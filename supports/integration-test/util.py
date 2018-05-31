@@ -7,6 +7,8 @@ import os
 import subprocess
 
 # Server info
+# ATTENTION
+# Unset Proxy before use RESTful API
 BASE_URL = "http://localhost:7045"
 
 # Restapi root
@@ -71,7 +73,7 @@ def exec_commands(cmds):
     while True:
         while cmds and len(processes) < max_task:
             task = cmds.pop()
-            print task
+            print(task)
             processes.append(subprocess.Popen(task, shell=True))
         for p in processes:
             if done(p):
@@ -255,6 +257,14 @@ def compact_small_file(src_files, container_file):
     """
     cmdlet_str = "compact -file " + src_files + \
                  " -containerFile " + container_file
+    return submit_cmdlet(cmdlet_str)
+
+
+def uncompact_small_file(container_file):
+    """
+    uncompact small files into container_file
+    """
+    cmdlet_str = "uncompact -containerFile " + container_file
     return submit_cmdlet(cmdlet_str)
 
 
