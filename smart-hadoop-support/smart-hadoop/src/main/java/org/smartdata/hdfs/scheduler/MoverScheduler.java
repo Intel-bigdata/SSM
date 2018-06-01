@@ -113,22 +113,6 @@ public class MoverScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
-    // check args
-    if (actionInfo.getArgs() == null) {
-      throw new IOException("No arguments for the action");
-    }
-    LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
-    // If locked then false
-    if (!isFileLocked(path)) {
-      // Lock this file/chain to avoid conflict
-      fileLock.put(path, 0L);
-      return true;
-    }
-    throw new IOException("The submit file" + path + " is in use by another program or user");
-  }
-
-  @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
     if (!actions.contains(action.getActionType())) {
       return ScheduleResult.SUCCESS;
@@ -185,6 +169,15 @@ public class MoverScheduler extends ActionSchedulerService {
       LOG.error("Unexpected exception when scheduling move " + policy + " '" + file + "'.", t);
       return ScheduleResult.FAIL;
     }
+  }
+
+  @Override
+  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+    // check args
+    if (actionInfo.getArgs() == null) {
+      throw new IOException("No arguments for the action");
+    }
+    return true;
   }
 
   private class UpdateClusterInfoTask implements Runnable {
