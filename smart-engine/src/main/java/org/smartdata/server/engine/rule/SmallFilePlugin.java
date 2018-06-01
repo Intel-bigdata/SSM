@@ -97,6 +97,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       Map<String, FileInfo> containerFileInfoMap = getContainerFileInfos();
       Map<SmallFileStatus, List<String>> smallFileStateMap = new HashMap<>();
       for (String object : objects) {
+        LOG.debug("Start handling the file: {}.", object);
         if (containerFileInfoMap.containsKey(object)) {
           LOG.debug("{} is container file.", object);
           continue;

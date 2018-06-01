@@ -138,6 +138,7 @@ public class InotifyEventApplier {
       }
     }
     metaStore.deleteFileByPath(fileInfo.getPath());
+    metaStore.deleteFileState(fileInfo.getPath());
     metaStore.insertFile(fileInfo);
     return "";
   }
