@@ -88,7 +88,7 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
   public boolean onSubmit(ActionInfo actionInfo) throws IOException {
     // check args
     if (actionInfo.getArgs() == null) {
-      throw new IOException("The args of the submit file is null");
+      throw new IOException("No arguments for the action");
     }
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (ifLocked(path)) {

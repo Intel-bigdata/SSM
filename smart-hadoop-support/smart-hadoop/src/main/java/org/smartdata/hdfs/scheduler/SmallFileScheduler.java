@@ -126,7 +126,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public boolean onSubmit(ActionInfo actionInfo) throws IOException {
     // check args
     if (actionInfo.getArgs() == null) {
-      throw new IOException("The args of the submit file is null");
+      throw new IOException("No arguments for the action");
     }
     if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       // Check if container file is null

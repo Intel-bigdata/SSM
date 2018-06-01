@@ -229,7 +229,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public boolean onSubmit(ActionInfo actionInfo) throws IOException {
     // check args
     if (actionInfo.getArgs() == null) {
-      throw new IOException("The args of the submit file is null");
+      throw new IOException("No arguments for the action");
     }
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
@@ -239,7 +239,7 @@ public class CopyScheduler extends ActionSchedulerService {
       fileLock.put(path, 0L);
       return true;
     }
-    throw new IOException("The submit file"+path+" is in use by another program or user");
+    throw new IOException("The submit file" + path + " is in use by another program or user");
   }
 
   @Override
