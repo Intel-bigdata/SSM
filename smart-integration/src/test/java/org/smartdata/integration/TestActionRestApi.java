@@ -56,7 +56,7 @@ public class TestActionRestApi extends IntegrationTestBase {
             "checkstorage",
             "archive",
             "onessd",
-            "hello"));
+            "echo"));
   }
 
   @Test(timeout = 200000)
@@ -102,9 +102,9 @@ public class TestActionRestApi extends IntegrationTestBase {
         Util.waitAgentAvailable();
 
         // Three actions would be executed on Master, StandbyServer and Agent
-        testAction("hello", "-print_message message");
-        testAction("hello", "-print_message message");
-        testAction("hello", "-print_message message");
+        testAction("echo", "-msg message");
+        testAction("echo", "-msg message");
+        testAction("echo", "-msg message");
       } finally {
         agent.destroy();
       }
