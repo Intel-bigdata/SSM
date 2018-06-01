@@ -464,6 +464,11 @@ public class CmdletManager extends AbstractService {
         curr = System.currentTimeMillis();
       }
       CmdletInfo cmdlet = idToCmdlets.get(id);
+      if (cmdlet == null) {
+        it.remove();
+        continue;
+      }
+
       synchronized (cmdlet) {
         switch (cmdlet.getState()) {
           case CANCELLED:
@@ -477,24 +482,37 @@ public class CmdletManager extends AbstractService {
             }
 
             LaunchCmdlet launchCmdlet = createLaunchCmdlet(cmdlet);
-            ScheduleResult result = scheduleCmdletActions(cmdlet, launchCmdlet);
+            ScheduleResult result;
+            try {
+              result = scheduleCmdletActions(cmdlet, launchCmdlet);
+            } catch (Throwable t) {
+              LOG.error("Schedule " + cmdlet + " failed.", t);
+              result = ScheduleResult.FAIL;
+            }
             if (result != ScheduleResult.RETRY) {
               it.remove();
+            } else {
+              continue;
             }
-            if (result == ScheduleResult.SUCCESS) {
-              idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
-              cmdlet.setState(CmdletState.SCHEDULED);
-              cmdlet.setStateChangedTime(System.currentTimeMillis());
-              scheduledCmdlet.add(id);
-              nScheduled++;
-            } else if (result == ScheduleResult.FAIL) {
-              cmdlet.updateState(CmdletState.CANCELLED);
-              cmdlet.setStateChangedTime(System.currentTimeMillis());
-              CmdletStatus cmdletStatus = new CmdletStatus(
-                      cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
-              // Mark all actions as finished and successful
-              cmdletFinishedInternal(cmdlet);
-              onCmdletStatusUpdate(cmdletStatus);
+
+            try {
+              if (result == ScheduleResult.SUCCESS) {
+                idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
+                cmdlet.setState(CmdletState.SCHEDULED);
+                cmdlet.setStateChangedTime(System.currentTimeMillis());
+                scheduledCmdlet.add(id);
+                nScheduled++;
+              } else if (result == ScheduleResult.FAIL) {
+                cmdlet.updateState(CmdletState.CANCELLED);
+                cmdlet.setStateChangedTime(System.currentTimeMillis());
+                CmdletStatus cmdletStatus = new CmdletStatus(
+                    cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
+                // Mark all actions as finished and successful
+                cmdletFinishedInternal(cmdlet);
+                onCmdletStatusUpdate(cmdletStatus);
+              }
+            } catch (Throwable t) {
+              LOG.error("Post schedule cmdlet " + cmdlet + " error.", t);
             }
             break;
         }
@@ -521,7 +539,13 @@ public class CmdletManager extends AbstractService {
 
       for (schIdx = 0; schIdx < actSchedulers.size(); schIdx++) {
         ActionScheduler s = actSchedulers.get(schIdx);
-        scheduleResult = s.onSchedule(actionInfo, launchAction);
+        try {
+          scheduleResult = s.onSchedule(actionInfo, launchAction);
+        } catch (Throwable t) {
+          actionInfo.setLog((actionInfo.getLog() == null ? "" : actionInfo.getLog())
+              + "\nOnSchedule exception: " + t);
+          scheduleResult = ScheduleResult.FAIL;
+        }
         if (scheduleResult != ScheduleResult.SUCCESS) {
           break;
         }
@@ -554,7 +578,12 @@ public class CmdletManager extends AbstractService {
       }
 
       for (int sidx = lastScheduler; sidx >= 0; sidx--) {
-        actSchedulers.get(sidx).postSchedule(info, result);
+        try {
+          actSchedulers.get(sidx).postSchedule(info, result);
+        } catch (Throwable t) {
+          info.setLog((info.getLog() == null ? "" : info.getLog())
+              + "\nPostSchedule exception: " + t);
+        }
       }
 
       lastScheduler = -1;
