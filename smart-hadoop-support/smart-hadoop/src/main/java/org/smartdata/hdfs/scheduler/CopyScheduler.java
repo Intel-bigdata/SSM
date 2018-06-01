@@ -136,6 +136,7 @@ public class CopyScheduler extends ActionSchedulerService {
     String srcDir = action.getArgs().get(SyncAction.SRC);
     String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String destDir = action.getArgs().get(SyncAction.DEST);
+    String destPath = path.replace(srcDir, destDir);
     // Check again to avoid corner cases
     long did = fileDiffChainMap.get(path).getHead();
     if (did == -1) {
@@ -155,7 +156,7 @@ public class CopyScheduler extends ActionSchedulerService {
     switch (fileDiff.getDiffType()) {
       case APPEND:
         action.setActionType("copy");
-        action.getArgs().put("-dest", path.replace(srcDir, destDir));
+        action.getArgs().put("-dest", destPath);
         if (rateLimiter != null) {
           String strLen = fileDiff.getParameters().get("-length");
           if (strLen != null) {
@@ -173,11 +174,11 @@ public class CopyScheduler extends ActionSchedulerService {
         break;
       case DELETE:
         action.setActionType("delete");
-        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, destPath);
         break;
       case RENAME:
         action.setActionType("rename");
-        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, destPath);
         // TODO scope check
         String remoteDest = fileDiff.getParameters().get("-dest");
         action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
@@ -185,7 +186,7 @@ public class CopyScheduler extends ActionSchedulerService {
         break;
       case METADATA:
         action.setActionType("metadata");
-        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, destPath);
         break;
       default:
         break;
@@ -620,6 +621,18 @@ public class CopyScheduler extends ActionSchedulerService {
     fileLock.remove(diff.getSrc());
   }
 
+  private boolean fileExistOnStandby(String filePath) {
+    // TODO Need to be more general to handle failure
+    try {
+      // Check if file exists at standby cluster
+      FileSystem fs = FileSystem.get(URI.create(filePath), conf);
+      return fs.exists(new Path(filePath));
+    } catch (IOException e) {
+      LOG.debug("Fetch remote file status fails!", e);
+      return false;
+    }
+  }
+
   private class ScheduleTask implements Runnable {
 
     private void syncFileDiff() {
@@ -805,7 +818,7 @@ public class CopyScheduler extends ActionSchedulerService {
         for (long did : appendChain) {
           FileDiff diff = fileDiffCache.get(did);
           if (diff.getParameters().containsKey("-offset")) {
-            if (diff.getParameters().get("-offset").equals("0")) {
+            if (!isCreate && diff.getParameters().get("-offset").equals("0")) {
               isCreate = true;
             }
           }
@@ -818,7 +831,13 @@ public class CopyScheduler extends ActionSchedulerService {
             // Delete raw is enough
             fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
           }
-          diffChain.add(fileDiff.getDiffId());
+          if (fileExistOnStandby(filePath)) {
+            // Only allow delete when file do exist on remote
+            diffChain.add(fileDiff.getDiffId());
+          } else {
+            // Mark this delete diff as applied
+            updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
+          }
         } else {
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }

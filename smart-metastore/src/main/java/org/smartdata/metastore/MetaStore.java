@@ -1260,7 +1260,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           break;
         }
         ActionInfo actionInfo = getActionById(aid);
-        if (actionInfo.isFinished()) {
+        if (actionInfo != null && actionInfo.isFinished()) {
           finishedActions.add(actionInfo);
         } else {
           runningActions.add(actionInfo);

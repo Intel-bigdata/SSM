@@ -269,8 +269,11 @@ public class InotifyEventApplier {
           fileDiff.getParameters().put("-owner", "" + metadataUpdateEvent.getOwnerName());
           metaStore.insertFileDiff(fileDiff);
         }
-        //Todo
-        break;
+        return String.format(
+            "UPDATE file SET owner = '%s', owner_group = '%s' WHERE path = '%s';",
+            metadataUpdateEvent.getOwnerName(),
+            metadataUpdateEvent.getGroupName(),
+            metadataUpdateEvent.getPath());
       case PERMS:
         if (fileDiff != null) {
           fileDiff.getParameters().put("-permission", "" + metadataUpdateEvent.getPerms().toShort());

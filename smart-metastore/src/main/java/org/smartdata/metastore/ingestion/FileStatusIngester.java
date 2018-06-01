@@ -68,14 +68,14 @@ public class FileStatusIngester implements Runnable {
       long curr = System.currentTimeMillis();
       if (curr - lastUpdateTime >= 5000) {
         long total =
-              IngestionTask.numDirectoriesFetched.get() + IngestionTask.numFilesFetched.get();
+            IngestionTask.numDirectoriesFetched.get() + IngestionTask.numFilesFetched.get();
         if (total > 0) {
           LOG.info(String.format(
-              "%d sec, %%%d persisted into database",
+              "%d sec, %d%% persisted into database",
               (curr - startTime) / 1000, IngestionTask.numPersisted.get() * 100 / total));
         } else {
           LOG.info(String.format(
-              "%d sec, %%0 persisted into database",
+              "%d sec, 0%% persisted into database",
               (curr - startTime) / 1000));
         }
         lastUpdateTime = curr;

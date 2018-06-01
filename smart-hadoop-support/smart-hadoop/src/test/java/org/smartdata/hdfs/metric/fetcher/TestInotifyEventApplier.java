@@ -123,6 +123,18 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertEquals(result4.getAccessTime(), 3);
     Assert.assertEquals(result4.getModificationTime(), 2);
 
+    Event meta1 =
+        new Event.MetadataUpdateEvent.Builder()
+            .path("/file")
+            .metadataType(Event.MetadataUpdateEvent.MetadataType.OWNER)
+            .ownerName("user1")
+            .groupName("cg1")
+            .build();
+    applier.apply(new Event[] {meta1});
+    result4 = metaStore.getFile().get(0);
+    Assert.assertEquals(result4.getOwner(), "user1");
+    Assert.assertEquals(result4.getGroup(), "cg1");
+
     Event.CreateEvent createEvent2 =
         new Event.CreateEvent.Builder()
             .iNodeType(Event.CreateEvent.INodeType.DIRECTORY)
@@ -165,7 +177,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertEquals(metaStore.getFile().size(), 0);
     System.out.println("Files in table " + metaStore.getFile().size());
     List<FileDiff> fileDiffList = metaStore.getPendingDiff();
-    Assert.assertTrue(fileDiffList.size() == 4);
+    Assert.assertTrue(fileDiffList.size() == 5);
   }
 
   @Test
