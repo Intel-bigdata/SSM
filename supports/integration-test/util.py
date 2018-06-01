@@ -21,9 +21,7 @@ SYSTEM_ROOT = REST_ROOT + "/system"
 CONF_ROOT = REST_ROOT + "/conf"
 PRIMARY_ROOT = REST_ROOT + "/primary"
 
-
 MOVE_TYPES = ['archive', 'alldisk', 'onedisk', 'allssd', 'onessd', 'cache', 'uncache']
-
 
 TEST_DIR = "/ssmtest/"
 
@@ -392,3 +390,4 @@ def move_random_task_list_totally(file_size):
     # record the last task
     moves = random_move_list_totally(random.randrange(10, 21))
     return continualy_move(moves, file_path)
+
