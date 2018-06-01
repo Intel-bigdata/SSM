@@ -133,13 +133,13 @@ public class SmallFileScheduler extends ActionSchedulerService {
       String containerFilePath = actionInfo.getArgs().get(
           SmallFileCompactAction.CONTAINER_FILE);
       if (containerFilePath == null || containerFilePath.isEmpty()) {
-        throw new IOException("Illegal container file path: "+containerFilePath);
+        throw new IOException("Illegal container file path: " + containerFilePath);
       }
 
       // Check if small files is null or empty
       String smallFiles = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       if (smallFiles == null || smallFiles.isEmpty()) {
-        throw new IOException("Illegal small files: "+smallFiles);
+        throw new IOException("Illegal small files: " + smallFiles);
       }
 
       // Check if small file list converted from Json is not empty
@@ -147,7 +147,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
           smallFiles, new TypeToken<ArrayList<String>>() {
           }.getType());
       if (smallFileList.isEmpty()) {
-        throw new IOException("Illegal small files list: "+smallFileList);
+        throw new IOException("Illegal small files list: " + smallFileList);
       }
 
       // Check if the small file list is valid

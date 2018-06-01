@@ -92,13 +92,13 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     }
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (ifLocked(path)) {
-      throw new IOException("The submit file "+path+" is locked");
+      throw new IOException("The submit file " + path + " is locked");
     }
     if (checkTheLengthOfFile(path) == 0) {
-      throw new IOException("The submit file "+path+" length is 0");
+      throw new IOException("The submit file " + path + " length is 0");
     }
     if (isOnS3(path)) {
-      throw new IOException("The submit file "+path+" is already copied");
+      throw new IOException("The submit file " + path + " is already copied");
     }
     lockTheFile(path);
     LOG.debug("The file {} can be submitted", path);
