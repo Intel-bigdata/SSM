@@ -79,7 +79,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
-  public static final long TIMEOUT_MULTIPLIER = 60;
+  public static final int TIMEOUT_MULTIPLIER = 100;
+  public static final int TIMEOUT_MIN_MILLISECOND = 30000;
   public static final String TIMEOUTLOG =
           "Timeout error occurred for getting this action's status report.";
   public static final String ACTION_SKIP_LOG =
@@ -137,9 +138,12 @@ public class CmdletManager extends AbstractService {
         SmartConfKeys.SMART_CMDLET_CACHE_BATCH_DEFAULT);
 
     int reportPeriod = context.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
-            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    this.timeout =
-            TIMEOUT_MULTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MULTIPLIER * reportPeriod;
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    int maxInterval = reportPeriod * context.getConf().getInt(
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_KEY,
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT);
+    this.timeout = TIMEOUT_MULTIPLIER * maxInterval < TIMEOUT_MIN_MILLISECOND
+        ? TIMEOUT_MIN_MILLISECOND : TIMEOUT_MULTIPLIER * maxInterval;
   }
 
   @VisibleForTesting
@@ -1181,6 +1185,8 @@ public class CmdletManager extends AbstractService {
         LOG.error(e.getMessage());
       } catch (IOException e) {
         LOG.error(e.getMessage());
+      } catch (Throwable t) {
+        LOG.error("Unexpected exception occurs.", t);
       }
     }
 
