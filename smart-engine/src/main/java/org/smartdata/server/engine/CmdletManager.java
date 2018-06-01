@@ -1185,6 +1185,8 @@ public class CmdletManager extends AbstractService {
         LOG.error(e.getMessage());
       } catch (IOException e) {
         LOG.error(e.getMessage());
+      } catch (Throwable t) {
+        LOG.error("Unexpected exception occurs.", t);
       }
     }
 

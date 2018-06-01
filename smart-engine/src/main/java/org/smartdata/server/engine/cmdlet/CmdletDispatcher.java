@@ -399,7 +399,9 @@ public class CmdletDispatcher {
     synchronized (dispatchedToSrvs) {
       if (dispatchedToSrvs.containsKey(cmdletId)) {
         LaunchCmdlet cmdlet = idToLaunchCmdlet.get(cmdletId);
-        regNodes.get(cmdlet.getNodeId()).incrementAndGet();
+        if (regNodes.get(cmdlet.getNodeId()) != null) {
+          regNodes.get(cmdlet.getNodeId()).incrementAndGet();
+        }
         ExecutorType t = dispatchedToSrvs.remove(cmdletId);
         updateSlotsLeft(t.ordinal(), 1);
         completeOn[t.ordinal()] = cmdlet.getNodeId();
