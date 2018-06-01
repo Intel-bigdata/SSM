@@ -325,7 +325,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
         return ScheduleResult.FAIL;
       }
 
-      // Reset action arguments
+      // Reset action arguments if container file is not exist
+      // and its permission is null
       if (containerFilePermission == null) {
         Map<String, String> args = new HashMap<>(3);
         args.put(SmallFileCompactAction.CONTAINER_FILE,

@@ -618,7 +618,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<String> executeFilesPathQuery(
       String sql) throws MetaStoreException {
     try {
-      LOG.debug("ExecuteFilesPathQuer sql = {}", sql);
+      LOG.debug("ExecuteFilesPathQuery sql = {}", sql);
       return metaStoreHelper.getFilesPath(sql);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
