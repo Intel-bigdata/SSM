@@ -21,26 +21,11 @@ SYSTEM_ROOT = REST_ROOT + "/system"
 CONF_ROOT = REST_ROOT + "/conf"
 PRIMARY_ROOT = REST_ROOT + "/primary"
 
-MOVE_TYPES = ['archive', 'alldisk', 'onedisk', 'allssd', 'onessd', 'cache', 'uncache']
+MOVE_TYPE = ["onessd",
+             "allssd",
+             "archive"]
 
 TEST_DIR = "/ssmtest/"
-
-
-def convert_to_byte(file_size):
-    if file_size.endswith('GB'):
-        file_size = file_size.replace('GB', '')
-        return int(file_size)*1024*1024*1024
-    elif file_size.endswith("MB"):
-        file_size = file_size.replace("MB", "")
-        return int(file_size)*1024*1024
-    elif file_size.endswith('KB'):
-        file_size = file_size.replace('KB', '')
-        return int(file_size)*1024;
-    elif file_size.endswith('B'):
-        file_size = file_size.replace('B', '')
-        return int(file_size)
-    else:
-        return file_size
 
 
 def cpu_count():
@@ -168,7 +153,7 @@ def wait_for_cmdlet(cid, period=300):
 def wait_for_cmdlets(cids, period=300):
     failed_cids = []
     while len(cids) != 0:
-        cmd = wait_for_cmdlet(cids[0], period)
+        cmd = wait_for_cmdlet(cids[0])
         if cmd is None or cmd['state'] == 'FAILED':
             failed_cids.append(cids[0])
         cids.pop(0)
@@ -201,6 +186,11 @@ def start_rule(rid):
 
 def stop_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/stop")
+
+
+def get_cmdlets_of_rule(rid):
+    resp = requests.get(RULE_ROOT + "/" + str(rid) + "/cmdlets")
+    return resp.json()["body"]
 
 
 def get_action(aid):
@@ -284,9 +274,9 @@ def uncompact_small_file(container_file):
 
 
 def random_move_test_file(file_path):
-    index = random.randrange(len(MOVE_TYPES))
+    index = random.randrange(len(MOVE_TYPE))
     resp = requests.post(CMDLET_ROOT + "/submit",
-                         data=MOVE_TYPES[index] + " -file  " + file_path)
+                         data=MOVE_TYPE[index] + " -file  " + file_path)
     return resp.json()["body"]
 
 
@@ -318,8 +308,8 @@ def move_randomly(file_path):
     """
     Randomly move blocks of a given file
     """
-    index = random.randrange(len(MOVE_TYPES))
-    return submit_cmdlet(MOVE_TYPES[index] + " -file " + file_path)
+    index = random.randrange(len(MOVE_TYPE))
+    return submit_cmdlet(MOVE_TYPE[index] + " -file " + file_path)
 
 
 def continualy_move(moves, file_path):
@@ -337,10 +327,10 @@ def random_move_list(length=10):
     moves = []
     last_move = -1
     while length > 0:
-        random_index = random.randrange(len(MOVE_TYPES))
+        random_index = random.randrange(len(MOVE_TYPE))
         if random_index != last_move:
             last_move = random_index
-            moves.append(MOVE_TYPES[random_index])
+            moves.append(MOVE_TYPE[random_index])
             length -= 1
     return moves
 
@@ -351,8 +341,8 @@ def random_move_list_totally(length=10):
     """
     moves = []
     while length > 0:
-        random_index = random.randrange(len(MOVE_TYPES))
-        moves.append(MOVE_TYPES[random_index])
+        random_index = random.randrange(len(MOVE_TYPE))
+        moves.append(MOVE_TYPE[random_index])
         length -= 1
     return moves
 
