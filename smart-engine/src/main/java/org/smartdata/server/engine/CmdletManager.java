@@ -504,7 +504,6 @@ public class CmdletManager extends AbstractService {
                 nScheduled++;
               } else if (result == ScheduleResult.FAIL) {
                 cmdlet.updateState(CmdletState.CANCELLED);
-                cmdlet.setStateChangedTime(System.currentTimeMillis());
                 CmdletStatus cmdletStatus = new CmdletStatus(
                     cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
                 // Mark all actions as finished and successful
@@ -744,7 +743,8 @@ public class CmdletManager extends AbstractService {
         // Set all action as finished
         actionInfo.setProgress(1.0F);
         actionInfo.setFinished(true);
-        actionInfo.setFinishTime(System.currentTimeMillis());
+        actionInfo.setCreateTime(cmdletInfo.getStateChangedTime());
+        actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
       }
     }
   }
