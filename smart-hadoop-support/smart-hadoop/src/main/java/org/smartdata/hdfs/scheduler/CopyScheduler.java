@@ -439,7 +439,7 @@ public class CopyScheduler extends ActionSchedulerService {
     FileDiff fileDiff;
     long offSet;
     if (overwriteQueue.containsKey(src)) {
-      offSet = 0;
+      offSet = -1;
       overwriteQueue.remove(src);
     } else {
       offSet = fileCompare(fileInfo, dest);
@@ -481,11 +481,7 @@ public class CopyScheduler extends ActionSchedulerService {
       long remoteLen = fileStatus.getLen();
       // TODO Add Checksum check
       // Remote
-      if (localLen == remoteLen) {
-        return localLen;
-      } else {
-        return remoteLen;
-      }
+      return remoteLen;
     } catch (IOException e) {
       return -1;
     }
