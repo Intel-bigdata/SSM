@@ -444,7 +444,10 @@ public class CopyScheduler extends ActionSchedulerService {
     } else {
       offSet = fileCompare(fileInfo, dest);
     }
-    if (offSet == fileInfo.getLength()) {
+    if (offSet == -1) {
+      // Remote file does not exist
+      offSet = 0;
+    } else if (offSet == fileInfo.getLength()) {
       LOG.debug("Primary len={}, remote len={}", fileInfo.getLength(), offSet);
       return null;
     } else if (offSet > fileInfo.getLength()) {
@@ -484,7 +487,7 @@ public class CopyScheduler extends ActionSchedulerService {
         return remoteLen;
       }
     } catch (IOException e) {
-      return 0;
+      return -1;
     }
   }
 
@@ -780,7 +783,7 @@ public class CopyScheduler extends ActionSchedulerService {
         long lastAppend = -1;
         for (long did : appendChain) {
           FileDiff fileDiff = fileDiffCache.get(did);
-          if (fileDiff != null && fileDiff.getState().getValue() != 2) {
+          if (fileDiff != null && fileDiff.getState() != FileDiffState.APPLIED) {
             long currOffset =
                 Long.valueOf(fileDiff.getParameters().get("-offset"));
             if (offset > currOffset) {
@@ -874,7 +877,7 @@ public class CopyScheduler extends ActionSchedulerService {
             }
           }
           if (appendFileDiff != null &&
-              appendFileDiff.getState().getValue() != 2) {
+              appendFileDiff.getState() != FileDiffState.APPLIED) {
             appendFileDiff.setSrc(newName);
             fileDiffCacheChanged.put(appendFileDiff.getDiffId(), true);
           }
@@ -919,7 +922,6 @@ public class CopyScheduler extends ActionSchedulerService {
           } else {
             dids.add(did);
             LOG.error("FileDiff {} is in chain but not in cache", did);
-            // metaStore.updateFileDiff(did, FileDiffState.MERGED);
           }
         }
         metaStore.batchUpdateFileDiff(dids, FileDiffState.MERGED);
