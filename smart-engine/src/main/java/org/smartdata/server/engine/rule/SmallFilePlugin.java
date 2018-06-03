@@ -59,7 +59,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   private Map<String, FileInfo> firstFileInfoCache;
   private Map<RuleInfo, Map<String, FileInfo>> containerFileInfoCache;
   private static final String COMPACT_ACTION_NAME = "compact";
-  private static final String CONTAINER_FILE_PREFIX = "container_file_";
+  private static final String CONTAINER_FILE_PREFIX = "_container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
 
   public SmallFilePlugin(ServerContext context, CmdletManager cmdletManager) {

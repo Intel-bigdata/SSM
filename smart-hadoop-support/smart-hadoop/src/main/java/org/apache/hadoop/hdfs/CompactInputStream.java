@@ -104,7 +104,7 @@ public class CompactInputStream extends SmartInputStream {
   @Override
   public synchronized int available() throws IOException {
     if (closed) {
-      throw new IOException("Stream closed");
+      throw new IOException("Stream closed.");
     }
     final long remaining = getFileLength() - getPos();
     return remaining <= Integer.MAX_VALUE ? (int) remaining : Integer.MAX_VALUE;
