@@ -23,6 +23,7 @@ from subprocess import call
 from os import path
 
 from util import *
+from test_smallfile_compact_rule import add_ssm_rule
 
 
 def call_prepare(hiBenchDir, workload, service):
@@ -68,6 +69,38 @@ if __name__ == '__main__':
         if DEBUG:
             print("DEBUG: Testing " + eachWL)
         if not call_prepare(hibenchDir, eachWL, "hadoop"):
-            call_hadoop(hibenchDir, eachWL)
+            taskType, taskName = eachWL.split("/")
+            taskName = taskName.capitalize()
+            inputDir = "/HiBench/" + taskName + "/Input"
+            if DEBUG:
+                print("DEBUG: Input: " + inputDir)
+            rid = add_ssm_rule(inputDir,DEBUG)
+            aids = get_cmdlets_of_rule(rid)
+            count = 0
+            while not aids and count < 30:
+                if DEBUG:
+                    print("DEBUG: sleep to wait for aids ")
+                time.sleep(1)
+                count += 1
+                aids = get_cmdlets_of_rule(rid)
+            if aids:
+                if DEBUG:
+                    print("DEBUG: get generated cmdlets of new submitted rule")
+                cidsOfActions = []
+                for eachAction in aids:
+                    cidsOfActions.append(eachAction["cid"])
+                failed_cids = wait_for_cmdlets(cidsOfActions)
+                if failed_cids:
+                    print("*********** WARNING ***********")
+                    print("Compact Test Files Failed, Test Skipped")
+                    print("**********WARNING END**********")
+                else:
+                    if DEBUG:
+                        print("DEBUG: get generated cmdlets of new submitted rule")
+                    call_hadoop(hibenchDir, eachWL)
+            else:
+                print("*********** WARNING ***********")
+                print("Compact Test Files Failed, Test Skipped")
+                print("**********WARNING END**********")
         else:
             print("Hadoop Task for " + eachWL + " Failed!")

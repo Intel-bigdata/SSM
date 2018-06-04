@@ -31,13 +31,14 @@ def add_ssm_rule(targetDir, DEBUG):
     if DEBUG:
         print("DEBUG: Rule with ID " + str(rid) + " started\n")
     print("**********Compact Rule Added**********\n")
+    return rid
 
 
 if __name__ == '__main__':
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Auto-generate and submit compact rules.')
-    parser.add_argument("-d", "--targetDir", default='/ssm_tmp_test',dest="targetDir",
-                    help="target test set directory Prefix, Default Value: /ssm_tmp_test")
+    parser.add_argument("-d", "--targetDir", default=TEST_DIR,dest="targetDir",
+                    help="target test set directory Prefix, Default Value: TEST_DIR in util.py")
     parser.add_argument("-b", "--sizeOfBatches", default='[10]', dest="sizeOfBatches",
                     help="size of each batch, string input, e.g. '[10,100,1000]', Default Value: [10].")
     parser.add_argument("-s", "--sizeOfFiles", default='1MB', dest="sizeOfFiles",
@@ -67,7 +68,10 @@ if __name__ == '__main__':
             print("Wrong Size Input, e.g. 1MB or 1KB")
             sys.exit(1)
         if options.targetDir:
-            targetDir = options.targetDir
+            if options.targetDir[-1:len(options.targetDir)] == '/':
+                targetDir = options.targetDir[:-1]
+            else:
+                targetDir = options.targetDir
         else:
             raise SystemExit
         if DEBUG:

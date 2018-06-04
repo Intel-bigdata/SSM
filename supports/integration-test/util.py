@@ -203,6 +203,11 @@ def stop_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/stop")
 
 
+def get_cmdlets_of_rule(rid):
+    resp = requests.get(RULE_ROOT + "/" + str(rid) + "/cmdlets")
+    return resp.json()["body"]
+
+
 def get_action(aid):
     resp = requests.get(ACTION_ROOT + "/" + str(aid) + "/info")
     return resp.json()["body"]
@@ -385,3 +390,4 @@ def move_random_task_list_totally(file_size):
     # record the last task
     moves = random_move_list_totally(random.randrange(10, 21))
     return continualy_move(moves, file_path)
+

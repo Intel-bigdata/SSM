@@ -33,8 +33,8 @@ def add_uncompact_action(containerFile, DEBUG):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test SSM action submit functions for compact and uncompact.')
-    parser.add_argument("-d", "--targetDir", default='/ssm_tmp_test', dest="targetDir", 
-                        help="directory to store generated test set, DefaultValue: /ssm_tmp_test")
+    parser.add_argument("-d", "--targetDir", default=TEST_DIR, dest="targetDir", 
+                        help="directory to store generated test set, DefaultValue: TEST_DIR in util.py")
     parser.add_argument("-f", "--targetFiles", dest="targetFiles", 
                         help="a string contains files to compact, No Default Value, e.g. ['/dir/file1','/dir/file2']")
     parser.add_argument("-b", "--sizeOfBatches", default='[5]', dest="sizeOfBatches",
@@ -67,7 +67,10 @@ if __name__ == '__main__':
             print("Wrong Size Input, e.g. 1MB or 1KB")
             sys.exit(1)
 
-        targetDir = options.targetDir
+        if options.targetDir[-1:len(options.targetDir)] == '/':
+            targetDir = options.targetDir[:-1]
+        else:
+            targetDir = options.targetDir
         action = options.action
         containerFile = options.containerFile
         if DEBUG:
