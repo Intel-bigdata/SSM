@@ -23,15 +23,6 @@ def create_test_set(nums, size, baseDir, DEBUG):
         if DEBUG:
             print("DEBUG: Current batch num: " + str(i) + "; each file size: " + str(size) + "KB")
         targetDir = baseDir + os.sep + "data_" + str(i)
-        try:
-            # delete old target directory
-            if DEBUG:
-                print("Deleting Old Target Directory " + targetDir)
-            cmdlet = wait_for_cmdlet(delete_file(targetDir))
-            if DEBUG:
-                print("Old Directory Deleted with return " + str(cmdlet))
-        except Exception:
-            pass
         for j in range(0,i):
             fileName = targetDir + os.sep + "file_" + str(j)
             aid = create_file(fileName, sizeInByte)
