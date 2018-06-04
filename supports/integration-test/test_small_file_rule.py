@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script is used to generate and submit a SSM compact rule.
+This script is used to generate and submit a SSM rule.
 """
 import sys
 import os
@@ -31,13 +31,14 @@ def add_ssm_rule(targetDir, DEBUG):
     if DEBUG:
         print("DEBUG: Rule with ID " + str(rid) + " started\n")
     print("**********Compact Rule Added**********\n")
+    return rid
 
 
 if __name__ == '__main__':
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Auto-generate and submit compact rules.')
-    parser.add_argument("-d", "--targetDir", default='/ssm_tmp_test',dest="targetDir",
-                    help="target test set directory Prefix, Default Value: /ssm_tmp_test")
+    parser.add_argument("-d", "--targetDir", default=TEST_DIR,dest="targetDir",
+                    help="target test set directory Prefix, Default Value: TEST_DIR in util.py")
     parser.add_argument("-b", "--sizeOfBatches", default='[10]', dest="sizeOfBatches",
                     help="size of each batch, string input, e.g. '[10,100,1000]', Default Value: [10].")
     parser.add_argument("-s", "--sizeOfFiles", default='1MB', dest="sizeOfFiles",
@@ -59,7 +60,7 @@ if __name__ == '__main__':
             sizeUnit = m.group(2)
             size = int(m.group(1))
             if sizeUnit != "MB" and sizeUnit != "KB":
-                print("Wrong Size Unit\nUsage: python3 test_geberate_test_set -h")
+                print("Wrong Size Unit\nUsage: python3 test_small_file_rule -h")
                 sys.exit(1)
             if sizeUnit == "MB":
                 size = size * 1024
@@ -67,14 +68,17 @@ if __name__ == '__main__':
             print("Wrong Size Input, e.g. 1MB or 1KB")
             sys.exit(1)
         if options.targetDir:
-            targetDir = options.targetDir
+            if options.targetDir[-1:len(options.targetDir)] == '/':
+                targetDir = options.targetDir[:-1]
+            else:
+                targetDir = options.targetDir
         else:
             raise SystemExit
         if DEBUG:
             print("DEBUG: nums: " + options.sizeOfFiles + ", size: " + str(size) + sizeUnit
                 + ", targetDir: "+ targetDir)
     except (ValueError, SystemExit) as e:
-        print("Usage: python3 test_smallfile_compact_rule.py -h")
+        print("Usage: python3 test_small_file_rule.py -h")
     except IndexError:
         pass
     

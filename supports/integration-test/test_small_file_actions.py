@@ -33,8 +33,8 @@ def add_uncompact_action(containerFile, DEBUG):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test SSM action submit functions for compact and uncompact.')
-    parser.add_argument("-d", "--targetDir", default='/ssm_tmp_test', dest="targetDir", 
-                        help="directory to store generated test set, DefaultValue: /ssm_tmp_test")
+    parser.add_argument("-d", "--targetDir", default=TEST_DIR, dest="targetDir", 
+                        help="directory to store generated test set, DefaultValue: TEST_DIR in util.py")
     parser.add_argument("-f", "--targetFiles", dest="targetFiles", 
                         help="a string contains files to compact, No Default Value, e.g. ['/dir/file1','/dir/file2']")
     parser.add_argument("-b", "--sizeOfBatches", default='[5]', dest="sizeOfBatches",
@@ -59,7 +59,7 @@ if __name__ == '__main__':
             sizeUnit = m.group(2)
             size = int(m.group(1))
             if sizeUnit != "MB" and sizeUnit != "KB":
-                print("Wrong Size Unit\nUsage: python3 test_geberate_test_set -h")
+                print("Wrong Size Unit\nUsage: python3 test_small_file_actions -h")
                 sys.exit(1)
             if sizeUnit == "MB":
                 size = size * 1024
@@ -67,14 +67,17 @@ if __name__ == '__main__':
             print("Wrong Size Input, e.g. 1MB or 1KB")
             sys.exit(1)
 
-        targetDir = options.targetDir
+        if options.targetDir[-1:len(options.targetDir)] == '/':
+            targetDir = options.targetDir[:-1]
+        else:
+            targetDir = options.targetDir
         action = options.action
         containerFile = options.containerFile
         if DEBUG:
             print("DEBUG: nums: " + options.sizeOfFiles + ", size: " + str(size) + sizeUnit
                 + ", targetDir: " + targetDir)
     except (ValueError, SystemExit) as e:
-        print("Usage: python3 test_smallfile_actioin -h")
+        print("Usage: python3 test_small_file_actions -h")
     except IndexError:
         pass
     
@@ -89,7 +92,7 @@ if __name__ == '__main__':
         if targetFiles:
             add_compact_action(targetFiles, containerFile, DEBUG)
         else:
-            print("Target files does not specified!\nUsage: python3 test_smallfile_action.py -h")
+            print("Target files does not specified!\nUsage: python3 test_small_file_actions.py -h")
             sys.exit(1)
     elif action == "uncompact":
         if not call(['hdfs','dfs','-test','-e',containerFile]):
