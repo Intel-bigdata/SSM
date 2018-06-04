@@ -136,7 +136,7 @@ public class CopyScheduler extends ActionSchedulerService {
     String srcDir = action.getArgs().get(SyncAction.SRC);
     String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String destDir = action.getArgs().get(SyncAction.DEST);
-    String destPath = path.replace(srcDir, destDir);
+    String destPath = path.replaceFirst(srcDir, destDir);
     // Check again to avoid corner cases
     long did = fileDiffChainMap.get(path).getHead();
     if (did == -1) {
@@ -181,7 +181,7 @@ public class CopyScheduler extends ActionSchedulerService {
         action.getArgs().put(HdfsAction.FILE_PATH, destPath);
         // TODO scope check
         String remoteDest = fileDiff.getParameters().get("-dest");
-        action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
+        action.getArgs().put("-dest", remoteDest.replaceFirst(srcDir, destDir));
         fileDiff.getParameters().remove("-dest");
         break;
       case METADATA:
@@ -361,7 +361,7 @@ public class CopyScheduler extends ActionSchedulerService {
     Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {
       // Remove prefix/parent
-      srcFileSet.put(fileInfo.getPath().replace(srcDir, ""), fileInfo);
+      srcFileSet.put(fileInfo.getPath().replaceFirst(srcDir, ""), fileInfo);
     }
     FileStatus[] fileStatuses = null;
     // recursively file lists
@@ -376,7 +376,7 @@ public class CopyScheduler extends ActionSchedulerService {
         if (srcFileSet.containsKey(destName)) {
           FileInfo fileInfo = srcFileSet.get(destName);
           String src = fileInfo.getPath();
-          String dest = src.replace(srcDir, destDir);
+          String dest = src.replaceFirst(srcDir, destDir);
           baseSyncQueue.put(src, dest);
           srcFileSet.remove(destName);
         }
@@ -389,21 +389,12 @@ public class CopyScheduler extends ActionSchedulerService {
         continue;
       }
       String src = fileInfo.getPath();
-      String dest = src.replace(srcDir, destDir);
+      String dest = src.replaceFirst(srcDir, destDir);
       baseSyncQueue.put(src, dest);
       overwriteQueue.put(src, true);
       // directSync(src, dest);
     }
     batchDirectSync();
-  }
-
-  private void directSync(String src, String srcDir,
-      String destDir) throws MetaStoreException {
-    String dest = src.replace(srcDir, destDir);
-    FileDiff fileDiff = directSync(src, dest);
-    if (fileDiff != null) {
-      metaStore.insertFileDiff(fileDiff);
-    }
   }
 
   private FileDiff directSync(String src, String dest) throws MetaStoreException {
@@ -501,17 +492,6 @@ public class CopyScheduler extends ActionSchedulerService {
     fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
   }
 
-/*  private void updateFileDiffInCache(FileDiff fileDiff) {
-    // judge whether change the file diff
-    if (fileDiffCache.containsKey(fileDiff.getDiffId())) {
-      FileDiff oldDiff = fileDiffCache.get(fileDiff.getDiffId());
-      if (!oldDiff.equals(fileDiff)) {
-        fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
-        fileDiffCache.put(fileDiff.getDiffId(), fileDiff);
-      }
-    }
-  }*/
-
   private void updateFileDiffInCache(Long did,
       FileDiffState fileDiffState) throws MetaStoreException {
     LOG.debug("Update FileDiff");
@@ -592,32 +572,6 @@ public class CopyScheduler extends ActionSchedulerService {
       throw new IOException(e);
     }
     executorService.shutdown();
-  }
-
-  private void lockFile(String fileName) {
-    fileLock.put(fileName, 0L);
-  }
-
-  private void lockFile(long did) {
-    FileDiff diff = fileDiffCache.get(did);
-    if(diff == null) {
-      return;
-    }
-    fileLock.put(diff.getSrc(), did);
-  }
-
-  private void unlockFile(String fileName) {
-    if (fileLock.containsKey(fileName)) {
-      fileLock.remove(fileName);
-    }
-  }
-
-  private void unlockFile(long did){
-    FileDiff diff = fileDiffCache.get(did);
-    if(diff == null) {
-      return;
-    }
-    fileLock.remove(diff.getSrc());
   }
 
   private boolean fileExistOnStandby(String filePath) {
