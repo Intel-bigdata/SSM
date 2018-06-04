@@ -327,7 +327,7 @@ def move_randomly(file_path):
     return submit_cmdlet(MOVE_TYPES[index] + " -file " + file_path)
 
 
-def continualy_move(moves, file_path):
+def continually_move(moves, file_path):
     cmds = []
     for move in moves:
         cmds.append(wait_for_cmdlet(move_cmdlet(move, file_path)))
@@ -374,7 +374,7 @@ def move_random_task_list(file_size):
     # use a list to save the result
     # record the last task
     moves = random_move_list(random.randrange(10, 21))
-    return continualy_move(moves, file_path)
+    return continually_move(moves, file_path)
 
 
 def move_random_task_list_totally(file_size):
@@ -389,4 +389,4 @@ def move_random_task_list_totally(file_size):
     # use a list to save the result
     # record the last task
     moves = random_move_list_totally(random.randrange(10, 21))
-    return continualy_move(moves, file_path)
+    return continually_move(moves, file_path)
