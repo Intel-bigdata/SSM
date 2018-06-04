@@ -29,6 +29,7 @@ import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.exception.QueueFullException;
 import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
 import org.smartdata.hdfs.scheduler.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
@@ -304,7 +305,7 @@ public class CmdletManager extends AbstractService {
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
     if (maxNumPendingCmdlets <= pendingCmdlet.size() + schedulingCmdlet.size()) {
-      throw new IOException("Pending cmdlets exceeds value specified by key '"
+      throw new QueueFullException("Pending cmdlets exceeds value specified by key '"
           + SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY + "' = " + maxNumPendingCmdlets);
     }
     long submitTime = System.currentTimeMillis();

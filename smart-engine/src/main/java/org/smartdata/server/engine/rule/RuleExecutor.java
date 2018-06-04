@@ -20,6 +20,7 @@ package org.smartdata.server.engine.rule;
 import com.google.common.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.exception.QueueFullException;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.dao.AccessCountTable;
@@ -446,6 +447,8 @@ public class RuleExecutor implements Runnable {
           }
           ruleManager.getCmdletManager().submitCmdlet(cmd);
           nSubmitted++;
+        } catch (QueueFullException e) {
+          break;
         } catch (IOException e) {
           // it's common here, ignore this and continue submit
           LOG.debug("Failed to submit cmdlet for file: " + file, e);
