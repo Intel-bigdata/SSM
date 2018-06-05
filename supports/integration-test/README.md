@@ -114,14 +114,14 @@ Note that user can get further instructions of below python scripts via paramete
 ```
 python test_small_file_rule -n 10 -s 10KB
 ```
-This command will generate 10 files under TEST_DIR, the size of every file is 10KB.
+This command will generate 10 files under TEST_DIR, the size of every file is 10KB.         
 Then trigger a small file compact rule on these files.
 
 #### Small file compact action
 ```
 python test_small_file_actions -a compact -n 5 -s 10KB
 ```
-This command will generate 5 files under TEST_DIR, the size of every file is 10KB.
+This command will generate 5 files under TEST_DIR, the size of every file is 10KB.          
 Then trigger a small file compact action on these files, the default container file of these files is /container_tmp_file.
 
 #### Small file uncompact action
@@ -146,8 +146,9 @@ The default workloads are following:
 - 'sql/scan',
 - 'sql/join',
 - 'sql/aggregation',
-- 'websearch/pagerank'
-You also can specify workloads by altering `workloads` variable in python script.
+- 'websearch/pagerank'      
+
+User can specify workloads by altering `workloads` variable in `test_smart_file_system.py`.
 
 ## Tips
 
