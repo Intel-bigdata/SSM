@@ -98,10 +98,19 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       Map<SmallFileStatus, List<String>> smallFileStateMap = new HashMap<>();
       for (String object : objects) {
         LOG.debug("Start handling the file: {}.", object);
-        if (containerFileInfoMap.containsKey(object)) {
-          LOG.debug("{} is container file.", object);
-          continue;
+
+        // Check if the file is container file
+        if (!object.endsWith("/")) {
+          String fileName = object.substring(
+              object.lastIndexOf("/") + 1, object.length());
+          if (fileName.startsWith(CONTAINER_FILE_PREFIX)
+              || containerFileInfoMap.containsKey(object)) {
+            LOG.debug("{} is container file.", object);
+            continue;
+          }
         }
+
+        // Check file info and state
         try {
           FileInfo fileInfo = metaStore.getFile(object);
           FileState fileState = metaStore.getFileState(object);
