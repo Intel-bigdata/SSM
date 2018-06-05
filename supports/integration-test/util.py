@@ -191,6 +191,10 @@ def submit_rule(rule_str):
     return resp.json()["body"]
 
 
+def stop_rule(rid):
+    requests.post(RULE_ROOT + "/") + str(rid) + "/stop"
+
+
 def delete_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/delete")
 
@@ -206,6 +210,13 @@ def stop_rule(rid):
 def get_cmdlets_of_rule(rid):
     resp = requests.get(RULE_ROOT + "/" + str(rid) + "/cmdlets")
     return resp.json()["body"]
+
+
+def get_cids_of_rule(rid):
+    cids = []
+    for cmdlet in get_cmdlets_of_rule(rid):
+        cids.append(cmdlet['cid'])
+    return cids
 
 
 def get_action(aid):
@@ -251,7 +262,7 @@ def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
 
 def copy_file_to_S3(file_path, dest_path):
     """
-    move file to S3
+    copy file to S3
     """
     cmdlet_str = "copy2s3 -file " + \
                  file_path + " -dest " + dest_path

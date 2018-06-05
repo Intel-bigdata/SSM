@@ -10,10 +10,7 @@ class TestStressDR(unittest.TestCase):
 
     def test_sync_rule(self):
         # file : every 1s | path matches "/1MB/*" | sync -dest
-        # file_path = create_random_file(10 * 1024 * 1024)
-        # submit rule
         file_paths = []
-        cids = []
         # create a directory with random name
         source_dir = TEST_DIR + random_string() + "/"
         # create random files in the above directory
@@ -26,17 +23,16 @@ class TestStressDR(unittest.TestCase):
         rid = submit_rule(rule_str)
         # Activate rule
         start_rule(rid)
-        # Submit read action to trigger rule
-        # Read three times
-        time.sleep(1)
-        # Statue check
+        # Status check
         while True:
             time.sleep(1)
             rule = get_rule(rid)
             if rule['numCmdsGen'] >= MAX_NUMBER:
                 break
-        time.sleep(5)
-        delete_rule(rid)
+        cids = get_cids_of_rule(rid)
+        failed = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed) == 0)
+        stop_rule(rid)
         # delete all random files
         for i in range(MAX_NUMBER):
             cids.append(delete_file(file_paths[i]))

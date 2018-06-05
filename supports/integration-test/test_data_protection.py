@@ -26,7 +26,7 @@ class TestMoverProtection(unittest.TestCase):
             # move
             cmds.append(move_cmdlet(action, file_path))
             time.sleep(5)
-            # read the file
+            # delete the file
             cmds.append(delete_file(file_path))
             failed = wait_for_cmdlets(cmds)
             self.assertTrue(len(failed) == 0, "Test failed for delete during {}".format(action))
@@ -38,7 +38,7 @@ class TestMoverProtection(unittest.TestCase):
             # move
             cmds.append(move_cmdlet(action, file_path))
             time.sleep(5)
-            # read the file
+            # append the file
             cmds.append(append_file(file_path,
                                     random.randrange(1024, 1024 * 1024 * 2)))
             failed = wait_for_cmdlets(cmds)
@@ -51,7 +51,7 @@ class TestMoverProtection(unittest.TestCase):
             # move
             cmds.append(move_cmdlet(action, file_path))
             time.sleep(5)
-            # read the file
+            # overwrite the file
             cmds.append(create_file(file_path, 24 * 1024 * 1024))
             failed = wait_for_cmdlets(cmds)
             self.assertTrue(len(failed) == 0, "Test failed for overwrite during {}".format(action))
