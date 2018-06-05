@@ -107,45 +107,47 @@ The default values of size and num are 1MB and 10000 respectively if not given.
 
 ### 6. Test Scripts for Small File Optimization
 
-This is a guide for SSM small file integration test with python scripts under the instruction of  [Test Plan](https://github.com/Intel-bigdata/SSM/blob/trunk/supports/small-file-test/SSM%20Small%20File%20Optimization%20Test%20Plan.md).
+This is a guide for SSM small file integration test with python scripts under the instruction of [Test Plan](https://github.com/Intel-bigdata/SSM/blob/trunk/supports/small-file-test/SSM%20Small%20File%20Optimization%20Test%20Plan.md).
+Note that user can get further instructions of below python scripts via parameter `-h`.
 
-#### Dependency
+#### Small File Rule
+```
+python test_small_file_rule -n 10 -s 10KB
+```
+This command will generate 10 files under TEST_DIR, the size of every file is 10KB.
+Then trigger a small file compact rule on these files.
 
-[`HiBench`](https://github.com/intel-hadoop/HiBench) is also required by `test_transparent_read.py`.
+#### Small file compact action
+```
+python test_small_file_actions -a compact -n 5 -s 10KB
+```
+This command will generate 5 files under TEST_DIR, the size of every file is 10KB.
+Then trigger a small file compact action on these files, the default container file of these files is /container_tmp_file.
 
-#### `test_generate_test_set.py`
-This script will generate the required data set.
+#### Small file uncompact action
+```
+python test_small_file_actions -a uncompact -c /_container_tmp_file
+```
+This command will trigger a small file uncompact action on the container file: /container_tmp_file.
 
-#### `test_smallfile_action.py`
-This script will generate the required data set, and then generate a new SSM compact or uncompact action.
+#### Smart File System
+> [`HiBench`](https://github.com/intel-hadoop/HiBench) is required for this test case.
 
-#### `test_smallfile_compact_rule.py`
-This script will generate the required data set, and then generate a new SSM compact rule.
+```
+python test_smart_file_system.py -d /root/HiBench
+```
+This command will run workloads of HiBench, the test data are compacted by automatically generated small file compact rule.
 
-#### `test_transparent_read.py`
-This script is used to run SSM transparent read test with HiBench for SSM integration test.
-The following workloads are included:
-- 'micro/wordcount', 
-- 'micro/sort', 
-- 'micro/terasort', 
+The default workloads are following:
+- 'micro/wordcount',
+- 'micro/sort',
+- 'micro/terasort',
 - 'ml/bayes',
-- 'sql/scan', 
-- 'sql/join', 
-- 'sql/aggregation', 
+- 'sql/scan',
+- 'sql/join',
+- 'sql/aggregation',
 - 'websearch/pagerank'
-
-You can just use `workload` as the variable in python script.
-
-Please check `-h` for further instructions.
-
-
-#### Scripts
-
-- `test_generate_test_set.py` will generate test data set. Check `-h` for usage.
-- `test_smallfile_action.py` will generate test data set and submit a new action. Check `-h` for usage.
-- `test_smallfile_compact_rule.py` will generate test data set and submit a new compact rule. Check `-h` for usage.
-- `test_transparent_read.py` will test transparent read feature of SSM with `HiBench`. Check `-h` for usage.
-
+You also can specify workloads by altering `workloads` variable in python script.
 
 ## Tips
 

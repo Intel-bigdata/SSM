@@ -1,87 +1,112 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script is used to generate and submit a SSM rule.
+This script is used to generate and submit SSM small file rule.
 """
 import sys
 import os
 import argparse
 import re
-import ast
-from subprocess import call
-
 from util import *
-from test_generate_test_set import create_test_set
+from ssm_generate_test_data import create_test_set
 
-def add_ssm_rule(targetDir, DEBUG):
-    if DEBUG:
-        print("DEBUG: **********Adding Compact Rule**********\n")
+
+def run_small_file_rule(small_file_dir, debug):
     # Create compact rule
     rule_str = "file : path matches " + \
-        "\"" + targetDir + os.sep + "*\" | compact"
-    try:
-        rid = submit_rule(rule_str)
-    except Exception as e:
-        print("**********Submit Rule ERROR**********")
-        print("Connect to SSM Failed\n**********ERROR END**********\n")
-    if DEBUG:
-        print("DEBUG: Rule with ID " + str(rid) + " submitted\n")
+        "\"" + small_file_dir + os.sep + "*\" | compact"
+    if debug:
+        print("DEBUG: **********Submitting Compact Rule**********")
+    rid = submit_rule(rule_str)
+    if debug:
+        print("DEBUG: Rule with ID " + str(rid) + " submitted")
+
     # Activate rule
     start_rule(rid)
-    if DEBUG:
-        print("DEBUG: Rule with ID " + str(rid) + " started\n")
-    print("**********Compact Rule Added**********\n")
-    return rid
+    if debug:
+        print("DEBUG: Rule with ID " + str(rid) + " started")
+
+    # Wait for submitting actions by rule
+    aids = get_cmdlets_of_rule(rid)
+    count = 0
+    while not aids and count < 30:
+        if debug:
+            print("DEBUG: sleep 1s to wait for action submission")
+        time.sleep(1)
+        count += 1
+        aids = get_cmdlets_of_rule(rid)
+
+    # Check if every action is DONE
+    if aids:
+        if debug:
+            print("DEBUG: get generated cmdlets of new submitted rule")
+        cids = []
+        for aid in aids:
+            cids.append(aid["cid"])
+        wait_for_cmdlets(cids)
+        for cid in cids:
+            cmd = get_cmdlet(cid)
+            if cmd is None or cmd['state'] == "FAILED":
+                print("Failed to execute the action: " + cid + "")
+                sys.exit(1)
+        print("All actions execute successfully")
 
 
 if __name__ == '__main__':
-    # Parse Arguments
+    # Parse arguments
     parser = argparse.ArgumentParser(description='Auto-generate and submit compact rules.')
-    parser.add_argument("-d", "--targetDir", default=TEST_DIR,dest="targetDir",
-                    help="target test set directory Prefix, Default Value: TEST_DIR in util.py")
-    parser.add_argument("-b", "--sizeOfBatches", default='[10]', dest="sizeOfBatches",
-                    help="size of each batch, string input, e.g. '[10,100,1000]', Default Value: [10].")
-    parser.add_argument("-s", "--sizeOfFiles", default='1MB', dest="sizeOfFiles",
-                    help="size of each file, e.g. 10MB, 10KB, default unit KB, Default Value 1KB.")
-    parser.add_argument("--nogen", nargs='?', const=1, default=0, dest="notGenerate",
-                    help="do not generate test set data flag.")
+    parser.add_argument("-d", "--testDir", default=TEST_DIR, dest="testDir",
+                        help="target test set directory Prefix, Default Value: TEST_DIR in util.py")
+    parser.add_argument("-n", "--fileNum", default='5', dest="fileNum",
+                        help="number of small files, string input, e.g. '10', Default Value: 5.")
+    parser.add_argument("-s", "--fileSize", default='1MB', dest="fileSize",
+                        help="size of each small file, e.g. 10MB, 10KB, default unit KB, Default Value 1KB.")
+    parser.add_argument("--noGen", nargs='?', const=1, default=0, dest="notGenerate",
+                        help="do not generate test set data flag.")
     parser.add_argument("--debug", nargs='?', const=1, default=0, dest="debug",
-                    help="print debug info.")
+                        help="print debug info.")
     options = parser.parse_args()
 
-    # Conver Arguments to values
+    # Convert arguments
     try:
         DEBUG = options.debug
-        nums = ast.literal_eval(options.sizeOfBatches)
-        sizeString = options.sizeOfFiles
+        file_num = options.fileNum
         notGen = options.notGenerate
-        m = re.match(r"(\d+)(\w{2}).*", sizeString)
-        if m:
-            sizeUnit = m.group(2)
-            size = int(m.group(1))
+
+        # Get small file size
+        file_size_arg = re.match(r"(\d+)(\w{2}).*", options.fileSize)
+        if file_size_arg:
+            file_size = int(file_size_arg.group(1))
+            sizeUnit = file_size_arg.group(2)
             if sizeUnit != "MB" and sizeUnit != "KB":
-                print("Wrong Size Unit\nUsage: python3 test_small_file_rule -h")
+                print("Wrong Size Unit.")
+                print("Usage: python3 test_small_file_actions -h")
                 sys.exit(1)
             if sizeUnit == "MB":
-                size = size * 1024
+                file_size = file_size * 1024
         else:
-            print("Wrong Size Input, e.g. 1MB or 1KB")
+            print("Wrong file size input, e.g. 1MB or 1KB")
             sys.exit(1)
-        if options.targetDir:
-            if options.targetDir[-1:len(options.targetDir)] == '/':
-                targetDir = options.targetDir[:-1]
+
+        if options.testDir:
+            if options.testDir[-1:len(options.testDir)] == '/':
+                test_dir = options.testDir[:-1]
             else:
-                targetDir = options.targetDir
+                test_dir = options.testDir
         else:
             raise SystemExit
+
         if DEBUG:
-            print("DEBUG: nums: " + options.sizeOfFiles + ", size: " + str(size) + sizeUnit
-                + ", targetDir: "+ targetDir)
+            print("DEBUG: small file number: " + file_num + ", file size: " + str(file_size) + sizeUnit
+                  + ", test small files directory: " + test_dir)
     except (ValueError, SystemExit) as e:
         print("Usage: python3 test_small_file_rule.py -h")
     except IndexError:
         pass
-    
-    if not notGen:
-        create_test_set(nums, size, targetDir, DEBUG)
-    add_ssm_rule(targetDir, DEBUG)
+
+    if notGen:
+        print("Please make sure there are small files in the test data directory: "
+              + test_dir + "/data_" + file_num)
+    else:
+        create_test_set([int(file_num)], file_size, test_dir, DEBUG)
+    run_small_file_rule(test_dir + "/data_" + file_num, DEBUG)
