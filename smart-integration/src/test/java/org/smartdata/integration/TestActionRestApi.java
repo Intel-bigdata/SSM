@@ -56,7 +56,7 @@ public class TestActionRestApi extends IntegrationTestBase {
             "checkstorage",
             "archive",
             "onessd",
-            "hello"));
+            "echo"));
   }
 
   @Test(timeout = 200000)
