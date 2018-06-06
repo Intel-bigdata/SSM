@@ -33,7 +33,6 @@ public abstract class AbstractActionFactory implements ActionFactory {
   private static Map<String, Class<? extends SmartAction>> supportedActions = new HashMap<>();
 
   static {
-    // addAction(HelloAction.class);
     addAction(EchoAction.class);
     addAction(SleepAction.class);
     addAction(SyncAction.class);
