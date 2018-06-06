@@ -32,7 +32,7 @@ Example:
 ```
 Example:
 ```   
- POST http://<host>:<port>/smart/api/v1.0/rules/{ruleId}/start
+ POST http://<host>:<port>/smart/api/v1/rules/{ruleId}/start
  Code:200
  Content-Type:application/json
 ```
@@ -72,7 +72,7 @@ Example:
 ### List all Smart rules
 * Submit a HTTP GET request.
 ```
- http://<host>:<port>/smart/api/v1.0/rules/list
+ http://<host>:<port>/smart/api/v1/rules/list
 ```
 Example:
 ```

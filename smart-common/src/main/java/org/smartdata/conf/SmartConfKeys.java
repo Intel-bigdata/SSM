@@ -81,7 +81,7 @@ public class SmartConfKeys {
   public static final int SMART_RULE_EXECUTORS_DEFAULT = 5;
 
   public static final String SMART_CMDLET_EXECUTORS_KEY = "smart.cmdlet.executors";
-  public static final int SMART_CMDLET_EXECUTORS_DEFAULT = 40;
+  public static final int SMART_CMDLET_EXECUTORS_DEFAULT = 10;
   public static final String SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY =
       "smart.dispatch.cmdlets.extra.num";
   public static final int SMART_DISPATCH_CMDLETS_EXTRA_NUM_DEFAULT = 10;
