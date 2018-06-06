@@ -1,27 +1,26 @@
 import argparse
+import timeout_decorator
 import unittest
 from util import *
 
 
-DEST_DIR = "hdfs://localhost:9000/dest"
-
-
 class TestStressDR(unittest.TestCase):
 
+    @timeout_decorator.timeout(seconds=60)
     def test_sync_rule(self):
-        # file : every 1s | path matches "/1MB/*" | sync -dest
         file_paths = []
+        cids = []
         # create a directory with random name
         source_dir = TEST_DIR + random_string() + "/"
         # create random files in the above directory
         for i in range(MAX_NUMBER):
-            file_paths.append(create_random_file_parallel(FILE_SIZE,
-                                                          source_dir)[0])
-        time.sleep(1)
+            file_path, cid = create_random_file_parallel(FILE_SIZE, source_dir)
+            file_paths.append(file_path)
+            cids.append(cid)
+        wait_for_cmdlets(cids)
         rule_str = "file : every 1s | path matches " + \
             "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
         rid = submit_rule(rule_str)
-        # Activate rule
         start_rule(rid)
         # Status check
         while True:
@@ -33,10 +32,6 @@ class TestStressDR(unittest.TestCase):
         failed = wait_for_cmdlets(cids)
         self.assertTrue(len(failed) == 0)
         stop_rule(rid)
-        # delete all random files
-        for i in range(MAX_NUMBER):
-            cids.append(delete_file(file_paths[i]))
-        wait_for_cmdlets(cids)
 
 
 if __name__ == '__main__':
@@ -47,6 +42,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-size', default='1MB')
     parser.add_argument('-num', default='10000')
+    # To sync files to another cluster, please use "-dest hdfs://hostname:port/dest/"
+    parser.add_argument('-dest', default='/dest/')
     parser.add_argument('unittest_args', nargs='*')
     args, unknown_args = parser.parse_known_args()
     sys.argv[1:] = unknown_args
@@ -54,5 +51,7 @@ if __name__ == '__main__':
     FILE_SIZE = convert_to_byte(args.size)
     print "The file number for test is {}.".format(args.num)
     MAX_NUMBER = int(args.num)
+    print "The dest directory for test is {}.".format(args.dest)
+    DEST_DIR = args.dest
 
     unittest.main()

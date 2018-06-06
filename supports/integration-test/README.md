@@ -46,7 +46,7 @@ python test_mover.py -size 10MB -v
 
 ```
 This command will run all test cases for 10MB files.
-The default value of size is 64MB if not given.
+The value of size is 64MB if not given.
 
 ### 2. Test Rule
 ```
@@ -59,7 +59,7 @@ This command will run all test cases for rule.
 python test_data_protection.py -size 2GB -v
 ```
 This command will run all test cases (read, delete, append and overwrite files during moving) for 10MB files.
-The default value of size is 1GB if not given. A large value is recommended.
+The value of size is 1GB if not given. A large value is recommended.
 
 #### Corner Cases of Data Protection
 
@@ -73,7 +73,7 @@ Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it.
 python test_S3.py -size 10MB -num 10 -v
 ```
 This command will run copy to S3 test on 10 files each of which is 10MB.
-The default values of size and num are 1MB and 100 respectively if not given.
+The values of size and num are 1MB and 100 respectively if not given.
 
 ### 5. Test Stress/Performance
 
@@ -82,28 +82,29 @@ The default values of size and num are 1MB and 100 respectively if not given.
 python test_stress_cmdlet.py -size 10MB -num 1000 -v
 ```
 This command will run test for create, read, delete action on 1000 files each of which is 10MB.
-The default values of size and num are 1MB and 10000 respectively if not given.
+The values of size and num are 1MB and 10000 respectively if not given.
 
 #### Mover Stress
 ```
 python test_stress_mover.py -size 10MB -num 1000 -v
 ```
 This command will run mover test on 1000 files each of which is 10MB.
-The default values of size and num are 1MB and 10000 respectively if not given.
+The values of size and num are 1MB and 10000 respectively if not given.
 
 #### Rule Stress
 ```
 python test_stress_rule.py -num 10 -v
 ```
 This command will trigger 10 rules on files under TEST_DIR.
-The default value of num is 100 if not given.
+The value of num is 100 if not given.
 
 #### Sync Stress
 ```
-python test_stress_sync.py -size 10MB -num 1000 -v
+python test_stress_sync.py -size 10MB -num 1000 -dest hdfs://sr518:9000/dest/ -v
 ```
-This command will run sync test on 1000 files each of which is 10MB.
-The default values of size and num are 1MB and 10000 respectively if not given.
+This command will trigger a rule which will sync 1000 10MB files to hdfs://sr518:9000/dest.
+The values of size and num are 1MB and 10000 respectively if not given.
+For dest, its default value is "/dest/" which means a directory of SSM's HDFS cluster.
 
 ### 6. Test Scripts for Small File Optimization
 
