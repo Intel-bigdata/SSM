@@ -8,7 +8,7 @@ import org.smartdata.action.annotation.ActionSignature;
         usage = EchoAction.PRINT_MESSAGE + " $message"
 )
 public class EchoAction extends SmartAction {
-    public static final String PRINT_MESSAGE = "-print_message";
+    public static final String PRINT_MESSAGE = "-msg";
 
     @Override
     protected void execute() throws Exception {
