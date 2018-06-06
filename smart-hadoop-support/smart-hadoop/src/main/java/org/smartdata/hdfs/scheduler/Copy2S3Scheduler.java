@@ -86,18 +86,19 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+    // check args
+    if (actionInfo.getArgs() == null) {
+      throw new IOException("No arguments for the action");
+    }
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (ifLocked(path)) {
-      LOG.debug("The submit file {} is locked", path);
-      return false;
+      throw new IOException("The submit file " + path + " is locked");
     }
     if (checkTheLengthOfFile(path) == 0) {
-      LOG.debug("The submit file {}'s length is 0", path);
-      return false;
+      throw new IOException("The submit file " + path + " length is 0");
     }
     if (isOnS3(path)) {
-      LOG.debug("The submit file {} is already copied", path);
-      return false;
+      throw new IOException("The submit file " + path + " is already copied");
     }
     lockTheFile(path);
     LOG.debug("The file {} can be submitted", path);
