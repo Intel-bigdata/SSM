@@ -128,7 +128,7 @@ Use Actions to read/write files, and generate access events. Then, you can use i
 
 **Basic Actions and usage:**
 
-- hello: Print message. `hello -print_message {message}` 
+- echo: Print message. `echo -msg {message}`
 - read: Read file once. `read -file {filePath}`
 - write: Create a new file with given size. `write -file {filePath} -length {size}` 
 - checkstorage: Check file Storage statuses. `checkstorage -file {filePath}`
