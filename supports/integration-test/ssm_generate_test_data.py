@@ -23,11 +23,11 @@ def create_test_set(file_set_nums, file_size, base_dir, debug):
         created_files_dir = base_dir + os.sep + "data_" + str(i)
         for j in range(0, i):
             file_name = created_files_dir + os.sep + "file_" + str(j)
-            aid = create_file(file_name, size_in_byte)
-            cids.append(aid)
+            cid = create_file(file_name, size_in_byte)
+            cids.append(cid)
             created_files.append("'" + file_name + "'")
             if debug:
-                print("**********Action " + str(aid) + " Submitted**********")
+                print("**********Action " + str(cid) + " Submitted**********")
     wait_for_cmdlets(cids)
     time.sleep(1)
     return "[" + ','.join(created_files) + "]"

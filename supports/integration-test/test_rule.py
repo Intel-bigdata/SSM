@@ -27,7 +27,10 @@ class TestRule(unittest.TestCase):
         rule = get_rule(rid)
         while rule['numCmdsGen'] != 1:
             rule = get_rule(rid)
-        delete_rule(rid)
+        cids = get_cids_of_rule(rid)
+        failed = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed) == 0)
+        stop_rule(rid)
 
     @timeout_decorator.timeout(seconds=60)
     def test_rule_age(self):
@@ -40,11 +43,14 @@ class TestRule(unittest.TestCase):
         # Activate rule
         start_rule(rid)
         wait_for_cmdlet(read_file(file_path))
-        # Statue check
+        # Status check
         rule = get_rule(rid)
         while rule['numCmdsGen'] != 1:
             rule = get_rule(rid)
-        delete_rule(rid)
+        cids = get_cids_of_rule(rid)
+        failed = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed) == 0)
+        stop_rule(rid)
 
     @timeout_decorator.timeout(seconds=60)
     def test_rule_scheduled(self):
@@ -66,7 +72,10 @@ class TestRule(unittest.TestCase):
         rule = get_rule(rid)
         while rule['numCmdsGen'] != 3:
             rule = get_rule(rid)
-        delete_rule(rid)
+        cids = get_cids_of_rule(rid)
+        failed = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed) == 0)
+        stop_rule(rid)
 
 
 if __name__ == '__main__':
