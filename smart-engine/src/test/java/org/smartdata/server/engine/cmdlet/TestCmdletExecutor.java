@@ -19,7 +19,7 @@ package org.smartdata.server.engine.cmdlet;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.HelloAction;
+import org.smartdata.action.EchoAction;
 import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.protocol.message.ActionStatus;
@@ -54,9 +54,9 @@ public class TestCmdletExecutor {
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     executorService.scheduleAtFixedRate(
             statusReportTask, 100, 10, TimeUnit.MILLISECONDS);
-    SmartAction action = new HelloAction();
+    SmartAction action = new EchoAction();
     Map<String, String> args = new HashMap<>();
-    args.put(HelloAction.PRINT_MESSAGE, "message");
+    args.put(EchoAction.PRINT_MESSAGE, "message success");
     action.setArguments(args);
     action.setActionId(101);
     Cmdlet cmdlet = new Cmdlet(Arrays.asList(action));
