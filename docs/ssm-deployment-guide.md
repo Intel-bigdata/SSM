@@ -324,7 +324,7 @@ Follow the steps to add SSM Jars to classpath
    #### Copy the Jars  
 Copy the SSM jars to the default Hadoop class path
   1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-  2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/hdfs/`.
+  2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
 
 
 ## CDH5.10.1
