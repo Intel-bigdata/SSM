@@ -76,19 +76,28 @@ Table – 3 Conditions
 
 Table – 4 Object properties
 
-| Object   | Property                         | Description                                      |
-|----------|----------------------------------|--------------------------------------------------|
-| file     | path                             | Path in HDFS                                     |
-|          | age                              | Time from last been modified                     |
-|          | atime                            | Time accessed last time                          |
-|          | accessCount(Time Interval)       | Access counts during the last time interval      |
-|          | accessCountTop(Time Interval, N) | Top N access count during the last time interval |
-|          | blocksize                        | Block size of the file                           |
-|          | storagePolicy                    | Storage policy of file                           |
-|          | length                           | Length of the file                               |
-|          | inCache                          | Test if file is in cache now                     |
-|          | isDir                            | Test if file is a directory                      |
-|          | mtime                            | Last modification time of the file               |
+| Object   | Property                         | Description                                                                     | 
+|----------|----------------------------------|---------------------------------------------------------------------------------|                                 
+|          | age                              | The time span from last modification moment to now                              |              
+|          | atime                            | The last access time                                                            |
+|          | blocksize                        | The block size of the file                                                      |  
+|          | inCache                          | The file is in cache storage                                                    |
+|          | isDir                            | The file is a directory                                                         |
+|          | length                           | Length of the file                                                              |
+|   file   | path                             | The file path in HDFS                                                           |
+|          | mtime                            | The last modification time of the file                                          |
+|          | unsynced                         | The file is not synced                                                          |
+|          | storagePolicy                    | Storage policy of file                                                          |
+|          | accessCount(Time Interval)       | The access counts during the last time interval                                 |
+|          | accessCountTop(interval)         | The topmost number for access counts during the last time interval              |
+|          | accessCountBottom(interval)      | The bottommost number for access counts during the last time interval           |
+|          |----------------------------------|---------------------------------------------------------------------------------|    
+|          | accessCountTopOnStoragePolicy    | The topmost number for access counts with regard to a storage policy.The        |                                                                          
+|          |(interval, "$StoragePolicy")      | supported HDFS storage policies are COLD,WARM,HOT,ONE_SSD,ALL_SSD,LAZY_PERSIST  |
+|          |----------------------------------|---------------------------------------------------------------------------------|
+|          |accessCountBottomOnStoragePolicy  | The bottommost number for access counts with regard to a storage policy during  |
+|          |(interval, "$StoragePolicy")      | the last time interval                                                          |
+
 
 Table – 5 Commands
 
