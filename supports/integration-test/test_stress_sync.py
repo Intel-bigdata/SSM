@@ -18,6 +18,9 @@ class TestStressDR(unittest.TestCase):
             file_paths.append(file_path)
             cids.append(cid)
         wait_for_cmdlets(cids)
+
+        # wait for DB sync
+        time.sleep(5)
         rule_str = "file : every 1s | path matches " + \
             "\"" + source_dir + "*\" | sync -dest " + DEST_DIR
         rid = submit_rule(rule_str)
@@ -31,6 +34,7 @@ class TestStressDR(unittest.TestCase):
         cids = get_cids_of_rule(rid)
         failed = wait_for_cmdlets(cids)
         self.assertTrue(len(failed) == 0)
+        time.sleep(5)
         stop_rule(rid)
 
 

@@ -25,7 +25,7 @@ class TestS3(unittest.TestCase):
         self.assertTrue(len(failed_cids) == 0)
 
         # wait for DB sync
-        time.sleep(10)
+        time.sleep(5)
         # submit actions
         cids = []
         for i in range(MAX_NUMBER):

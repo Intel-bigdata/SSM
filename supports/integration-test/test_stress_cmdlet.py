@@ -7,14 +7,25 @@ class TestStressCmdlet(unittest.TestCase):
 
     def test_cmdlet_scheduler(self):
         file_paths = []
+
         cids = []
         for i in range(MAX_NUMBER):
             # 1 MB files
             file_path, cid = create_random_file_parallel(FILE_SIZE)
             file_paths.append(file_path)
             cids.append(cid)
+        failed_cids = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed_cids) == 0)
+
+        # wait for DB sync
+        time.sleep(5)
+        cids = []
         for i in range(MAX_NUMBER):
             cids.append(read_file(file_paths[i]))
+        failed_cids = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed_cids) == 0)
+
+        cids = []
         for i in range(MAX_NUMBER):
             cids.append(delete_file(file_paths[i]))
         failed_cids = wait_for_cmdlets(cids)
