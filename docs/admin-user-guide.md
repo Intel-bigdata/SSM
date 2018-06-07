@@ -109,7 +109,7 @@ Table – 5 Commands
 |  copy                     |  Copy the file in $src with $offset offset, $length length and $size buffer size                                  |
 |  copy2s3                  |  Copy $file to $s3_dest which is on Amazon S3,$s3_dest is a url starts with s3a://                                |                                             |
 |  delete                   |  Delete $file                                                                                                     |
-|  echo                     |  Print $message                                                                                                   |
+|  echo                     |  Echo -msg $message                                                                                               |
 |  list                     |  List all the files in $src                                                                                       |
 |  merge                    |  Merge the files in $src which lists at least two files separated by comma and $dest is the target file           |                                                                       |
 |  onedisk                  |  Move one replica of $file to disk                                                                                |
