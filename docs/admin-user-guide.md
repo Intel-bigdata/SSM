@@ -89,34 +89,43 @@ Table – 4 Object properties
 |          | unsynced                         | The file is not synced                                                          |
 |          | storagePolicy                    | Storage policy of file                                                          |
 |          | accessCount(Time Interval)       | The access counts during the last time interval                                 |
-|          | accessCountTop(interval)         | The topmost number for access counts during the last time interval              |
-|          | accessCountBottom(interval)      | The bottommost number for access counts during the last time interval           |
-|          |----------------------------------|---------------------------------------------------------------------------------|    
-|          | accessCountTopOnStoragePolicy    | The topmost number for access counts with regard to a storage policy.The        |                                                                          
-|          |(interval, "$StoragePolicy")      | supported HDFS storage policies are COLD,WARM,HOT,ONE_SSD,ALL_SSD,LAZY_PERSIST  |
-|          |----------------------------------|---------------------------------------------------------------------------------|
-|          |accessCountBottomOnStoragePolicy  | The bottommost number for access counts with regard to a storage policy during  |
-|          |(interval, "$StoragePolicy")      | the last time interval                                                          |
-
+|          | accessCountTop(interval,N )      | The topmost N for access counts during the last time interval                   |
+|          | accessCountBottom(interval,N)    | The bottommost N for access counts during the last time interval                |
+|          | accessCountTopOnStoragePolicy(interval,N,$StoragePolicy")    | The topmost N for access counts with regard to a storage policy.The supported HDFS storage policies are COLD,WARM,HOT,ONE_SSD,ALL_SSD,LAZY_PERSIST |
+|          | accessCountBottomOnStoragePolicy(interval,N,$StoragePolicy") | The bottommost N for access counts with regard to a storage policy during the last time interval |
 
 Table – 5 Commands
 
-| Command(case insensitive) | Description                                               |
-|---------------------------|-----------------------------------------------------------|
-| cache                     | Cache file in HDFS Cache                                  |
-| uncache                   | Uncache file                                              |
-| onessd                    | Move one copy of file to SSD                              |
-| allssd                    | Move all copies of file to SSD                            |
-| onedisk                   | Move one copy of file to DISK                             |
-| alldisk                   | Move all copies of file to DISK                           |
-| archive                   | Move file to ‘Archive’ storage type                       |
-| ramdisk                   | Store one copy of file to RAM_DISK                        |
-| checkstorage              | Check file block storage type                             |
-| read                      | Read the file and discard the content read                |
-| write                     | Create the file and fill with random values               |
-| sleep                     | Sleep for given time                                      |
-| sync                      | Sync file to remote cluster                               |
-| user defined actions      | Interface defined for user to implement their own actions |
+| Command(case insensitive) |  Description                                                                                                      |
+|---------------------------|-------------------------------------------------------------------------------------------------------------------|
+|  allssd                   |  Move $file to SSD storage                                                                                        |
+|  alldisk                  |  Move $file to disk storage                                                                                       |
+|  append                   |  Append $file with $length length and $bufSize buffer size                                                        |
+|  archive                  |  Archive $file                                                                                                    |
+|  cache                    |  Cache $file to HDFS cache                                                                                        |
+|  checkstorage             |  Show the storage type of $file                                                                                   |
+|  compact                  |  Compact $file1, $file2, etc. to $containerFile                                                                   |
+|  concat                   |  Concatenate the files in $src which lists at least two files separated by comma and $dest is the target file     |
+|  copy                     |  Copy the file in $src with $offset offset, $length length and $size buffer size                                  |
+|  copy2s3                  |  Copy $file to $s3_dest which is on Amazon S3,$s3_dest is a url starts with s3a://                                |                                             |
+|  delete                   |  Delete $file                                                                                                     |
+|  echo                     |  Print $message                                                                                                   |
+|  list                     |  List all the files in $src                                                                                       |
+|  merge                    |  Merge the files in $src which lists at least two files separated by comma and $dest is the target file           |                                                                       |
+|  onedisk                  |  Move one replica of $file to disk                                                                                |
+|  onessd                   |  Move one replica of $file to SSD                                                                                 |
+|  ramdisk                  |  Move $file to RAM_DISK                                                                                           |
+|  read                     |  Read $file with $size buffer size                                                                                |
+|  rename                   |  Rename $src to $dest                                                                                             |
+|  truncate                 |  Truncate $src to $length size                                                                                    |
+|  truncate0                |  Truncate $src to 0 size                                                                                          |
+|  uncache                  |  Uncache $file from HDFS cache                                                                                    |
+|  uncompact                |  Uncompact $containerFile to original files                                                                       |
+|  write                    |  Write random data to $file with $size buffer size and $length length                                             |
+|  sleep                    |  Sleep for given time                                                                                             |
+|  sync                     |  Sync file to remote cluster                                                                                      |
+|  user defined actions     |  Interface defined for user to implement their own actions                                                        |
+
 
 Here is a rule example,
 
