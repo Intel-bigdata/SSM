@@ -240,6 +240,8 @@ public class TestInotifyEventApplier extends TestDaoUtil {
         HadoopUtil.convertFileStatus(getDummyDirStatus("/dir2", 8100), "/dir2"),
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dir2/file1", 8101), "/dir2/file1"),
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dir2/file2", 8102), "/dir2/file2"),
+        HadoopUtil.convertFileStatus(getDummyDirStatus("/dir/dir", 8200), "/dir/dir"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/dir/dir/f1", 8201), "/dir/dir/f1"),
     };
     metaStore.insertFiles(fileInfos);
     Mockito.when(client.getFileInfo("/dir1")).thenReturn(getDummyDirStatus("/dir1", 8000));
@@ -253,6 +255,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertTrue(metaStore.getFile("/dirfile") != null);
     Assert.assertTrue(metaStore.getFile("/dir1") != null);
     Assert.assertTrue(metaStore.getFile("/dir1/file1") != null);
+    Assert.assertTrue(metaStore.getFile("/dir1/dir/f1") != null);
     Assert.assertTrue(metaStore.getFile("/dir2") != null);
     Assert.assertTrue(metaStore.getFile("/dir2/file1") != null);
 
