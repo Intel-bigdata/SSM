@@ -93,6 +93,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   static final Logger LOG = LoggerFactory.getLogger(MetaStore.class);
 
   private DBPool pool = null;
+  private DBType dbType;
 
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<String, Integer> mapStoragePolicyNameId = null;
@@ -122,6 +123,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
+    initDbInfo();
     ruleDao = new RuleDao(pool.getDataSource());
     cmdletDao = new CmdletDao(pool.getDataSource());
     actionDao = new ActionDao(pool.getDataSource());
@@ -145,6 +147,30 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     smallFileDao = new SmallFileDao(pool.getDataSource());
   }
 
+  private void initDbInfo() throws MetaStoreException {
+    Connection conn = null;
+    try {
+      try {
+        conn = getConnection();
+        String driver = conn.getMetaData().getDriverName();
+        driver = driver.toLowerCase();
+        if (driver.contains("sqlite")) {
+          dbType = DBType.SQLITE;
+        } else if (driver.contains("mysql")) {
+          dbType = DBType.MYSQL;
+        } else {
+          throw new MetaStoreException("Unknown database: " + driver);
+        }
+      } finally {
+        if (conn != null) {
+          closeConnection(conn);
+        }
+      }
+    } catch (SQLException e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public Connection getConnection() throws MetaStoreException {
     if (pool != null) {
       try {
@@ -164,6 +190,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         throw new MetaStoreException(e);
       }
     }
+  }
+
+  public DBType getDbType() {
+    return dbType;
   }
 
   public Long queryForLong(String sql) throws MetaStoreException {

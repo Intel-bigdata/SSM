@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileDiff;
@@ -186,39 +187,48 @@ public class InotifyEventApplier {
 
   private List<String> getRenameSql(Event.RenameEvent renameEvent)
       throws IOException, MetaStoreException {
+    String src = renameEvent.getSrcPath();
+    String dest = renameEvent.getDstPath();
     List<String> ret = new ArrayList<>();
-    HdfsFileStatus status = client.getFileInfo(renameEvent.getDstPath());
+    HdfsFileStatus status = client.getFileInfo(dest);
     FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
-    if (inBackup(renameEvent.getSrcPath())) {
-      fileDiff.setSrc(renameEvent.getSrcPath());
-      fileDiff.getParameters().put("-dest",
-          renameEvent.getDstPath());
+    if (inBackup(src)) {
+      fileDiff.setSrc(src);
+      fileDiff.getParameters().put("-dest", dest);
       metaStore.insertFileDiff(fileDiff);
     }
     if (status == null) {
-      LOG.debug("Get rename dest status failed, {} -> {}",
-          renameEvent.getSrcPath(), renameEvent.getDstPath());
+      LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
-    FileInfo info = metaStore.getFile(renameEvent.getSrcPath());
+    FileInfo info = metaStore.getFile(src);
     if (info == null) {
       if (status != null) {
-        info = HadoopUtil.convertFileStatus(status, renameEvent.getDstPath());
+        info = HadoopUtil.convertFileStatus(status, dest);
         metaStore.insertFile(info);
       }
     } else {
-      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
-          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') WHERE path = '%s';",
-          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
-          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') "
+          + "WHERE path = '%s';", src, dest, src));
+      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') "
+          + "WHERE path = '%s';", src, dest, src));
+      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
+          + "WHERE path = '%s';", src, dest, src));
       if (info.isdir()) {
-        ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
-            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-        ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
-            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-        ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
-            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+        if (metaStore.getDbType() == DBType.MYSQL) {
+          ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+        } else if (metaStore.getDbType() == DBType.SQLITE) {
+          ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+        }
       }
     }
     return ret;
