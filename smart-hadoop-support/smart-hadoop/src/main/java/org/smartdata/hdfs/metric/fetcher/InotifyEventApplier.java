@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileDiff;
@@ -213,12 +214,21 @@ public class InotifyEventApplier {
       ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
           + "WHERE path = '%s';", src, dest, src));
       if (info.isdir()) {
-        ret.add(String.format("UPDATE file SET path = CONCAT('%s', TRIM(LEADING '%s' FROM path)) "
-            + "WHERE path LIKE '%s/%%';", dest, src, src));
-        ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', TRIM(LEADING '%s' "
-            + "FROM path)) WHERE path LIKE '%s/%%';", dest, src, src));
-        ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', TRIM(LEADING '%s' "
-            + "FROM path)) WHERE path LIKE '%s/%%';", dest, src, src));
+        if (metaStore.getDbType() == DBType.MYSQL) {
+          ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+        } else if (metaStore.getDbType() == DBType.SQLITE) {
+          ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+        }
       }
     }
     return ret;
