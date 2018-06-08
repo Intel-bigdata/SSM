@@ -186,24 +186,24 @@ limitations under the License.
       <td>The access counts during the last time interval</td>
     </tr>
     <tr>
-      <td>accessCountTop(interval)</td>
+      <td>accessCountTop(interval,N)</td>
       <td>acTop</td>
-      <td>The topmost number for access counts during the last time interval</td>
+      <td>The topmost N for access counts during the last time interval</td>
     </tr>
     <tr>
-      <td>accessCountBottom(interval)</td>
+      <td>accessCountBottom(interval,N)</td>
       <td>acBot</td>
-      <td>The bottommost number for access counts during the last time interval</td>
+      <td>The bottommost N for access counts during the last time interval</td>
     </tr>
     <tr>
-      <td>accessCountTopOnStoragePolicy(interval, "$StoragePolicy")</td>
+      <td>accessCountTopOnStoragePolicy(interval, N, "$StoragePolicy")</td>
       <td>acTopSp</td>
-      <td>The topmost number for access counts with regard to a storage policy. The supported HDFS storage policies are COLD, WARM, HOT, ONE_SSD, ALL_SSD, LAZY_PERSIST</td>
+      <td>The topmost N for access counts with regard to a storage policy. The supported HDFS storage policies are COLD, WARM, HOT, ONE_SSD, ALL_SSD, LAZY_PERSIST</td>
     </tr>
     <tr>
-      <td>accessCountBottomOnStoragePolicy(interval, "$StoragePolicy")</td>
+      <td>accessCountBottomOnStoragePolicy(interval,N, "$StoragePolicy")</td>
       <td>acBotSp</td>
-      <td>The bottommost number for access counts with regard to a storage policy during the last time interval</td>
+      <td>The bottommost N for access counts with regard to a storage policy during the last time interval</td>
     </tr>
     <tr>
       <td>age</td>
