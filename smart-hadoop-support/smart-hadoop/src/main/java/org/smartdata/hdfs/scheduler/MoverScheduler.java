@@ -171,6 +171,15 @@ public class MoverScheduler extends ActionSchedulerService {
     }
   }
 
+  @Override
+  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+    // check args
+    if (actionInfo.getArgs() == null) {
+      throw new IOException("No arguments for the action");
+    }
+    return true;
+  }
+
   private class UpdateClusterInfoTask implements Runnable {
     private DatanodeStorageReportProcTask task;
 
