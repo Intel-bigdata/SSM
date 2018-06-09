@@ -361,15 +361,12 @@ public class InotifyEventApplier {
     if (isDir) {
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
-        // recursively on dir
         if (fileInfo.isdir()) {
           if (path.equals(fileInfo.getPath())) {
-            continue;
+            insertDeleteDiff(fileInfo.getPath());
+            break;
           }
-          insertDeleteDiff(fileInfo.getPath(), true);
-          continue;
         }
-        insertDeleteDiff(fileInfo.getPath());
       }
     } else {
       insertDeleteDiff(path);
