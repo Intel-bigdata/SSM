@@ -1940,6 +1940,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<BackUpInfo> getBackUpInfoBySrc(String src) throws MetaStoreException {
+    try {
+      // More than one dest may exist for one same src
+      List<BackUpInfo> backUpInfos = new ArrayList<>();
+      for (BackUpInfo backUpInfo : listAllBackUpInfo()) {
+        if (src.startsWith(backUpInfo.getSrc())) {
+          backUpInfos.add(backUpInfo);
+        }
+      }
+      return backUpInfos;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   @Override
   public void deleteAllBackUpInfo() throws MetaStoreException {
     try {

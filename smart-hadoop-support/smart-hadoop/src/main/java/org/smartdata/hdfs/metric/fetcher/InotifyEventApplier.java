@@ -27,6 +27,7 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
@@ -355,19 +356,18 @@ public class InotifyEventApplier {
     }
   }
 
+  // TODO: just insert a fileDiff for this kind of path.
+  // It seems that there is no need to see if path matches with one dir in FileInfo.
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
-        // recursively on dir
         if (fileInfo.isdir()) {
           if (path.equals(fileInfo.getPath())) {
-            continue;
+            insertDeleteDiff(fileInfo.getPath());
+            break;
           }
-          insertDeleteDiff(fileInfo.getPath(), true);
-          continue;
         }
-        insertDeleteDiff(fileInfo.getPath());
       }
     } else {
       insertDeleteDiff(path);
@@ -376,9 +376,15 @@ public class InotifyEventApplier {
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
     if (inBackup(path)) {
-      FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-      fileDiff.setSrc(path);
-      metaStore.insertFileDiff(fileDiff);
+      List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(path);
+      for (BackUpInfo backUpInfo : backUpInfos) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+        fileDiff.setSrc(path);
+        String destPath = path.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+        //put sync's dest path in parameter for delete use
+        fileDiff.getParameters().put("-dest", destPath);
+        metaStore.insertFileDiff(fileDiff);
+      }
     }
   }
 }
