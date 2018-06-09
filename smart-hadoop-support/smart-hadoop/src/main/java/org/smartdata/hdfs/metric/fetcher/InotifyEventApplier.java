@@ -35,7 +35,6 @@ import org.smartdata.model.FileInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -361,10 +360,6 @@ public class InotifyEventApplier {
   // It seems that there is no need to see if path matches with one dir in FileInfo.
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
-      // FileInfo's path has no "/" appended in the end.
-      if (path.length() > 1 && path.endsWith("/")) {
-        path = path.substring(0, path.length() - 1);
-      }
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
         if (fileInfo.isdir()) {
