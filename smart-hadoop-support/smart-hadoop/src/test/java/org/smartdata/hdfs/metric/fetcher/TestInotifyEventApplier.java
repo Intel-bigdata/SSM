@@ -54,6 +54,8 @@ public class TestInotifyEventApplier extends TestDaoUtil {
   public void testApplier() throws Exception {
     DFSClient client = Mockito.mock(DFSClient.class);
 
+    FileInfo root = HadoopUtil.convertFileStatus(getDummyDirStatus("/", 1000), "/");
+    metaStore.insertFile(root);
     BackUpInfo backUpInfo = new BackUpInfo(1L, "/file", "remote/dest/", 10);
     metaStore.insertBackUpInfo(backUpInfo);
     InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
@@ -91,14 +93,14 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Mockito.when(client.getFileInfo(Matchers.startsWith("/dir"))).thenReturn(getDummyDirStatus("", 1010));
     applier.apply(new Event[] {createEvent});
 
-    FileInfo result1 = metaStore.getFile().get(0);
+    FileInfo result1 = metaStore.getFile().get(1);
     Assert.assertEquals(result1.getPath(), "/file");
     Assert.assertEquals(result1.getFileId(), 1010L);
     Assert.assertEquals(result1.getPermission(), 511);
 
     Event close = new Event.CloseEvent("/file", 1024, 0);
     applier.apply(new Event[] {close});
-    FileInfo result2 = metaStore.getFile().get(0);
+    FileInfo result2 = metaStore.getFile().get(1);
     Assert.assertEquals(result2.getLength(), 1024);
     Assert.assertEquals(result2.getModificationTime(), 0L);
 
@@ -119,7 +121,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             .groupName("cg2")
             .build();
     applier.apply(new Event[] {meta});
-    FileInfo result4 = metaStore.getFile().get(0);
+    FileInfo result4 = metaStore.getFile().get(1);
     Assert.assertEquals(result4.getAccessTime(), 3);
     Assert.assertEquals(result4.getModificationTime(), 2);
 
@@ -131,7 +133,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             .groupName("cg1")
             .build();
     applier.apply(new Event[] {meta1});
-    result4 = metaStore.getFile().get(0);
+    result4 = metaStore.getFile().get(1);
     Assert.assertEquals(result4.getOwner(), "user1");
     Assert.assertEquals(result4.getGroup(), "cg1");
 
@@ -168,7 +170,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
       actualPaths.add(s.getPath());
     }
     Collections.sort(actualPaths);
-    Assert.assertTrue(actualPaths.size() == 3);
+    Assert.assertTrue(actualPaths.size() == 4);
     Assert.assertTrue(actualPaths.containsAll(expectedPaths));
 
     Event unlink = new Event.UnlinkEvent.Builder().path("/").timestamp(6).build();
@@ -177,7 +179,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertEquals(metaStore.getFile().size(), 0);
     System.out.println("Files in table " + metaStore.getFile().size());
     List<FileDiff> fileDiffList = metaStore.getPendingDiff();
-    Assert.assertTrue(fileDiffList.size() == 5);
+    Assert.assertTrue(fileDiffList.size() == 4);
   }
 
   @Test

@@ -357,6 +357,8 @@ public class InotifyEventApplier {
     }
   }
 
+  // TODO: just insert a fileDiff for this kind of path.
+  // It seems that there is no need to see if path matches with one dir in FileInfo
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
