@@ -788,7 +788,8 @@ public class CopyScheduler extends ActionSchedulerService {
             // Delete raw is enough
             fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
           }
-          if (fileExistOnStandby(filePath)) {
+          String destPath = fileDiff.getParameters().get("-dest");
+          if (fileExistOnStandby(destPath)) {
             // Only allow delete when file do exist on remote
             diffChain.add(fileDiff.getDiffId());
           } else {

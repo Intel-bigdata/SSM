@@ -27,6 +27,7 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
@@ -34,6 +35,7 @@ import org.smartdata.model.FileInfo;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -376,9 +378,16 @@ public class InotifyEventApplier {
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
     if (inBackup(path)) {
-      FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-      fileDiff.setSrc(path);
-      metaStore.insertFileDiff(fileDiff);
+      List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(path);
+      for (BackUpInfo backUpInfo : backUpInfos) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+        fileDiff.setSrc(path);
+        String dest = backUpInfo.getDest();
+        String destPath = path.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+        //put sync's dest path in parameter for delete use
+        fileDiff.getParameters().put("-dest", destPath);
+        metaStore.insertFileDiff(fileDiff);
+      }
     }
   }
 }
