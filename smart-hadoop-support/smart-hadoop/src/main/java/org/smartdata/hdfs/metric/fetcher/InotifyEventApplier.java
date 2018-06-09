@@ -358,9 +358,13 @@ public class InotifyEventApplier {
   }
 
   // TODO: just insert a fileDiff for this kind of path.
-  // It seems that there is no need to see if path matches with one dir in FileInfo
+  // It seems that there is no need to see if path matches with one dir in FileInfo.
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
+      // FileInfo's path has no "/" appended in the end.
+      if (path.length() > 1 && path.endsWith("/")) {
+        path = path.substring(0, path.length() - 1);
+      }
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
         if (fileInfo.isdir()) {
@@ -381,7 +385,6 @@ public class InotifyEventApplier {
       for (BackUpInfo backUpInfo : backUpInfos) {
         FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
         fileDiff.setSrc(path);
-        String dest = backUpInfo.getDest();
         String destPath = path.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
         //put sync's dest path in parameter for delete use
         fileDiff.getParameters().put("-dest", destPath);
