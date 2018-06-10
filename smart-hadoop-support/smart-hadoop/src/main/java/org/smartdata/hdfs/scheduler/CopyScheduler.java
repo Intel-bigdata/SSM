@@ -32,12 +32,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.model.ActionInfo;
-import org.smartdata.model.FileDiff;
-import org.smartdata.model.FileDiffState;
-import org.smartdata.model.FileDiffType;
-import org.smartdata.model.FileInfo;
-import org.smartdata.model.LaunchAction;
+import org.smartdata.model.*;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
@@ -728,13 +723,29 @@ public class CopyScheduler extends ActionSchedulerService {
               Long.valueOf(fileDiff.getParameters().get("-length"));
           diffChain.add(did);
         } else if (fileDiff.getDiffType() == FileDiffType.RENAME) {
-          // Add New Name to Name Chain
-          mergeRename(fileDiff);
+          if (isRenameSyncedFile(fileDiff)) {
+            // Add New Name to Name Chain
+            mergeRename(fileDiff);
+          } else {
+            discardDirty(fileDiff);
+          }
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
           mergeDelete(fileDiff);
         } else {
           // Metadata
           diffChain.add(did);
+        }
+      }
+
+      void discardDirty(FileDiff fileDiff) throws MetaStoreException {
+        List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(fileDiff.getSrc());
+        for (BackUpInfo backUpInfo : backUpInfos) {
+          FileDiff deleteFileDiff = new FileDiff(FileDiffType.DELETE, FileDiffState.PENDING);
+          deleteFileDiff.setSrc(fileDiff.getSrc());
+          String destPath = deleteFileDiff.getSrc().replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+          //put sync's dest path in parameter for delete use
+          deleteFileDiff.getParameters().put("-dest", destPath);
+          metaStore.insertFileDiff(deleteFileDiff);
         }
       }
 
@@ -859,6 +870,34 @@ public class CopyScheduler extends ActionSchedulerService {
         }
         // Unlock file
         fileLock.remove(filePath);
+      }
+
+      boolean isRenameSyncedFile(FileDiff renameFileDiff) throws MetaStoreException {
+        String path = renameFileDiff.getSrc();
+        List<FileDiff> fileDiffs = metaStore.getFileDiffsByFileName(path);
+        List<Long> nonterminalDid = new ArrayList<>();
+        for (FileDiff fileDiff : fileDiffs) {
+          if (fileDiff.getDiffType() != FileDiffType.APPEND) {
+            continue;
+          }
+          if (fileDiff.getState() == FileDiffState.APPLIED) {
+            return true;
+          } else if (!FileDiffState.isTerminalState(fileDiff.getState())) {
+            nonterminalDid.add(fileDiff.getDiffId());
+          }
+        }
+        for (Long did : nonterminalDid) {
+          FileDiff fileDiff = fileDiffCache.get(did);
+          if (fileDiff != null) {
+            fileDiff.setState(FileDiffState.FAILED);
+            updateFileDiffInCache(did, FileDiffState.FAILED);
+            FileDiff newFileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
+            newFileDiff.getParameters().putAll(fileDiff.getParameters());
+            newFileDiff.setSrc(renameFileDiff.getParameters().get("-dest"));
+            metaStore.insertFileDiff(newFileDiff);
+          }
+        }
+        return false;
       }
 
       long getHead() {
