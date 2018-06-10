@@ -738,6 +738,10 @@ public class CopyScheduler extends ActionSchedulerService {
       }
 
       void discardDirty(FileDiff fileDiff) throws MetaStoreException {
+        // Discard rename filediff
+        fileDiff.setState(FileDiffState.FAILED);
+        updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.FAILED);
+        // Clean dirty data
         List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(fileDiff.getSrc());
         for (BackUpInfo backUpInfo : backUpInfos) {
           FileDiff deleteFileDiff = new FileDiff(FileDiffType.DELETE, FileDiffState.PENDING);
