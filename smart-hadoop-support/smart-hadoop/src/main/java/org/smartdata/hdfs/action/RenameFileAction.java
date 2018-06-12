@@ -67,11 +67,12 @@ public class RenameFileAction extends HdfsAction {
     if (destPath == null) {
       throw new IllegalArgumentException("Dest File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : Rename %s to %s",
-            Utils.getFormatedCurrentTime(), srcPath, destPath));
-    //rename
-    renameSingleFile(srcPath, destPath);
+    appendLog(String.format("Action starts at %s : Rename %s to %s",
+        Utils.getFormatedCurrentTime(), srcPath, destPath));
+
+    if (!renameSingleFile(srcPath, destPath)) {
+      throw new IOException("Failed to rename " + srcPath + " -> " + destPath);
+    }
   }
 
   private boolean renameSingleFile(String src,
