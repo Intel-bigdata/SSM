@@ -25,7 +25,6 @@ import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.StoragePolicy;
 
 public class TestStoragePolicyDao extends TestDaoUtil {
-
     private StoragePolicyDao storagePolicyDao;
 
     @Before
