@@ -24,8 +24,6 @@ import org.junit.Test;
 import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.StoragePolicy;
 
-import java.util.Map;
-
 public class TestStoragePolicyDao extends TestDaoUtil {
 
     private StoragePolicyDao storagePolicyDao;
