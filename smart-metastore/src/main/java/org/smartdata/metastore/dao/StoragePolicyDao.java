@@ -30,65 +30,65 @@ import java.util.List;
 import java.util.Map;
 
 public class StoragePolicyDao {
-    private DataSource dataSource;
+  private DataSource dataSource;
 
-    public void setDataSource(DataSource dataSource) {
+  public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
-    public StoragePolicyDao(DataSource dataSource) {
+  public StoragePolicyDao(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
-    private static final String TABLE_NAME = "storage_policy";
+  private String TABLE_NAME = "storage_policy";
 
-    public Map<Integer, String> getStoragePolicyIdNameMap() throws SQLException {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String sql = "SELECT * FROM " + TABLE_NAME;
-        List<StoragePolicy> list = jdbcTemplate.query(sql,
-                new RowMapper<StoragePolicy>() {
-                    public StoragePolicy mapRow(ResultSet rs,
-                                                int rowNum) throws SQLException {
-                        return new StoragePolicy(rs.getByte("sid"),
-                                rs.getString("policy_name"));
-                    }
-                });
+  public Map<Integer, String> getStoragePolicyIdNameMap() throws SQLException {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM " + TABLE_NAME;
+    List<StoragePolicy> list = jdbcTemplate.query(sql,
+      new RowMapper<StoragePolicy>() {
+        public StoragePolicy mapRow(ResultSet rs,
+                                    int rowNum) throws SQLException {
+          return new StoragePolicy(rs.getByte("sid"),
+            rs.getString("policy_name"));
+          }
+        });
         Map<Integer, String> map = new HashMap<>();
         for (StoragePolicy s : list) {
-            map.put((int) (s.getSid()), s.getPolicyName());
+          map.put((int) (s.getSid()), s.getPolicyName());
         }
-        return map;
+      return map;
     }
 
-    public List<StoragePolicy> getAll() {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
-                new StoragePolicyRowMapper());
-    }
+  public List<StoragePolicy> getAll() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
+      new StoragePolicyRowMapper());
+  }
 
-    public String getStoragePolicyName(int sid) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String sql = "SELECT policy_name FROM " + TABLE_NAME + " WHERE sid = ?";
-        return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
-    }
+  public String getStoragePolicyName(int sid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT policy_name FROM " + TABLE_NAME + " WHERE sid = ?";
+    return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
+  }
 
-    public synchronized void insertStoragePolicyTable(StoragePolicy s) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
-                + s.getSid() + "','" + s.getPolicyName() + "');";
-        jdbcTemplate.execute(sql);
-    }
+  public synchronized void insertStoragePolicyTable(StoragePolicy s) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
+          + s.getSid() + "','" + s.getPolicyName() + "');";
+    jdbcTemplate.execute(sql);
+  }
 
-    public void deleteStoragePolicy(int sid) {
-        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-        final String sql = "DELETE FROM " + TABLE_NAME + " WHERE sid = ?";
-        jdbcTemplate.update(sql, sid);
-    }
+  public void deleteStoragePolicy(int sid) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE sid = ?";
+    jdbcTemplate.update(sql, sid);
+  }
 
-    class StoragePolicyRowMapper implements RowMapper<StoragePolicy> {
-        @Override
-        public StoragePolicy mapRow(ResultSet resultSet, int i) throws SQLException {
-            return new StoragePolicy(resultSet.getByte("sid"), resultSet.getString("policy_name"));
-        }
+  class StoragePolicyRowMapper implements RowMapper<StoragePolicy> {
+    @Override
+    public StoragePolicy mapRow(ResultSet resultSet, int i) throws SQLException {
+      return new StoragePolicy(resultSet.getByte("sid"), resultSet.getString("policy_name"));
     }
+  }
 }

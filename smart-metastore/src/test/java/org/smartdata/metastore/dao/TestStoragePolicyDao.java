@@ -25,29 +25,29 @@ import org.smartdata.metastore.TestDaoUtil;
 import org.smartdata.model.StoragePolicy;
 
 public class TestStoragePolicyDao extends TestDaoUtil {
-    private StoragePolicyDao storagePolicyDao;
+  private StoragePolicyDao storagePolicyDao;
 
-    @Before
-    public void initStoragePolicyDao() throws Exception {
-        initDao();
-        storagePolicyDao = new StoragePolicyDao(druidPool.getDataSource());
-    }
+  @Before
+  public void initStoragePolicyDao() throws Exception {
+    initDao();
+    storagePolicyDao = new StoragePolicyDao(druidPool.getDataSource());
+  }
 
-    @After
-    public void closeStoragePolicyDao() throws Exception {
-        closeDao();
-        storagePolicyDao = null;
-    }
+  @After
+  public void closeStoragePolicyDao() throws Exception {
+    closeDao();
+    storagePolicyDao = null;
+  }
 
-    @Test
-    public void testInsertGetStorage_policyTable() throws Exception {
-        StoragePolicy storagePolicy = new StoragePolicy((byte) 1, "pName");
-        storagePolicyDao.insertStoragePolicyTable(storagePolicy);
-        Assert.assertTrue(storagePolicyDao.getStoragePolicyName(1).equals("pName"));
-        storagePolicyDao.getStoragePolicyName(1);
-        storagePolicyDao.deleteStoragePolicy(1);
-        storagePolicyDao.getStoragePolicyName(7);
-        storagePolicyDao.getStoragePolicyIdNameMap();
-        storagePolicyDao.getAll();
-    }
+  @Test
+  public void testInsertGetStorage_policyTable() throws Exception {
+    StoragePolicy storagePolicy = new StoragePolicy((byte) 1, "pName");
+    storagePolicyDao.insertStoragePolicyTable(storagePolicy);
+    Assert.assertTrue(storagePolicyDao.getStoragePolicyName(1).equals("pName"));
+    storagePolicyDao.getStoragePolicyName(1);
+    storagePolicyDao.deleteStoragePolicy(1);
+    storagePolicyDao.getStoragePolicyName(7);
+    storagePolicyDao.getStoragePolicyIdNameMap();
+    storagePolicyDao.getAll();
+  }
 }
