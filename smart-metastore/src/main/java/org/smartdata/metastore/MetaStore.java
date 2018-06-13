@@ -1542,6 +1542,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public int getUselessFileDiffNum() throws MetaStoreException {
+    try {
+      return fileDiffDao.getUselessRecordsNum();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public int deleteUselessFileDiff(int maxNumRecords) throws MetaStoreException {
+    try {
+      return fileDiffDao.deleteUselessRecords(maxNumRecords);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 
   public List<String> getSyncPath(int size) throws MetaStoreException {
     return fileDiffDao.getSyncPath(size);

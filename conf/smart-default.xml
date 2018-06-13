@@ -176,6 +176,14 @@
   </property>
 
   <property>
+    <name>smart.file.diff.max.num.records</name>
+    <value>10000</value>
+    <description>
+      Maximum file diff records with useless state.
+    </description>
+  </property>
+
+  <property>
     <name>smart.status.report.period</name>
     <value>10</value>
     <description>

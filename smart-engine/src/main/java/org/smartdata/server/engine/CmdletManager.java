@@ -1163,7 +1163,7 @@ public class CmdletManager extends AbstractService {
         long ts = System.currentTimeMillis();
         if (ts - lastDelTimeStamp >= lifeCheckInterval) {
           numCmdletsFinished.getAndAdd(
-              metaStore.deleteFinishedCmdletsWithGenTimeBefore(ts - maxLifeTime));
+              -metaStore.deleteFinishedCmdletsWithGenTimeBefore(ts - maxLifeTime));
           lastDelTimeStamp = ts;
         }
 
