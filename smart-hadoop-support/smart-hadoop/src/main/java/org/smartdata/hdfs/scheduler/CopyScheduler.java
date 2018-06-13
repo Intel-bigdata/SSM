@@ -277,6 +277,7 @@ public class CopyScheduler extends ActionSchedulerService {
           int curr = retryDiffMap.get(did);
           if (curr >= retryTh) {
             // Action failed several times and exceed threshold
+            fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
             // Mark diff as failed
             updateFileDiffInCache(did, FileDiffState.FAILED);
             // Trigger direct sync for this file
