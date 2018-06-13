@@ -55,7 +55,7 @@ public enum FileDiffState {
     return states;
   }
 
-  public static boolean isUnusedFileDiff(FileDiffState state) {
+  public static boolean isUselessFileDiff(FileDiffState state) {
     return state == APPLIED
         || state == DELETED
         || state == FAILED;

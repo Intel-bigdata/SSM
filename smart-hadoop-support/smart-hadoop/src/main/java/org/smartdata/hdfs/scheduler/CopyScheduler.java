@@ -96,7 +96,7 @@ public class CopyScheduler extends ActionSchedulerService {
   // throttle for copy action
   private long throttleInMb;
   private RateLimiter rateLimiter = null;
-  // records the number of unused file diffs by their states
+  // records the number of file diffs in useless states
   private AtomicInteger numFileDiffUseless = new AtomicInteger(0);
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
@@ -132,7 +132,7 @@ public class CopyScheduler extends ActionSchedulerService {
     try {
       this.numFileDiffUseless.addAndGet(metaStore.getUselessFileDiffNum());
     } catch (MetaStoreException e) {
-      LOG.error("Failed to get num of unused file diffs!");
+      LOG.error("Failed to get num of useless file diffs!");
     }
   }
 
@@ -519,7 +519,7 @@ public class CopyScheduler extends ActionSchedulerService {
       // update
       pushCacheToDB();
     }
-    if (FileDiffState.isUnusedFileDiff(fileDiffState)) {
+    if (FileDiffState.isUselessFileDiff(fileDiffState)) {
       numFileDiffUseless.decrementAndGet();
     }
   }
@@ -917,7 +917,7 @@ public class CopyScheduler extends ActionSchedulerService {
       try {
         numFileDiffUseless.addAndGet(-metaStore.deleteUselessFileDiff(maxNumRecords));
       } catch (MetaStoreException e) {
-        LOG.error("Error occurs when delete unused file diff!");
+        LOG.error("Error occurs when delete useless file diff!");
       }
     }
   }
