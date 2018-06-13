@@ -859,7 +859,10 @@ public class CopyScheduler extends ActionSchedulerService {
           diffChain.add(0, fileDiff.getDiffId());
         } else {
           // Rename chain
+          fileLock.remove(filePath);
+          fileDiffChainMap.remove(filePath);
           setFilePath(newName);
+          fileDiffChainMap.put(newName, this);
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
         // Unlock file
