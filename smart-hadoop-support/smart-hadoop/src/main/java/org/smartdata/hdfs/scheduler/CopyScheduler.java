@@ -292,8 +292,10 @@ public class CopyScheduler extends ActionSchedulerService {
             // Todo maybe diff affects multiple files
             retryDiffMap.remove(did);
             // Add to direct Sync queue
-            baseSyncQueue.put(actionInfo.getArgs().get(SyncAction.SRC),
-                actionInfo.getArgs().get(SyncAction.DEST));
+            baseSyncQueue.put(fileDiff.getSrc(), actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+            if (fileDiff.getDiffType() == FileDiffType.RENAME) {
+              baseSyncQueue.put(fileDiff.getParameters().get("-dest"), actionInfo.getArgs().get("-dest"));
+            }
           } else {
             retryDiffMap.put(did, curr + 1);
           }
