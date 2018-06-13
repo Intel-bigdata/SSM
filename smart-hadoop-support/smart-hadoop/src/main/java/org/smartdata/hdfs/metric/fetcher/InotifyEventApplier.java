@@ -32,10 +32,12 @@ import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * This is a very preliminary and buggy applier, can further enhance by referring to
@@ -375,16 +377,54 @@ public class InotifyEventApplier {
   }
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
+    // TODO: remove "/" appended in src or dest in backup_file table
+    if (!path.endsWith("/")) {
+      path = path + "/";
+    }
     if (inBackup(path)) {
       List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(path);
       for (BackUpInfo backUpInfo : backUpInfos) {
-        FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-        fileDiff.setSrc(path);
         String destPath = path.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
-        //put sync's dest path in parameter for delete use
-        fileDiff.getParameters().put("-dest", destPath);
-        metaStore.insertFileDiff(fileDiff);
+        try {
+          // tackle root path case
+          URI namenodeUri = new URI(destPath);
+          String root = "hdfs://" + namenodeUri.getHost() + ":"
+              + String.valueOf(namenodeUri.getPort());
+          if (destPath.equals(root) || destPath.equals(root + "/") || destPath.equals("/")) {
+            for (String srcFilePath : getFilesUnderDir(path)) {
+              FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+              fileDiff.setSrc(srcFilePath);
+              String destFilePath = srcFilePath.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+              fileDiff.getParameters().put("-dest", destFilePath);
+              metaStore.insertFileDiff(fileDiff);
+            }
+          } else {
+            FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+            fileDiff.setSrc(path);
+            //put sync's dest path in parameter for delete use
+            fileDiff.getParameters().put("-dest", destPath);
+            metaStore.insertFileDiff(fileDiff);
+          }
+        } catch (URISyntaxException e) {
+          LOG.error("Error occurs!", e);
+        }
       }
     }
+  }
+
+  private List<String> getFilesUnderDir(String dir) throws MetaStoreException {
+    if (!dir.endsWith("/")) {
+      dir = dir + "/";
+    }
+    List<String> fileList = new ArrayList<>();
+    List<FileInfo> fileInfos = metaStore.getFilesByPrefix(dir);
+    for (FileInfo fileInfo : fileInfos) {
+      // To avoid deleting subdir before deleting the file under it
+      if (fileInfo.isdir()) {
+        continue;
+      }
+      fileList.add(fileInfo.getPath());
+    }
+    return fileList;
   }
 }
