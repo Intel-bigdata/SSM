@@ -174,47 +174,88 @@ limitations under the License.
     <tr>
       <th>Object</th>
       <th>Property</th>
+      <th>Abbreviation</th>
       <th>Description</th>
     </tr>
     </thead>
     <tbody>
     <tr>
-      <td rowspan="9" valign="middle">file</td>
-      <td>path</td>
-      <td>file in HDFS</td>
+      <td rowspan="15" valign="middle">file</td>
+      <td>accessCount(interval)</td>
+      <td>ac</td>
+      <td>The access counts during the last time interval</td>
+    </tr>
+    <tr>
+      <td>accessCountTop(interval,N)</td>
+      <td>acTop</td>
+      <td>The topmost N for access counts during the last time interval</td>
+    </tr>
+    <tr>
+      <td>accessCountBottom(interval,N)</td>
+      <td>acBot</td>
+      <td>The bottommost N for access counts during the last time interval</td>
+    </tr>
+    <tr>
+      <td>accessCountTopOnStoragePolicy(interval, N, "$StoragePolicy")</td>
+      <td>acTopSp</td>
+      <td>The topmost N for access counts with regard to a storage policy. The supported HDFS storage policies are COLD, WARM, HOT, ONE_SSD, ALL_SSD, LAZY_PERSIST</td>
+    </tr>
+    <tr>
+      <td>accessCountBottomOnStoragePolicy(interval,N, "$StoragePolicy")</td>
+      <td>acBotSp</td>
+      <td>The bottommost N for access counts with regard to a storage policy during the last time interval</td>
     </tr>
     <tr>
       <td>age</td>
-      <td>Time from last been modified</td>
+      <td>-</td>
+      <td>The time span from last modification moment to now</td>
     </tr>
     <tr>
       <td>atime</td>
-      <td>Time accessed last time</td>
-    </tr>
-    <tr>
-      <td>accessCount(interval)</td>
-      <td>Access counts during in the last time interval</td>
+      <td>-</td>
+      <td>The last access time</td>
     </tr>
     <tr>
       <td>blocksize</td>
-      <td>Block size of the file</td>
+      <td>-</td>
+      <td>The block size of the file</td>
     </tr>
     <tr>
-      <td>storagePolicy</td>
-      <td>Storage policy of file</td>
+      <td>inCache</td>
+      <td>-</td>
+      <td>The file is in cache storage</td>
+    </tr>
+    <tr>
+      <td>isDir</td>
+      <td>-</td>
+      <td>The file is a directory</td>
     </tr>
     <tr>
       <td>length</td>
+      <td>-</td>
       <td>Length of the file</td>
     </tr>
     <tr>
-      <td>isInCache</td>
-      <td>Test if file is in cache now</td>
+      <td>mtime</td>
+      <td>-</td>
+      <td>The last modification time of the file</td>
     </tr>
     <tr>
-      <td>mtime</td>
-      <td>Last modification time of the file</td>
+      <td>path</td>
+      <td>-</td>
+      <td>The file path in HDFS</td>
     </tr>
+    <tr>
+      <td>storagePolicy</td>
+      <td>-</td>
+      <td>The storage policy of file</td>
+    </tr>
+    <tr>
+      <td>unsynced</td>
+      <td>-</td>
+      <td>The file is not synced</td>
+    </tr>
+
     </tbody>
   </table>
   <br/>

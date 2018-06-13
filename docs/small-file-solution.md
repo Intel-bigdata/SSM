@@ -7,12 +7,12 @@ There are several existing solutions to handle this small file problem, such as 
 
 Most existing solutions may solve some of the problems well, but maybe not transparently to applications, or introducing non-trivial modification into HDFS. We’d like to propose a solution to solve these HDFS small files problems in the framework of SSM on top of HDFS based on the ideas from existing approaches and discussions with industry experts. 
 
-In this solution, we introduce a concept of container file. A container file is a normal big HDFS file with configurable threshold size, say 1G. A container file can contains hundreds or thousands of small files. The mapping between small files and container file are maintained by SSM metastore. As the format of container file, we may consider existing Hadoop file format. SSM metastore holds the mapping information between small files and container file. The mapping maintains small file id, container file id and index info.
+In this solution, we introduce a concept of container file. A container file is a normal big HDFS file with configurable threshold size, say 1G. A container file can contain hundreds or thousands of small files. The mapping between small files and container file are maintained by SSM metastore. As the format of container file, we may consider existing Hadoop file format. SSM metastore holds the mapping information between small files and container file. The mapping maintains small file id, container file id and index info.
 
 Design Targets 
 ===============
 
-The following list the targets of this design:
+The following lists the targets of this design:
 
 1. Better read performance than current HDFS small file read in average.
 
@@ -98,7 +98,7 @@ ii. Due to the file container info (corresponding container file, offset and len
 
 * Get block info: getLocatedBlocks, getBlockLocations, getFileBlockLocations.
 * Get file info: getFileInfo, listStatus, listStatusIterator, getFileStatus, isFileClosed.
-
+  
 iii. Operations like the following impact small file's meta in namespace as well as meta store of SSM.
 
 * Rename small file: rename small file in both namespace and meta store.
