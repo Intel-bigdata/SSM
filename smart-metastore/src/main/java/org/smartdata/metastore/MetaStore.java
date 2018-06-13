@@ -1542,17 +1542,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public int getUnusedFileDiffNum() throws MetaStoreException {
+  public int getUselessFileDiffNum() throws MetaStoreException {
     try {
-      return fileDiffDao.getUnusedRecordsNum();
+      return fileDiffDao.getUselessRecordsNum();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
-  public int deleteUnusedFileDiff(int maxNumRecords) throws MetaStoreException {
+  public int deleteUselessFileDiff(int maxNumRecords) throws MetaStoreException {
     try {
-      return fileDiffDao.deleteUnusedRecords(maxNumRecords);
+      return fileDiffDao.deleteUselessRecords(maxNumRecords);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

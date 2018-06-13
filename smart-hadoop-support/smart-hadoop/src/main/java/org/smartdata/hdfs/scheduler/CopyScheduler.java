@@ -97,7 +97,7 @@ public class CopyScheduler extends ActionSchedulerService {
   private long throttleInMb;
   private RateLimiter rateLimiter = null;
   // records the number of unused file diffs by their states
-  private AtomicInteger numFileDiffUnused = new AtomicInteger(0);
+  private AtomicInteger numFileDiffUseless = new AtomicInteger(0);
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -130,7 +130,7 @@ public class CopyScheduler extends ActionSchedulerService {
       rateLimiter = RateLimiter.create(throttleInMb);
     }
     try {
-      this.numFileDiffUnused.addAndGet(metaStore.getUnusedFileDiffNum());
+      this.numFileDiffUseless.addAndGet(metaStore.getUselessFileDiffNum());
     } catch (MetaStoreException e) {
       LOG.error("Failed to get num of unused file diffs!");
     }
@@ -520,7 +520,7 @@ public class CopyScheduler extends ActionSchedulerService {
       pushCacheToDB();
     }
     if (FileDiffState.isUnusedFileDiff(fileDiffState)) {
-      numFileDiffUnused.decrementAndGet();
+      numFileDiffUseless.decrementAndGet();
     }
   }
 
@@ -577,6 +577,7 @@ public class CopyScheduler extends ActionSchedulerService {
     executorService.scheduleAtFixedRate(
         new CopyScheduler.ScheduleTask(), 0, checkInterval,
         TimeUnit.MILLISECONDS);
+    // The PurgeFileDiffTask runs in the period of 1800s
     executorService.scheduleAtFixedRate(
         new PurgeFileDiffTask(conf), 0, 1800, TimeUnit.SECONDS);
   }
@@ -910,11 +911,11 @@ public class CopyScheduler extends ActionSchedulerService {
 
     @Override
     public void run() {
-      if (numFileDiffUnused.get() <= maxNumRecords) {
+      if (numFileDiffUseless.get() <= maxNumRecords) {
         return;
       }
       try {
-        numFileDiffUnused.addAndGet(-metaStore.deleteUnusedFileDiff(maxNumRecords));
+        numFileDiffUseless.addAndGet(-metaStore.deleteUselessFileDiff(maxNumRecords));
       } catch (MetaStoreException e) {
         LOG.error("Error occurs when delete unused file diff!");
       }

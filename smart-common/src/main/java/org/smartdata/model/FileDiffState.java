@@ -47,7 +47,7 @@ public enum FileDiffState {
     return value;
   }
 
-  public static List<FileDiffState> getUnusedFileDiffState() {
+  public static List<FileDiffState> getUselessFileDiffState() {
     ArrayList<FileDiffState> states = new ArrayList<>();
     states.add(FileDiffState.APPLIED);
     states.add(FileDiffState.DELETED);

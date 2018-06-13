@@ -122,7 +122,7 @@ public class SmartConfKeys {
   public static final String SMART_FILE_DIFF_MAX_NUM_RECORDS_KEY =
       "smart.file.diff.max.num.records";
   public static final int SMART_FILE_DIFF_MAX_NUM_RECORDS_DEFAULT =
-      1000;
+      10000;
 
   // Dispatcher
   public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =

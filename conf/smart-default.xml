@@ -177,9 +177,9 @@
 
   <property>
     <name>smart.file.diff.max.num.records</name>
-    <value>1000</value>
+    <value>10000</value>
     <description>
-      Maximum file diff records with terminal state.
+      Maximum file diff records with useless state.
     </description>
   </property>
 
