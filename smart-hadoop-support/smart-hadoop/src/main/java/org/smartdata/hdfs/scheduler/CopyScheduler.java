@@ -55,7 +55,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
@@ -718,10 +717,9 @@ public class CopyScheduler extends ActionSchedulerService {
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
           String offset = fileDiff.getParameters().get("-offset");
-          if (offset != null && offset.equals("0") && diffChain.size() != 0) {
-            markAllDiffs();
-          }
-
+          // if (offset != null && offset.equals("0") && appendChain.size() != 0) {
+          //   markAllDiffs();
+          // }
           if (currAppendLength >= mergeLenTh ||
               appendChain.size() >= mergeCountTh) {
             mergeAppend();
