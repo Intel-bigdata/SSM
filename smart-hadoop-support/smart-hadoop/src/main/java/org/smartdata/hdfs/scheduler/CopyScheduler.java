@@ -843,8 +843,8 @@ public class CopyScheduler extends ActionSchedulerService {
         boolean isCreate = false;
         for (long did : appendChain) {
           FileDiff appendFileDiff = fileDiffCache.get(did);
-          if (fileDiff.getParameters().containsKey("-offset")) {
-            if (fileDiff.getParameters().get("-offset").equals("0")) {
+          if (appendFileDiff.getParameters().containsKey("-offset")) {
+            if (appendFileDiff.getParameters().get("-offset").equals("0")) {
               isCreate = true;
             }
           }
