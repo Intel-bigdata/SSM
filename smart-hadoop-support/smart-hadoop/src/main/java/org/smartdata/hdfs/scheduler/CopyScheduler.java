@@ -529,9 +529,7 @@ public class CopyScheduler extends ActionSchedulerService {
       fileDiffCache.remove(did);
       fileDiffCacheChanged.remove(did);
       // Remove file lock
-      if (fileLock.containsKey(fileDiff.getSrc())) {
-        fileLock.remove(fileDiff.getSrc());
-      }
+      fileLock.remove(fileDiff.getSrc());
     }
   }
 
