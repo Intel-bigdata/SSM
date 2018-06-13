@@ -394,11 +394,8 @@ public class InotifyEventApplier {
             for (String srcFilePath : getFilesUnderDir(path)) {
               FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
               fileDiff.setSrc(srcFilePath);
-              String destFilePath = srcFilePath.replaceFirst(backUpInfo.getSrc(), "");
-              if (!destPath.endsWith("/")) {
-                destPath = destPath + "/";
-              }
-              fileDiff.getParameters().put("-dest", destPath + destFilePath);
+              String destFilePath = srcFilePath.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+              fileDiff.getParameters().put("-dest", destFilePath);
               metaStore.insertFileDiff(fileDiff);
             }
           } else {
