@@ -375,6 +375,10 @@ public class InotifyEventApplier {
   }
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
+    // TODO: remove "/" appended in src or dest in backup_file table
+    if (!path.endsWith("/")) {
+      path = path + "/";
+    }
     if (inBackup(path)) {
       List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(path);
       for (BackUpInfo backUpInfo : backUpInfos) {
