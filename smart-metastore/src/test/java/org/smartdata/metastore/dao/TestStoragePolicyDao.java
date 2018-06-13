@@ -45,12 +45,24 @@ public class TestStoragePolicyDao extends TestDaoUtil {
     storagePolicyDao.insertStoragePolicyTable(storagePolicy);
 
     Assert.assertTrue(storagePolicyDao.getStoragePolicyName(1).equals("pName"));
-    storagePolicyDao.getStoragePolicyName(1);
-    storagePolicyDao.getStorageSid("pName");
+
+    if (!storagePolicyDao.isExist("pName") || !storagePolicyDao.isExist(1)) {
+      throw new Exception("isExist() error");
+    }
+
+    if (storagePolicyDao.getStoragePolicyName(1) != "pName") {
+      throw new Exception("getStoragePolicyName() error");
+    }
+
+    if (storagePolicyDao.getStorageSid("pName") != 1) {
+      throw new Exception("getStorageSid() error");
+    }
+
     storagePolicyDao.getStoragePolicyIdNameMap();
     storagePolicyDao.deleteStoragePolicy("pName");
-    storagePolicyDao.getStoragePolicyName(7);
-    storagePolicyDao.getAll();
-    storagePolicyDao.getStoragePolicyIdNameMap();
+
+    if (storagePolicyDao.isExist("pName")) {
+      throw new Exception("deleteStoragePolicy() error");
+    }
   }
 }

@@ -32,6 +32,10 @@ import java.util.Map;
 public class StoragePolicyDao {
   private DataSource dataSource;
 
+  private static final String TABLE_NAME = "storage_policy";
+
+  private Map<Integer, String> data = null;
+
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
     this.data = getStoragePolicyFromDB();
@@ -41,10 +45,6 @@ public class StoragePolicyDao {
     this.dataSource = dataSource;
     this.data = getStoragePolicyFromDB();
   }
-
-  private static final String TABLE_NAME = "storage_policy";
-
-  private Map<Integer, String> data = null;
 
   private Map<Integer, String> getStoragePolicyFromDB() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
@@ -67,42 +67,55 @@ public class StoragePolicyDao {
     return this.data;
   }
 
-  public List<StoragePolicy> getAll() {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME,
-      new StoragePolicyRowMapper());
-  }
-
   public String getStoragePolicyName(int sid) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT policy_name FROM " + TABLE_NAME + " WHERE sid = ?";
-    return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
+    return this.data.get(sid);
   }
 
   public Integer getStorageSid(String policyName) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "SELECT sid FROM " + TABLE_NAME + " WHERE policy_name = ?";
-    return jdbcTemplate.queryForObject(sql, new Object[]{policyName}, Integer.class);
+    for(Map.Entry<Integer, String> entry : this.data.entrySet()){
+      if(entry.getValue().equals(policyName)){
+        return entry.getKey();
+      }
+    }
+    return -1;
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
-      + s.getSid() + "','" + s.getPolicyName() + "');";
-    jdbcTemplate.execute(sql);
-    this.data.put((int) (s.getSid()), s.getPolicyName());
+    if (!isExist(s.getPolicyName())) {
+      JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+      String sql = "INSERT INTO storage_policy (sid, policy_name) VALUES('"
+        + s.getSid() + "','" + s.getPolicyName() + "');";
+      jdbcTemplate.execute(sql);
+      this.data.put((int) (s.getSid()), s.getPolicyName());
+    }
   }
 
   public synchronized void deleteStoragePolicy(int sid) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE sid = ?";
-    jdbcTemplate.update(sql, sid);
-    this.data.remove(sid);
+    if (isExist(sid)) {
+      JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+      final String sql = "DELETE FROM " + TABLE_NAME + " WHERE sid = ?";
+      jdbcTemplate.update(sql, sid);
+      this.data.remove(sid);
+    }
   }
 
   public synchronized void deleteStoragePolicy(String policyName) {
     Integer sid = getStorageSid(policyName);
     deleteStoragePolicy(sid);
+  }
+
+  public boolean isExist(int sid) {
+    if (getStoragePolicyName(sid) != null) {
+      return  true;
+    }
+    return false;
+  }
+
+  public boolean isExist(String policyName) {
+    if (getStorageSid(policyName) != -1) {
+      return  true;
+    }
+    return false;
   }
 
   class StoragePolicyRowMapper implements RowMapper<StoragePolicy> {
