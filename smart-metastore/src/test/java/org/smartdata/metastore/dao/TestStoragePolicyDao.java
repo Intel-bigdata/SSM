@@ -43,13 +43,14 @@ public class TestStoragePolicyDao extends TestDaoUtil {
   public void testInsertGetStorage_policyTable() throws Exception {
     StoragePolicy storagePolicy = new StoragePolicy((byte) 1, "pName");
     storagePolicyDao.insertStoragePolicyTable(storagePolicy);
+
     Assert.assertTrue(storagePolicyDao.getStoragePolicyName(1).equals("pName"));
     storagePolicyDao.getStoragePolicyName(1);
     storagePolicyDao.getStorageSid("pName");
-    storagePolicyDao.getStoragePolicy();
-    storagePolicyDao.deleteStoragePolicy(1);
-    storagePolicyDao.getStoragePolicyName(7);
     storagePolicyDao.getStoragePolicyIdNameMap();
+    storagePolicyDao.deleteStoragePolicy("pName");
+    storagePolicyDao.getStoragePolicyName(7);
     storagePolicyDao.getAll();
+    storagePolicyDao.getStoragePolicyIdNameMap();
   }
 }
