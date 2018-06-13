@@ -119,6 +119,10 @@ public class SmartConfKeys {
       "smart.copy.scheduler.check.interval";
   public static final int SMART_COPY_SCHEDULER_CHECK_INTERVAL_DEFAULT =
       500;
+  public static final String SMART_FILE_DIFF_MAX_NUM_RECORDS_KEY =
+      "smart.file.diff.max.num.records";
+  public static final int SMART_FILE_DIFF_MAX_NUM_RECORDS_DEFAULT =
+      10000;
 
   // Dispatcher
   public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =

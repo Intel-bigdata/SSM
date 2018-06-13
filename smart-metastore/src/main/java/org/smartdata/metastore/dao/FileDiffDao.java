@@ -39,6 +39,7 @@ import java.util.Map;
 public class FileDiffDao {
   private static final String TABLE_NAME = "file_diff";
   private DataSource dataSource;
+  public String uselessFileDiffStates;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -46,6 +47,15 @@ public class FileDiffDao {
 
   public FileDiffDao(DataSource dataSource) {
     this.dataSource = dataSource;
+    this.uselessFileDiffStates = getUselessFileDiffState();
+  }
+
+  public String getUselessFileDiffState() {
+    List<String> stateValues = new ArrayList<>();
+    for (FileDiffState state: FileDiffState.getUselessFileDiffState()) {
+      stateValues.add(String.valueOf(state.getValue()));
+    }
+    return StringUtils.join(stateValues, ",");
   }
 
   public List<FileDiff> getAll() {
@@ -122,6 +132,28 @@ public class FileDiffDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME + " WHERE did = ?";
     jdbcTemplate.update(sql, did);
+  }
+
+  public int getUselessRecordsNum() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String query = "SELECT count(*) FROM " + TABLE_NAME + " WHERE state IN ("
+        + uselessFileDiffStates + ")";
+    return jdbcTemplate.queryForObject(query, Integer.class);
+  }
+
+  public int deleteUselessRecords(int num) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String queryDids = "SELECT did FROM " + TABLE_NAME + " WHERE state IN ("
+        + uselessFileDiffStates + ") ORDER BY create_time DESC LIMIT 1000 OFFSET " + num;
+    List<Long> dids = jdbcTemplate.queryForList(queryDids, Long.class);
+    if (dids.isEmpty()) {
+      return 0;
+    }
+    String unusedDids = StringUtils.join(dids, ",");
+    final String deleteUnusedFileDiff = "DELETE FROM " + TABLE_NAME + " where did IN ("
+        + unusedDids + ")";
+    jdbcTemplate.update(deleteUnusedFileDiff);
+    return dids.size();
   }
 
   public long insert(FileDiff fileDiff) {
