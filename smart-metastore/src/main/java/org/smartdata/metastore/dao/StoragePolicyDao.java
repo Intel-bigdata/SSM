@@ -40,16 +40,16 @@ public class StoragePolicyDao {
         this.dataSource = dataSource;
     }
 
-  public Map<Integer, String> Data = null;
+  public Map<Integer, String> data = null;
 
   private static final String TABLE_NAME = "storage_policy";
 
   private void updateData() {
-    this.Data = getStoragePolicyIdNameMap();
+    this.data = getStoragePolicyIdNameMap();
   }
 
   public Map<Integer, String> getStoragePolicy() {
-    return this.Data;
+    return this.data;
   }
 
   public Map<Integer, String> getStoragePolicyIdNameMap() {
@@ -81,10 +81,10 @@ public class StoragePolicyDao {
     return jdbcTemplate.queryForObject(sql, new Object[]{sid}, String.class);
   }
 
-  public Integer getStorageSid(String policy_name) {
+  public Integer getStorageSid(String policyName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT policy_name FROM " + TABLE_NAME + " WHERE policy_name = ?";
-    return jdbcTemplate.queryForObject(sql, new Object[]{policy_name}, Integer.class);
+    return jdbcTemplate.queryForObject(sql, new Object[]{policyName}, Integer.class);
   }
 
   public synchronized void insertStoragePolicyTable(StoragePolicy s) {
@@ -102,8 +102,8 @@ public class StoragePolicyDao {
     updateData();
   }
 
-  public synchronized void deleteStoragePolicy(String policy_name) {
-    Integer sid = getStorageSid(policy_name);
+  public synchronized void deleteStoragePolicy(String policyName) {
+    Integer sid = getStorageSid(policyName);
     deleteStoragePolicy(sid);
     updateData();
   }
