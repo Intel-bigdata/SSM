@@ -17,6 +17,9 @@
  */
 package org.smartdata.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum FileDiffState {
   PENDING(0), // Ready for execution
   RUNNING(1), // Still running
@@ -42,6 +45,20 @@ public enum FileDiffState {
 
   public int getValue() {
     return value;
+  }
+
+  public static List<FileDiffState> getUnusedFileDiffState() {
+    ArrayList<FileDiffState> states = new ArrayList<>();
+    states.add(FileDiffState.APPLIED);
+    states.add(FileDiffState.DELETED);
+    states.add(FileDiffState.FAILED);
+    return states;
+  }
+
+  public static boolean isUnusedFileDiff(FileDiffState state) {
+    return state == APPLIED
+        || state == DELETED
+        || state == FAILED;
   }
 
   @Override

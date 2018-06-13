@@ -54,6 +54,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
@@ -94,7 +96,8 @@ public class CopyScheduler extends ActionSchedulerService {
   // throttle for copy action
   private long throttleInMb;
   private RateLimiter rateLimiter = null;
-
+  // records the number of unused file diffs by their states
+  private AtomicInteger numFileDiffUnused = new AtomicInteger(0);
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -105,7 +108,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.fileDiffMap = new ConcurrentHashMap<>();
     this.baseSyncQueue = new ConcurrentHashMap<>();
     this.overwriteQueue = new ConcurrentHashMap<>();
-    this.executorService = Executors.newSingleThreadScheduledExecutor();
+    this.executorService = Executors.newScheduledThreadPool(2);
     this.fileDiffCache = new ConcurrentHashMap<>();
     this.fileDiffCacheChanged = new ConcurrentHashMap<>();
     // Get conf or new default conf
@@ -125,6 +128,11 @@ public class CopyScheduler extends ActionSchedulerService {
         SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_DEFAULT);
     if (throttleInMb > 0) {
       rateLimiter = RateLimiter.create(throttleInMb);
+    }
+    try {
+      this.numFileDiffUnused.addAndGet(metaStore.getUnusedFileDiffNum());
+    } catch (MetaStoreException e) {
+      LOG.error("Failed to get num of unused file diffs!");
     }
   }
 
@@ -511,6 +519,9 @@ public class CopyScheduler extends ActionSchedulerService {
       // update
       pushCacheToDB();
     }
+    if (FileDiffState.isUnusedFileDiff(fileDiffState)) {
+      numFileDiffUnused.decrementAndGet();
+    }
   }
 
   /***
@@ -566,6 +577,8 @@ public class CopyScheduler extends ActionSchedulerService {
     executorService.scheduleAtFixedRate(
         new CopyScheduler.ScheduleTask(), 0, checkInterval,
         TimeUnit.MILLISECONDS);
+    executorService.scheduleAtFixedRate(
+        new PurgeFileDiffTask(conf), 0, 1800, TimeUnit.SECONDS);
   }
 
   @Override
@@ -883,6 +896,27 @@ public class CopyScheduler extends ActionSchedulerService {
         diffChain.clear();
         currAppendLength = 0;
         appendChain.clear();
+      }
+    }
+  }
+
+  private class PurgeFileDiffTask implements Runnable {
+    public int maxNumRecords;
+
+    public PurgeFileDiffTask(Configuration conf){
+      this.maxNumRecords = conf.getInt(SmartConfKeys.SMART_FILE_DIFF_MAX_NUM_RECORDS_KEY,
+          SmartConfKeys.SMART_FILE_DIFF_MAX_NUM_RECORDS_DEFAULT);
+    }
+
+    @Override
+    public void run() {
+      if (numFileDiffUnused.get() <= maxNumRecords) {
+        return;
+      }
+      try {
+        numFileDiffUnused.addAndGet(-metaStore.deleteUnusedFileDiff(maxNumRecords));
+      } catch (MetaStoreException e) {
+        LOG.error("Error occurs when delete unused file diff!");
       }
     }
   }
