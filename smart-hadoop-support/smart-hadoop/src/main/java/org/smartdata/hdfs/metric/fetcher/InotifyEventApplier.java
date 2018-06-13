@@ -385,8 +385,8 @@ public class InotifyEventApplier {
       List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(path);
       for (BackUpInfo backUpInfo : backUpInfos) {
         String destPath = path.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
-        // tackle root path case
         try {
+          // tackle root path case
           URI namenodeUri = new URI(destPath);
           String root = "hdfs://" + namenodeUri.getHost() + ":"
               + String.valueOf(namenodeUri.getPort());
