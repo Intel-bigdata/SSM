@@ -72,8 +72,8 @@ public class StoragePolicyDao {
   }
 
   public Integer getStorageSid(String policyName) {
-    for(Map.Entry<Integer, String> entry : this.data.entrySet()){
-      if(entry.getValue().equals(policyName)){
+    for (Map.Entry<Integer, String> entry : this.data.entrySet()) {
+      if (entry.getValue().equals(policyName)) {
         return entry.getKey();
       }
     }
