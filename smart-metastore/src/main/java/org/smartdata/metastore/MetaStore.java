@@ -288,6 +288,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<FileInfo> getFilesByPrefixInOrder(String path) throws MetaStoreException {
+    updateCache();
+    try {
+      return fileInfoDao.getFilesByPrefixInOrder(path);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<FileInfo> getFilesByPaths(Collection<String> paths)
       throws MetaStoreException {
     try {

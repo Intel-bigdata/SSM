@@ -420,23 +420,20 @@ public class InotifyEventApplier {
     if (!dir.endsWith("/")) {
       dir = dir + "/";
     }
-
     List<String> fileList = new ArrayList<>();
     List<String> subdirList = new ArrayList<>();
-    List<FileInfo> fileInfos = metaStore.getFilesByPrefix(dir);
-    for (FileInfo fileInfo : fileInfos) {
-      if (fileInfo.isdir()) {
-        subdirList.add(fileInfo.getPath());
-      }
-    }
-
-    fileList.addAll(subdirList);
+    // get fileInfo in asc order of path to guarantee that
+    // the subdir is tackled prior to files or dirs under it
+    List<FileInfo> fileInfos = metaStore.getFilesByPrefixInOrder(dir);
     for (FileInfo fileInfo : fileInfos) {
       // just delete subdir instead of deleting all files under it
       if (isUnderDir(fileInfo.getPath(), subdirList)) {
         continue;
       }
       fileList.add(fileInfo.getPath());
+      if (fileInfo.isdir()) {
+        subdirList.add(fileInfo.getPath());
+      }
     }
     return fileList;
   }
