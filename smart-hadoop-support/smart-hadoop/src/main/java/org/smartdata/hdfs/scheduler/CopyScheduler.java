@@ -74,7 +74,7 @@ public class CopyScheduler extends ActionSchedulerService {
   // <File path, FileChain object>
   private Map<String, ScheduleTask.FileChain> fileDiffChainMap;
   // <did, Fail times>
-  private Map<Long, Integer> fileDiffMap;
+  private Map<Long, Integer> retryDiffMap;
   // BaseSync queue
   private Map<String, String> baseSyncQueue;
   private Map<String, Boolean> overwriteQueue;
@@ -105,7 +105,7 @@ public class CopyScheduler extends ActionSchedulerService {
     this.fileLock = new ConcurrentHashMap<>();
     this.actionDiffMap = new ConcurrentHashMap<>();
     this.fileDiffChainMap = new ConcurrentHashMap<>();
-    this.fileDiffMap = new ConcurrentHashMap<>();
+    this.retryDiffMap = new ConcurrentHashMap<>();
     this.baseSyncQueue = new ConcurrentHashMap<>();
     this.overwriteQueue = new ConcurrentHashMap<>();
     this.executorService = Executors.newScheduledThreadPool(2);
@@ -190,7 +190,6 @@ public class CopyScheduler extends ActionSchedulerService {
         // TODO scope check
         String remoteDest = fileDiff.getParameters().get("-dest");
         action.getArgs().put("-dest", remoteDest.replaceFirst(srcDir, destDir));
-        fileDiff.getParameters().remove("-dest");
         break;
       case METADATA:
         action.setActionType("metadata");
@@ -202,7 +201,6 @@ public class CopyScheduler extends ActionSchedulerService {
     // Put all parameters into args
     action.getArgs().putAll(fileDiff.getParameters());
     actionDiffMap.put(actionInfo.getActionId(), did);
-    fileDiffMap.put(did, 0);
     return ScheduleResult.SUCCESS;
   }
 
@@ -255,53 +253,59 @@ public class CopyScheduler extends ActionSchedulerService {
   public void onActionFinished(ActionInfo actionInfo) {
     // Remove lock
     FileDiff fileDiff = null;
-    if (actionInfo.isFinished()) {
-      try {
-        long did = actionDiffMap.get(actionInfo.getActionId());
-        // Remove for action diff map
-        if (actionDiffMap.containsKey(actionInfo.getActionId())) {
-          actionDiffMap.remove(actionInfo.getActionId());
-        }
-        if (fileDiffCache.containsKey(did)) {
-          fileDiff = fileDiffCache.get(did);
+    long did = actionDiffMap.get(actionInfo.getActionId());
+    // Remove for action diff map
+    actionDiffMap.remove(actionInfo.getActionId());
+    fileDiff = fileDiffCache.get(did);
+    if (fileDiff == null) {
+      LOG.error("Duplicate sync action->[ {} ] is triggered", did);
+      return;
+    }
+    handleActionResult(actionInfo, fileDiff);
+    fileLock.remove(fileDiff.getSrc());
+  }
+
+
+  private void handleActionResult(ActionInfo actionInfo, FileDiff fileDiff) {
+    long did = fileDiff.getDiffId();
+    try {
+      if (actionInfo.isSuccessful()) {
+        // Remove from chain top
+        fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
+        // Update state in cache
+        updateFileDiffInCache(did, FileDiffState.APPLIED);
+        // Remove from retry map
+        retryDiffMap.remove(did);
+      } else {
+        // Action failed
+        if (!retryDiffMap.containsKey(did)) {
+          // Put diff into retry map
+          retryDiffMap.put(did, 0);
         } else {
-          LOG.error("Duplicate sync action->[ {} ] is triggered", did);
-          return;
-        }
-        if (fileDiff == null) {
-          return;
-        }
-        if (actionInfo.isSuccessful()) {
-          if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
-            // Remove from chain top
+          int curr = retryDiffMap.get(did);
+          if (curr >= retryTh) {
+            // Action failed several times and exceed threshold
             fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
-          }
-          //update state in cache
-          updateFileDiffInCache(did, FileDiffState.APPLIED);
-          if (fileDiffMap.containsKey(did)) {
-            fileDiffMap.remove(did);
-          }
-        } else {
-          if (fileDiffMap.containsKey(did)) {
-            int curr = fileDiffMap.get(did);
-            if (curr >= retryTh) {
-              //update state in cache
-              updateFileDiffInCache(did, FileDiffState.FAILED);
-              // directSync(fileDiff.getSrc(),
-              //     actionInfo.getArgs().get(SyncAction.SRC),
-              //     actionInfo.getArgs().get(SyncAction.DEST));
-            } else {
-              fileDiffMap.put(did, curr + 1);
-              // Unlock this file for retry
-              fileLock.remove(fileDiff.getSrc());
-            }
+            // Mark diff as failed
+            updateFileDiffInCache(did, FileDiffState.FAILED);
+            // Trigger direct sync for this file
+            // Todo maybe diff affects multiple files
+            retryDiffMap.remove(did);
+            // Add to direct Sync queue
+            baseSyncQueue.put(actionInfo.getArgs().get(SyncAction.SRC),
+                actionInfo.getArgs().get(SyncAction.DEST));
+          } else {
+            retryDiffMap.put(did, curr + 1);
           }
         }
-      } catch (MetaStoreException e) {
-        LOG.error("Mark sync action in metastore failed!", e);
-      } catch (Exception e) {
-        LOG.error("Sync action error", e);
       }
+      // Unlock this file for retry and next diff
+    } catch (MetaStoreException e) {
+      retryDiffMap.remove(did);
+      LOG.error("Mark sync action in metastore failed!", e);
+    } catch (Exception e) {
+      retryDiffMap.remove(did);
+      LOG.error("ActionOnFinish: Sync action error", e);
     }
   }
 
@@ -316,7 +320,7 @@ public class CopyScheduler extends ActionSchedulerService {
     FileDiff fileDiff;
     int index = 0;
     for (Iterator<Map.Entry<String, String>> it =
-        baseSyncQueue.entrySet().iterator(); it.hasNext(); ) {
+        baseSyncQueue.entrySet().iterator(); it.hasNext();) {
       if (index >= batchSize) {
         break;
       }
@@ -410,6 +414,7 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   private FileDiff directSync(String src, String dest) throws MetaStoreException {
+    // Check if file is in file table
     FileInfo fileInfo = metaStore.getFile(src);
     if (fileInfo == null) {
       // Primary file doesn't exist
@@ -535,9 +540,7 @@ public class CopyScheduler extends ActionSchedulerService {
       fileDiffCache.remove(did);
       fileDiffCacheChanged.remove(did);
       // Remove file lock
-      if (fileLock.containsKey(fileDiff.getSrc())) {
-        fileLock.remove(fileDiff.getSrc());
-      }
+      fileLock.remove(fileDiff.getSrc());
     }
   }
 
