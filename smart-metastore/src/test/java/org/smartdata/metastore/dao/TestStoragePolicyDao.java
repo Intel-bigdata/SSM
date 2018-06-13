@@ -45,6 +45,8 @@ public class TestStoragePolicyDao extends TestDaoUtil {
     storagePolicyDao.insertStoragePolicyTable(storagePolicy);
     Assert.assertTrue(storagePolicyDao.getStoragePolicyName(1).equals("pName"));
     storagePolicyDao.getStoragePolicyName(1);
+    storagePolicyDao.getStorageSid("pName");
+    storagePolicyDao.getStoragePolicy();
     storagePolicyDao.deleteStoragePolicy(1);
     storagePolicyDao.getStoragePolicyName(7);
     storagePolicyDao.getStoragePolicyIdNameMap();
