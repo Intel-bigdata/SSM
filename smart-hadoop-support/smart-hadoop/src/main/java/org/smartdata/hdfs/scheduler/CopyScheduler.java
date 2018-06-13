@@ -182,7 +182,6 @@ public class CopyScheduler extends ActionSchedulerService {
         // TODO scope check
         String remoteDest = fileDiff.getParameters().get("-dest");
         action.getArgs().put("-dest", remoteDest.replaceFirst(srcDir, destDir));
-        fileDiff.getParameters().remove("-dest");
         break;
       case METADATA:
         action.setActionType("metadata");
@@ -312,7 +311,7 @@ public class CopyScheduler extends ActionSchedulerService {
     FileDiff fileDiff;
     int index = 0;
     for (Iterator<Map.Entry<String, String>> it =
-        baseSyncQueue.entrySet().iterator(); it.hasNext(); ) {
+        baseSyncQueue.entrySet().iterator(); it.hasNext();) {
       if (index >= batchSize) {
         break;
       }
