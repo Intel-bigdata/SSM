@@ -206,9 +206,19 @@ def start_rule(rid):
 def stop_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/stop")
 
+
 def list_sync():
     resp = requests.get(RULE_ROOT + "/list/sync")
     return resp.json()["body"]
+
+
+def get_sync_info_by_rid(rid):
+    infos = list_sync()
+    for info in infos:
+        if info["id"] is rid:
+            return info
+    return None
+
 
 def get_cmdlets_of_rule(rid):
     resp = requests.get(RULE_ROOT + "/" + str(rid) + "/cmdlets")
@@ -263,7 +273,7 @@ def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
     return file_path, submit_cmdlet(cmdlet_str)
 
 
-def copy_file_to_S3(file_path, dest_path):
+def copy_file_to_s3(file_path, dest_path):
     """
     copy file to S3
     """

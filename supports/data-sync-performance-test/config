@@ -1,0 +1,17 @@
+# This is test cases, also the base sync dir name, the files for these case should be created under them in advance
+cases="1MB_10000 100MB_1000"
+
+# SSM home, e.g., SMART_HOME=~/smart-data-1.4.0
+SMART_HOME=
+
+# PAT home, e.g., PAT_HOME=~/PAT
+PAT_HOME=
+
+# The dest cluster hdfs url for sync, e.g., DEST_CLUSTER=hdfs://sr518:9000
+DEST_CLUSTER=
+
+# The namenode's hostname for remote HDFS cluster
+remote_namenode=
+
+# The hosts requires dropping cache, e.g., hosts="host1 host2"
+hosts=""
