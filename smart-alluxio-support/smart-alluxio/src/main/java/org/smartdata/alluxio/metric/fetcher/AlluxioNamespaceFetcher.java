@@ -49,6 +49,10 @@ public class AlluxioNamespaceFetcher {
   public static final Logger LOG =
       LoggerFactory.getLogger(AlluxioNamespaceFetcher.class);
 
+  public AlluxioNamespaceFetcher(FileSystem fs, MetaStore metaStore, ScheduledExecutorService service) {
+    this(fs, metaStore, DEFAULT_INTERVAL, service);
+  }
+
   public AlluxioNamespaceFetcher(FileSystem fs, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service) {
     this.fetchTask = new AlluxioFetchTask(fs);

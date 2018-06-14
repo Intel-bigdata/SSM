@@ -19,6 +19,7 @@ package org.smartdata.alluxio;
 
 import java.io.IOException;
 
+import alluxio.client.file.URIStatus;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
 import org.slf4j.Logger;
@@ -28,6 +29,7 @@ import alluxio.Configuration;
 import alluxio.PropertyKey;
 import alluxio.client.file.FileSystem;
 import alluxio.client.file.FileSystemContext;
+import org.smartdata.model.FileInfo;
 
 /**
  * Contain utils related to alluxio cluster.
@@ -44,6 +46,22 @@ public class AlluxioUtil {
     FileSystemContext fsContext = FileSystemContext.create();
     return FileSystem.Factory.get(fsContext);  
   }
-  
+
+  public static FileInfo convertFileStatus(URIStatus status) {
+    FileInfo fileInfo = new FileInfo(
+        status.getPath(),
+        status.getFileId(),
+        status.getLength(),
+        status.isFolder(),
+        (short)1,
+        status.getBlockSizeBytes(),
+        status.getLastModificationTimeMs(),
+        status.getCreationTimeMs(),
+        (short) status.getMode(),
+        status.getOwner(),
+        status.getGroup(),
+        (byte) 0);
+    return fileInfo;
+  }
  
 }
