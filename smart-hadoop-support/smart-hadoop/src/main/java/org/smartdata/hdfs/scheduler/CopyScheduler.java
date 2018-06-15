@@ -721,10 +721,6 @@ public class CopyScheduler extends ActionSchedulerService {
         addDiffToCache(fileDiff);
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-          String offset = fileDiff.getParameters().get("-offset");
-          // if (offset != null && offset.equals("0") && appendChain.size() != 0) {
-          //   markAllDiffs();
-          // }
           if (currAppendLength >= mergeLenTh ||
               appendChain.size() >= mergeCountTh) {
             mergeAppend();
@@ -860,6 +856,9 @@ public class CopyScheduler extends ActionSchedulerService {
         // Rename chain
         fileDiffChainMap.remove(filePath);
         setFilePath(finalName);
+        if (fileDiffChainMap.containsKey(finalName)) {
+          fileDiffChainMap.get(finalName).markAllDiffs();
+        }
         fileDiffChainMap.put(finalName, this);
         nameChain.clear();
         nameChain.add(finalName);
@@ -901,6 +900,9 @@ public class CopyScheduler extends ActionSchedulerService {
           fileLock.remove(filePath);
           fileDiffChainMap.remove(filePath);
           setFilePath(newName);
+          if (fileDiffChainMap.containsKey(newName)) {
+            fileDiffChainMap.get(newName).markAllDiffs();
+          }
           fileDiffChainMap.put(newName, this);
           // Revert last name added just now
           nameChain.remove(nameChain.size() - 1);

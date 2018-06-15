@@ -148,7 +148,7 @@ public class CopyFileAction extends HdfsAction {
         }
         out.write(buf, 0, bytesRead);
         bytesRemaining -= (long) bytesRead;
-        appendLog("Copied " +  (1.0 - bytesRemaining/length) + "%");
+        appendLog("Copied " +  (100.0 - 100.0 * bytesRemaining/length) + "%");
       }
       return true;
     } finally {
