@@ -526,7 +526,7 @@ public class CopyScheduler extends ActionSchedulerService {
       pushCacheToDB();
     }
     if (FileDiffState.isUselessFileDiff(fileDiffState)) {
-      numFileDiffUseless.decrementAndGet();
+      numFileDiffUseless.incrementAndGet();
     }
   }
 
