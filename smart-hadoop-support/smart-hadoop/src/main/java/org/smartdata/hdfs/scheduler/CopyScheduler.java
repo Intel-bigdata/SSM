@@ -199,7 +199,9 @@ public class CopyScheduler extends ActionSchedulerService {
     // Put all parameters into args
     action.getArgs().putAll(fileDiff.getParameters());
     actionDiffMap.put(actionInfo.getActionId(), did);
-    fileDiffMap.put(did, 0);
+    if (!fileDiffMap.containsKey(did)) {
+      fileDiffMap.put(did, 0);
+    }
     return ScheduleResult.SUCCESS;
   }
 
@@ -273,6 +275,7 @@ public class CopyScheduler extends ActionSchedulerService {
             // Remove from chain top
             fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
           }
+          fileDiffTerminated(fileDiff);
           //update state in cache
           updateFileDiffInCache(did, FileDiffState.APPLIED);
           if (fileDiffMap.containsKey(did)) {
@@ -282,6 +285,7 @@ public class CopyScheduler extends ActionSchedulerService {
           if (fileDiffMap.containsKey(did)) {
             int curr = fileDiffMap.get(did);
             if (curr >= retryTh) {
+              fileDiffTerminated(fileDiff);
               //update state in cache
               updateFileDiffInCache(did, FileDiffState.FAILED);
               // directSync(fileDiff.getSrc(),
@@ -292,6 +296,9 @@ public class CopyScheduler extends ActionSchedulerService {
               // Unlock this file for retry
               fileLock.remove(fileDiff.getSrc());
             }
+          } else {
+            fileDiffTerminated(fileDiff);
+            updateFileDiffInCache(did, FileDiffState.FAILED);
           }
         }
       } catch (MetaStoreException e) {
@@ -299,6 +306,28 @@ public class CopyScheduler extends ActionSchedulerService {
       } catch (Exception e) {
         LOG.error("Sync action error", e);
       }
+    }
+  }
+
+  public void fileDiffTerminated(FileDiff fileDiff) {
+    if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
+      // Remove from chain top
+      fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
+    }
+    //update state in cache
+    if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
+      fileDiffMap.remove(fileDiff.getDiffId());
+    }
+  }
+
+  public void fileDiffTerminatedInternal(FileDiff fileDiff) {
+    if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
+      // Remove from chain top
+      fileDiffChainMap.get(fileDiff.getSrc()).removeFromDiffChain(fileDiff);
+    }
+//    update state in cache
+    if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
+      fileDiffMap.remove(fileDiff.getDiffId());
     }
   }
 
@@ -739,9 +768,10 @@ public class CopyScheduler extends ActionSchedulerService {
             // Add New Name to Name Chain
             mergeRename(fileDiff);
           } else {
+            fileDiffTerminatedInternal(fileDiff);
             // discard rename file diff due to not synced
             updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.FAILED);
-            discardDirtyInfo(fileDiff);
+            discardDirtyData(fileDiff);
           }
         } else if (fileDiff.getDiffType() == FileDiffType.DELETE) {
           mergeDelete(fileDiff);
@@ -751,7 +781,7 @@ public class CopyScheduler extends ActionSchedulerService {
         }
       }
 
-      void discardDirtyInfo(FileDiff fileDiff) throws MetaStoreException {
+      void discardDirtyData(FileDiff fileDiff) throws MetaStoreException {
         // Clean dirty data
         List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(fileDiff.getSrc());
         for (BackUpInfo backUpInfo : backUpInfos) {
@@ -923,6 +953,7 @@ public class CopyScheduler extends ActionSchedulerService {
           if (fileDiff == null) {
             fileDiff = fileDiffInDB;
           }
+          fileDiffTerminatedInternal(fileDiff);
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.FAILED);
           // add a new append file diff with new name
           FileDiff newFileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
@@ -953,6 +984,15 @@ public class CopyScheduler extends ActionSchedulerService {
           fileDiffChainMap.remove(filePath);
         }
         return fid;
+      }
+
+      void removeFromDiffChain(FileDiff fileDiff) {
+        Iterator<Long> iter = diffChain.iterator();
+        while (iter.hasNext()) {
+          if (iter.next() == fileDiff.getDiffId()) {
+            iter.remove();
+          }
+        }
       }
 
       void markAllDiffs() throws MetaStoreException {
