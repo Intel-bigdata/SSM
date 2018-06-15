@@ -1471,6 +1471,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<FileDiff> getLastAppendFileDiffByFileName(String fileName) throws MetaStoreException {
+    try {
+      return fileDiffDao.getLastAppendFileDiffByFileName(fileName);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
     try {
       return fileDiffDao.getByState(fileDiffState);
