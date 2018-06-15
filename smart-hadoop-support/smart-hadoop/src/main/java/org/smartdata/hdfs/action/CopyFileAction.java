@@ -129,7 +129,7 @@ public class CopyFileAction extends HdfsAction {
         String.format("Copy with offset %s and length %s", offset, length));
     InputStream in = null;
     OutputStream out = null;
-
+    // TODO catch exception and revert
     try {
       in = getSrcInputStream(src);
       out = getDestOutPutStream(dest, offset);
@@ -148,6 +148,7 @@ public class CopyFileAction extends HdfsAction {
         }
         out.write(buf, 0, bytesRead);
         bytesRemaining -= (long) bytesRead;
+        appendLog("Copied " +  (1.0 - bytesRemaining/length) + "%");
       }
       return true;
     } finally {
