@@ -197,7 +197,7 @@ public class CopyScheduler extends ActionSchedulerService {
     action.getArgs().putAll(fileDiff.getParameters());
     actionDiffMap.put(actionInfo.getActionId(), did);
     if (!fileDiffMap.containsKey(did)) {
-      fileDiffMap.put(did, 0);
+      fileDiffMap.put(did, 1);
     }
     return ScheduleResult.SUCCESS;
   }
@@ -308,10 +308,10 @@ public class CopyScheduler extends ActionSchedulerService {
 
   public void fileDiffTerminated(FileDiff fileDiff) {
     if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
-      // Remove from chain top
+      // Remove chain top
       fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
     }
-    //update state in cache
+    // remove from fileDiffMap which is for retry use
     if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
       fileDiffMap.remove(fileDiff.getDiffId());
     }
@@ -319,10 +319,10 @@ public class CopyScheduler extends ActionSchedulerService {
 
   public void fileDiffTerminatedInternal(FileDiff fileDiff) {
     if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
-      // Remove from chain top
+      // Remove the fileDiff from chain
       fileDiffChainMap.get(fileDiff.getSrc()).removeFromDiffChain(fileDiff);
     }
-//    update state in cache
+    // remove from fileDiffMap which is for retry use
     if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
       fileDiffMap.remove(fileDiff.getDiffId());
     }
