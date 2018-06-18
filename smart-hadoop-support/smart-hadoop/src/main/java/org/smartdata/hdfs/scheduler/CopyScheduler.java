@@ -92,7 +92,6 @@ public class CopyScheduler extends ActionSchedulerService {
   private RateLimiter rateLimiter = null;
   // records the number of file diffs in useless states
   private AtomicInteger numFileDiffUseless = new AtomicInteger(0);
-//  private Map<String, FileDiff> pathToAppendFileDiff;
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -106,8 +105,6 @@ public class CopyScheduler extends ActionSchedulerService {
     this.executorService = Executors.newScheduledThreadPool(2);
     this.fileDiffCache = new ConcurrentHashMap<>();
     this.fileDiffCacheChanged = new ConcurrentHashMap<>();
-//    this.pathToAppendFileDiff = new ConcurrentHashMap<>();
-
     // Get conf or new default conf
     try {
       conf = getContext().getConf();
@@ -548,10 +545,6 @@ public class CopyScheduler extends ActionSchedulerService {
     if (FileDiffState.isUselessFileDiff(fileDiffState)) {
       numFileDiffUseless.incrementAndGet();
     }
-    // record append file diff state by path
-//    if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-//      pathToAppendFileDiff.put(fileDiff.getSrc(), fileDiff);
-//    }
   }
 
   /***
@@ -649,12 +642,6 @@ public class CopyScheduler extends ActionSchedulerService {
 
     private void diffPreProcessing(
         List<FileDiff> fileDiffs) throws MetaStoreException {
-      // record append file diff state by path
-//      for (FileDiff fileDiff : fileDiffs) {
-//        if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-//          pathToAppendFileDiff.put(fileDiff.getSrc(), fileDiff);
-//        }
-//      }
       // Merge all existing fileDiffs into fileChains
       LOG.debug("Size of Pending diffs {}", fileDiffs.size());
       if (fileDiffs.size() == 0 && baseSyncQueue.size() == 0) {
@@ -925,23 +912,6 @@ public class CopyScheduler extends ActionSchedulerService {
       }
 
       boolean isRenameSyncedFile(FileDiff renameFileDiff) throws MetaStoreException {
-//        FileDiff fileDiff = pathToAppendFileDiff.get(renameFileDiff.getSrc());
-//        if (fileDiff == null) {
-//          return false;
-//        }
-//        if (fileDiff.getState() == FileDiffState.APPLIED) {
-//          return true;
-//        } else {
-//          fileDiff.setState(FileDiffState.FAILED);
-//          updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.FAILED);
-//          // add a new append file diff with new name
-//          FileDiff newFileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
-//          newFileDiff.getParameters().putAll(fileDiff.getParameters());
-//          newFileDiff.setSrc(fileDiff.getParameters().get("-dest"));
-//          metaStore.insertFileDiff(newFileDiff);
-//          return false;
-//        }
-
         String path = renameFileDiff.getSrc();
         // get latest append file diff
         List<FileDiff> fileDiffList = metaStore.getLastAppendFileDiffByFileName(path);
