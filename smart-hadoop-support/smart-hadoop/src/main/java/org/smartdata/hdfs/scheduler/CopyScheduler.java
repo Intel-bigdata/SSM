@@ -283,17 +283,22 @@ public class CopyScheduler extends ActionSchedulerService {
         } else {
           int curr = retryDiffMap.get(did);
           if (curr >= retryTh) {
-            // Action failed several times and exceed threshold
-            fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
-            // Mark diff as failed
-            updateFileDiffInCache(did, FileDiffState.FAILED);
-            // Trigger direct sync for this file
-            // Todo maybe diff affects multiple files
             retryDiffMap.remove(did);
-            // Add to direct Sync queue
-            baseSyncQueue.put(fileDiff.getSrc(), actionInfo.getArgs().get(HdfsAction.FILE_PATH));
-            if (fileDiff.getDiffType() == FileDiffType.RENAME) {
-              baseSyncQueue.put(fileDiff.getParameters().get("-dest"), actionInfo.getArgs().get("-dest"));
+            if (fileDiffChainMap.get(fileDiff.getSrc()).isRenameChain()) {
+              // Rename caused fails
+              fileDiffChainMap.get(fileDiff.getSrc()).foreceMergeRename();
+            } else {
+              // Action failed several times and exceed threshold
+              fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
+              // Mark diff as failed
+              updateFileDiffInCache(did, FileDiffState.FAILED);
+              // Trigger direct sync for this file
+              // Todo maybe diff affects multiple files
+              // Add to direct Sync queue
+              baseSyncQueue.put(fileDiff.getSrc(), actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+              if (fileDiff.getDiffType() == FileDiffType.RENAME) {
+                baseSyncQueue.put(fileDiff.getParameters().get("-dest"), actionInfo.getArgs().get("-dest"));
+              }
             }
           } else {
             retryDiffMap.put(did, curr + 1);
@@ -716,10 +721,6 @@ public class CopyScheduler extends ActionSchedulerService {
         addDiffToCache(fileDiff);
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
-          String offset = fileDiff.getParameters().get("-offset");
-          // if (offset != null && offset.equals("0") && appendChain.size() != 0) {
-          //   markAllDiffs();
-          // }
           if (currAppendLength >= mergeLenTh ||
               appendChain.size() >= mergeCountTh) {
             mergeAppend();
@@ -814,6 +815,7 @@ public class CopyScheduler extends ActionSchedulerService {
             updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
           }
         } else {
+          // ignore rename, because file is not copied yet
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
       }
@@ -829,17 +831,53 @@ public class CopyScheduler extends ActionSchedulerService {
         }
       }
 
+      public boolean isRenameChain() {
+        return nameChain.size() != 1;
+      }
+
+      public void foreceMergeRename() throws MetaStoreException {
+        // Restart mergeReanme
+        // Rename action will effect all append actions
+        String finalName = nameChain.get(nameChain.size() - 1);
+        LOG.debug("Force Rename Merge Triggered!");
+        // Lock file to avoid File Chain being processed
+        fileLock.put(filePath, -1L);
+        for (long did : diffChain) {
+          FileDiff fileDiff = fileDiffCache.get(did);
+          if (fileDiff == null) {continue;}
+          if (fileDiff.getDiffType() == FileDiffType.RENAME) {
+            updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
+          } else if (fileDiff.getState() != FileDiffState.APPLIED) {
+            // change path to final
+            fileDiff.setSrc(finalName);
+            fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
+          }
+        }
+        // Rename chain
+        fileDiffChainMap.remove(filePath);
+        setFilePath(finalName);
+        if (fileDiffChainMap.containsKey(finalName)) {
+          fileDiffChainMap.get(finalName).markAllDiffs();
+        }
+        fileDiffChainMap.put(finalName, this);
+        nameChain.clear();
+        nameChain.add(finalName);
+        // Unlock file
+        fileLock.remove(filePath);
+      }
+
       @VisibleForTesting
       void mergeRename(FileDiff fileDiff) throws MetaStoreException {
         // Rename action will effect all append actions
+        String newName = fileDiff.getParameters().get("-dest");
+        nameChain.add(newName);
         if (fileLock.containsKey(filePath)) {
+          addToChain(fileDiff);
           return;
         }
         LOG.debug("Rename Merge Triggered!");
         // Lock file to avoid File Chain being processed
         fileLock.put(filePath, -1L);
-        String newName = fileDiff.getParameters().get("-dest");
-        nameChain.add(newName);
         boolean isCreate = false;
         for (long did : appendChain) {
           FileDiff appendFileDiff = fileDiffCache.get(did);
@@ -862,7 +900,12 @@ public class CopyScheduler extends ActionSchedulerService {
           fileLock.remove(filePath);
           fileDiffChainMap.remove(filePath);
           setFilePath(newName);
+          if (fileDiffChainMap.containsKey(newName)) {
+            fileDiffChainMap.get(newName).markAllDiffs();
+          }
           fileDiffChainMap.put(newName, this);
+          // Revert last name added just now
+          nameChain.remove(nameChain.size() - 1);
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
         // Unlock file
