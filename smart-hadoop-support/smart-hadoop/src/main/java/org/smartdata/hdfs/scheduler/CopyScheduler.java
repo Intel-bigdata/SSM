@@ -914,7 +914,7 @@ public class CopyScheduler extends ActionSchedulerService {
       boolean isRenameSyncedFile(FileDiff renameFileDiff) throws MetaStoreException {
         String path = renameFileDiff.getSrc();
         // get latest append file diff
-        List<FileDiff> fileDiffList = metaStore.getLastAppendFileDiffByFileName(path);
+        List<FileDiff> fileDiffList = metaStore.getLastAppendFileDiffByPath(path, renameFileDiff.getDiffId());
         FileDiff fileDiffInDB = fileDiffList.get(0);
         if (fileDiffInDB.getState() == FileDiffState.APPLIED) {
           return true;
