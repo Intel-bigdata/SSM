@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -264,17 +265,11 @@ public class InotifyEventFetcher {
     }
 
     public List<String> getIgnoreDirFromConfig() {
-      String ignoreDirs = this.conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      List<String> ignoreList;
-      if (ignoreDirs == null || ignoreDirs.equals("")) {
-        ignoreList = new ArrayList<>();
-      } else {
-        ignoreList = Arrays.asList(ignoreDirs.split(","));
-      }
-      for (int i = 0; i < ignoreList.size(); i++) {
-        if (!ignoreList.get(i).endsWith("/")) {
-          ignoreList.set(i, ignoreList.get(i).concat("/"));
-        }
+      Collection<String> ignoreDirs =
+          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      List<String> ignoreList = new ArrayList<>(ignoreDirs.size());
+      for (String dir : ignoreDirs) {
+        ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
       }
       return ignoreList;
     }
@@ -283,8 +278,8 @@ public class InotifyEventFetcher {
       if (!path.endsWith("/")) {
         path = path.concat("/");
       }
-      for (int i = 0; i < ignoreList.size(); i++) {
-        if (path.equals(ignoreList.get(i))) {
+      for (String dir : ignoreList) {
+        if (path.startsWith(dir)) {
           return true;
         }
       }

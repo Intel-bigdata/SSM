@@ -92,10 +92,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     Collection<String> dirs = serverContext.getConf()
         .getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     for (String s : dirs) {
-      if (!s.endsWith("/")) {
-        s = s + "/";
-        ignoreDirs.add(s);
-      }
+      ignoreDirs.add(s.endsWith("/") ? s : s + "/");
     }
     LOG.info("Initialized.");
   }
