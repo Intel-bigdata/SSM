@@ -55,6 +55,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
@@ -291,10 +292,8 @@ public class CopyScheduler extends ActionSchedulerService {
             // Todo maybe diff affects multiple files
             retryDiffMap.remove(did);
             // Add to direct Sync queue
-            baseSyncQueue.put(fileDiff.getSrc(), actionInfo.getArgs().get(HdfsAction.FILE_PATH));
-            if (fileDiff.getDiffType() == FileDiffType.RENAME) {
-              baseSyncQueue.put(fileDiff.getParameters().get("-dest"), actionInfo.getArgs().get("-dest"));
-            }
+            baseSyncQueue.put(actionInfo.getArgs().get(SyncAction.SRC),
+                actionInfo.getArgs().get(SyncAction.DEST));
           } else {
             retryDiffMap.put(did, curr + 1);
           }
@@ -717,9 +716,10 @@ public class CopyScheduler extends ActionSchedulerService {
         long did = fileDiff.getDiffId();
         if (fileDiff.getDiffType() == FileDiffType.APPEND) {
           String offset = fileDiff.getParameters().get("-offset");
-          // if (offset != null && offset.equals("0") && appendChain.size() != 0) {
-          //   markAllDiffs();
-          // }
+          if (offset != null && offset.equals("0") && diffChain.size() != 0) {
+            markAllDiffs();
+          }
+
           if (currAppendLength >= mergeLenTh ||
               appendChain.size() >= mergeCountTh) {
             mergeAppend();
@@ -843,8 +843,8 @@ public class CopyScheduler extends ActionSchedulerService {
         boolean isCreate = false;
         for (long did : appendChain) {
           FileDiff appendFileDiff = fileDiffCache.get(did);
-          if (appendFileDiff.getParameters().containsKey("-offset")) {
-            if (appendFileDiff.getParameters().get("-offset").equals("0")) {
+          if (fileDiff.getParameters().containsKey("-offset")) {
+            if (fileDiff.getParameters().get("-offset").equals("0")) {
               isCreate = true;
             }
           }
@@ -858,11 +858,6 @@ public class CopyScheduler extends ActionSchedulerService {
         if (!isCreate) {
           diffChain.add(0, fileDiff.getDiffId());
         } else {
-          // Rename chain
-          fileLock.remove(filePath);
-          fileDiffChainMap.remove(filePath);
-          setFilePath(newName);
-          fileDiffChainMap.put(newName, this);
           updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
         }
         // Unlock file
