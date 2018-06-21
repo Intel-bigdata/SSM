@@ -94,7 +94,8 @@ public class CopyScheduler extends ActionSchedulerService {
   // records the number of file diffs in useless states
   private AtomicInteger numFileDiffUseless = new AtomicInteger(0);
   // record the file diff info in order for check use
-  private List<FileDiff> fileDiffsArchive;
+  private List<FileDiff> fileDiffArchive;
+  public static final int fileDiffArchiveSize = 1000;
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -131,7 +132,7 @@ public class CopyScheduler extends ActionSchedulerService {
     } catch (MetaStoreException e) {
       LOG.error("Failed to get num of useless file diffs!");
     }
-    this.fileDiffsArchive = new CopyOnWriteArrayList<>();
+    this.fileDiffArchive = new CopyOnWriteArrayList<>();
   }
 
   @Override
@@ -360,7 +361,7 @@ public class CopyScheduler extends ActionSchedulerService {
     for (int i=0; i< dids.length; i++) {
       batchFileDiffs.get(i).setDiffId(dids[i]);
     }
-    fileDiffsArchive.addAll(batchFileDiffs);
+    fileDiffArchive.addAll(batchFileDiffs);
     // Remove from baseSyncQueue
     for (String src : removed) {
       baseSyncQueue.remove(src);
@@ -546,7 +547,7 @@ public class CopyScheduler extends ActionSchedulerService {
     // Update
     fileDiffCacheChanged.put(did, true);
     fileDiffCache.put(did, fileDiff);
-    for (FileDiff diff: fileDiffsArchive) {
+    for (FileDiff diff: fileDiffArchive) {
       if (diff.getDiffId() == did) {
         diff.setState(fileDiffState);
       }
@@ -656,7 +657,7 @@ public class CopyScheduler extends ActionSchedulerService {
     private void diffPreProcessing(
         List<FileDiff> fileDiffs) throws MetaStoreException {
       for (FileDiff fileDiff: fileDiffs) {
-        addToFileDiffsArchive(fileDiff);
+        addToFileDiffArchive(fileDiff);
       }
       // Merge all existing fileDiffs into fileChains
       LOG.debug("Size of Pending diffs {}", fileDiffs.size());
@@ -691,13 +692,21 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
 
-    private void addToFileDiffsArchive(FileDiff newFileDiff) {
-      for (FileDiff fileDiff: fileDiffsArchive) {
+    private void addToFileDiffArchive(FileDiff newFileDiff) {
+      for (FileDiff fileDiff: fileDiffArchive) {
         if (fileDiff.getDiffId() == newFileDiff.getDiffId()) {
           return;
         }
       }
-      fileDiffsArchive.add(newFileDiff);
+      fileDiffArchive.add(newFileDiff);
+      int index = 0;
+      while (fileDiffArchive.size() > fileDiffArchiveSize && index < fileDiffArchiveSize) {
+        if (FileDiffState.isTerminalState(fileDiffArchive.get(index).getState())) {
+          fileDiffArchive.remove(index);
+          continue;
+        }
+        index++;
+      }
     }
 
     @Override
@@ -805,7 +814,7 @@ public class CopyScheduler extends ActionSchedulerService {
           deleteFileDiff.getParameters().put("-dest", destPath);
           long did = metaStore.insertFileDiff(deleteFileDiff);
           deleteFileDiff.setDiffId(did);
-          fileDiffsArchive.add(deleteFileDiff);
+          fileDiffArchive.add(deleteFileDiff);
         }
       }
 
@@ -943,7 +952,7 @@ public class CopyScheduler extends ActionSchedulerService {
         // get latest append file diff
         FileDiff lastAppendFileDiff = null;
         int index = 0;
-        for (FileDiff fileDiff: fileDiffsArchive) {
+        for (FileDiff fileDiff: fileDiffArchive) {
           if (fileDiff.getDiffId() == renameFileDiff.getDiffId()) {
             break;
           }
@@ -972,7 +981,7 @@ public class CopyScheduler extends ActionSchedulerService {
               renameFileDiff.getSrc(), renameFileDiff.getParameters().get("-dest")));
           long did = metaStore.insertFileDiff(newFileDiff);
           newFileDiff.setDiffId(did);
-          fileDiffsArchive.add(index, newFileDiff);
+          fileDiffArchive.add(index, newFileDiff);
           return false;
         }
       }

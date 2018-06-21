@@ -1470,7 +1470,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throw new MetaStoreException(e);
     }
   }
-  
+
   public List<FileDiff> getFileDiffs(FileDiffState fileDiffState) throws MetaStoreException {
     try {
       return fileDiffDao.getByState(fileDiffState);
