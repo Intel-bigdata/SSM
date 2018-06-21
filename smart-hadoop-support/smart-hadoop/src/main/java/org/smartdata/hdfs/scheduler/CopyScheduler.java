@@ -286,9 +286,6 @@ public class CopyScheduler extends ActionSchedulerService {
               fileDiffTerminated(fileDiff);
               //update state in cache
               updateFileDiffInCache(did, FileDiffState.FAILED);
-              // directSync(fileDiff.getSrc(),
-              //     actionInfo.getArgs().get(SyncAction.SRC),
-              //     actionInfo.getArgs().get(SyncAction.DEST));
             } else {
               fileDiffMap.put(did, curr + 1);
               // Unlock this file for retry
@@ -858,46 +855,19 @@ public class CopyScheduler extends ActionSchedulerService {
         appendChain.clear();
       }
 
-//      @VisibleForTesting
-//      void mergeDelete(FileDiff fileDiff) throws MetaStoreException {
-//        LOG.debug("Delete Merge Triggered!");
-//        boolean isCreate = false;
-//        for (long did : appendChain) {
-//          FileDiff diff = fileDiffCache.get(did);
-//          if (diff != null && diff.getParameters().containsKey("-offset")) {
-//            if (!isCreate && diff.getParameters().get("-offset").equals("0")) {
-//              isCreate = true;
-//            }
-//          }
-//          updateFileDiffInCache(did, FileDiffState.APPLIED);
-//        }
-//        appendChain.clear();
-//        if (!isCreate) {
-//          if (nameChain.size() > 1) {
-//            fileDiff.setSrc(nameChain.get(0));
-//            // Delete raw is enough
-//            fileDiffCacheChanged.put(fileDiff.getDiffId(), true);
-//          }
-//          String destPath = fileDiff.getParameters().get("-dest");
-//          if (fileExistOnStandby(destPath)) {
-//            // Only allow delete when file do exist on remote
-//            diffChain.add(fileDiff.getDiffId());
-//          } else {
-//            // Mark this delete diff as applied
-//            updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
-//          }
-//        } else {
-//          updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.APPLIED);
-//        }
-//      }
-
       @VisibleForTesting
       void mergeDelete(FileDiff fileDiff) throws MetaStoreException {
+        LOG.debug("Delete Merge Triggered!");
+        for (long did : appendChain) {
+          FileDiff diff = fileDiffCache.get(did);
+          fileDiffTerminatedInternal(diff);
+          updateFileDiffInCache(did, FileDiffState.APPLIED);
+        }
+        appendChain.clear();
         diffChain.add(fileDiff.getDiffId());
       }
 
-
-        @VisibleForTesting
+      @VisibleForTesting
       void mergeChain(FileChain previousChain) {
       }
 
