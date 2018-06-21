@@ -111,13 +111,6 @@ public class FileDiffDao {
         new Object[]{fileName}, new FileDiffRowMapper());
   }
 
-  public List<FileDiff> getLastAppendFileDiffByPath(String path, long did) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME
-            + " WHERE src = ? AND diff_type = 3 AND did < ? ORDER BY create_time DESC LIMIT 1",
-        new Object[]{path, did}, new FileDiffRowMapper());
-  }
-
   public List<String> getSyncPath(int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
