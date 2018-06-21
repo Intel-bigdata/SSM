@@ -378,23 +378,20 @@ public class InotifyEventApplier {
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
     // TODO: remove "/" appended in src or dest in backup_file table
-    String pathWithSlash;
     if (!path.endsWith("/")) {
-      pathWithSlash = path + "/";
-    } else {
-      pathWithSlash = path;
+      path = path + "/";
     }
-    if (inBackup(pathWithSlash)) {
-      List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(pathWithSlash);
+    if (inBackup(path)) {
+      List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(path);
       for (BackUpInfo backUpInfo : backUpInfos) {
-        String destPath = pathWithSlash.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+        String destPath = path.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
         try {
           // tackle root path case
           URI namenodeUri = new URI(destPath);
           String root = "hdfs://" + namenodeUri.getHost() + ":"
               + String.valueOf(namenodeUri.getPort());
           if (destPath.equals(root) || destPath.equals(root + "/") || destPath.equals("/")) {
-            for (String srcFilePath : getFilesUnderDir(pathWithSlash)) {
+            for (String srcFilePath : getFilesUnderDir(path)) {
               FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
               fileDiff.setSrc(srcFilePath);
               String destFilePath = srcFilePath.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
@@ -403,9 +400,8 @@ public class InotifyEventApplier {
             }
           } else {
             FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-            // use the path getting from event with no slash appended
             fileDiff.setSrc(path);
-            // put sync's dest path in parameter for delete use
+            //put sync's dest path in parameter for delete use
             fileDiff.getParameters().put("-dest", destPath);
             metaStore.insertFileDiff(fileDiff);
           }
@@ -421,32 +417,14 @@ public class InotifyEventApplier {
       dir = dir + "/";
     }
     List<String> fileList = new ArrayList<>();
-    List<String> subdirList = new ArrayList<>();
-    // get fileInfo in asc order of path to guarantee that
-    // the subdir is tackled prior to files or dirs under it
-    List<FileInfo> fileInfos = metaStore.getFilesByPrefixInOrder(dir);
+    List<FileInfo> fileInfos = metaStore.getFilesByPrefix(dir);
     for (FileInfo fileInfo : fileInfos) {
-      // just delete subdir instead of deleting all files under it
-      if (isUnderDir(fileInfo.getPath(), subdirList)) {
+      // To avoid deleting subdir before deleting the file under it
+      if (fileInfo.isdir()) {
         continue;
       }
       fileList.add(fileInfo.getPath());
-      if (fileInfo.isdir()) {
-        subdirList.add(fileInfo.getPath());
-      }
     }
     return fileList;
-  }
-
-  private boolean isUnderDir(String path, List<String> dirs) {
-    if (dirs.isEmpty()) {
-      return false;
-    }
-    for (String subdir : dirs) {
-      if (path.startsWith(subdir)) {
-        return true;
-      }
-    }
-    return false;
   }
 }
