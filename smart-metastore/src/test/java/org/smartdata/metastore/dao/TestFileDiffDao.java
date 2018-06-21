@@ -164,11 +164,9 @@ public class TestFileDiffDao extends TestDaoUtil {
     Assert.assertTrue(fileDiffDao.getPendingDiff().size() == 1);
     fileDiffs[0].getParameters().put("-offset", "0");
     fileDiffs[0].setSrc("test1");
-    fileDiffs[0].setState(FileDiffState.FAILED);
     fileDiffs[1].setCreateTime(2);
     fileDiffs[1].setRuleId(2);
     fileDiffs[1].setDiffType(FileDiffType.RENAME);
-    fileDiffs[1].setState(FileDiffState.APPLIED);
     fileDiffDao.update(fileDiffs);
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiffs[0]));
     Assert.assertTrue(fileDiffDao.getById(2).equals(fileDiffs[1]));
