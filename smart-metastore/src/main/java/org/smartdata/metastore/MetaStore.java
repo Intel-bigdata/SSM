@@ -1426,10 +1426,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   @Override
-  public boolean insertFileDiff(FileDiff fileDiff)
+  public long insertFileDiff(FileDiff fileDiff)
       throws MetaStoreException {
     try {
-      return fileDiffDao.insert(fileDiff) >= 0;
+      return fileDiffDao.insert(fileDiff);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1444,10 +1444,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertFileDiffs(List<FileDiff> fileDiffs)
+  public Long[] insertFileDiffs(List<FileDiff> fileDiffs)
       throws MetaStoreException {
     try {
-      fileDiffDao.insert(fileDiffs);
+      return fileDiffDao.insert(fileDiffs);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
