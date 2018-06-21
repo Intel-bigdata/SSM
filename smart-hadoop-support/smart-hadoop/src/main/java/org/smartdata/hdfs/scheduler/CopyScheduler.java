@@ -273,10 +273,6 @@ public class CopyScheduler extends ActionSchedulerService {
           return;
         }
         if (actionInfo.isSuccessful()) {
-          if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
-            // Remove from chain top
-            fileDiffChainMap.get(fileDiff.getSrc()).removeHead();
-          }
           fileDiffTerminated(fileDiff);
           //update state in cache
           updateFileDiffInCache(did, FileDiffState.APPLIED);
@@ -325,7 +321,7 @@ public class CopyScheduler extends ActionSchedulerService {
   public void fileDiffTerminatedInternal(FileDiff fileDiff) {
     if (fileDiffChainMap.containsKey(fileDiff.getSrc())) {
       // Remove the fileDiff from chain
-      fileDiffChainMap.get(fileDiff.getSrc()).removeFromDiffChain(fileDiff);
+      fileDiffChainMap.get(fileDiff.getSrc()).removeFromChain(fileDiff);
     }
     // remove from fileDiffMap which is for retry use
     if (fileDiffMap.containsKey(fileDiff.getDiffId())) {
@@ -1008,11 +1004,19 @@ public class CopyScheduler extends ActionSchedulerService {
         return fid;
       }
 
-      void removeFromDiffChain(FileDiff fileDiff) {
-        Iterator<Long> iter = diffChain.iterator();
+      void removeFromChain(FileDiff fileDiff) {
+        Iterator<Long> iter = appendChain.iterator();
         while (iter.hasNext()) {
           if (iter.next() == fileDiff.getDiffId()) {
             iter.remove();
+            break;
+          }
+        }
+        iter = diffChain.iterator();
+        while (iter.hasNext()) {
+          if (iter.next() == fileDiff.getDiffId()) {
+            iter.remove();
+            break;
           }
         }
       }
