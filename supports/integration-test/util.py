@@ -150,9 +150,9 @@ def get_cmdlet(cid):
     return resp.json()["body"]
 
 
-def wait_for_cmdlet(cid, period=300):
+def wait_for_cmdlet(cid, period=60):
     """
-    wait at most 300 seconds for cmdlet to be done
+    wait at most 60 seconds for cmdlet to be done
     """
     timeout = time.time() + period
     while True:
@@ -165,7 +165,7 @@ def wait_for_cmdlet(cid, period=300):
             return None
 
 
-def wait_for_cmdlets(cids, period=300):
+def wait_for_cmdlets(cids, period=60):
     failed_cids = []
     while len(cids) != 0:
         cmd = wait_for_cmdlet(cids[0], period)

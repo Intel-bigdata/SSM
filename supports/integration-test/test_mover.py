@@ -2,8 +2,6 @@ import argparse
 import unittest
 from util import *
 
-move_actions = ['archive', 'alldisk', 'onedisk', 'allssd', 'onessd', 'cache', 'uncache']
-
 
 class TestMover(unittest.TestCase):
 
