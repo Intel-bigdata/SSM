@@ -857,13 +857,13 @@ public class CopyScheduler extends ActionSchedulerService {
 
       @VisibleForTesting
       void mergeDelete(FileDiff fileDiff) throws MetaStoreException {
-        LOG.debug("Delete Merge Triggered!");
-        for (long did : appendChain) {
-          FileDiff diff = fileDiffCache.get(did);
-          fileDiffTerminatedInternal(diff);
-          updateFileDiffInCache(did, FileDiffState.APPLIED);
-        }
-        appendChain.clear();
+//        LOG.debug("Delete Merge Triggered!");
+//        for (long did : appendChain) {
+//          FileDiff diff = fileDiffCache.get(did);
+//          fileDiffTerminatedInternal(diff);
+//          updateFileDiffInCache(did, FileDiffState.APPLIED);
+//        }
+//        appendChain.clear();
         diffChain.add(fileDiff.getDiffId());
       }
 
@@ -975,18 +975,10 @@ public class CopyScheduler extends ActionSchedulerService {
       }
 
       void removeFromChain(FileDiff fileDiff) {
-        Iterator<Long> iter = appendChain.iterator();
+        Iterator<Long> iter = diffChain.iterator();
         while (iter.hasNext()) {
           if (iter.next() == fileDiff.getDiffId()) {
             iter.remove();
-            break;
-          }
-        }
-        iter = diffChain.iterator();
-        while (iter.hasNext()) {
-          if (iter.next() == fileDiff.getDiffId()) {
-            iter.remove();
-            break;
           }
         }
       }
