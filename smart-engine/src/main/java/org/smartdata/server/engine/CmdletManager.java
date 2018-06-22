@@ -1189,6 +1189,9 @@ public class CmdletManager extends AbstractService {
         Set<CmdletInfo> failedCmdlet = new HashSet<>();
         for (Long cid : idToLaunchCmdlet.keySet()) {
           CmdletInfo cmdletInfo = idToCmdlets.get(cid);
+          if (cmdletInfo == null) {
+            continue;
+          }
           if (cmdletInfo.getState() == CmdletState.DISPATCHED
                   || cmdletInfo.getState() == CmdletState.EXECUTING) {
             for (long id : cmdletInfo.getAids()) {

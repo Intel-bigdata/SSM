@@ -19,9 +19,8 @@ class TestRule(unittest.TestCase):
         # Submit read action to trigger rule
         # Read three times
         cmds = []
-        cmds.append(read_file(file_path))
-        cmds.append(read_file(file_path))
-        cmds.append(read_file(file_path))
+        for i in range(3):
+            cmds.append(read_file(file_path))
         wait_for_cmdlets(cmds)
         # Status check
         rule = get_rule(rid)
