@@ -194,16 +194,45 @@ public class InotifyEventApplier {
     String dest = renameEvent.getDstPath();
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(dest);
-    FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+    FileInfo info = metaStore.getFile(src);
     if (inBackup(src)) {
-      fileDiff.setSrc(src);
-      fileDiff.getParameters().put("-dest", dest);
-      metaStore.insertFileDiff(fileDiff);
+      // rename the file if the renamed file is still under the backup src dir
+      // if not, insert a delete file diff
+      if (inBackup(dest)) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+        fileDiff.setSrc(src);
+        fileDiff.getParameters().put("-dest", dest);
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        insertDeleteDiff(src, info.isdir());
+      }
+    } else if (inBackup(dest)) {
+      // tackle such case: rename file from outside into backup dir
+      if (!info.isdir()) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(dest);
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        fileDiff.getParameters()
+            .put("-length", String.valueOf(info.getLength()));
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        List<FileInfo> fileInfos = metaStore.getFilesByPrefix(src.endsWith("/") ? src : src + "/");
+        for (FileInfo fileInfo : fileInfos) {
+          if (fileInfo.isdir()) {
+            continue;
+          }
+          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+          fileDiff.setSrc(fileInfo.getPath().replaceFirst(src, dest));
+          fileDiff.getParameters().put("-offset", String.valueOf(0));
+          fileDiff.getParameters()
+              .put("-length", String.valueOf(fileInfo.getLength()));
+          metaStore.insertFileDiff(fileDiff);
+        }
+      }
     }
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
-    FileInfo info = metaStore.getFile(src);
     if (info == null) {
       if (status != null) {
         info = HadoopUtil.convertFileStatus(status, dest);
