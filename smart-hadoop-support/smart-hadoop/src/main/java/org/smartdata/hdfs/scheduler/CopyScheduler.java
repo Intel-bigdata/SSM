@@ -160,6 +160,10 @@ public class CopyScheduler extends ActionSchedulerService {
       fileLock.remove(path);
       return ScheduleResult.FAIL;
     }
+    // wait dependent file diff
+    if (requireWait(fileDiff)) {
+      return ScheduleResult.RETRY;
+    }
     switch (fileDiff.getDiffType()) {
       case APPEND:
         action.setActionType("copy");
@@ -231,6 +235,24 @@ public class CopyScheduler extends ActionSchedulerService {
     if (fileDiffChainMap.get(path).size() == 0) {
       // File Chain is empty
       return true;
+    }
+    return false;
+  }
+
+  public boolean requireWait(FileDiff fileDiff) {
+    for (FileDiff archiveDiff : fileDiffArchive) {
+      if (fileDiff.getDiffId() == archiveDiff.getDiffId()) {
+        break;
+      }
+      if (!FileDiffState.isTerminalState(archiveDiff.getState())) {
+        String fileDiffPath = fileDiff.getSrc().endsWith("/") ?
+            fileDiff.getSrc() : fileDiff.getSrc() + "/";
+        String archiveDiffPath = archiveDiff.getSrc().endsWith("/") ?
+            archiveDiff.getSrc() : archiveDiff.getSrc() + "/";
+        if (fileDiffPath.startsWith(archiveDiffPath) || archiveDiffPath.startsWith(fileDiffPath)) {
+          return true;
+        }
+      }
     }
     return false;
   }
@@ -461,6 +483,9 @@ public class CopyScheduler extends ActionSchedulerService {
       }
     }
     metaStore.batchUpdateFileDiff(dids, FileDiffState.MERGED);
+    for (long did : dids) {
+      updateFileDiffArchive(did, FileDiffState.MERGED);
+    }
     // Unlock this file
     fileLock.remove(src);
     // Generate a new file diff
@@ -540,17 +565,21 @@ public class CopyScheduler extends ActionSchedulerService {
     // Update
     fileDiffCacheChanged.put(did, true);
     fileDiffCache.put(did, fileDiff);
-    for (FileDiff diff: fileDiffArchive) {
-      if (diff.getDiffId() == did) {
-        diff.setState(fileDiffState);
-      }
-    }
+    updateFileDiffArchive(did, fileDiffState);
     if (fileDiffCacheChanged.size() >= cacheSyncTh) {
       // update
       pushCacheToDB();
     }
     if (FileDiffState.isUselessFileDiff(fileDiffState)) {
       numFileDiffUseless.incrementAndGet();
+    }
+  }
+
+  private synchronized void updateFileDiffArchive(long did, FileDiffState state) {
+    for (FileDiff diff : fileDiffArchive) {
+      if (diff.getDiffId() == did) {
+        diff.setState(state);
+      }
     }
   }
 
@@ -661,6 +690,7 @@ public class CopyScheduler extends ActionSchedulerService {
       for (FileDiff fileDiff : fileDiffs) {
         if (fileDiff.getDiffType() == FileDiffType.BASESYNC) {
           metaStore.updateFileDiff(fileDiff.getDiffId(), FileDiffState.MERGED);
+          updateFileDiffArchive(fileDiff.getDiffId(), FileDiffState.MERGED);
           baseSync(fileDiff.getSrc(), fileDiff.getParameters().get("-dest"));
           return;
         }

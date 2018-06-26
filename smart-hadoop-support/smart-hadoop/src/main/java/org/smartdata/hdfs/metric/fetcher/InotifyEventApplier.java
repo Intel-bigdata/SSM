@@ -218,6 +218,7 @@ public class InotifyEventApplier {
       } else {
         List<FileInfo> fileInfos = metaStore.getFilesByPrefix(src.endsWith("/") ? src : src + "/");
         for (FileInfo fileInfo : fileInfos) {
+          // TODO: cover subdir with no file case
           if (fileInfo.isdir()) {
             continue;
           }
