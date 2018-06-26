@@ -945,39 +945,44 @@ public class CopyScheduler extends ActionSchedulerService {
 
       boolean isRenameSyncedFile(FileDiff renameFileDiff) throws MetaStoreException {
         String path = renameFileDiff.getSrc();
-        // get latest append file diff
-        FileDiff lastAppendFileDiff = null;
-        int index = 0;
-        for (FileDiff fileDiff: fileDiffArchive) {
+        // get unfinished append file diff
+        List<FileDiff> unfinishedAppendFileDiff = new ArrayList<>();
+        FileDiff renameDiffInArchive = null;
+        for (FileDiff fileDiff : fileDiffArchive) {
           if (fileDiff.getDiffId() == renameFileDiff.getDiffId()) {
+            renameDiffInArchive = fileDiff;
             break;
           }
           String pathWithSlash = path.endsWith("/") ? path : path + "/";
           String srcWithSlash = fileDiff.getSrc().endsWith("/") ?
               fileDiff.getSrc() : fileDiff.getSrc() + "/";
-          if (fileDiff.getDiffType() == FileDiffType.APPEND &&
-              srcWithSlash.startsWith(pathWithSlash)) {
-            lastAppendFileDiff = fileDiff;
+          if (fileDiff.getDiffType() != FileDiffType.APPEND ||
+              !srcWithSlash.startsWith(pathWithSlash)) {
+            continue;
           }
-          index++;
+          if (fileDiff.getState() == FileDiffState.PENDING) {
+            unfinishedAppendFileDiff.add(fileDiff);
+          }
         }
-        if (lastAppendFileDiff == null || lastAppendFileDiff.getState() == FileDiffState.APPLIED) {
+        if (unfinishedAppendFileDiff.isEmpty()) {
           return true;
         } else {
-          FileDiff fileDiff = fileDiffCache.get(lastAppendFileDiff.getDiffId());
-          if (fileDiff == null) {
-            fileDiff = lastAppendFileDiff;
+          for (FileDiff unfinished : unfinishedAppendFileDiff) {
+            FileDiff fileDiff = fileDiffCache.get(unfinished.getDiffId());
+            if (fileDiff == null) {
+              fileDiff = unfinished;
+            }
+            fileDiffTerminatedInternal(fileDiff);
+            updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.FAILED);
+            // add a new append file diff with new name
+            FileDiff newFileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
+            newFileDiff.getParameters().putAll(fileDiff.getParameters());
+            newFileDiff.setSrc(fileDiff.getSrc().replaceFirst(
+                renameFileDiff.getSrc(), renameFileDiff.getParameters().get("-dest")));
+            long did = metaStore.insertFileDiff(newFileDiff);
+            newFileDiff.setDiffId(did);
+            fileDiffArchive.add(fileDiffArchive.indexOf(renameDiffInArchive), newFileDiff);
           }
-          fileDiffTerminatedInternal(fileDiff);
-          updateFileDiffInCache(fileDiff.getDiffId(), FileDiffState.FAILED);
-          // add a new append file diff with new name
-          FileDiff newFileDiff = new FileDiff(FileDiffType.APPEND, FileDiffState.PENDING);
-          newFileDiff.getParameters().putAll(fileDiff.getParameters());
-          newFileDiff.setSrc(fileDiff.getSrc().replaceFirst(
-              renameFileDiff.getSrc(), renameFileDiff.getParameters().get("-dest")));
-          long did = metaStore.insertFileDiff(newFileDiff);
-          newFileDiff.setDiffId(did);
-          fileDiffArchive.add(index, newFileDiff);
           return false;
         }
       }
@@ -1010,6 +1015,9 @@ public class CopyScheduler extends ActionSchedulerService {
           if (iter.next() == fileDiff.getDiffId()) {
             iter.remove();
           }
+        }
+        if (diffChain.size() == 0) {
+          fileDiffChainMap.remove(filePath);
         }
       }
 
