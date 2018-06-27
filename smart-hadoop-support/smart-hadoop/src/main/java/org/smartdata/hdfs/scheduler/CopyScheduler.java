@@ -894,6 +894,22 @@ public class CopyScheduler extends ActionSchedulerService {
 //          updateFileDiffInCache(did, FileDiffState.APPLIED);
 //        }
 //        appendChain.clear();
+        for (FileDiff archiveDiff : fileDiffArchive) {
+          if (archiveDiff.getDiffId() == fileDiff.getDiffId()) {
+            break;
+          }
+          if (FileDiffState.isTerminalState(archiveDiff.getState())) {
+            continue;
+          }
+          String fileDiffPath = fileDiff.getSrc().endsWith("/") ?
+              fileDiff.getSrc() : fileDiff.getSrc() + "/";
+          String archiveDiffPath = archiveDiff.getSrc().endsWith("/") ?
+              archiveDiff.getSrc() : archiveDiff.getSrc() + "/";
+          if (archiveDiffPath.startsWith(fileDiffPath)) {
+            fileDiffTerminatedInternal(archiveDiff);
+            updateFileDiffInCache(archiveDiff.getDiffId(), FileDiffState.APPLIED);
+          }
+        }
         diffChain.add(fileDiff.getDiffId());
       }
 
