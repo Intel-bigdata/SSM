@@ -366,7 +366,10 @@ public class InotifyEventApplier {
           String.format("DELETE FROM file_state WHERE path like '%s%%'", root),
           String.format("DELETE FROM small_file WHERE path like '%s%%'", root));
     }
-    FileInfo fileInfo = metaStore.getFile(unlinkEvent.getPath());
+    String path = unlinkEvent.getPath();
+    // file has no "/" appended in the metaStore
+    FileInfo fileInfo = metaStore.getFile(path.endsWith("/") ?
+        path.substring(0, path.length() - 1) : path);
     if (fileInfo == null) return Arrays.asList();
     if (fileInfo.isdir()) {
       insertDeleteDiff(unlinkEvent.getPath(), true);
@@ -392,6 +395,7 @@ public class InotifyEventApplier {
   // It seems that there is no need to see if path matches with one dir in FileInfo.
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
+      path = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
         if (fileInfo.isdir()) {
@@ -408,12 +412,7 @@ public class InotifyEventApplier {
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
     // TODO: remove "/" appended in src or dest in backup_file table
-    String pathWithSlash;
-    if (!path.endsWith("/")) {
-      pathWithSlash = path + "/";
-    } else {
-      pathWithSlash = path;
-    }
+    String pathWithSlash = path.endsWith("/") ? path : path + "/";
     if (inBackup(pathWithSlash)) {
       List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(pathWithSlash);
       for (BackUpInfo backUpInfo : backUpInfos) {
@@ -447,9 +446,7 @@ public class InotifyEventApplier {
   }
 
   private List<String> getFilesUnderDir(String dir) throws MetaStoreException {
-    if (!dir.endsWith("/")) {
-      dir = dir + "/";
-    }
+    dir = dir.endsWith("/") ? dir : dir + "/";
     List<String> fileList = new ArrayList<>();
     List<String> subdirList = new ArrayList<>();
     // get fileInfo in asc order of path to guarantee that
