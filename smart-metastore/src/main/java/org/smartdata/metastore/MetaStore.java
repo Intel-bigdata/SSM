@@ -797,8 +797,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         if (backUpInfo != null) {
           detailedRuleInfo
               .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-          int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
+          long count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
           count += fileDiffDao.getByState(backUpInfo.getSrc(), FileDiffState.RUNNING).size();
+          if (count > detailedRuleInfo.baseProgress) {
+            count = detailedRuleInfo.baseProgress;
+          }
           detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
