@@ -298,9 +298,6 @@ public class CopyScheduler extends ActionSchedulerService {
           fileDiffTerminated(fileDiff);
           //update state in cache
           updateFileDiffInCache(did, FileDiffState.APPLIED);
-          if (fileDiffMap.containsKey(did)) {
-            fileDiffMap.remove(did);
-          }
         } else {
           if (fileDiffMap.containsKey(did)) {
             int curr = fileDiffMap.get(did);
@@ -600,7 +597,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  private void pushCacheToDB() throws MetaStoreException {
+  private synchronized void pushCacheToDB() throws MetaStoreException {
     List<FileDiff> updatedFileDiffs = new ArrayList<>();
     List<Long> needDel = new ArrayList<>();
     FileDiff fileDiff;
