@@ -54,7 +54,7 @@ Example:
 ```
 Example:
 ```   
- GET http://<host>:<port>/smart/api/v1/rules/{ruleId}/detail
+ GET http://<host>:<port>/smart/api/v1/rules/{ruleId}/info
  Code:200
  Content-Type:application/json
 ```
