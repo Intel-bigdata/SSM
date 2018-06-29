@@ -121,7 +121,6 @@ public class FileDiffDao {
         .queryForList(sql, String.class, FileDiffState.RUNNING.getValue());
   }
 
-
   public FileDiff getById(long did) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE did = ?",
