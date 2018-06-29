@@ -32,7 +32,7 @@ public class TestSystemRestApi extends IntegrationTestBase {
   public void testVersion() throws Exception {
     Response response1 = RestAssured.get(RestApiBase.SYSTEMROOT + "/version");
     String json1 = response1.asString();
-    response1.then().body("body", Matchers.equalTo("1.4.0-SNAPSHOT"));
+    response1.then().body("body", Matchers.equalTo("1.4.0"));
   }
 
 //  @Test

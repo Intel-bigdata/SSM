@@ -22,29 +22,29 @@
     <parent>
         <groupId>org.smartdata</groupId>
         <artifactId>smart-hadoop-support</artifactId>
-        <version>1.4.0-SNAPSHOT</version>
+        <version>1.4.0</version>
         <relativePath>..</relativePath>
     </parent>
 
     <artifactId>smart-hadoop</artifactId>
-    <version>1.4.0-SNAPSHOT</version>
+    <version>1.4.0</version>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metastore</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-action</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -59,7 +59,7 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-action</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metastore</artifactId>
-            <version>1.4.0-SNAPSHOT</version>
+            <version>1.4.0</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
