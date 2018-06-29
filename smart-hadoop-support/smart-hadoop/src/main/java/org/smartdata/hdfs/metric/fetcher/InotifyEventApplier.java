@@ -194,16 +194,46 @@ public class InotifyEventApplier {
     String dest = renameEvent.getDstPath();
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(dest);
-    FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+    FileInfo info = metaStore.getFile(src);
     if (inBackup(src)) {
-      fileDiff.setSrc(src);
-      fileDiff.getParameters().put("-dest", dest);
-      metaStore.insertFileDiff(fileDiff);
+      // rename the file if the renamed file is still under the backup src dir
+      // if not, insert a delete file diff
+      if (inBackup(dest)) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+        fileDiff.setSrc(src);
+        fileDiff.getParameters().put("-dest", dest);
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        insertDeleteDiff(src, info.isdir());
+      }
+    } else if (inBackup(dest)) {
+      // tackle such case: rename file from outside into backup dir
+      if (!info.isdir()) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(dest);
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        fileDiff.getParameters()
+            .put("-length", String.valueOf(info.getLength()));
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        List<FileInfo> fileInfos = metaStore.getFilesByPrefix(src.endsWith("/") ? src : src + "/");
+        for (FileInfo fileInfo : fileInfos) {
+          // TODO: cover subdir with no file case
+          if (fileInfo.isdir()) {
+            continue;
+          }
+          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+          fileDiff.setSrc(fileInfo.getPath().replaceFirst(src, dest));
+          fileDiff.getParameters().put("-offset", String.valueOf(0));
+          fileDiff.getParameters()
+              .put("-length", String.valueOf(fileInfo.getLength()));
+          metaStore.insertFileDiff(fileDiff);
+        }
+      }
     }
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
-    FileInfo info = metaStore.getFile(src);
     if (info == null) {
       if (status != null) {
         info = HadoopUtil.convertFileStatus(status, dest);
@@ -336,7 +366,10 @@ public class InotifyEventApplier {
           String.format("DELETE FROM file_state WHERE path like '%s%%'", root),
           String.format("DELETE FROM small_file WHERE path like '%s%%'", root));
     }
-    FileInfo fileInfo = metaStore.getFile(unlinkEvent.getPath());
+    String path = unlinkEvent.getPath();
+    // file has no "/" appended in the metaStore
+    FileInfo fileInfo = metaStore.getFile(path.endsWith("/") ?
+        path.substring(0, path.length() - 1) : path);
     if (fileInfo == null) return Arrays.asList();
     if (fileInfo.isdir()) {
       insertDeleteDiff(unlinkEvent.getPath(), true);
@@ -362,6 +395,7 @@ public class InotifyEventApplier {
   // It seems that there is no need to see if path matches with one dir in FileInfo.
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
+      path = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
         if (fileInfo.isdir()) {
@@ -378,12 +412,7 @@ public class InotifyEventApplier {
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
     // TODO: remove "/" appended in src or dest in backup_file table
-    String pathWithSlash;
-    if (!path.endsWith("/")) {
-      pathWithSlash = path + "/";
-    } else {
-      pathWithSlash = path;
-    }
+    String pathWithSlash = path.endsWith("/") ? path : path + "/";
     if (inBackup(pathWithSlash)) {
       List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(pathWithSlash);
       for (BackUpInfo backUpInfo : backUpInfos) {
@@ -417,9 +446,7 @@ public class InotifyEventApplier {
   }
 
   private List<String> getFilesUnderDir(String dir) throws MetaStoreException {
-    if (!dir.endsWith("/")) {
-      dir = dir + "/";
-    }
+    dir = dir.endsWith("/") ? dir : dir + "/";
     List<String> fileList = new ArrayList<>();
     List<String> subdirList = new ArrayList<>();
     // get fileInfo in asc order of path to guarantee that
