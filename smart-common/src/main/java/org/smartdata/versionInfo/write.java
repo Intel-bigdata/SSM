@@ -73,7 +73,7 @@ public class write  {
 
 
     private String getSCMCommit (){
-        List<String> scm=execCmd("git commit");
+        List<String> scm=execCmd("log -n 1");
         String commit = "Unknown";
         for (String s : scm) {
             if (s.startsWith("commit")) {
