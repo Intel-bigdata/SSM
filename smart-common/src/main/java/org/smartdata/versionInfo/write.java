@@ -1,3 +1,4 @@
+package org.smartdata.versionInfo;
 import java.io.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
