@@ -66,7 +66,7 @@ public class write  {
                 break;
             }
 
-            break;
+       
         }
         return uri.trim();
     }
@@ -80,7 +80,7 @@ public class write  {
                 commit = s.substring("commit".length());
                 break;
             }
-            break;
+         
         }
         return commit.trim();
     }
@@ -96,7 +96,7 @@ public class write  {
                 break;
             }
 
-            break;
+   
         }
         return branch.trim();
     }
