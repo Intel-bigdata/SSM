@@ -16,12 +16,19 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+
+
+<!-- The form -->
+<form class="example">
+  <input id="search" type="text" placeholder="Search.." name="search"\>
+  <button ng-click="getContent()">search</button>
+</form>
 <div class="col-md-12" >
   <br/>
   <table class="table table-bordered">
     <thead ng-show="totalNumber > 0">
     <tr>
-      <th ng-click="defindOrderBy('aid')">ID</th>
+      <th ng-click="defindOrderBy('aid')">ID2333</th>
       <th ng-click="defindOrderBy('action_name')">Name</th>
       <th ng-click="defindOrderBy('create_time')">Create Time</th>
       <th ng-click="defindOrderBy('finish_time')">Finish Time</th>
@@ -63,7 +70,7 @@ under the License.
       </td>
       <td>
         <a type="button" class="btn btn-default btn-xs btn-info"
-                href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
+           href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
           <span class="glyphicon glyphicon-info-sign"></span>
         </a>
       </td>

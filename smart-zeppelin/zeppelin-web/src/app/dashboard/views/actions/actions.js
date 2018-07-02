@@ -18,6 +18,8 @@
  */
 angular.module('zeppelinWebApp')
 
+
+
   .controller('ActionsCtrl', ActionsCtrl);
   ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
   function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
@@ -49,6 +51,20 @@ angular.module('zeppelinWebApp')
       }, function(errorResponse) {
           $scope.totalNumber = 0;
       });
+    };
+
+    function search(text) {
+      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/search/'
+        + text)
+        .then(function(response) {
+      }, function(errorResponse) {
+          $scope.totalNumber = 0;
+      });
+    };
+
+    $scope.getContent = function () {
+      var text = document.getElementById('search').value;
+      search(text);
     };
 
     $scope.gotoPage = function (index) {
