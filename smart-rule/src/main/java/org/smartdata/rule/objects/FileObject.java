@@ -39,20 +39,40 @@ public class FileObject extends SmartObject {
         new Property("accessCount", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("ac",
+        new Property("ac", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("accessCountTop",
         new Property("accessCountTop", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("acTop",
+        new Property("acTop", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("accessCountBottom",
         new Property("accessCountBottom", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("acBot",
+        new Property("acBot", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("accessCountTopOnStoragePolicy",
         new Property("accessCountTopOnStoragePolicy", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG, ValueType.STRING),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("acTopSp",
+        new Property("acTopSp", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG, ValueType.STRING),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("accessCountBottomOnStoragePolicy",
         new Property("accessCountBottomOnStoragePolicy", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG, ValueType.STRING),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("acBotSp",
+        new Property("acBotSp", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG, ValueType.STRING),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("length",

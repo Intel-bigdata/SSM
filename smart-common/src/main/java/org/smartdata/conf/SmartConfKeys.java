@@ -52,6 +52,8 @@ public class SmartConfKeys {
   // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
   public static final String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
+  public static final String SMART_ALLUXIO_MASTER_JOURNAL_DIR_KEY =
+      "smart.alluxio.master.journal.dir";
 
   // SSM
   public static final String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
@@ -81,7 +83,7 @@ public class SmartConfKeys {
   public static final int SMART_RULE_EXECUTORS_DEFAULT = 5;
 
   public static final String SMART_CMDLET_EXECUTORS_KEY = "smart.cmdlet.executors";
-  public static final int SMART_CMDLET_EXECUTORS_DEFAULT = 40;
+  public static final int SMART_CMDLET_EXECUTORS_DEFAULT = 10;
   public static final String SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY =
       "smart.dispatch.cmdlets.extra.num";
   public static final int SMART_DISPATCH_CMDLETS_EXTRA_NUM_DEFAULT = 10;
@@ -119,6 +121,10 @@ public class SmartConfKeys {
       "smart.copy.scheduler.check.interval";
   public static final int SMART_COPY_SCHEDULER_CHECK_INTERVAL_DEFAULT =
       500;
+  public static final String SMART_FILE_DIFF_MAX_NUM_RECORDS_KEY =
+      "smart.file.diff.max.num.records";
+  public static final int SMART_FILE_DIFF_MAX_NUM_RECORDS_DEFAULT =
+      10000;
 
   // Dispatcher
   public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =

@@ -24,7 +24,7 @@ import java.util.List;
 
 public interface CopyMetaService extends MetaService {
 
-  boolean insertFileDiff(FileDiff fileDiff) throws MetaServiceException;
+  long insertFileDiff(FileDiff fileDiff) throws MetaServiceException;
 
   List<FileDiff> getPendingDiff() throws MetaServiceException;
 

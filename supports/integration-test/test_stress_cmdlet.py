@@ -1,42 +1,47 @@
+import argparse
 import unittest
 from util import *
 
 
-class TestPerformance(unittest.TestCase):
-    def test_cmdlet_scheduler_1000(self):
-        max_number = 1000
+class TestStressCmdlet(unittest.TestCase):
+
+    def test_cmdlet_scheduler(self):
         file_paths = []
+
         cids = []
-        failed_cids = []
-        for i in range(max_number):
+        for i in range(MAX_NUMBER):
             # 1 MB files
-            file_path, cid = create_random_file_parallel(10 * 1024 * 1024)
+            file_path, cid = create_random_file_parallel(FILE_SIZE)
             file_paths.append(file_path)
             cids.append(cid)
-        for i in range(max_number):
-            cids.append(read_file(file_paths[i]))
-        for i in range(max_number):
-            cids.append(delete_file(file_paths[i]))
         failed_cids = wait_for_cmdlets(cids)
         self.assertTrue(len(failed_cids) == 0)
 
-    def test_cmdlet_scheduler_10000(self):
-        max_number = 10000
-        file_paths = []
+        # wait for DB sync
+        time.sleep(5)
         cids = []
-        failed_cids = []
-        for i in range(max_number):
-            # 1 MB files
-            file_path, cid = create_random_file_parallel(1024 * 1024)
-            file_paths.append(file_path)
-            cids.append(cid)
-        for i in range(max_number):
+        for i in range(MAX_NUMBER):
             cids.append(read_file(file_paths[i]))
-        for i in range(max_number):
+        failed_cids = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed_cids) == 0)
+
+        cids = []
+        for i in range(MAX_NUMBER):
             cids.append(delete_file(file_paths[i]))
         failed_cids = wait_for_cmdlets(cids)
         self.assertTrue(len(failed_cids) == 0)
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-size', default='1MB')
+    parser.add_argument('-num', default='10000')
+    parser.add_argument('unittest_args', nargs='*')
+    args, unknown_args = parser.parse_known_args()
+    sys.argv[1:] = unknown_args
+    print "The file size for test is {}.".format(args.size)
+    FILE_SIZE = convert_to_byte(args.size)
+    print "The file number for test is {}.".format(args.num)
+    MAX_NUMBER = int(args.num)
+
     unittest.main()

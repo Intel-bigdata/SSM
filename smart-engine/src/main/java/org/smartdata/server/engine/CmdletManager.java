@@ -29,6 +29,7 @@ import org.smartdata.action.ActionRegistry;
 import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.exception.QueueFullException;
 import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
 import org.smartdata.hdfs.scheduler.ActionSchedulerService;
 import org.smartdata.metastore.MetaStore;
@@ -79,7 +80,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
-  public static final long TIMEOUT_MULTIPLIER = 60;
+  public static final int TIMEOUT_MULTIPLIER = 100;
+  public static final int TIMEOUT_MIN_MILLISECOND = 30000;
   public static final String TIMEOUTLOG =
     "Timeout error occurred for getting this action's status report.";
   public static final String ACTION_SKIP_LOG =
@@ -137,9 +139,12 @@ public class CmdletManager extends AbstractService {
         SmartConfKeys.SMART_CMDLET_CACHE_BATCH_DEFAULT);
 
     int reportPeriod = context.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
-      SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    this.timeout =
-      TIMEOUT_MULTIPLIER * reportPeriod < 30000 ? 30000 : TIMEOUT_MULTIPLIER * reportPeriod;
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    int maxInterval = reportPeriod * context.getConf().getInt(
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_KEY,
+        SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT);
+    this.timeout = TIMEOUT_MULTIPLIER * maxInterval < TIMEOUT_MIN_MILLISECOND
+        ? TIMEOUT_MIN_MILLISECOND : TIMEOUT_MULTIPLIER * maxInterval;
   }
 
   @VisibleForTesting
@@ -300,8 +305,8 @@ public class CmdletManager extends AbstractService {
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
     if (maxNumPendingCmdlets <= pendingCmdlet.size() + schedulingCmdlet.size()) {
-      throw new IOException("Pending cmdlets exceeds value specified by key '"
-        + SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY + "' = " + maxNumPendingCmdlets);
+      throw new QueueFullException("Pending cmdlets exceeds value specified by key '"
+          + SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY + "' = " + maxNumPendingCmdlets);
     }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
@@ -460,6 +465,11 @@ public class CmdletManager extends AbstractService {
         curr = System.currentTimeMillis();
       }
       CmdletInfo cmdlet = idToCmdlets.get(id);
+      if (cmdlet == null) {
+        it.remove();
+        continue;
+      }
+
       synchronized (cmdlet) {
         switch (cmdlet.getState()) {
           case CANCELLED:
@@ -473,24 +483,35 @@ public class CmdletManager extends AbstractService {
             }
 
             LaunchCmdlet launchCmdlet = createLaunchCmdlet(cmdlet);
-            ScheduleResult result = scheduleCmdletActions(cmdlet, launchCmdlet);
+            ScheduleResult result;
+            try {
+              result = scheduleCmdletActions(cmdlet, launchCmdlet);
+            } catch (Throwable t) {
+              LOG.error("Schedule " + cmdlet + " failed.", t);
+              result = ScheduleResult.FAIL;
+            }
             if (result != ScheduleResult.RETRY) {
               it.remove();
+            } else {
+              continue;
             }
-            if (result == ScheduleResult.SUCCESS) {
-              idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
-              cmdlet.setState(CmdletState.SCHEDULED);
-              cmdlet.setStateChangedTime(System.currentTimeMillis());
-              scheduledCmdlet.add(id);
-              nScheduled++;
-            } else if (result == ScheduleResult.FAIL) {
-              cmdlet.updateState(CmdletState.CANCELLED);
-              cmdlet.setStateChangedTime(System.currentTimeMillis());
-              CmdletStatus cmdletStatus = new CmdletStatus(
-                cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
-              // Mark all actions as finished and successful
-              cmdletFinishedInternal(cmdlet);
-              onCmdletStatusUpdate(cmdletStatus);
+            try {
+              if (result == ScheduleResult.SUCCESS) {
+                idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
+                cmdlet.setState(CmdletState.SCHEDULED);
+                cmdlet.setStateChangedTime(System.currentTimeMillis());
+                scheduledCmdlet.add(id);
+                nScheduled++;
+              } else if (result == ScheduleResult.FAIL) {
+                cmdlet.updateState(CmdletState.CANCELLED);
+                CmdletStatus cmdletStatus = new CmdletStatus(
+                    cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
+                // Mark all actions as finished and successful
+                cmdletFinishedInternal(cmdlet);
+                onCmdletStatusUpdate(cmdletStatus);
+              }
+            } catch (Throwable t) {
+              LOG.error("Post schedule cmdlet " + cmdlet + " error.", t);
             }
             break;
         }
@@ -517,7 +538,13 @@ public class CmdletManager extends AbstractService {
 
       for (schIdx = 0; schIdx < actSchedulers.size(); schIdx++) {
         ActionScheduler s = actSchedulers.get(schIdx);
-        scheduleResult = s.onSchedule(actionInfo, launchAction);
+        try {
+          scheduleResult = s.onSchedule(actionInfo, launchAction);
+        } catch (Throwable t) {
+          actionInfo.setLog((actionInfo.getLog() == null ? "" : actionInfo.getLog())
+              + "\nOnSchedule exception: " + t);
+          scheduleResult = ScheduleResult.FAIL;
+        }
         if (scheduleResult != ScheduleResult.SUCCESS) {
           break;
         }
@@ -550,7 +577,12 @@ public class CmdletManager extends AbstractService {
       }
 
       for (int sidx = lastScheduler; sidx >= 0; sidx--) {
-        actSchedulers.get(sidx).postSchedule(info, result);
+        try {
+          actSchedulers.get(sidx).postSchedule(info, result);
+        } catch (Throwable t) {
+          info.setLog((info.getLog() == null ? "" : info.getLog())
+              + "\nPostSchedule exception: " + t);
+        }
       }
 
       lastScheduler = -1;
@@ -711,7 +743,8 @@ public class CmdletManager extends AbstractService {
         // Set all action as finished
         actionInfo.setProgress(1.0F);
         actionInfo.setFinished(true);
-        actionInfo.setFinishTime(System.currentTimeMillis());
+        actionInfo.setCreateTime(cmdletInfo.getStateChangedTime());
+        actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
       }
     }
   }
@@ -1151,7 +1184,7 @@ public class CmdletManager extends AbstractService {
         long ts = System.currentTimeMillis();
         if (ts - lastDelTimeStamp >= lifeCheckInterval) {
           numCmdletsFinished.getAndAdd(
-            metaStore.deleteFinishedCmdletsWithGenTimeBefore(ts - maxLifeTime));
+              -metaStore.deleteFinishedCmdletsWithGenTimeBefore(ts - maxLifeTime));
           lastDelTimeStamp = ts;
         }
 
@@ -1177,6 +1210,9 @@ public class CmdletManager extends AbstractService {
         Set<CmdletInfo> failedCmdlet = new HashSet<>();
         for (Long cid : idToLaunchCmdlet.keySet()) {
           CmdletInfo cmdletInfo = idToCmdlets.get(cid);
+          if (cmdletInfo == null) {
+            continue;
+          }
           if (cmdletInfo.getState() == CmdletState.DISPATCHED
             || cmdletInfo.getState() == CmdletState.EXECUTING) {
             for (long id : cmdletInfo.getAids()) {
@@ -1203,6 +1239,8 @@ public class CmdletManager extends AbstractService {
         LOG.error(e.getMessage());
       } catch (IOException e) {
         LOG.error(e.getMessage());
+      } catch (Throwable t) {
+        LOG.error("Unexpected exception occurs.", t);
       }
     }
 

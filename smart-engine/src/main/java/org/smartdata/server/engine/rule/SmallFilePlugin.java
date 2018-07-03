@@ -59,7 +59,7 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
   private Map<String, FileInfo> firstFileInfoCache;
   private Map<RuleInfo, Map<String, FileInfo>> containerFileInfoCache;
   private static final String COMPACT_ACTION_NAME = "compact";
-  private static final String CONTAINER_FILE_PREFIX = "container_file_";
+  private static final String CONTAINER_FILE_PREFIX = "_container_file_";
   private static final Logger LOG = LoggerFactory.getLogger(SmallFilePlugin.class);
 
   public SmallFilePlugin(ServerContext context, CmdletManager cmdletManager) {
@@ -97,10 +97,20 @@ public class SmallFilePlugin implements RuleExecutorPlugin {
       Map<String, FileInfo> containerFileInfoMap = getContainerFileInfos();
       Map<SmallFileStatus, List<String>> smallFileStateMap = new HashMap<>();
       for (String object : objects) {
-        if (containerFileInfoMap.containsKey(object)) {
-          LOG.debug("{} is container file.", object);
-          continue;
+        LOG.debug("Start handling the file: {}.", object);
+
+        // Check if the file is container file
+        if (!object.endsWith("/")) {
+          String fileName = object.substring(
+              object.lastIndexOf("/") + 1, object.length());
+          if (fileName.startsWith(CONTAINER_FILE_PREFIX)
+              || containerFileInfoMap.containsKey(object)) {
+            LOG.debug("{} is container file.", object);
+            continue;
+          }
         }
+
+        // Check file info and state
         try {
           FileInfo fileInfo = metaStore.getFile(object);
           FileState fileState = metaStore.getFileState(object);

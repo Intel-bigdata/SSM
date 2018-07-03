@@ -72,6 +72,7 @@ import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.SystemInfo;
 import org.smartdata.model.XAttribute;
+
 import org.springframework.dao.EmptyResultDataAccessException;
 
 import java.sql.Connection;
@@ -92,6 +93,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   static final Logger LOG = LoggerFactory.getLogger(MetaStore.class);
 
   private DBPool pool = null;
+  private DBType dbType;
 
   private Map<Integer, String> mapStoragePolicyIdName = null;
   private Map<String, Integer> mapStoragePolicyNameId = null;
@@ -121,6 +123,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
+    initDbInfo();
     ruleDao = new RuleDao(pool.getDataSource());
     cmdletDao = new CmdletDao(pool.getDataSource());
     actionDao = new ActionDao(pool.getDataSource());
@@ -144,6 +147,30 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     smallFileDao = new SmallFileDao(pool.getDataSource());
   }
 
+  private void initDbInfo() throws MetaStoreException {
+    Connection conn = null;
+    try {
+      try {
+        conn = getConnection();
+        String driver = conn.getMetaData().getDriverName();
+        driver = driver.toLowerCase();
+        if (driver.contains("sqlite")) {
+          dbType = DBType.SQLITE;
+        } else if (driver.contains("mysql")) {
+          dbType = DBType.MYSQL;
+        } else {
+          throw new MetaStoreException("Unknown database: " + driver);
+        }
+      } finally {
+        if (conn != null) {
+          closeConnection(conn);
+        }
+      }
+    } catch (SQLException e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public Connection getConnection() throws MetaStoreException {
     if (pool != null) {
       try {
@@ -163,6 +190,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         throw new MetaStoreException(e);
       }
     }
+  }
+
+  public DBType getDbType() {
+    return dbType;
   }
 
   public Long queryForLong(String sql) throws MetaStoreException {
@@ -257,6 +288,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<FileInfo> getFilesByPrefixInOrder(String path) throws MetaStoreException {
+    updateCache();
+    try {
+      return fileInfoDao.getFilesByPrefixInOrder(path);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public List<FileInfo> getFilesByPaths(Collection<String> paths)
     throws MetaStoreException {
     try {
@@ -330,6 +372,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllFileInfo() throws MetaStoreException {
     try {
       fileInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteFileByPath(String path) throws MetaStoreException {
+    try {
+      fileInfoDao.deleteByPath(path);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -609,7 +659,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public List<String> executeFilesPathQuery(
     String sql) throws MetaStoreException {
     try {
-      LOG.debug("ExecuteFilesPathQuer sql = {}", sql);
+      LOG.debug("ExecuteFilesPathQuery sql = {}", sql);
       return metaStoreHelper.getFilesPath(sql);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
@@ -746,9 +796,12 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Get total matched files
         if (backUpInfo != null) {
           detailedRuleInfo
-            .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
-          int count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
+              .setBaseProgress(getFilesByPrefix(backUpInfo.getSrc()).size());
+          long count = fileDiffDao.getPendingDiff(backUpInfo.getSrc()).size();
           count += fileDiffDao.getByState(backUpInfo.getSrc(), FileDiffState.RUNNING).size();
+          if (count > detailedRuleInfo.baseProgress) {
+            count = detailedRuleInfo.baseProgress;
+          }
           detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
@@ -1266,7 +1319,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           break;
         }
         ActionInfo actionInfo = getActionById(aid);
-        if (actionInfo.isFinished()) {
+        if (actionInfo != null && actionInfo.isFinished()) {
           finishedActions.add(actionInfo);
         } else {
           runningActions.add(actionInfo);
@@ -1391,10 +1444,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   @Override
-  public boolean insertFileDiff(FileDiff fileDiff)
-    throws MetaStoreException {
+  public long insertFileDiff(FileDiff fileDiff)
+      throws MetaStoreException {
     try {
-      return fileDiffDao.insert(fileDiff) >= 0;
+      return fileDiffDao.insert(fileDiff);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1409,10 +1462,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertFileDiffs(List<FileDiff> fileDiffs)
-    throws MetaStoreException {
+  public Long[] insertFileDiffs(List<FileDiff> fileDiffs)
+      throws MetaStoreException {
     try {
-      fileDiffDao.insert(fileDiffs);
+      return fileDiffDao.insert(fileDiffs);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1518,6 +1571,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public int getUselessFileDiffNum() throws MetaStoreException {
+    try {
+      return fileDiffDao.getUselessRecordsNum();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public int deleteUselessFileDiff(int maxNumRecords) throws MetaStoreException {
+    try {
+      return fileDiffDao.deleteUselessRecords(maxNumRecords);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 
   public List<String> getSyncPath(int size) throws MetaStoreException {
     return fileDiffDao.getSyncPath(size);
@@ -1911,6 +1979,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       return backUpInfoDao.getByRid(rid);
     } catch (EmptyResultDataAccessException e) {
       return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<BackUpInfo> getBackUpInfoBySrc(String src) throws MetaStoreException {
+    try {
+      // More than one dest may exist for one same src
+      List<BackUpInfo> backUpInfos = new ArrayList<>();
+      for (BackUpInfo backUpInfo : listAllBackUpInfo()) {
+        if (src.startsWith(backUpInfo.getSrc())) {
+          backUpInfos.add(backUpInfo);
+        }
+      }
+      return backUpInfos;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

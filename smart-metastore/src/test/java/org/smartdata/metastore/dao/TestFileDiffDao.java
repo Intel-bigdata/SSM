@@ -171,4 +171,37 @@ public class TestFileDiffDao extends TestDaoUtil {
     Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiffs[0]));
     Assert.assertTrue(fileDiffDao.getById(2).equals(fileDiffs[1]));
   }
+
+  @Test
+  public void testDeleteUselessRecords() {
+    FileDiff[] fileDiffs = new FileDiff[2];
+    fileDiffs[0] = new FileDiff();
+    fileDiffs[0].setDiffId(1);
+    fileDiffs[0].setRuleId(1);
+    fileDiffs[0].setParameters(new HashMap<String, String>());
+    fileDiffs[0].setSrc("test");
+    fileDiffs[0].setState(FileDiffState.PENDING);
+    fileDiffs[0].setDiffType(FileDiffType.APPEND);
+    fileDiffs[0].setCreateTime(1);
+
+    fileDiffs[1] = new FileDiff();
+    fileDiffs[1].setDiffId(2);
+    fileDiffs[0].setRuleId(1);
+    fileDiffs[1].setParameters(new HashMap<String, String>());
+    fileDiffs[1].setSrc("src");
+    fileDiffs[1].setState(FileDiffState.PENDING);
+    fileDiffs[1].setDiffType(FileDiffType.APPEND);
+    fileDiffs[1].setCreateTime(2);
+
+    fileDiffDao.insert(fileDiffs);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 0);
+    fileDiffDao.update(1, FileDiffState.APPLIED);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 1);
+    fileDiffDao.update(2, FileDiffState.FAILED);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 2);
+    fileDiffDao.update(2, FileDiffState.DELETED);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 2);
+    fileDiffDao.deleteUselessRecords(1);
+    Assert.assertEquals(fileDiffDao.getAll().size(), 1);
+  }
 }
