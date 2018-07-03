@@ -42,7 +42,11 @@ SMART_VARGS=
 while [ $# != 0 ]; do
   case $1 in
     "version")
+       if [ "$SSM_HOME" == "" ]; then
        cat ../common-version-info.properties
+       else
+       cat $SSM_HOME/common-version-info.properties
+       fi
        exit 1
       ;;
 
