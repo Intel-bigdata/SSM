@@ -20,13 +20,13 @@
 package org.smartdata.versioninfo;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
 public class VersionInfoRead {
   public void printInfo() throws IOException {
-    String s = this.getClass().getResource("/").getPath()+ "/../../src/main/resources/versionInfo.properties";
+    String s = this.getClass().getResource("/").getPath()
+            + "/../../src/main/resources/versionInfo.properties";
     FileReader v = new FileReader(s);
     BufferedReader br = new BufferedReader(v);
     String version = "Not found";
