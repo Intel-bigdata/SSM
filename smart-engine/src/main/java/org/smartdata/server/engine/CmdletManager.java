@@ -620,7 +620,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public CmdletGroup listCmdletsInfo(long rid, long pageIndex, long numPerPage,
-                                     List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+                                     List<String> orderBy,
+                                     List<Boolean> isDesc) throws IOException, MetaStoreException {
     List<CmdletInfo> cmdlets = metaStore.listPageCmdlets(rid,
       (pageIndex - 1) * numPerPage, numPerPage, orderBy, isDesc);
     return new CmdletGroup(cmdlets, metaStore.getNumCmdletsByRid(rid));
@@ -822,7 +823,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-                                                int actionNum, boolean finished) throws IOException {
+                                                int actionNum,
+                                                boolean finished) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum, finished);
     } catch (MetaStoreException e) {
@@ -832,7 +834,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-                                                boolean successful, int actionNum) throws IOException {
+                                                boolean successful,
+                                                int actionNum) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, successful, actionNum);
     } catch (MetaStoreException e) {
@@ -888,7 +891,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public ActionGroup listActions(long pageIndex, long numPerPage,
-                                 List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+                                 List<String> orderBy,
+                                 List<Boolean> isDesc) throws IOException, MetaStoreException {
     List<ActionInfo> infos = metaStore.listPageAction((pageIndex - 1) * numPerPage,
       numPerPage, orderBy, isDesc);
     for (ActionInfo info : infos) {
@@ -942,8 +946,10 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public DetailedFileActionGroup getFileActions(long rid, long pageIndex,
-                                                long numPerPage) throws IOException, MetaStoreException {
+  public DetailedFileActionGroup getFileActions(long rid,
+                                                long pageIndex,
+                                                long numPerPage)
+    throws IOException, MetaStoreException {
     List<DetailedFileAction> detailedFileActions = metaStore.listFileActions(rid,
       (pageIndex - 1) * numPerPage, numPerPage);
     return new DetailedFileActionGroup(detailedFileActions, metaStore.getNumFileAction(rid));
