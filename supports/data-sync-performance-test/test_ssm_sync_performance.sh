@@ -9,9 +9,9 @@ echo "Get configuration from config."
 echo "------------------ Your configuration ------------------"
 echo "SSM home is ${SMART_HOME}."
 echo "PAT home is ${PAT_HOME}."
-echo "Test cases:"
-for size in ${!cases[@]}; do
-  echo ${size} ${cases[$size]}
+echo "Test case:"
+for size in ${!CASES[@]}; do
+  echo ${size} ${CASES[$size]}
 done
 echo "Destination cluster is ${DEST_CLUSTER}."
 echo "--------------------------------------------------------"
@@ -22,8 +22,8 @@ log="${bin}/ssm.log"
 # remove historical data in log file
 printf "" > ${log}
 
-for size in "${!cases[@]}"; do
-    case=${size}_${cases[$size]}
+for size in "${!CASES[@]}"; do
+    case=${size}_${CASES[$size]}
     echo "Test case ${case}:" >> ${log}
     for i in {1..5}; do
         echo "==================== test case: $case, test round: $i ============================"
@@ -31,7 +31,7 @@ for size in "${!cases[@]}"; do
         printf "" > ${SMART_HOME}/logs/smartserver.log
         sh prepare.sh ${case}
         cd ${PAT_HOME}/PAT-collecting-data
-        echo "export PYTHONPATH=${bin}/../integration-test:${PYTHONPATH}; python ${bin}/run_ssm_sync.py ${size} ${cases[$size]} ${log} ${DEST_CLUSTER}" > cmd.sh
+        echo "export PYTHONPATH=${bin}/../integration-test:${PYTHONPATH}; python ${bin}/run_ssm_sync.py ${size} ${CASES[$size]} ${log} ${DEST_CLUSTER}" > cmd.sh
         ./pat run "${case}-$i"
         cp ${SMART_HOME}/logs/smartserver.log ./results/${case}-${i}.log
         cd ${bin}

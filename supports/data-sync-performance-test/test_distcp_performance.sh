@@ -1,25 +1,31 @@
 #!/usr/bin/env bash
 
-FROM="sr519"
-TO="sr518"
+echo "Get configuration from config."
+. config
 
-for m in 30 60 90
-do
-for name in 10KB_10000 1MB_10000 100MB_1000
-do
-for i in {1..5}
-do
-    ssh ${TO} "hdfs dfs -rm -r /10KB_10000"
-    ssh ${TO} "hdfs dfs -rm -r /1MB_10000"
-    ssh ${TO} "hdfs dfs -rm -r /100MB_1000"
-    ssh ${TO} "drop-cache"
-    drop-cache
-    echo "====================m:$m  file:$name  time:$i============================"
-    echo "hadoop distcp -m $m \\
-          hdfs://$FROM:9000/$name \\
-          hdfs://$TO:9000/$name \\
-          > results/$name-$i-$m.log 2>&1" > cmd.sh
-    ./pat run "$name-$i-$m"
+echo "------------------ Your configuration ------------------"
+echo "PAT home is ${PAT_HOME}."
+echo "Test case:"
+for size in ${!CASES[@]}; do
+  echo ${size} ${CASES[$size]}
 done
-done
+echo "Source cluster is ${SRC_CLUSTER}."
+echo "Destination cluster is ${DEST_CLUSTER}."
+echo "--------------------------------------------------------"
+
+bin=$(dirname "${BASH_SOURCE-$0}")
+bin=$(cd "${bin}">/dev/null; pwd)
+
+for m in ${MAPPER_NUM}; do
+    for size in "${!CASES[@]}"; do
+        case=${size}_${CASES[$size]}
+        for i in {1..5}; do
+            echo "==================== test case: $case, mapper num: ${m}, test round: $i ============================"
+            sh prepare.sh ${case}
+            cd ${PAT_HOME}/PAT-collecting-data
+            echo "hadoop distcp -m $m ${SRC_CLUSTER}/${case} ${DEST_CLUSTER}/${case} > results/$case-$m-$i.log 2>&1" > cmd.sh
+            ./pat run "$case-$m-$i"
+            cd ${bin}
+        done
+    done
 done
