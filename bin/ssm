@@ -16,9 +16,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-bin_dir=$(cd `dirname $0`;pwd)
-version=$(echo `cat $bin_dir/../pom.xml | grep "<version>" | head -n 1` | tr -d '</version>')
-jar_name=$bin_dir/../smart-common/target/smart-common-$version.jar
+
 
 Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
@@ -43,7 +41,9 @@ SMART_VARGS=
 while [ $# != 0 ]; do
   case "$1" in
      "version")
-      java -cp $jar_name org.smartdata.versioninfo.VersionInfoRead start
+      bin_dir=$(cd `dirname $0`;pwd)
+      path=$bin_dir/../smart-common/target/classes/
+      java -cp $path org.smartdata.versioninfo.VersionInfoRead
       exit 1
       ;;
 

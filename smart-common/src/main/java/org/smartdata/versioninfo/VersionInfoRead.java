@@ -25,12 +25,10 @@ import java.io.FileReader;
 import java.io.IOException;
 
 public class VersionInfoRead {
-  public void printInfo(String versionInfoFile) throws IOException {
-    System.out.println(System.getProperty("user.dir"));
-    String s = System.getProperty("user.dir")
-      + "/smart-common/src/main/resource/" + versionInfoFile;
-    File f = new File(s);
-    FileReader v = new FileReader(f);
+  public void printInfo() throws IOException {
+    File f = new File(this.getClass().getResource("/").getPath());
+    String s = f.getParent() + "/../src/main/resource/versionInfo.properties";
+    FileReader v = new FileReader(s);
     BufferedReader br = new BufferedReader(v);
     String version = "Not found";
     String url = "Not found";
@@ -65,7 +63,7 @@ public class VersionInfoRead {
   public static void main(String[] args) {
     VersionInfoRead t = new VersionInfoRead();
     try {
-      t.printInfo("versionInfo.properties");
+      t.printInfo();
     } catch (IOException e) {
       e.printStackTrace();
     }
