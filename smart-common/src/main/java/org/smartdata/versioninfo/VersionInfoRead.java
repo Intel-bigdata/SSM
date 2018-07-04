@@ -26,8 +26,7 @@ import java.io.IOException;
 
 public class VersionInfoRead {
   public void printInfo() throws IOException {
-    File f = new File(this.getClass().getResource("/").getPath());
-    String s = f.getParent() + "/../src/main/resources/versionInfo.properties";
+    String s = this.getClass().getResource("/").getPath()+ "/../../src/main/resources/versionInfo.properties";
     FileReader v = new FileReader(s);
     BufferedReader br = new BufferedReader(v);
     String version = "Not found";
