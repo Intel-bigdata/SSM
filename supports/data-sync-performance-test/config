@@ -1,5 +1,6 @@
-# This is test cases, also the base sync dir name, the files for these case should be created under them in advance
-cases="1MB_10000 100MB_1000"
+# These are test cases which specify file size and num. The base sync dir name is "size_num".
+# The files for these case should be created under them in advance.
+declare -A cases=(["1MB"]="10000" ["100MB"]="1000")
 
 # SSM home, e.g., SMART_HOME=~/smart-data-1.4.0
 SMART_HOME=
