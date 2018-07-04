@@ -23,8 +23,6 @@ public class VersionInfoWrite {
       out.write("Compiled by " + getSCMUser() + " on " + getBuildTime() + "\n");
       out.flush();
       out.close();
-      out.flush();
-      out.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
