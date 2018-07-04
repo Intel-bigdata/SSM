@@ -868,7 +868,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         }
 
         // TODO: hard code now, abstract later
-        if (p.getPropertyName().equals("accessCount")) {
+        if (p.getPropertyName().equals("accessCount")
+            || p.getPropertyName().equals("ac")) {
           String virTab = genAccessCountTable(transCtx == null ? 0 : transCtx.getRuleId(),
               (Long) realParas.getValues().get(0));
           procAcc = true;
@@ -876,8 +877,11 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         }
 
         if (p.getPropertyName().equals("accessCountTop")
-            || p.getPropertyName().equals("accessCountBottom")) {
-          boolean topFlag = p.getPropertyName().equals("accessCountTop");
+            || p.getPropertyName().equals("accessCountBottom")
+            || p.getPropertyName().equals("acTop")
+            || p.getPropertyName().equals("acBot")) {
+          boolean topFlag = p.getPropertyName().equals("accessCountTop")
+              || p.getPropertyName().equals("acTop");
           String virTab = genAccessCountTable(transCtx == null ? 0 : transCtx.getRuleId(),
               (Long) realParas.getValues().get(0));
           String func = "$@genVirtualAccessCountTable" + (topFlag ? "Top" : "Bottom") + "Value";
@@ -893,8 +897,11 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         }
 
         if (p.getPropertyName().equals("accessCountTopOnStoragePolicy")
-            || p.getPropertyName().equals("accessCountBottomOnStoragePolicy")) {
-          boolean topFlag = p.getPropertyName().equals("accessCountTopOnStoragePolicy");
+            || p.getPropertyName().equals("accessCountBottomOnStoragePolicy")
+            || p.getPropertyName().equals("acTopSp")
+            || p.getPropertyName().equals("acBotSp")) {
+          boolean topFlag = p.getPropertyName().equals("accessCountTopOnStoragePolicy")
+              || p.getPropertyName().equals("acTopSp");
           String virTab = genAccessCountTable(transCtx == null ? 0 : transCtx.getRuleId(),
               (Long) realParas.getValues().get(0));
           String func = "$@genVirtualAccessCountTable" + (topFlag ? "Top" : "Bottom")

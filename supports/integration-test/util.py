@@ -7,6 +7,8 @@ import os
 import subprocess
 
 # Server info
+# ATTENTION
+# Unset Proxy before use RESTful API
 BASE_URL = "http://localhost:7045"
 
 # Restapi root
@@ -19,11 +21,26 @@ SYSTEM_ROOT = REST_ROOT + "/system"
 CONF_ROOT = REST_ROOT + "/conf"
 PRIMARY_ROOT = REST_ROOT + "/primary"
 
-MOVE_TYPE = ["onessd",
-             "allssd",
-             "archive"]
+MOVE_TYPES = ['archive', 'alldisk', 'onedisk', 'allssd', 'onessd', 'cache', 'uncache']
 
 TEST_DIR = "/ssmtest/"
+
+
+def convert_to_byte(file_size):
+    if file_size.endswith('GB'):
+        file_size = file_size.replace('GB', '')
+        return int(file_size)*1024*1024*1024
+    elif file_size.endswith("MB"):
+        file_size = file_size.replace("MB", "")
+        return int(file_size)*1024*1024
+    elif file_size.endswith('KB'):
+        file_size = file_size.replace('KB', '')
+        return int(file_size)*1024;
+    elif file_size.endswith('B'):
+        file_size = file_size.replace('B', '')
+        return int(file_size)
+    else:
+        return file_size
 
 
 def cpu_count():
@@ -71,7 +88,7 @@ def exec_commands(cmds):
     while True:
         while cmds and len(processes) < max_task:
             task = cmds.pop()
-            print task
+            print(task)
             processes.append(subprocess.Popen(task, shell=True))
         for p in processes:
             if done(p):
@@ -133,9 +150,9 @@ def get_cmdlet(cid):
     return resp.json()["body"]
 
 
-def wait_for_cmdlet(cid, period=300):
+def wait_for_cmdlet(cid, period=60):
     """
-    wait at most 300 seconds for cmdlet to be done
+    wait at most 60 seconds for cmdlet to be done
     """
     timeout = time.time() + period
     while True:
@@ -148,10 +165,10 @@ def wait_for_cmdlet(cid, period=300):
             return None
 
 
-def wait_for_cmdlets(cids, period=300):
+def wait_for_cmdlets(cids, period=60):
     failed_cids = []
     while len(cids) != 0:
-        cmd = wait_for_cmdlet(cids[0])
+        cmd = wait_for_cmdlet(cids[0], period)
         if cmd is None or cmd['state'] == 'FAILED':
             failed_cids.append(cids[0])
         cids.pop(0)
@@ -174,6 +191,10 @@ def submit_rule(rule_str):
     return resp.json()["body"]
 
 
+def stop_rule(rid):
+    requests.post(RULE_ROOT + "/") + str(rid) + "/stop"
+
+
 def delete_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/delete")
 
@@ -184,6 +205,18 @@ def start_rule(rid):
 
 def stop_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/stop")
+
+
+def get_cmdlets_of_rule(rid):
+    resp = requests.get(RULE_ROOT + "/" + str(rid) + "/cmdlets")
+    return resp.json()["body"]
+
+
+def get_cids_of_rule(rid):
+    cids = []
+    for cmdlet in get_cmdlets_of_rule(rid):
+        cids.append(cmdlet['cid'])
+    return cids
 
 
 def get_action(aid):
@@ -229,7 +262,7 @@ def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
 
 def copy_file_to_S3(file_path, dest_path):
     """
-    move file to S3
+    copy file to S3
     """
     cmdlet_str = "copy2s3 -file " + \
                  file_path + " -dest " + dest_path
@@ -258,10 +291,18 @@ def compact_small_file(src_files, container_file):
     return submit_cmdlet(cmdlet_str)
 
 
+def uncompact_small_file(container_file):
+    """
+    uncompact small files into container_file
+    """
+    cmdlet_str = "uncompact -containerFile " + container_file
+    return submit_cmdlet(cmdlet_str)
+
+
 def random_move_test_file(file_path):
-    index = random.randrange(len(MOVE_TYPE))
+    index = random.randrange(len(MOVE_TYPES))
     resp = requests.post(CMDLET_ROOT + "/submit",
-                         data=MOVE_TYPE[index] + " -file  " + file_path)
+                         data=MOVE_TYPES[index] + " -file  " + file_path)
     return resp.json()["body"]
 
 
@@ -293,11 +334,11 @@ def move_randomly(file_path):
     """
     Randomly move blocks of a given file
     """
-    index = random.randrange(len(MOVE_TYPE))
-    return submit_cmdlet(MOVE_TYPE[index] + " -file " + file_path)
+    index = random.randrange(len(MOVE_TYPES))
+    return submit_cmdlet(MOVE_TYPES[index] + " -file " + file_path)
 
 
-def continualy_move(moves, file_path):
+def continually_move(moves, file_path):
     cmds = []
     for move in moves:
         cmds.append(wait_for_cmdlet(move_cmdlet(move, file_path)))
@@ -312,10 +353,10 @@ def random_move_list(length=10):
     moves = []
     last_move = -1
     while length > 0:
-        random_index = random.randrange(len(MOVE_TYPE))
+        random_index = random.randrange(len(MOVE_TYPES))
         if random_index != last_move:
             last_move = random_index
-            moves.append(MOVE_TYPE[random_index])
+            moves.append(MOVE_TYPES[random_index])
             length -= 1
     return moves
 
@@ -326,8 +367,8 @@ def random_move_list_totally(length=10):
     """
     moves = []
     while length > 0:
-        random_index = random.randrange(len(MOVE_TYPE))
-        moves.append(MOVE_TYPE[random_index])
+        random_index = random.randrange(len(MOVE_TYPES))
+        moves.append(MOVE_TYPES[random_index])
         length -= 1
     return moves
 
@@ -344,7 +385,7 @@ def move_random_task_list(file_size):
     # use a list to save the result
     # record the last task
     moves = random_move_list(random.randrange(10, 21))
-    return continualy_move(moves, file_path)
+    return continually_move(moves, file_path)
 
 
 def move_random_task_list_totally(file_size):
@@ -359,4 +400,4 @@ def move_random_task_list_totally(file_size):
     # use a list to save the result
     # record the last task
     moves = random_move_list_totally(random.randrange(10, 21))
-    return continualy_move(moves, file_path)
+    return continually_move(moves, file_path)

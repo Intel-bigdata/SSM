@@ -17,32 +17,42 @@
  */
 package org.smartdata.alluxio;
 
+import alluxio.AlluxioURI;
+import alluxio.client.WriteType;
+import alluxio.client.file.FileOutStream;
+import alluxio.client.file.FileSystem;
+import alluxio.client.file.options.CreateFileOptions;
+import alluxio.client.file.options.DeleteOptions;
+import alluxio.exception.AlluxioException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.alluxio.metric.fetcher.AlluxioNamespaceFetcher;
+import org.smartdata.alluxio.metric.fetcher.AlluxioEntryFetcher;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;
 
-import alluxio.client.file.FileSystem;
-
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 /**
  * Polls metrics and events from Alluxio Server
  */
 public class AlluxioStatesUpdateService extends StatesUpdateService {
-
+  private static final String ALLUXIO_MOVER_ID_PATH = "/system/alluxio-mover.id";
+  private volatile boolean inSafeMode;
   private FileSystem alluxioFs;
   private ScheduledExecutorService executorService;
-  private AlluxioNamespaceFetcher namespaceFetcher;
+  private AlluxioEntryFetcher alluxioEntryFetcher;
+  private FileOutStream moverIdOutStream;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(AlluxioStatesUpdateService.class);
 
   public AlluxioStatesUpdateService(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
+    this.inSafeMode = true;
   }
 
   /**
@@ -55,10 +65,24 @@ public class AlluxioStatesUpdateService extends StatesUpdateService {
     LOG.info("Initializing ...");
     SmartContext context = getContext();
     this.alluxioFs = AlluxioUtil.getAlluxioFs(context);
+    this.moverIdOutStream = checkAndMarkRunning(alluxioFs);
     this.executorService = Executors.newScheduledThreadPool(4);
-    this.namespaceFetcher = new AlluxioNamespaceFetcher(alluxioFs, metaStore,
-        AlluxioNamespaceFetcher.DEFAULT_INTERVAL, executorService);
+    this.alluxioEntryFetcher = new AlluxioEntryFetcher(alluxioFs, metaStore,
+        executorService, new EntryFetchFinishedCallBack(), context.getConf());
     LOG.info("Initialized.");
+  }
+
+  private class EntryFetchFinishedCallBack implements Callable<Object> {
+    @Override
+    public Object call() throws Exception {
+      inSafeMode = false;
+      return null;
+    }
+  }
+
+  @Override
+  public boolean inSafeMode() {
+    return inSafeMode;
   }
 
   /**
@@ -67,17 +91,43 @@ public class AlluxioStatesUpdateService extends StatesUpdateService {
   @Override
   public void start() throws IOException {
     LOG.info("Starting ...");
-    this.namespaceFetcher.startFetch();
+    this.alluxioEntryFetcher.start();
     LOG.info("Started. ");
   }
 
   @Override
   public void stop() throws IOException {
     LOG.info("Stopping ...");
-    if (this.namespaceFetcher != null) {
-      this.namespaceFetcher.stop();
+    if (moverIdOutStream != null) {
+      try {
+        moverIdOutStream.close();
+      } catch (IOException e) {
+        LOG.debug("Close alluxio 'mover' ID output stream error", e);
+      }
+    }
+    if (alluxioEntryFetcher != null) {
+      alluxioEntryFetcher.stop();
     }
     LOG.info("Stopped.");
+  }
+
+  private FileOutStream checkAndMarkRunning(FileSystem fs) throws IOException {
+    AlluxioURI moverIdPath = new AlluxioURI(ALLUXIO_MOVER_ID_PATH);
+    try {
+      if (fs.exists(moverIdPath)) {
+        // Alluxio does not support append operation (ALLUXIO-25), here just delete it
+        fs.delete(moverIdPath, DeleteOptions.defaults().setRecursive(true));
+      }
+      CreateFileOptions options = CreateFileOptions.defaults().setWriteType(
+          WriteType.MUST_CACHE);
+      FileOutStream fos = fs.createFile(moverIdPath, options);
+      fos.write(InetAddress.getLocalHost().getHostName().getBytes());
+      fos.flush();
+      return fos;
+    } catch (IOException | AlluxioException e) {
+      LOG.error("Unable to lock alluxio 'mover', please stop alluxio 'mover' first.");
+      throw new IOException(e.getMessage());
+    }
   }
 
 }

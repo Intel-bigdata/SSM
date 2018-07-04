@@ -57,6 +57,12 @@ public class FileInfoDao {
         new FileInfoDao.FileInfoRowMapper(), path + "%");
   }
 
+  public List<FileInfo> getFilesByPrefixInOrder(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    return jdbcTemplate.query("SELECT * FROM file WHERE path LIKE ? ORDER BY path ASC",
+        new FileInfoDao.FileInfoRowMapper(), path + "%");
+  }
+
   public List<FileInfo> getFilesByPaths(Collection<String> paths) {
     NamedParameterJdbcTemplate namedParameterJdbcTemplate =
         new NamedParameterJdbcTemplate(dataSource);
@@ -137,6 +143,12 @@ public class FileInfoDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM file WHERE fid = ?";
     jdbcTemplate.update(sql, fid);
+  }
+
+  public void deleteByPath(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM file WHERE path = ?";
+    jdbcTemplate.update(sql, path);
   }
 
   public void deleteAll() {

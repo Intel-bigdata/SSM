@@ -25,10 +25,10 @@ import org.junit.Test;
 import org.smartdata.admin.SmartAdmin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
-import org.smartdata.model.FileState;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.S3FileState;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
@@ -87,22 +87,31 @@ public class TestCopy2S3Scheduler extends MiniSmartClusterHarness {
     DistributedFileSystem dfs = cluster.getFileSystem();
     final String srcPath = "/src/";
     dfs.mkdirs(new Path(srcPath));
+    List<String> sps = new ArrayList<>();
     // Write to src
     for (int i = 0; i < 3; i++) {
       // Create test files
       // Not 0 because this file may be not be truncated yet
+      sps.add(srcPath + i);
       DFSTestUtil.createFile(dfs, new Path(srcPath + i),
           10, (short) 1, 1);
-      // Add S3 Statuses
-      FileState fileState = new S3FileState(srcPath + i);
-      metaStore.insertUpdateFileState(fileState);
     }
-    Thread.sleep(500);
+
+    do {
+      Thread.sleep(1000);
+      if (metaStore.getFilesByPaths(sps).size() == sps.size()) {
+        break;
+      }
+    } while (true);
+
+    for (String p : sps) {
+      metaStore.insertUpdateFileState(new S3FileState(p));
+    }
     long ruleId = admin.submitRule(
         "file: path matches \"/src/*\"| copy2s3 -dest s3a://xxxctest/dest/",
         RuleState.ACTIVE);
     Thread.sleep(2500);
     List<ActionInfo> actions = metaStore.getActions(ruleId, 0);
-    Assert.assertEquals(actions.size(), 0);
+    Assert.assertEquals(0, actions.size());
   }
 }

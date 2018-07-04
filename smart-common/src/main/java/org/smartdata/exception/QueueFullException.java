@@ -15,21 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.action;
+package org.smartdata.exception;
 
-import org.smartdata.action.annotation.ActionSignature;
+import java.io.IOException;
 
-@ActionSignature(
-  actionId = "hello",
-  displayName = "hello",
-  usage = HelloAction.PRINT_MESSAGE + " $message"
-)
-public class HelloAction extends SmartAction {
-  public static final String PRINT_MESSAGE = "-print_message";
+/**
+ * Denote a queue-full exception in SSM.
+ */
+public class QueueFullException extends IOException {
+  static final long serialVersionUID = 7819031620146090155L;
 
-  @Override
-  protected void execute() throws Exception {
-    this.appendResult(getArguments().get(PRINT_MESSAGE));
-    System.out.println(getArguments().get(PRINT_MESSAGE));
+  public QueueFullException() {
+    super();
+  }
+
+  public QueueFullException(String message) {
+    super(message);
+  }
+
+  public QueueFullException(String message, Throwable throwable) {
+    super(message, throwable);
+  }
+
+  public QueueFullException(Throwable throwable) {
+    super(throwable);
   }
 }

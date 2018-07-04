@@ -12,7 +12,7 @@ Note that `{s3_dest}` should start with `s3a` rather than `s3`. You can find mor
 
 ### Add S3 configuration in SSM
 
-SSM has already solved the dependency of S3. We only need to add some configuration in `{SSM_HOME}/conf/smart-site.xml`:
+SSM has already solved the dependency of S3. We only need to add the following configurations in `{SSM_HOME}/conf/smart-site.xml`:
 
 ```xml
 <property>
@@ -25,7 +25,7 @@ SSM has already solved the dependency of S3. We only need to add some configurat
 </property>
 ```
 
-where `{s3.key}` and `{s3.secret}` are the key and secret of your S3 account.
+In above, `{s3.key}` and `{s3.secret}` are the key and secret of your S3 account.
 
 ### Add S3 Endpoint (Optional)
 
@@ -91,7 +91,7 @@ This is an optional step. We highly recommend enable this feature on HDFS for te
 
 ### Solve HDFS S3 dependency
 
-First, we need to copy some jar packages about `aws` and `jackson` from `${HADOOP_HOME}/share/hadoop/tools/lib}` to `${HADOOP_HOME}/share/hadoop/tools/common/lib`. The dependencies we need are listed below:
+First, we need to copy some jar packages about `aws` and `jackson` from `${HADOOP_HOME}/share/hadoop/tools/lib}` to `${HADOOP_HOME}/share/hadoop/common/lib`. The dependencies we need are listed below:
 
 ```
 aws-java-sdk-1.7.4.jar
