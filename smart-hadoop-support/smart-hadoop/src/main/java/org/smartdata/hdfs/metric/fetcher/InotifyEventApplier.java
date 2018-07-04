@@ -24,16 +24,20 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.BackUpInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * This is a very preliminary and buggy applier, can further enhance by referring to
@@ -186,39 +190,78 @@ public class InotifyEventApplier {
 
   private List<String> getRenameSql(Event.RenameEvent renameEvent)
       throws IOException, MetaStoreException {
+    String src = renameEvent.getSrcPath();
+    String dest = renameEvent.getDstPath();
     List<String> ret = new ArrayList<>();
-    HdfsFileStatus status = client.getFileInfo(renameEvent.getDstPath());
-    FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
-    if (inBackup(renameEvent.getSrcPath())) {
-      fileDiff.setSrc(renameEvent.getSrcPath());
-      fileDiff.getParameters().put("-dest",
-          renameEvent.getDstPath());
-      metaStore.insertFileDiff(fileDiff);
+    HdfsFileStatus status = client.getFileInfo(dest);
+    FileInfo info = metaStore.getFile(src);
+    if (inBackup(src)) {
+      // rename the file if the renamed file is still under the backup src dir
+      // if not, insert a delete file diff
+      if (inBackup(dest)) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+        fileDiff.setSrc(src);
+        fileDiff.getParameters().put("-dest", dest);
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        insertDeleteDiff(src, info.isdir());
+      }
+    } else if (inBackup(dest)) {
+      // tackle such case: rename file from outside into backup dir
+      if (!info.isdir()) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(dest);
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        fileDiff.getParameters()
+            .put("-length", String.valueOf(info.getLength()));
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        List<FileInfo> fileInfos = metaStore.getFilesByPrefix(src.endsWith("/") ? src : src + "/");
+        for (FileInfo fileInfo : fileInfos) {
+          // TODO: cover subdir with no file case
+          if (fileInfo.isdir()) {
+            continue;
+          }
+          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+          fileDiff.setSrc(fileInfo.getPath().replaceFirst(src, dest));
+          fileDiff.getParameters().put("-offset", String.valueOf(0));
+          fileDiff.getParameters()
+              .put("-length", String.valueOf(fileInfo.getLength()));
+          metaStore.insertFileDiff(fileDiff);
+        }
+      }
     }
     if (status == null) {
-      LOG.debug("Get rename dest status failed, {} -> {}",
-          renameEvent.getSrcPath(), renameEvent.getDstPath());
+      LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
-    FileInfo info = metaStore.getFile(renameEvent.getSrcPath());
     if (info == null) {
       if (status != null) {
-        info = HadoopUtil.convertFileStatus(status, renameEvent.getDstPath());
+        info = HadoopUtil.convertFileStatus(status, dest);
         metaStore.insertFile(info);
       }
     } else {
-      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
-          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') WHERE path = '%s';",
-          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
-          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') "
+          + "WHERE path = '%s';", src, dest, src));
+      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') "
+          + "WHERE path = '%s';", src, dest, src));
+      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
+          + "WHERE path = '%s';", src, dest, src));
       if (info.isdir()) {
-        ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
-            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-        ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
-            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
-        ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
-            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+        if (metaStore.getDbType() == DBType.MYSQL) {
+          ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+        } else if (metaStore.getDbType() == DBType.SQLITE) {
+          ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
+              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+        }
       }
     }
     return ret;
@@ -323,7 +366,10 @@ public class InotifyEventApplier {
           String.format("DELETE FROM file_state WHERE path like '%s%%'", root),
           String.format("DELETE FROM small_file WHERE path like '%s%%'", root));
     }
-    FileInfo fileInfo = metaStore.getFile(unlinkEvent.getPath());
+    String path = unlinkEvent.getPath();
+    // file has no "/" appended in the metaStore
+    FileInfo fileInfo = metaStore.getFile(path.endsWith("/") ?
+        path.substring(0, path.length() - 1) : path);
     if (fileInfo == null) return Arrays.asList();
     if (fileInfo.isdir()) {
       insertDeleteDiff(unlinkEvent.getPath(), true);
@@ -345,19 +391,19 @@ public class InotifyEventApplier {
     }
   }
 
+  // TODO: just insert a fileDiff for this kind of path.
+  // It seems that there is no need to see if path matches with one dir in FileInfo.
   private void insertDeleteDiff(String path, boolean isDir) throws MetaStoreException {
     if (isDir) {
+      path = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
       List<FileInfo> fileInfos = metaStore.getFilesByPrefix(path);
       for (FileInfo fileInfo : fileInfos) {
-        // recursively on dir
         if (fileInfo.isdir()) {
           if (path.equals(fileInfo.getPath())) {
-            continue;
+            insertDeleteDiff(fileInfo.getPath());
+            break;
           }
-          insertDeleteDiff(fileInfo.getPath(), true);
-          continue;
         }
-        insertDeleteDiff(fileInfo.getPath());
       }
     } else {
       insertDeleteDiff(path);
@@ -365,10 +411,69 @@ public class InotifyEventApplier {
   }
 
   private void insertDeleteDiff(String path) throws MetaStoreException {
-    if (inBackup(path)) {
-      FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
-      fileDiff.setSrc(path);
-      metaStore.insertFileDiff(fileDiff);
+    // TODO: remove "/" appended in src or dest in backup_file table
+    String pathWithSlash = path.endsWith("/") ? path : path + "/";
+    if (inBackup(pathWithSlash)) {
+      List<BackUpInfo> backUpInfos = metaStore.getBackUpInfoBySrc(pathWithSlash);
+      for (BackUpInfo backUpInfo : backUpInfos) {
+        String destPath = pathWithSlash.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+        try {
+          // tackle root path case
+          URI namenodeUri = new URI(destPath);
+          String root = "hdfs://" + namenodeUri.getHost() + ":"
+              + String.valueOf(namenodeUri.getPort());
+          if (destPath.equals(root) || destPath.equals(root + "/") || destPath.equals("/")) {
+            for (String srcFilePath : getFilesUnderDir(pathWithSlash)) {
+              FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+              fileDiff.setSrc(srcFilePath);
+              String destFilePath = srcFilePath.replaceFirst(backUpInfo.getSrc(), backUpInfo.getDest());
+              fileDiff.getParameters().put("-dest", destFilePath);
+              metaStore.insertFileDiff(fileDiff);
+            }
+          } else {
+            FileDiff fileDiff = new FileDiff(FileDiffType.DELETE);
+            // use the path getting from event with no slash appended
+            fileDiff.setSrc(path);
+            // put sync's dest path in parameter for delete use
+            fileDiff.getParameters().put("-dest", destPath);
+            metaStore.insertFileDiff(fileDiff);
+          }
+        } catch (URISyntaxException e) {
+          LOG.error("Error occurs!", e);
+        }
+      }
     }
+  }
+
+  private List<String> getFilesUnderDir(String dir) throws MetaStoreException {
+    dir = dir.endsWith("/") ? dir : dir + "/";
+    List<String> fileList = new ArrayList<>();
+    List<String> subdirList = new ArrayList<>();
+    // get fileInfo in asc order of path to guarantee that
+    // the subdir is tackled prior to files or dirs under it
+    List<FileInfo> fileInfos = metaStore.getFilesByPrefixInOrder(dir);
+    for (FileInfo fileInfo : fileInfos) {
+      // just delete subdir instead of deleting all files under it
+      if (isUnderDir(fileInfo.getPath(), subdirList)) {
+        continue;
+      }
+      fileList.add(fileInfo.getPath());
+      if (fileInfo.isdir()) {
+        subdirList.add(fileInfo.getPath());
+      }
+    }
+    return fileList;
+  }
+
+  private boolean isUnderDir(String path, List<String> dirs) {
+    if (dirs.isEmpty()) {
+      return false;
+    }
+    for (String subdir : dirs) {
+      if (path.startsWith(subdir)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

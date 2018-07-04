@@ -15,21 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.action;
+package org.smartdata.metastore;
 
-import org.smartdata.action.annotation.ActionSignature;
-
-@ActionSignature(
-  actionId = "hello",
-  displayName = "hello",
-  usage = HelloAction.PRINT_MESSAGE + " $message"
-)
-public class HelloAction extends SmartAction {
-  public static final String PRINT_MESSAGE = "-print_message";
-
-  @Override
-  protected void execute() throws Exception {
-    this.appendResult(getArguments().get(PRINT_MESSAGE));
-    System.out.println(getArguments().get(PRINT_MESSAGE));
-  }
+/**
+ * Type of database.
+ */
+public enum DBType {
+  SQLITE,
+  MYSQL
 }

@@ -27,29 +27,28 @@ def run_small_file_rule(small_file_dir, debug):
         print("DEBUG: Rule with ID " + str(rid) + " started")
 
     # Wait for submitting actions by rule
-    aids = get_cmdlets_of_rule(rid)
+    cmdlets = get_cmdlets_of_rule(rid)
     count = 0
-    while not aids and count < 30:
+    while not cmdlets and count < 30:
         if debug:
             print("DEBUG: sleep 1s to wait for action submission")
         time.sleep(1)
         count += 1
-        aids = get_cmdlets_of_rule(rid)
+        cmdlets = get_cmdlets_of_rule(rid)
 
     # Check if every action is DONE
-    if aids:
+    if cmdlets:
         if debug:
             print("DEBUG: get generated cmdlets of new submitted rule")
-        cids = []
-        for aid in aids:
-            cids.append(aid["cid"])
-        wait_for_cmdlets(cids)
-        for cid in cids:
-            cmd = get_cmdlet(cid)
-            if cmd is None or cmd['state'] == "FAILED":
-                print("Failed to execute the action: " + cid + "")
-                sys.exit(1)
+        cids = get_cids_of_rule(rid)
+        failed = wait_for_cmdlets(cids)
+        if len(failed) != 0:
+            for cid in failed:
+                print("Failed to execute the cmdlet: id = " + str(cid))
         print("All actions execute successfully")
+    else:
+        print("No cmdlet is generated")
+    stop_rule(rid)
 
 
 if __name__ == '__main__':

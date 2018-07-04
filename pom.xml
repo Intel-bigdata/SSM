@@ -16,7 +16,7 @@
 
   <groupId>org.smartdata</groupId>
   <artifactId>smartdata-project</artifactId>
-  <version>1.4.0-SNAPSHOT</version>
+  <version>1.5.0-SNAPSHOT</version>
   <description>Smart Data Project</description>
   <name>SmartData Project</name>
   <packaging>pom</packaging>
@@ -43,7 +43,7 @@
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     <hadoop.version>2.7.3</hadoop.version>
-    <alluxio.version>1.5.0</alluxio.version>
+    <alluxio.version>1.6.1</alluxio.version>
     <junit.version>4.11</junit.version>
     <scala.version>2.11.8</scala.version>
     <scala.binary.version>2.11</scala.binary.version>
@@ -98,6 +98,9 @@
         <!-- TODO remove in future -->
         <module>smart-hadoop-support</module>
       </modules>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
     </profile>
   </profiles>
 

@@ -91,8 +91,11 @@ public class AccessCountDao {
     jdbcTemplate.execute(create);
     String insert =
         String.format(
-            "INSERT INTO %s SELECT %s, SUM(%s) AS %s FROM(%s) tmp GROUP BY %s;",
+            "INSERT INTO %s SELECT tmp1.%s, tmp1.%s FROM ((SELECT %s, SUM(%s) AS %s FROM(%s) "
+                + "tmp0 GROUP BY %s) AS tmp1 LEFT JOIN file ON file.fid = tmp1.fid);",
             destinationTable.getTableName(),
+            AccessCountDao.FILE_FIELD,
+            AccessCountDao.ACCESSCOUNT_FIELD,
             AccessCountDao.FILE_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,
             AccessCountDao.ACCESSCOUNT_FIELD,

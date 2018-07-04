@@ -150,9 +150,9 @@ def get_cmdlet(cid):
     return resp.json()["body"]
 
 
-def wait_for_cmdlet(cid, period=300):
+def wait_for_cmdlet(cid, period=60):
     """
-    wait at most 300 seconds for cmdlet to be done
+    wait at most 60 seconds for cmdlet to be done
     """
     timeout = time.time() + period
     while True:
@@ -165,7 +165,7 @@ def wait_for_cmdlet(cid, period=300):
             return None
 
 
-def wait_for_cmdlets(cids, period=300):
+def wait_for_cmdlets(cids, period=60):
     failed_cids = []
     while len(cids) != 0:
         cmd = wait_for_cmdlet(cids[0], period)
@@ -191,6 +191,10 @@ def submit_rule(rule_str):
     return resp.json()["body"]
 
 
+def stop_rule(rid):
+    requests.post(RULE_ROOT + "/") + str(rid) + "/stop"
+
+
 def delete_rule(rid):
     requests.post(RULE_ROOT + "/" + str(rid) + "/delete")
 
@@ -206,6 +210,13 @@ def stop_rule(rid):
 def get_cmdlets_of_rule(rid):
     resp = requests.get(RULE_ROOT + "/" + str(rid) + "/cmdlets")
     return resp.json()["body"]
+
+
+def get_cids_of_rule(rid):
+    cids = []
+    for cmdlet in get_cmdlets_of_rule(rid):
+        cids.append(cmdlet['cid'])
+    return cids
 
 
 def get_action(aid):
@@ -251,7 +262,7 @@ def create_random_file_parallel(length=1024, dest_path=TEST_DIR):
 
 def copy_file_to_S3(file_path, dest_path):
     """
-    move file to S3
+    copy file to S3
     """
     cmdlet_str = "copy2s3 -file " + \
                  file_path + " -dest " + dest_path
@@ -327,7 +338,7 @@ def move_randomly(file_path):
     return submit_cmdlet(MOVE_TYPES[index] + " -file " + file_path)
 
 
-def continualy_move(moves, file_path):
+def continually_move(moves, file_path):
     cmds = []
     for move in moves:
         cmds.append(wait_for_cmdlet(move_cmdlet(move, file_path)))
@@ -374,7 +385,7 @@ def move_random_task_list(file_size):
     # use a list to save the result
     # record the last task
     moves = random_move_list(random.randrange(10, 21))
-    return continualy_move(moves, file_path)
+    return continually_move(moves, file_path)
 
 
 def move_random_task_list_totally(file_size):
@@ -389,4 +400,4 @@ def move_random_task_list_totally(file_size):
     # use a list to save the result
     # record the last task
     moves = random_move_list_totally(random.randrange(10, 21))
-    return continualy_move(moves, file_path)
+    return continually_move(moves, file_path)
