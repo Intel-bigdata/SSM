@@ -40,7 +40,7 @@ public class VersionInfoWrite {
   public void execute() {
     try {
       File f = new File(directory.getAbsolutePath()
-        + "/smart-common/src/main/resource/" + "versionInfo.properties");
+        + "/smart-common/src/main/resources/" + "versionInfo.properties");
       FileWriter out = new FileWriter(f);
       out.write("version=" + getVersionInfo(pom) + "\n");
       out.write("revision=" + getSCMCommit() + "\n");
