@@ -564,7 +564,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateCachedFiles(Long fid,
-                                   Long lastAccessTime, Integer numAccessed) throws MetaStoreException {
+                                   Long lastAccessTime,
+                                   Integer numAccessed) throws MetaStoreException {
     try {
       return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
     } catch (Exception e) {
@@ -981,7 +982,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public List<CmdletInfo> getCmdlets(String cidCondition,
-                                     String ridCondition, CmdletState state) throws MetaStoreException {
+                                     String ridCondition,
+                                     CmdletState state) throws MetaStoreException {
     try {
       return cmdletDao.getByCondition(cidCondition, ridCondition, state);
     } catch (EmptyResultDataAccessException e) {
@@ -1247,7 +1249,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-                                               int size, boolean finished) throws MetaStoreException {
+                                               int size,
+                                               boolean finished) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1261,7 +1264,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-                                               boolean successful, int size) throws MetaStoreException {
+                                               boolean successful,
+                                               int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
