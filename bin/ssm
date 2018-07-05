@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+bin_dir=$(cd `dirname $0`;pwd)
+version=$(echo `cat $bin_dir/../pom.xml | grep "<version>" | head -n 1` | tr -d '</version>')
+jar_name=$bin_dir/../smart-common/target/smart-common-$version.jar
 
 Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
@@ -37,17 +40,11 @@ DAEMON_MOD=
 DAEMON_MOD_OP=
 REMOTE_MODE=
 SMART_VARGS=
-
-       	
 while [ $# != 0 ]; do
-  case $1 in
-    "version")
-       if [ "$SSM_HOME" == "" ]; then
-       cat ../common-version-info.properties
-       else
-       cat $SSM_HOME/../common-version-info.properties
-       fi
-       exit 1
+  case "$1" in
+     "version")
+      java -cp $jar_name org.smartdata.versioninfo.VersionInfoRead start
+      exit 1
       ;;
 
     "--config")
@@ -63,9 +60,6 @@ while [ $# != 0 ]; do
       REMOTE_COMMAND+=" --config $1"
       shift
       ;;
-
- 
-      
     "--debug")
       JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
       REMOTE_COMMAND+=" $1"
@@ -171,4 +165,3 @@ else
   fi
   exit $?
 fi
-
