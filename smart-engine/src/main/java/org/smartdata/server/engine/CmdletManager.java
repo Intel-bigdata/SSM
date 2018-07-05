@@ -246,7 +246,7 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   private void checkActionsOnSubmit(CmdletInfo cmdletInfo,
-                                    List<ActionInfo> actionInfos) throws IOException {
+      List<ActionInfo> actionInfos) throws IOException {
     for (ActionInfo actionInfo : actionInfos) {
       for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
         if (!p.onSubmit(actionInfo)) {
@@ -564,7 +564,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private void postscheduleCmdletActions(List<Long> actions, ScheduleResult result,
-                                         int lastAction, int lastScheduler) {
+      int lastAction, int lastScheduler) {
     List<ActionScheduler> actSchedulers;
     for (int aidx = lastAction; aidx >= 0; aidx--) {
       ActionInfo info = idToActions.get(actions.get(aidx));
@@ -909,11 +909,11 @@ public class CmdletManager extends AbstractService {
   public ActionGroup searchAction(String path, long pageIndex, long numPerPage,
                                   List<String> orderBy, List<Boolean> isDesc) throws IOException {
     try {
-      LOG.info("[metaStore search] " + path);
+      LOG.debug("[metaStore search] " + path);
       List<ActionInfo> infos =  metaStore.searchAction(path, (pageIndex - 1) * numPerPage,
         numPerPage, orderBy, isDesc);
       for (ActionInfo info : infos) {
-        LOG.info("[metaStore search] " + info.getActionName());
+        LOG.debug("[metaStore search] " + info.getActionName());
         ActionInfo memInfo = idToActions.get(info.getActionId());
         if (memInfo != null) {
           info.setCreateTime(memInfo.getCreateTime());

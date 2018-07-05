@@ -1123,11 +1123,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
                                        long offset, List<String> orderBy,
                                        List<Boolean> desc) throws MetaStoreException {
     try {
-      if (orderBy.size() == 0) {
-        return actionDao.searchAction(path, start, offset);
-      } else {
-        return actionDao.searchAction(path, start, offset, orderBy, desc);
-      }
+      return actionDao.searchAction(path, start, offset, orderBy, desc);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {

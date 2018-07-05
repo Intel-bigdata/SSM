@@ -187,15 +187,28 @@ public class ActionDao {
                                        List<Boolean> isDesc) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     boolean ifHasAid = false;
+    String res = "";
+    for (Character i: path.toCharArray()) {
+      if (i == '%' || i == '_' || i == '\\') {
+        res += '\\';
+      }
+      res += i;
+    }
+
     String sql = "SELECT * FROM " + TABLE_NAME + " WHERE ("
-      + "aid LIKE '%" + path + "%'"
-      + "OR cid LIKE '%" + path + "%'"
-      + "OR args LIKE '%" + path + "%'"
-      + "OR result LIKE '%" + path + "%'"
-      + "OR progress LIKE '%" + path + "%'"
-      + "OR log LIKE '%" + path + "%'"
-      + "OR action_name LIKE '%" + path + "%')"
+      + "aid LIKE '%" + res + "%'"
+      + "OR cid LIKE '%" + res + "%'"
+      + "OR args LIKE '%" + res + "%'"
+      + "OR result LIKE '%" + res + "%'"
+      + "OR progress LIKE '%" + res + "%'"
+      + "OR log LIKE '%" + res + "%'"
+      + "OR action_name LIKE '%" + res + "%')"
       + " ORDER BY ";
+
+    if (orderBy.size() == 0) {
+      return jdbcTemplate.query(sql,
+        new ActionRowMapper());
+    }
 
     for (int i = 0; i < orderBy.size(); i++) {
       if (orderBy.get(i).equals("aid")) {
@@ -219,22 +232,6 @@ public class ActionDao {
     //add limit
     sql = sql + " LIMIT " + start + "," + offset + ";";
     return jdbcTemplate.query(sql, new ActionRowMapper());
-  }
-
-
-  public List<ActionInfo> searchAction(String path, long start, long offset) {
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    String query = "SELECT * FROM " + TABLE_NAME + " WHERE ("
-      + "aid LIKE '%" + path + "%'"
-      + "OR cid LIKE '%" + path + "%'"
-      + "OR args LIKE '%" + path + "%'"
-      + "OR result LIKE '%" + path + "%'"
-      + "OR progress LIKE '%" + path + "%'"
-      + "OR log LIKE '%" + path + "%'"
-      + "OR action_name LIKE '%" + path + "%')"
-      + " LIMIT " + start + "," + offset + ";";
-    return jdbcTemplate.query(query,
-      new ActionRowMapper());
   }
 
   public List<ActionInfo> getLatestActions(String actionType, int size,
