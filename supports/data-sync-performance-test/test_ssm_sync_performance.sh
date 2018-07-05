@@ -31,7 +31,8 @@ for size in "${!CASES[@]}"; do
         printf "" > ${SMART_HOME}/logs/smartserver.log
         sh prepare.sh ${case}
         cd ${PAT_HOME}/PAT-collecting-data
-        echo "export PYTHONPATH=${bin}/../integration-test:${PYTHONPATH}; python ${bin}/run_ssm_sync.py ${size} ${CASES[$size]} ${log} ${DEST_CLUSTER}" > cmd.sh
+        echo "export PYTHONPATH=${bin}/../integration-test:${PYTHONPATH};\
+         python ${bin}/run_ssm_sync.py ${size} ${CASES[$size]} ${log} ${DEST_CLUSTER}" > cmd.sh
         ./pat run "${case}-$i"
         cp ${SMART_HOME}/logs/smartserver.log ./results/${case}-${i}.log
         cd ${bin}
