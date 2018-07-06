@@ -38,15 +38,19 @@ DAEMON_MOD=
 DAEMON_MOD_OP=
 REMOTE_MODE=
 SMART_VARGS=
+
 while [ $# != 0 ]; do
   case "$1" in
      "version")
       bin_dir=$(cd `dirname $0`;pwd)
+      if [[ $bin_dir =~ "SSM/bin" ]];then
       path=$bin_dir/../smart-common/target/classes/
+      else
+      path=$bin_dir/../../../../../smart-common/target/classes/
+      fi
       java -cp $path org.smartdata.versioninfo.VersionInfoRead
-      exit 1
+      exit 
       ;;
-
     "--config")
       shift
       conf_dir="$1"
