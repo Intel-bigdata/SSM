@@ -49,7 +49,7 @@ while [ $# != 0 ]; do
       path=$bin_dir/../../../../../smart-common/target/classes/
       fi
       java -cp $path org.smartdata.versioninfo.VersionInfoRead
-      exit 
+      exit 1
       ;;
     "--config")
       shift
