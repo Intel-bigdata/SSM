@@ -213,11 +213,11 @@ Enter into ${SMART_HOME} directory for running SSM.
 
    `./bin/start-ssm.sh`
 
+   `version` can be used to show specific version information for SSM.
+
    `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
 
    `--config <config-dir>` can be used to specify where the config directory is.
-
-   `version` can be used to specify the version information about the SSM being used.
 
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 

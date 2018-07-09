@@ -20,16 +20,18 @@ package org.smartdata.versioninfo;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 
 public class VersionInfoWrite {
@@ -37,19 +39,27 @@ public class VersionInfoWrite {
   String pom = directory.getAbsolutePath() + "/" + "pom.xml";
 
   public void execute() {
+    Properties prop = new Properties();
+    OutputStream output = null;
+    String s = this.getClass().getResource("/").getPath() + "common-versionInfo.properties";
     try {
-      String s = this.getClass().getResource("/").getPath() + "common-versionInfo.properties";
-      File file = new File(s);
-      FileWriter out = new FileWriter(file);
-      out.write("version=" + getVersionInfo(pom) + "\n");
-      out.write("revision=" + getCommit() + "\n");
-      out.write("user=" + getUser() + "\n");
-      out.write("date=" + getBuildTime() + "\n");
-      out.write("url=" + getUri() + "\n");
-      out.flush();
-      out.close();
-    } catch (IOException e) {
-      e.printStackTrace();
+      output = new FileOutputStream(s);
+      prop.setProperty("version" , getVersionInfo(pom));
+      prop.setProperty("revision" , getCommit());
+      prop.setProperty("user" , getUser());
+      prop.setProperty("date" , getBuildTime());
+      prop.setProperty("url" , getUri());
+      prop.store(output , new Date().toString());
+      } catch (IOException io) {
+        io.printStackTrace();
+      } finally {
+      if (output != null) {
+        try {
+          output.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
     }
   }
 
@@ -74,9 +84,9 @@ public class VersionInfoWrite {
   }
 
   private String getUri() {
-    List<String> scm = execCmd("git remote -v");
+    List<String> list = execCmd("git remote -v");
     String uri = "Unknown";
-    for (String s : scm) {
+    for (String s : list) {
       if (s.startsWith("origin") && s.endsWith("(fetch)")) {
         uri = s.substring("origin".length());
         uri = uri.substring(0, uri.length() - "(fetch)".length());
@@ -87,9 +97,9 @@ public class VersionInfoWrite {
   }
 
   private String getCommit() {
-    List<String> scm = execCmd("git log -n 1");
+    List<String> list = execCmd("git log -n 1");
     String commit = "Unknown";
-    for (String s : scm) {
+    for (String s : list) {
       if (s.startsWith("commit")) {
         commit = s.substring("commit".length());
         break;
@@ -99,9 +109,9 @@ public class VersionInfoWrite {
   }
 
   private String getUser() {
-    List<String> scm = execCmd("whoami");
+    List<String> list = execCmd("whoami");
     String user = "Unknown";
-    for (String s : scm) {
+    for (String s : list) {
       user = s.trim();
       break;
     }
