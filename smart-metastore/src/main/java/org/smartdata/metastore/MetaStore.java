@@ -761,15 +761,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
         int currPos = 0;
         for (CmdletInfo cmdletInfo : cmdletInfos) {
-          if (cmdletInfo.getState().getValue() <= 2) {
+          if (cmdletInfo.getState().getValue() <= 4) {
             break;
           }
           currPos += 1;
         }
         int countRunning = 0;
         for (CmdletInfo cmdletInfo : cmdletInfos) {
-          if (cmdletInfo.getState().getValue() <= 2) {
-            countRunning += 1;
+          if (cmdletInfo.getState().getValue() <= 4) {
+            countRunning++;
           }
         }
         detailedRuleInfo
