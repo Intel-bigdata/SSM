@@ -26,15 +26,15 @@ import java.util.List;
 public enum CmdletState {
   NOTINITED(0),
   PENDING(1), // Ready for schedule
-  EXECUTING(2), // Still running
-  PAUSED(3),
-  DONE(4), // Execution successful
-  CANCELLED(5),
-  DISABLED(6), // Disable this Cmdlet, kill all executing actions
-  DRYRUN(7),   // TODO Don't Run, but keep status
-  FAILED(8),   // Running cmdlet failed
-  SCHEDULED(9),
-  DISPATCHED(10);
+  SCHEDULED(2),
+  DISPATCHED(3),
+  EXECUTING(4), // Still running
+  PAUSED(5),
+  DRYRUN(6),   // TODO Don't Run, but keep status
+  CANCELLED(7),
+  DISABLED(8), // Disable this Cmdlet, kill all executing actions
+  FAILED(9),   // Running cmdlet failed
+  DONE(10); // Execution successful
 
   private int value;
 
@@ -60,7 +60,7 @@ public enum CmdletState {
   }
 
   public static List<CmdletState> getTerminalStates() {
-    return Arrays.asList(DONE, CANCELLED, DISABLED, FAILED);
+    return Arrays.asList(CANCELLED, DISABLED, FAILED, DONE);
   }
 
   @Override
