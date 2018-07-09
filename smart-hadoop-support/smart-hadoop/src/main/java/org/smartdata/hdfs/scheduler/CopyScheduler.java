@@ -370,7 +370,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     // Batch Insert
     Long dids[] = metaStore.insertFileDiffs(batchFileDiffs);
-    for (int i=0; i< dids.length; i++) {
+    for (int i = 0; i < dids.length; i++) {
       batchFileDiffs.get(i).setDiffId(dids[i]);
     }
     fileDiffArchive.addAll(batchFileDiffs);
