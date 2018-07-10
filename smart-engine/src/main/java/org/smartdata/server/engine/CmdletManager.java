@@ -113,7 +113,11 @@ public class CmdletManager extends AbstractService {
 
   private long totalScheduled = 0;
 
+  private ActionGroup tmpActions = new ActionGroup();
+
   private long timeout;
+
+  private ActionGroup cache;
 
   public CmdletManager(ServerContext context) throws IOException {
     super(context);
@@ -884,6 +888,10 @@ public class CmdletManager extends AbstractService {
     private List<ActionInfo> actions;
     private long totalNumOfActions;
 
+    public ActionGroup() {
+      this.totalNumOfActions = 0;
+    }
+
     public ActionGroup(List<ActionInfo> actions, long totalNumOfActions) {
       this.actions = actions;
       this.totalNumOfActions = totalNumOfActions;
@@ -891,10 +899,16 @@ public class CmdletManager extends AbstractService {
   }
 
   public ActionGroup listActions(long pageIndex, long numPerPage,
-                                 List<String> orderBy,
-                                 List<Boolean> isDesc) throws IOException, MetaStoreException {
+                                 List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+    if (pageIndex == Long.parseLong("0")) {
+      if (tmpActions.totalNumOfActions != 0) {
+        return tmpActions;
+      } else {
+        pageIndex = 1;
+      }
+    }
     List<ActionInfo> infos = metaStore.listPageAction((pageIndex - 1) * numPerPage,
-      numPerPage, orderBy, isDesc);
+        numPerPage, orderBy, isDesc);
     for (ActionInfo info : infos) {
       ActionInfo memInfo = idToActions.get(info.getActionId());
       if (memInfo != null) {
@@ -902,26 +916,32 @@ public class CmdletManager extends AbstractService {
         info.setProgress(memInfo.getProgress());
       }
     }
-
-    return new ActionGroup(infos, metaStore.getCountOfAllAction());
+    tmpActions = new ActionGroup(infos, metaStore.getCountOfAllAction());
+    return tmpActions;
   }
 
   public ActionGroup searchAction(String path, long pageIndex, long numPerPage,
-                                  List<String> orderBy, List<Boolean> isDesc) throws IOException {
+      List<String> orderBy, List<Boolean> isDesc) throws IOException {
     try {
-      LOG.debug("[metaStore search] " + path);
+      if (pageIndex == Long.parseLong("0")) {
+        if (tmpActions.totalNumOfActions != 0) {
+          return tmpActions;
+        } else {
+          pageIndex = 1;
+        }
+      }
       List<ActionInfo> infos =  metaStore.searchAction(path, (pageIndex - 1) * numPerPage,
-        numPerPage, orderBy, isDesc);
+          numPerPage, orderBy, isDesc);
       for (ActionInfo info : infos) {
-        LOG.debug("[metaStore search] " + info.getActionName());
+        LOG.info("[metaStore search] " + info.getActionName());
         ActionInfo memInfo = idToActions.get(info.getActionId());
         if (memInfo != null) {
           info.setCreateTime(memInfo.getCreateTime());
           info.setProgress(memInfo.getProgress());
         }
       }
-
-      return new ActionGroup(infos, infos.size());
+      tmpActions = new ActionGroup(infos, infos.size());
+      return tmpActions;
     } catch (MetaStoreException e) {
       LOG.error("Search [ {} ], Get Finished Actions by search from DB error", path, e);
       throw new IOException(e);

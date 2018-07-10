@@ -93,7 +93,26 @@ angular.module('zeppelinWebApp')
     };
 
     $scope.getContent = function () {
-      $scope.path = document.getElementById('search').value;
+      var tmp = document.getElementById('search').value;
+      var res = "";
+      for (var i = 0; i < tmp.length; i++) {
+        if (tmp.charAt(i) == '%') {
+          res += "%25";
+        }
+        else if (tmp.charAt(i) == '/'){
+          res += "%2F";
+        }
+        else if (tmp.charAt(i) == '?'){
+          res += "%3F";
+        }
+        else if (tmp.charAt(i) == '@'){
+          res += "%40";
+        }
+        else {
+          res += tmp.charAt(i);
+        }
+      }
+      $scope.path = res;
       search($scope.path);
     };
 
@@ -123,7 +142,12 @@ angular.module('zeppelinWebApp')
       }
     };
 
-    getActions();
+    // getActions();
+    if ($scope.totalNumber == 0) {
+      $scope.currentPage = 0;
+      getActions();
+      $scope.currentPage = 1;
+    }
 
     var timer = $interval(function(){
       if (!$scope.searching) {

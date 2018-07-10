@@ -183,55 +183,48 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
-  public List<ActionInfo> searchAction(String path, long start, long offset, List<String> orderBy,
-                                       List<Boolean> isDesc) {
+  public List<ActionInfo> searchAction(String path, long start,
+      long offset, List<String> orderBy, List<Boolean> isDesc) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     boolean ifHasAid = false;
-    String res = "";
-    for (Character i: path.toCharArray()) {
-      if (i == '%' || i == '_' || i == '\\') {
-        res += '\\';
-      }
-      res += i;
-    }
-
     String sql = "SELECT * FROM " + TABLE_NAME + " WHERE ("
-      + "aid LIKE '%" + res + "%'"
-      + "OR cid LIKE '%" + res + "%'"
-      + "OR args LIKE '%" + res + "%'"
-      + "OR result LIKE '%" + res + "%'"
-      + "OR progress LIKE '%" + res + "%'"
-      + "OR log LIKE '%" + res + "%'"
-      + "OR action_name LIKE '%" + res + "%')"
-      + " ORDER BY ";
-
+        + "aid LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR cid LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR args LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR result LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR progress LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR log LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR action_name LIKE '%" + path + "%' ESCAPE '/')";
     if (orderBy.size() == 0) {
-      return jdbcTemplate.query(sql,
-        new ActionRowMapper());
+          sql += " LIMIT " + start + "," + offset + ";";
+      return jdbcTemplate.query(sql, new ActionRowMapper());
     }
+    else {
+      sql += " ORDER BY ";
 
-    for (int i = 0; i < orderBy.size(); i++) {
-      if (orderBy.get(i).equals("aid")) {
-        ifHasAid = true;
-      }
-      sql = sql + orderBy.get(i);
-      if (isDesc.size() > i) {
-        if (isDesc.get(i)) {
-          sql = sql + " desc ";
+      for (int i = 0; i < orderBy.size(); i++) {
+        if (orderBy.get(i).equals("aid")) {
+          ifHasAid = true;
         }
-        sql = sql + ",";
+        sql = sql + orderBy.get(i);
+        if (isDesc.size() > i) {
+          if (isDesc.get(i)) {
+            sql = sql + " desc ";
+          }
+          sql = sql + ",";
+        }
       }
-    }
 
-    if (!ifHasAid) {
-      sql = sql + "aid,";
-    }
+      if (!ifHasAid) {
+        sql = sql + "aid,";
+      }
 
-    //delete the last char
-    sql = sql.substring(0, sql.length() - 1);
-    //add limit
-    sql = sql + " LIMIT " + start + "," + offset + ";";
-    return jdbcTemplate.query(sql, new ActionRowMapper());
+      //delete the last char
+      sql = sql.substring(0, sql.length() - 1);
+      //add limit
+      sql = sql + " LIMIT " + start + "," + offset + ";";
+      return jdbcTemplate.query(sql, new ActionRowMapper());
+    }
   }
 
   public List<ActionInfo> getLatestActions(String actionType, int size,
