@@ -198,8 +198,7 @@ public class ActionDao {
     if (orderBy.size() == 0) {
           sql += " LIMIT " + start + "," + offset + ";";
       return jdbcTemplate.query(sql, new ActionRowMapper());
-    }
-    else {
+    } else {
       sql += " ORDER BY ";
 
       for (int i = 0; i < orderBy.size(); i++) {
