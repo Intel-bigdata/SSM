@@ -110,7 +110,7 @@ addNonTestJarInDir "${SMART_HOME}/smart-agent/target"
 addJarInDir "${SMART_HOME}/lib"
 
 if [ $SSM_VERSION = "true" ]; then
-  java -cp ${SMART_HOME}/smart-common/target/classes/ org.smartdata.versioninfo.VersionInfoRead
+  java -cp ${SMART_CLASSPATH} org.smartdata.versioninfo.VersionInfoRead
   exit 1
 fi
 

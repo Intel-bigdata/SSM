@@ -18,9 +18,7 @@
  */
 package org.smartdata.versioninfo;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -29,14 +27,19 @@ public class VersionInfoRead {
   Properties prop = new Properties();
 
   protected VersionInfoRead(String component) {
-    String s = this.getClass().getResource("/").getPath() + component + "-versionInfo.properties";
+    InputStream in = null;
+    String s = component + "-versionInfo.properties";
     try {
-      FileReader v = new FileReader(s);
-      InputStream in = new BufferedInputStream(new FileInputStream(s));
+      in = Thread.currentThread().getContextClassLoader().getResourceAsStream(s);
       prop.load(in);
-      in.close();
     } catch (Exception e) {
       System.out.println(e);
+    } finally {
+      try {
+        in.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
     }
   }
 
