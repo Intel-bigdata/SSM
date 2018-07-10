@@ -899,7 +899,7 @@ public class CmdletManager extends AbstractService {
   }
 
   public ActionGroup listActions(long pageIndex, long numPerPage,
-                                 List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+      List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
     if (pageIndex == Long.parseLong("0")) {
       if (tmpActions.totalNumOfActions != 0) {
         return tmpActions;
