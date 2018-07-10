@@ -20,16 +20,16 @@
 ---------------------------------------------------------------------------------
 ##  **Download SSM**
 
-Download SSM branch from Github https://github.com/Intel-bigdata/SSM/ 
+Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 ##  **Build SSM**
 
 ###   For CDH5.10.1
-  
+
   	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
-   
+
 ###   For Hadoop 2.7.3
-  	
+
 	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
 
@@ -42,11 +42,11 @@ More detailed information, please refer to BUILDING.txt file.
 ## Configure How to access Hadoop Namenode
 
    We need to let SSM know where Hadoop Namenode is. There are 2 cases,
-   
+
 ### HA-Namenode
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, fill the value field with Hadoop configuration files path, for example "file:///etc/hadoop/conf".
-   
-   ```xml   
+
+   ```xml
    <property>
        <name>smart.hadoop.conf.path</name>
        <value>/conf</value>
@@ -54,9 +54,9 @@ More detailed information, please refer to BUILDING.txt file.
    </property>
    ```
 ###  Single Namenode
-   
+
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address,
-   
+
  ```xml
    <property>
        <name>smart.dfs.namenode.rpcserver</name>
@@ -97,12 +97,12 @@ Please note, the configuration should be the same on all server hosts.
 ## **Configure Smart Agent (optional)**
 
 This step can be skipped if SSM standalone mode is preferred.
-  
+
 Open `agents` file under ${SMART_HOME}/conf, put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
 After the configuration, the Smart Agents should be installed in the same path on their respective hosts as the one of Smart Server.
 Smart Agent specific JVM parameters can be changed through the following way in file ${SMART_HOME}/conf/smart-env.sh.
 `export SSM_AGENT_JAVA_OPT=<Your Parameters>`
- 
+
 ## **Configure database**
 
 SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
@@ -120,9 +120,9 @@ Please be noted that, security support will be enabled later. Here is an example
        <entry key="username">username</entry>
        <entry key="password">password</entry>
 	   ......
-   </properties>	   
+   </properties>
 ```
- 
+
 `ssm` is the database name. User needs to create it manually through MySQL client.
 
 ### Option 2. Use SSM-TiDB
@@ -162,22 +162,22 @@ By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory
 
 ## **Configure user account to authenticate to Web UI**
 
-By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.ini file, 
-    
+By default, SSM Web UI enables user login with default user "admin", password "ssm@123".  If user wants to change the password to define more user accounts, go to the conf/shiro.ini file,
+
 `[users]` section
 
       define supported user name and password. It follows the username = password, role format. Here is an example,
 
 	     admin = ssm@123, admin
-	
-	     ssmoperator = operator@operation, operator 
-	
+
+	     ssmoperator = operator@operation, operator
+
 `[roles]` section
 
 	 define support roles. Here is the example,
 
 	     operator = *
-	
+
 	     admin = *
 
 For more information about security configuration, please refer to official document
@@ -191,7 +191,7 @@ After finishing the SSM configuration, we can start to deploy the SSM package wi
 ---------------------------------------------------------------------------------
 
 SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
-   
+
    ## Standalone SSM Service
 
 For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
@@ -204,23 +204,24 @@ On the SSM service server, switch to the SSM installation directory, ready to st
 
 # Run SSM
 ---------------------------------------------------------------------------------
-Enter into ${SMART_HOME} directory for running SSM.
+Enter into ${SMART_HOME} directory for running SSM, type "./bin/ssm version" to show specific version information for SSM.
 ##  **Start SSM server**
-   
+
    SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
-   
-   The start process also requires the user account to start the SSM server is able to ssh to localhost without providing password.  
+
+   The start process also requires the user account to start the SSM server is able to ssh to localhost without providing password.
 
    `./bin/start-ssm.sh`
 
    `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
 
    `--config <config-dir>` can be used to specify where the config directory is.
+
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 
    If Smart Agents are configured, the start script will start the Agents one by one remotely.
-   
-   Once you start the SSM server, you can open its web UI by 
+
+   Once you start the SSM server, you can open its web UI by
 
    `http://Active_SSM_Server_IP:7045`
 
@@ -238,7 +239,7 @@ Enter into ${SMART_HOME} directory for running SSM.
    Please note that the SSM distribution directory should be under the same directory on the new agent host as that on Smart Server.
 
 ## **Stop SSM server**
-   
+
    The script `bin/stop-ssm.sh` is used to stop SSM server.
 
    `./bin/stop-ssm.sh`
@@ -258,7 +259,7 @@ After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configur
 
 ## Apache Hadoop 2.7.3
 
-### core-site.xml changes 
+### core-site.xml changes
 
 Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System". Add the following content to the `core-site.xml`
 ```xml
@@ -268,7 +269,7 @@ Add property `fs.hdfs.impl` to point to Smart Server provided "Smart File System
         <description>The FileSystem for hdfs URL</description>
     </property>
 ```
-### hdfs-site.xml changes  
+### hdfs-site.xml changes
 
 Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
 ```xml
@@ -288,7 +289,7 @@ in which executors represents the value for smart.cmdlet.executors in SSM and ag
         <value></value>
     </property>
 ```
-### Storage volume types   
+### Storage volume types
 
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, here is an example which sets the RAM_DISK, SSD, DISK and Archive volumes,
 ```xml
@@ -297,7 +298,7 @@ Make sure you have the correct HDFS storage type applied to HDFS DataNode storag
          <value>[RAM_DISK]file://${RAM_DIR}/dfs/data,[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
      </property>
 ```
-### Check of HDFS client can access SSM jars  
+### Check of HDFS client can access SSM jars
 
 Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
    ####  Add SSM jars to the Hadoop classpath.
@@ -309,19 +310,19 @@ Follow the steps to add SSM Jars to classpath
   *  Add the SSM jars directory to hadoop calsspath in `hadoop-env.sh` as following.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
-  
+
   *  For YARN and MapReduce, add the following content to the `yarn-site.xml`:
 
 ```xml
     <property>
         <name>yarn.application.classpath</name>
-        <value>    
+        <value>
 	$HADOOP_CONF_DIR:$HADOOP_COMMON_HOME/share/hadoop/common/*:$HADOOP_COMMON_HOME/share/hadoop/common/lib/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*:$HADOOP_YARN_HOME/share/hadoop/yarn/*:$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*:${SSM_jars}/*
         </value>
     </property>
 ```
 
-   #### Copy the Jars  
+   #### Copy the Jars
 Copy the SSM jars to the default Hadoop class path
   1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
   2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
@@ -329,7 +330,7 @@ Copy the SSM jars to the default Hadoop class path
 
 ## CDH5.10.1
 
-### core-site.xml changes 
+### core-site.xml changes
 
 Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point to Smart Server provided "Smart File System".
 
@@ -346,7 +347,7 @@ Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point t
  4.    Restart stale Services and re-deploy the client configurations
 
 
-### hdfs-site.xml changes 
+### hdfs-site.xml changes
 
 Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
@@ -376,7 +377,7 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
 ###  HDFS Storage types
 
 Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, Check it in Cloudera Manager by the following steps.
-    
+
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
  2.    Search DataNode Data Directory configuration. Below is an example which sets the RAM_DISK, SSD, DISK and Archive volumes.
 ```xml
@@ -388,9 +389,9 @@ Make sure you have the correct HDFS storage type applied to HDFS DataNode storag
 ###  Check if HDFS can access SSM jars
 
 After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can access. There are two ways to ensure Hadoop can access SmartFileSystem,
- 
+
 #### Add SSM jars to the CDH Hadoop Classpath using Cloudera Manager.
-    
+
  1. In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
  2. Search `HDFS Replication Environment Advanced Configuration Snippet (Safety Valve) for hadoop-env.sh`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
  3. Search `HDFS Service Environment Advanced Configuration Snippet (Safety Valve)`. Add the SSM jars to CDH Hadoop classpath. For example, `$HADOOP_CLASSPATH=$HADOOP_CLASSPATH:/PATH/TO/SSM_jars/*`
@@ -406,25 +407,25 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
  13. Restart stale Services and re-deploy the client configurations.
 
 ####  Copy the SSM jars to the CDH default Hadoop class path.
-     
+
  1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
  2. Distribute the jars starts with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
 
 
 
 ## Validate the Hadoop Configuration
-     After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if 
-the configuration takes effect. You can try TestDFSIO for example, 
+     After all the steps, A cluster restart is required. After the restart, try to run some simple test to see if
+the configuration takes effect. You can try TestDFSIO for example,
 
  	* write data
- 
+
 	  `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –write –nrFiles 5 –size 5MB`
-   
+
  	* read data
 
 	  `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
 
-   You may want to replace the jar with the version used in your cluster. After the read data operation, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well. 
+   You may want to replace the jar with the version used in your cluster. After the read data operation, if all the data files are listed on SSM web UI page "hot files" table, then the integration works very well.
 
 
 # SSM Rule Examples
@@ -455,27 +456,27 @@ single date nor time value is specified, the rule will be evaluated every short 
 ## **Specify rule evaluation interval**
 
 	`file: every 3s | path matches "/test/*.xml" | allssd`
-  
+
 This rule will move all XML files under /test directory to SSD. The rule engine will
-evaluate whether the condition meets every 3s. 
+evaluate whether the condition meets every 3s.
 
 
 ## **Backup files between clusters**
-     
+
      `file: every 500ms | path matches "/test-10000-10MB/*"| sync -dest hdfs://sr518:9000/test-10000-10MB/`
-	
-This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/". 
+
+This rule will copy file and update any namespace changes(add,delete,rename,append) under source directory "/test-10000-10MB/" to destination directory "hdfs://sr518:9000/test-10000-10MB/".
 
 ## **Support action chain**
 
 	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
-	
+
 SSM use ";" to separate different actions in a rule. The execution trigger of later action depends on the successful execution of the prior action. If prior action fails, the following actions will not be executed.
-     
+
 Above rule means all the files under /test directory, if it's age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is a not a built-in action. Users need to implement it by themselves.
-     
+
 Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
-     
+
 Rule priority and rule order will be considered to implement yet. Currently all rules
 will run in parallel. For a full detail rule format definition, please refer to
 https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
@@ -499,7 +500,7 @@ Current default value is 5, which means system will concurrently evaluate 5 rule
 ```
 ### smart.cmdlet.executors
 
-Current default value is 10, means there will be 10 actions concurrently executed at the same time. 
+Current default value is 10, means there will be 10 actions concurrently executed at the same time.
 If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example to change the action execution parallelism to 50.
 ```xml
      <property>
@@ -507,14 +508,14 @@ If the current configuration cannot meet your performance requirements, you can 
          <value>50</value>
      </property>
 ```
-## Cmdlet history purge in metastore  
+## Cmdlet history purge in metastore
 
 SSM choose to save cmdlet and action execution history in metastore for audit and log purpose. To not blow up the metastore space, SSM support periodically purge cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 ```xml
     <property>
         <name>smart.cmdlet.hist.max.num.records</name>
         <value>100000</value>
-        <description>Maximum number of historic cmdlet records kept in SSM server. Oldest cmdlets will be deleted if exceeds the threshold. 
+        <description>Maximum number of historic cmdlet records kept in SSM server. Oldest cmdlets will be deleted if exceeds the threshold.
         </description>
      </property>
 
@@ -576,17 +577,17 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 1. Smart Server can't start successfully
 
    a. Check whether Hadoop HDFS NameNode is running
-   
+
    b. Check whether MySQL server is running
-   
+
    c. Check if there is already a SmartDaemon process running
-   
+
    d. Got to logs under ${SMART_HOME}/logs directory, find any useful clues in the log file.
-   
-2. UI can not show hot files list 
+
+2. UI can not show hot files list
 
    Possible causes:
-  
+
    a. Cannot lock system mover locker. You may see something like follows in the smartserver.log file. Make sure there is no system mover running. Try to restart the SSM service will solve the problem.
 
 ```
@@ -595,11 +596,11 @@ Note: To make the scripts work, you have to set up password-less SSH connections
    2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
 ```
 
-	 
+
 Notes
 ---------------------------------------------------------------------------------
 1. If there is no SSD or Archive type disk volume configured in DataNodes, "allssd" or "archive" action will fail.
 2. When SSM starts, it will pull the whole namespace from Namenode. If the namespace is very huge, it will take long time for SSM to finish namespace synchronization. SSM may half function during this period.
 
 
-   
+
