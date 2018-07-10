@@ -204,7 +204,7 @@ On the SSM service server, switch to the SSM installation directory, ready to st
 
 # Run SSM
 ---------------------------------------------------------------------------------
-Enter into ${SMART_HOME} directory for running SSM.
+Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` to show specific version information for SSM.
 ##  **Start SSM server**
    
    SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
