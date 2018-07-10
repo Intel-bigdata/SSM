@@ -42,10 +42,10 @@ public class VersionInfoWrite {
       File file = new File(s);
       FileWriter out = new FileWriter(file);
       out.write("version=" + getVersionInfo(pom) + "\n");
-      out.write("revision=" + getSCMCommit() + "\n");
-      out.write("user=" + getSCMUser() + "\n");
+      out.write("revision=" + getCommit() + "\n");
+      out.write("user=" + getUser() + "\n");
       out.write("date=" + getBuildTime() + "\n");
-      out.write("url=" + getSCMUri() + "\n");
+      out.write("url=" + getUri() + "\n");
       out.flush();
       out.close();
     } catch (IOException e) {
@@ -73,7 +73,7 @@ public class VersionInfoWrite {
     return "Not found";
   }
 
-  private String getSCMUri() {
+  private String getUri() {
     List<String> scm = execCmd("git remote -v");
     String uri = "Unknown";
     for (String s : scm) {
@@ -86,7 +86,7 @@ public class VersionInfoWrite {
     return uri.trim();
   }
 
-  private String getSCMCommit() {
+  private String getCommit() {
     List<String> scm = execCmd("git log -n 1");
     String commit = "Unknown";
     for (String s : scm) {
@@ -98,7 +98,7 @@ public class VersionInfoWrite {
     return commit.trim();
   }
 
-  private String getSCMUser() {
+  private String getUser() {
     List<String> scm = execCmd("whoami");
     String user = "Unknown";
     for (String s : scm) {
