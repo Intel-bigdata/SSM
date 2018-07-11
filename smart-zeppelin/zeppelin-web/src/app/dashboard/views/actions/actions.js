@@ -156,7 +156,7 @@ angular.module('zeppelinWebApp')
       else {
         __search__($scope.path);
       }
-    },5000);
+    },60000);
 
     $scope.$on('$destroy',function(){
       $interval.cancel(timer);
