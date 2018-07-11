@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,7 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
 
 Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
@@ -37,8 +35,13 @@ DAEMON_MOD=
 DAEMON_MOD_OP=
 REMOTE_MODE=
 SMART_VARGS=
+SSM_VERSION=false
 while [ $# != 0 ]; do
   case "$1" in
+      "version")
+      SSM_VERSION=true
+      break
+      ;;
     "--config")
       shift
       conf_dir="$1"
@@ -106,6 +109,11 @@ addNonTestJarInDir "${SMART_HOME}/smart-server/target"
 addNonTestJarInDir "${SMART_HOME}/smart-agent/target"
 addJarInDir "${SMART_HOME}/lib"
 
+if [ $SSM_VERSION = "true" ]; then
+  java -cp ${SMART_CLASSPATH} org.smartdata.versioninfo.VersionInfoRead
+  exit 1
+fi
+
 if [ "$SMART_CLASSPATH" = "" ]; then
   SMART_CLASSPATH="${SMART_CONF_DIR}"
 else
@@ -157,4 +165,3 @@ else
   fi
   exit $?
 fi
-
