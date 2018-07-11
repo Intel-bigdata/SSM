@@ -51,8 +51,8 @@ public class VersionInfoWrite {
       prop.setProperty("url", getUri());
       prop.setProperty("branch", getBranch());
       prop.store(output, new Date().toString());
-    } catch (IOException io) {
-      io.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     } finally {
       if (output != null) {
         try {
@@ -73,7 +73,7 @@ public class VersionInfoWrite {
   private String getVersionInfo(String pom) throws IOException {
     File fl = new File(pom);
     FileReader fr = new FileReader(fl);
-    String st = null;
+    String st;
     BufferedReader br = new BufferedReader(fr);
     while ((st = br.readLine()) != null) {
       if (st.contains("<version>")) {
