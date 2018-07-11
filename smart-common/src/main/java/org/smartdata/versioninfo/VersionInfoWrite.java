@@ -71,10 +71,10 @@ public class VersionInfoWrite {
   }
 
   private String getVersionInfo(String pom) throws IOException {
-    File fl = new File(pom);
-    FileReader fr = new FileReader(fl);
+    File file = new File(pom);
+    FileReader fileReader = new FileReader(file);
     String st;
-    BufferedReader br = new BufferedReader(fr);
+    BufferedReader br = new BufferedReader(fileReader);
     while ((st = br.readLine()) != null) {
       if (st.contains("<version>")) {
         return st.trim().substring("<version>".length(),
