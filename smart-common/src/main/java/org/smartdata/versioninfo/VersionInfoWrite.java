@@ -49,6 +49,7 @@ public class VersionInfoWrite {
       prop.setProperty("user", getUser());
       prop.setProperty("date", getBuildTime());
       prop.setProperty("url", getUri());
+      prop.setProperty("branch", getBranch());
       prop.store(output, new Date().toString());
     } catch (IOException io) {
       io.printStackTrace();
@@ -77,7 +78,7 @@ public class VersionInfoWrite {
     while ((st = br.readLine()) != null) {
       if (st.contains("<version>")) {
         return st.trim().substring("<version>".length(),
-          st.trim().length() - "</version>".length());
+            st.trim().length() - "</version>".length());
       }
     }
     return "Not found";
@@ -116,6 +117,18 @@ public class VersionInfoWrite {
       break;
     }
     return user;
+  }
+
+  private String getBranch() {
+    List<String> list = execCmd("git branch");
+    String branch = "Unknown";
+    for (String s : list) {
+      if (s.startsWith("*")) {
+        branch = s.substring("*".length());
+        break;
+      }
+    }
+    return branch;
   }
 
   public List<String> execCmd(String cmd) {

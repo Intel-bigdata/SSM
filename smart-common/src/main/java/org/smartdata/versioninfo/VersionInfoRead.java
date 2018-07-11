@@ -65,9 +65,14 @@ public class VersionInfoRead {
     return info.prop.getProperty("url", "Unknown");
   }
 
+  protected String getBranch() {
+    return info.prop.getProperty("branch", "Unknown");
+  }
+
   public void printInfo() {
     System.out.println("SSM " + getVersion());
-    System.out.println("Subversion " + getUrl() + " -r " + getRevision());
+    System.out.println("Subversion " + getUrl());
+    System.out.println("Last commit ") + getRevision() + " on branch " + getBranch());
     System.out.println("Compiled by " + getUser() + " on " + getTime());
   }
 
