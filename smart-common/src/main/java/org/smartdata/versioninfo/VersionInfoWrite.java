@@ -124,7 +124,7 @@ public class VersionInfoWrite {
     String branch = "Unknown";
     for (String s : list) {
       if (s.startsWith("*")) {
-        branch = s.substring("*".length());
+        branch = s.substring("*".length()).trim();
         break;
       }
     }
