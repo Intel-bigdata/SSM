@@ -50,9 +50,9 @@ public class VersionInfoWrite {
       prop.setProperty("date" , getBuildTime());
       prop.setProperty("url" , getUri());
       prop.store(output , new Date().toString());
-      } catch (IOException io) {
-        io.printStackTrace();
-      } finally {
+    } catch (IOException io) {
+      io.printStackTrace();
+    } finally {
       if (output != null) {
         try {
           output.close();
