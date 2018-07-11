@@ -44,12 +44,12 @@ public class VersionInfoWrite {
     String s = this.getClass().getResource("/").getPath() + "common-versionInfo.properties";
     try {
       output = new FileOutputStream(s);
-      prop.setProperty("version" , getVersionInfo(pom));
-      prop.setProperty("revision" , getCommit());
-      prop.setProperty("user" , getUser());
-      prop.setProperty("date" , getBuildTime());
-      prop.setProperty("url" , getUri());
-      prop.store(output , new Date().toString());
+      prop.setProperty("version", getVersionInfo(pom));
+      prop.setProperty("revision", getCommit());
+      prop.setProperty("user", getUser());
+      prop.setProperty("date", getBuildTime());
+      prop.setProperty("url", getUri());
+      prop.store(output, new Date().toString());
     } catch (IOException io) {
       io.printStackTrace();
     } finally {
