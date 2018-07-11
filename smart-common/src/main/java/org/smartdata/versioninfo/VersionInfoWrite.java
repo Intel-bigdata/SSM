@@ -132,16 +132,15 @@ public class VersionInfoWrite {
   }
 
   public List<String> execCmd(String cmd) {
-    String command = new String(cmd);
-    command = "/bin/sh -c " + command;
+    String command = "/bin/sh -c " + cmd;
     List<String> list = new ArrayList<String>();
     try {
       Runtime rt = Runtime.getRuntime();
       Process proc = rt.exec(cmd, null, null);
       InputStream stderr = proc.getInputStream();
-      InputStreamReader isr = new InputStreamReader(stderr, "GBK");
+      InputStreamReader isr = new InputStreamReader(stderr, "UTF-8");
       BufferedReader br = new BufferedReader(isr);
-      String line = "";
+      String line;
       while ((line = br.readLine()) != null) {
         list.add(line);
       }
