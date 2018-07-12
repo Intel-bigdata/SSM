@@ -297,13 +297,15 @@ public class CmdletManager extends AbstractService {
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
     } catch (ParseException e) {
-      LOG.error("Cmdlet -> [ {} ], format is not correct", cmdlet, e);
+      LOG.debug("Cmdlet -> [ {} ], format is not correct", cmdlet, e);
       throw new IOException(e);
     }
   }
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
-    LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
+    }
     if (maxNumPendingCmdlets <= pendingCmdlet.size() + schedulingCmdlet.size()) {
       throw new QueueFullException("Pending cmdlets exceeds value specified by key '"
           + SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY + "' = " + maxNumPendingCmdlets);
@@ -447,7 +449,7 @@ public class CmdletManager extends AbstractService {
     return false;
   }
 
-  public int scheduleCmdlet() throws IOException {
+  private int scheduleCmdlet() throws IOException {
     int nScheduled = 0;
 
     synchronized (pendingCmdlet) {
@@ -792,14 +794,6 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public int getCmdletsSizeInCache() {
-    return idToCmdlets.size();
-  }
-
-  public int getActionsSizeInCache() {
-    return idToActions.size();
-  }
-
   public ActionInfo getActionInfo(long actionID) throws IOException {
     if (idToActions.containsKey(actionID)) {
       return idToActions.get(actionID);
@@ -955,7 +949,9 @@ public class CmdletManager extends AbstractService {
   }
 
   public void updateStatus(StatusMessage status) {
-    LOG.debug("Got status update: " + status);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Got status update: " + status);
+    }
     try {
       if (status instanceof CmdletStatusUpdate) {
         CmdletStatusUpdate statusUpdate = (CmdletStatusUpdate) status;
