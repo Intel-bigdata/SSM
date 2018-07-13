@@ -92,6 +92,23 @@
       </repositories>
     </profile>
     <profile>
+      <id>hadoop-3.1</id>
+      <modules>
+        <module>smart-hadoop-support</module>
+      </modules>
+      <properties>
+        <hadoop.version>3.1.0</hadoop.version>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-hdfs-client</artifactId>
+          <version>3.1.0</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
       <id>alluxio</id>
       <modules>
         <module>smart-alluxio-support</module>
