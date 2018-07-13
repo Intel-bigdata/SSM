@@ -163,6 +163,12 @@ angular.module('zeppelinWebApp')
         }
     });
 
+    $(document).keyup(function(event) {
+        if (event.keyCode == 27) {
+          getActions();
+        }
+    });
+
     var timer = $interval(function(){
       if (!$scope.searching) {
         getActions();
