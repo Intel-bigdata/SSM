@@ -340,7 +340,7 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   private void syncCmdAction(CmdletInfo cmdletInfo,
-                             List<ActionInfo> actionInfos) throws IOException {
+      List<ActionInfo> actionInfos) throws IOException {
     lockMovefileActionFiles(actionInfos);
     LOG.debug("Cache cmd {}", cmdletInfo);
     for (ActionInfo actionInfo : actionInfos) {
@@ -524,7 +524,8 @@ public class CmdletManager extends AbstractService {
     return nScheduled;
   }
 
-  private ScheduleResult scheduleCmdletActions(CmdletInfo info, LaunchCmdlet launchCmdlet) {
+  private ScheduleResult scheduleCmdletActions(CmdletInfo info,
+      LaunchCmdlet launchCmdlet) {
     List<Long> actIds = info.getAids();
     int idx = 0;
     int schIdx = 0;
@@ -624,8 +625,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public CmdletGroup listCmdletsInfo(long rid, long pageIndex, long numPerPage,
-                                     List<String> orderBy,
-                                     List<Boolean> isDesc) throws IOException, MetaStoreException {
+      List<String> orderBy,
+      List<Boolean> isDesc) throws IOException, MetaStoreException {
     List<CmdletInfo> cmdlets = metaStore.listPageCmdlets(rid,
       (pageIndex - 1) * numPerPage, numPerPage, orderBy, isDesc);
     return new CmdletGroup(cmdlets, metaStore.getNumCmdletsByRid(rid));
@@ -817,7 +818,7 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-                                                int actionNum) throws IOException {
+      int actionNum) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum);
     } catch (MetaStoreException e) {
@@ -827,8 +828,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-                                                int actionNum,
-                                                boolean finished) throws IOException {
+      int actionNum,
+      boolean finished) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum, finished);
     } catch (MetaStoreException e) {
@@ -838,8 +839,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-                                                boolean successful,
-                                                int actionNum) throws IOException {
+      boolean successful,
+      int actionNum) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, successful, actionNum);
     } catch (MetaStoreException e) {
@@ -967,8 +968,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public DetailedFileActionGroup getFileActions(long rid,
-                                                long pageIndex,
-                                                long numPerPage)
+      long pageIndex,
+      long numPerPage)
     throws IOException, MetaStoreException {
     List<DetailedFileAction> detailedFileActions = metaStore.listFileActions(rid,
       (pageIndex - 1) * numPerPage, numPerPage);

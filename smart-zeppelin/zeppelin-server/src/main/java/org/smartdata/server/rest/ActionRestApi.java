@@ -69,9 +69,9 @@ public class ActionRestApi {
   @GET
   @Path("/list/{pageIndex}/{numPerPage}/{orderBy}/{isDesc}")
   public Response actionList(@PathParam("pageIndex") String pageIndex,
-                             @PathParam("numPerPage") String numPerPage,
-                             @PathParam("orderBy") String orderBy,
-                             @PathParam("isDesc") String isDesc) {
+      @PathParam("numPerPage") String numPerPage,
+      @PathParam("orderBy") String orderBy,
+      @PathParam("isDesc") String isDesc) {
     if (logger.isDebugEnabled()) {
       logger.debug("pageIndex={}, numPerPage={}, orderBy={}, isDesc={}",
         pageIndex, numPerPage, orderBy, isDesc);
@@ -128,7 +128,7 @@ public class ActionRestApi {
   @GET
   @Path("/list/{listNumber}/{ruleId}")
   public Response actionList(@PathParam("listNumber") String listNumber,
-                             @PathParam("ruleId") String ruleId) {
+      @PathParam("ruleId") String ruleId) {
     Integer intNumber = Integer.parseInt(listNumber);
     intNumber = intNumber > 0 ? intNumber : 0;
     try {
@@ -144,8 +144,8 @@ public class ActionRestApi {
   @GET
   @Path("/filelist/{ruleId}/{pageIndex}/{numPerPage}")
   public Response dataSyncFileList(@PathParam("ruleId") String ruleId,
-                                   @PathParam("pageIndex") String pageIndex,
-                                   @PathParam("numPerPage") String numPerPage) {
+      @PathParam("pageIndex") String pageIndex,
+      @PathParam("numPerPage") String numPerPage) {
     if (logger.isDebugEnabled()) {
       logger.debug("ruleId={}, pageIndex={}, numPerPage={}", ruleId,
         pageIndex, numPerPage);
@@ -164,7 +164,7 @@ public class ActionRestApi {
   @GET
   @Path("/filelist/{listNumber}/{ruleId}")
   public Response actionFileList(@PathParam("listNumber") String listNumber,
-                                 @PathParam("ruleId") String ruleId) {
+      @PathParam("ruleId") String ruleId) {
     Integer intNumber = Integer.parseInt(listNumber);
     intNumber = intNumber > 0 ? intNumber : 0;
     try {
@@ -181,7 +181,7 @@ public class ActionRestApi {
   @GET
   @Path("/type/{listNumber}/{actionName}")
   public Response actionTypeList(@PathParam("listNumber") String listNumber,
-                                 @PathParam("actionName") String actionName) {
+      @PathParam("actionName") String actionName) {
     Integer intNumber = Integer.parseInt(listNumber);
     intNumber = intNumber > 0 ? intNumber : 0;
     try {

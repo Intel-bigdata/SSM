@@ -88,7 +88,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getByCondition(String aidCondition,
-                                         String cidCondition) {
+      String cidCondition) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sqlPrefix = "SELECT * FROM " + TABLE_NAME + " WHERE ";
     String sqlAid = (aidCondition == null) ? "" : "AND aid " + aidCondition;
@@ -122,7 +122,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getLatestActions(String actionName, int size,
-                                           boolean successful, boolean finished) {
+      boolean successful, boolean finished) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
@@ -135,7 +135,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getLatestActions(String actionName, boolean successful,
-                                           int size) {
+      int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);
@@ -148,7 +148,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getAPageOfAction(long start, long offset, List<String> orderBy,
-                                           List<Boolean> isDesc) {
+      List<Boolean> isDesc) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     boolean ifHasAid = false;
     String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
@@ -227,7 +227,7 @@ public class ActionDao {
   }
 
   public List<ActionInfo> getLatestActions(String actionType, int size,
-                                           boolean finished) {
+      boolean finished) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     if (size != 0) {
       jdbcTemplate.setMaxRows(size);

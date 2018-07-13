@@ -35,33 +35,24 @@ angular.module('zeppelinWebApp')
     $scope.path;
 
     function getActions() {
-      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
-        + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc)
-        .then(function(response) {
-        var actionData = angular.fromJson(response.data);
-        $scope.totalNumber = actionData.body.totalNumOfActions;
-        $scope.actions = actionData.body.actions;
-        angular.forEach($scope.actions, function (data,index) {
-          data.runTime = data.finishTime - data.createTime;
-          data.createTime = data.createTime === 0 ? "-" :
-            $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
-          data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
-            $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
-          data.progress = Math.round(data.progress * 100);
-          data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
-        });
-        $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
-      }, function(errorResponse) {
-          $scope.totalNumber = 0;
-      });
+      var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
+        + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
+      setCookie(url);
+      setVariables(url);
     };
 
     function __search__ (text) {
       if (!$scope.searching) {
         $scope.currentSearchPage = 1;
       }
-      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/search/'
-        + text + '/' + $scope.currentSearchPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc)
+      var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/search/'
+        + text + '/' + $scope.currentSearchPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
+      setCookie(url);
+      setVariables(url);
+    }
+
+    function setVariables(url) {
+      $http.get(url)
         .then(function(response) {
         var actionData = angular.fromJson(response.data);
         $scope.totalNumber = actionData.body.totalNumOfActions;
@@ -92,27 +83,38 @@ angular.module('zeppelinWebApp')
       }
     };
 
+    function setCookie(cvalue) {
+        document.cookie = "tmpURL" + "=" + cvalue + ";" + ";path=/";
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for(var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
+    function checkCookie() {
+        var url=getCookie("tmpURL");
+        if (url != "") {
+          setVariables(url);
+        } else {
+          getActions();
+        }
+    }
+
     $scope.getContent = function () {
       var tmp = document.getElementById('search').value;
-      var res = "";
-      for (var i = 0; i < tmp.length; i++) {
-        if (tmp.charAt(i) == '%') {
-          res += "%25";
-        }
-        else if (tmp.charAt(i) == '/'){
-          res += "%2F";
-        }
-        else if (tmp.charAt(i) == '?'){
-          res += "%3F";
-        }
-        else if (tmp.charAt(i) == '@'){
-          res += "%40";
-        }
-        else {
-          res += tmp.charAt(i);
-        }
-      }
-      $scope.path = res;
+      $scope.path = encodeURIComponent(tmp);
       search($scope.path);
     };
 
@@ -144,9 +146,10 @@ angular.module('zeppelinWebApp')
 
     // getActions();
     if ($scope.totalNumber == 0) {
-      $scope.currentPage = 0;
-      getActions();
-      $scope.currentPage = 1;
+      // $scope.currentPage = 0;
+      // getActions();
+      // $scope.currentPage = 1;
+      checkCookie();
     }
 
     var timer = $interval(function(){

@@ -481,7 +481,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateStoragesTable(String type,
-                                     Long capacity, Long free) throws MetaStoreException {
+      Long capacity, Long free) throws MetaStoreException {
     try {
       mapStorageCapacity = null;
       return storageDao.updateStoragesTable(type, capacity, free);
@@ -500,7 +500,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<StorageCapacity> getStorageHistoryData(String type, long interval,
-                                                     long startTime, long endTime) {
+      long startTime, long endTime) {
     return storageHistoryDao.getStorageHistoryData(type, interval, startTime, endTime);
   }
 
@@ -537,8 +537,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertCachedFiles(long fid, String path,
-                                long fromTime,
-                                long lastAccessTime, int numAccessed) throws MetaStoreException {
+      long fromTime,
+      long lastAccessTime, int numAccessed) throws MetaStoreException {
     try {
       cacheFileDao.insert(fid, path, fromTime, lastAccessTime, numAccessed);
     } catch (Exception e) {
@@ -564,8 +564,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateCachedFiles(Long fid,
-                                   Long lastAccessTime,
-                                   Integer numAccessed) throws MetaStoreException {
+      Long lastAccessTime,
+      Integer numAccessed) throws MetaStoreException {
     try {
       return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
     } catch (Exception e) {
@@ -574,7 +574,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void updateCachedFiles(Map<String, Long> pathToIds,
-                                List<FileAccessEvent> events)
+      List<FileAccessEvent> events)
     throws MetaStoreException {
     try {
       cacheFileDao.update(pathToIds, events);
@@ -623,7 +623,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void createProportionTable(AccessCountTable dest,
-                                    AccessCountTable source)
+      AccessCountTable source)
     throws MetaStoreException {
     try {
       accessCountDao.createProportionTable(dest, source);
@@ -669,7 +669,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+  public List<DetailedFileAction> listFileActions(long rid,
+      int size) throws MetaStoreException {
     if (mapStoragePolicyIdName == null) {
       updateCache();
     }
@@ -825,7 +826,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateRuleInfo(long ruleId, RuleState rs,
-                                long lastCheckTime, long checkedCount, int commandsGen)
+      long lastCheckTime, long checkedCount, int commandsGen)
     throws MetaStoreException {
     try {
       if (rs == null) {
@@ -862,7 +863,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<RuleInfo> listPageRule(long start, long offset, List<String> orderBy,
-                                     List<Boolean> desc)
+      List<Boolean> desc)
     throws MetaStoreException {
     LOG.debug("List Rule, start {}, offset {}", start, offset);
     try {
@@ -888,7 +889,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<CmdletInfo> listPageCmdlets(long rid, long start, long offset,
-                                          List<String> orderBy, List<Boolean> desc)
+      List<String> orderBy, List<Boolean> desc)
     throws MetaStoreException {
     LOG.debug("List cmdlet, start {}, offset {}", start, offset);
     try {
@@ -911,7 +912,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<CmdletInfo> listPageCmdlets(long start, long offset,
-                                          List<String> orderBy, List<Boolean> desc)
+      List<String> orderBy, List<Boolean> desc)
     throws MetaStoreException {
     LOG.debug("List cmdlet, start {}, offset {}", start, offset);
     try {
@@ -982,8 +983,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public List<CmdletInfo> getCmdlets(String cidCondition,
-                                     String ridCondition,
-                                     CmdletState state) throws MetaStoreException {
+      String ridCondition,
+      CmdletState state) throws MetaStoreException {
     try {
       return cmdletDao.getByCondition(cidCondition, ridCondition, state);
     } catch (EmptyResultDataAccessException e) {
@@ -1105,7 +1106,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> listPageAction(long start, long offset, List<String> orderBy,
-                                         List<Boolean> desc)
+      List<Boolean> desc)
     throws MetaStoreException {
     LOG.debug("List Action, start {}, offset {}", start, offset);
     try {
@@ -1120,8 +1121,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> searchAction(String path, long start,
-                                       long offset, List<String> orderBy,
-                                       List<Boolean> desc) throws MetaStoreException {
+      long offset, List<String> orderBy,
+      List<Boolean> desc) throws MetaStoreException {
     try {
       return actionDao.searchAction(path, start, offset, orderBy, desc);
     } catch (EmptyResultDataAccessException e) {
@@ -1216,7 +1217,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-                                               int size) throws MetaStoreException {
+      int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1230,8 +1231,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-                                               int size, boolean successful,
-                                               boolean finished) throws MetaStoreException {
+      int size, boolean successful,
+      boolean finished) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1245,8 +1246,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-                                               int size,
-                                               boolean finished) throws MetaStoreException {
+      int size,
+      boolean finished) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1260,8 +1261,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-                                               boolean successful,
-                                               int size) throws MetaStoreException {
+      boolean successful,
+      int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
