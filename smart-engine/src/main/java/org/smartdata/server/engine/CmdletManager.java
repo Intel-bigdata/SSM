@@ -934,7 +934,7 @@ public class CmdletManager extends AbstractService {
       List<ActionInfo> infos =  metaStore.searchAction(path, (pageIndex - 1) * numPerPage,
           numPerPage, orderBy, isDesc);
       for (ActionInfo info : infos) {
-        LOG.info("[metaStore search] " + info.getActionName());
+        LOG.debug("[metaStore search] " + info.getActionName());
         ActionInfo memInfo = idToActions.get(info.getActionId());
         if (memInfo != null) {
           info.setCreateTime(memInfo.getCreateTime());

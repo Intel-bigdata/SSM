@@ -37,7 +37,7 @@ angular.module('zeppelinWebApp')
     function getActions() {
       var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
         + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
-      setCookie(url);
+      setCookie(url, "");
       setVariables(url);
     };
 
@@ -47,7 +47,7 @@ angular.module('zeppelinWebApp')
       }
       var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/search/'
         + text + '/' + $scope.currentSearchPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
-      setCookie(url);
+      setCookie(url, decodeURIComponent(text));
       setVariables(url);
     }
 
@@ -83,8 +83,9 @@ angular.module('zeppelinWebApp')
       }
     };
 
-    function setCookie(cvalue) {
-        document.cookie = "tmpURL" + "=" + cvalue + ";" + ";path=/";
+    function setCookie(curl, cvalue) {
+        document.cookie = "tmpURL" + "=" + curl + ";" + ";path=/";
+        document.cookie = "tmpSearch" + "=" + cvalue + ";" + ";path=/";
     }
 
     function getCookie(cname) {
@@ -105,7 +106,9 @@ angular.module('zeppelinWebApp')
 
     function checkCookie() {
         var url=getCookie("tmpURL");
+        var search=getCookie("tmpSearch");
         if (url != "") {
+          document.getElementById('search').value = search;
           setVariables(url);
         } else {
           getActions();
@@ -151,6 +154,14 @@ angular.module('zeppelinWebApp')
       // $scope.currentPage = 1;
       checkCookie();
     }
+
+    var input = document.getElementById("search");
+    input.addEventListener("keyup", function(event) {
+        event.preventDefault();
+        if (event.keyCode === 13) {
+            document.getElementById("searchBtn").click();
+        }
+    });
 
     var timer = $interval(function(){
       if (!$scope.searching) {
