@@ -20,8 +20,9 @@ BIN_HOME=$(cd `dirname $0`;pwd)
 SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 INPUT_PATH=""
+FLAG=false
 
-echo "Do you want to install SSM to the hosts configured in the configuration file named 'agents'?"
+echo "Do you want to install SSM to the hosts configured in the files 'agents' and 'servers'?"
 
 while true;do
 read -p  "Please type [Y|y] or [N|n]:
@@ -45,19 +46,21 @@ fi
 cd $SSM_HOME/../; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
 IFS=$'\n'
-for line in `cat $SSM_NAME/conf/agents`
+for host in `cat $SSM_NAME/conf/servers;echo '';cat $SSM_NAME/conf/agents`
 do
-   line=$(echo $line | tr -d  " ")
-   if [[ "$line" =~ ^#.* ]];then
+   host=$(echo $host | tr -d  " ")
+   if [[ "$host" =~ ^#.* ]];then
         continue
    else
-      flag=`ssh $line "if [ -d $INPUT_PATH ];then echo 1; else echo 0; fi"`
+      flag=`ssh $host "if [ -d $INPUT_PATH ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
-         echo installing SSM to $line...
-         scp ${SSM_NAME}.tar $line:$INPUT_PATH >> /dev/null
-         ssh $line "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
+         FLAG=true
+         echo installing SSM to $host...
+         scp ${SSM_NAME}.tar $host:$INPUT_PATH >> /dev/null
+         ssh $host "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
+         echo install SSM to $host successfully!
       else
-         echo "the path you type do not exist in $line"
+         echo "The path you type do not exist in $host!"
          rm -f ${SSM_NAME}.tar
          exit 1
       fi
@@ -66,4 +69,6 @@ done
 
 rm -f ${SSM_NAME}.tar
 
-echo finish installing!
+if [ $FLAG = false ];then
+    echo -e No hosts configured in \'servers\' and \'agents\'!
+fi
