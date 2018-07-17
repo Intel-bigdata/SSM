@@ -26,7 +26,7 @@ if [[ $INPUT_PATH != */ ]];then
     INPUT_PATH=${INPUT_PATH}/
 fi
 
-cd ..;cd ..; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
+cd $SSM_HOME/../; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
 IFS=$'\n'
 for line in `cat $SSM_NAME/conf/agents`
