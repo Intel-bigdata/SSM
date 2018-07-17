@@ -3,7 +3,6 @@
 BIN_HOME=$(cd `dirname $0`;pwd)
 SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
-AGENTS_PATH=$BIN_HOME/../conf/agents
 PATH1=""
 
 echo "Do you want to install SSM to the hosts configured in the configuration file named 'agents'?"
@@ -30,7 +29,7 @@ fi
 cd ..;cd ..; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
 IFS=$'\n'
-for line in `cat ${AGENTS_PATH}`
+for line in `cat $SSM_NAME/conf/agents`
 do
    line=$(echo $line | tr -d  " ")
    if [[ "$line" =~ ^#.* ]];then
