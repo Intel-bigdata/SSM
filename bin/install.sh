@@ -42,7 +42,7 @@ do
          scp ${SSM_NAME}.tar $line:$PATH1 >> /dev/null
          ssh $line "cd ${PATH1};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
       else
-         echo "the path you tpye do not exist in $line"
+         echo "the path you type do not exist in $line"
          rm -f ${SSM_NAME}.tar
          exit 1
       fi
