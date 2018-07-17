@@ -1,9 +1,14 @@
 #!/bin/bash
 
 BIN_HOME=$(cd `dirname $0`;pwd)
+SSM_HOME=${BIN_HOME%/*}
+SSM_NAME=${SSM_HOME##*/}
 AGENTS_PATH=$BIN_HOME/../conf/agents
-SSM_VERSION=$(cat $BIN_HOME/../../../../pom.xml | grep "<version>" | head -n 1 | tr -d "<version>/ ")
 PATH1=""
+echo $SSM_HOME
+echo $SSM_NAME
+echo $AGENTS_PATH
+
 
 echo "Do you want to install SSM to the hosts configured in the configuration file named 'agents'?"
 
@@ -26,7 +31,7 @@ if [[ $PATH1 != */ ]];then
     PATH1=${PATH1}/
 fi
 
-cd ..;cd ..; tar cf "smart-data-${SSM_VERSION}.tar" smart-data-${SSM_VERSION}
+cd ..;cd ..; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
 IFS=$'\n'
 for line in `cat ${AGENTS_PATH}`
@@ -38,16 +43,16 @@ do
       flag=`ssh $one "if [ -d $PATH1 ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
          echo installing SSM to $one...
-         scp smart-data-${SSM_VERSION}.tar $one:$PATH1 >> /dev/null
-         ssh $one "cd ${PATH1};tar xf smart-data-${SSM_VERSION}.tar;rm -f smart-data-${SSM_VERSION}.tar"
+         scp ${SSM_NAME}.tar $one:$PATH1 >> /dev/null
+         ssh $one "cd ${PATH1};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
       else
          echo "the path you tpye do not exist in $one"
-         rm -f smart-data-${SSM_VERSION}.tar
+         rm -f ${SSM_NAME}.tar
          exit 1
       fi
    fi
 done
 
-rm -f smart-data-${SSM_VERSION}.tar
+rm -f ${SSM_NAME}.tar
 
 echo finish installing!
