@@ -5,10 +5,6 @@ SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 AGENTS_PATH=$BIN_HOME/../conf/agents
 PATH1=""
-echo $SSM_HOME
-echo $SSM_NAME
-echo $AGENTS_PATH
-
 
 echo "Do you want to install SSM to the hosts configured in the configuration file named 'agents'?"
 
@@ -36,17 +32,17 @@ cd ..;cd ..; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 IFS=$'\n'
 for line in `cat ${AGENTS_PATH}`
 do
-   one=$(echo $line | tr -d  " ")
-   if [[ "$one" =~ ^#.* ]];then
+   line=$(echo $line | tr -d  " ")
+   if [[ "$line" =~ ^#.* ]];then
         continue
    else
-      flag=`ssh $one "if [ -d $PATH1 ];then echo 1; else echo 0; fi"`
+      flag=`ssh $line "if [ -d $PATH1 ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
-         echo installing SSM to $one...
-         scp ${SSM_NAME}.tar $one:$PATH1 >> /dev/null
-         ssh $one "cd ${PATH1};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
+         echo installing SSM to $line...
+         scp ${SSM_NAME}.tar $line:$PATH1 >> /dev/null
+         ssh $line "cd ${PATH1};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
       else
-         echo "the path you tpye do not exist in $one"
+         echo "the path you tpye do not exist in $line"
          rm -f ${SSM_NAME}.tar
          exit 1
       fi
