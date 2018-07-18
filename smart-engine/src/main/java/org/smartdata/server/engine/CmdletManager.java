@@ -83,9 +83,9 @@ public class CmdletManager extends AbstractService {
   public static final int TIMEOUT_MULTIPLIER = 100;
   public static final int TIMEOUT_MIN_MILLISECOND = 30000;
   public static final String TIMEOUTLOG =
-          "Timeout error occurred for getting this action's status report.";
+    "Timeout error occurred for getting this action's status report.";
   public static final String ACTION_SKIP_LOG =
-          "The action is not executed because the prior action in the same cmdlet failed.";
+    "The action is not executed because the prior action in the same cmdlet failed.";
 
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -113,7 +113,11 @@ public class CmdletManager extends AbstractService {
 
   private long totalScheduled = 0;
 
+  private ActionGroup tmpActions = new ActionGroup();
+
   private long timeout;
+
+  private ActionGroup cache;
 
   public CmdletManager(ServerContext context) throws IOException {
     super(context);
@@ -130,12 +134,12 @@ public class CmdletManager extends AbstractService {
     this.cacheCmd = new ConcurrentHashMap<>();
     this.fileLocks = new ConcurrentHashMap<>();
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
-        idToLaunchCmdlet, runningCmdlets, schedulers);
+      idToLaunchCmdlet, runningCmdlets, schedulers);
     maxNumPendingCmdlets = context.getConf()
-        .getInt(SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY,
+      .getInt(SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_KEY,
         SmartConfKeys.SMART_CMDLET_MAX_NUM_PENDING_DEFAULT);
     cacheCmdTh = context.getConf()
-        .getInt(SmartConfKeys.SMART_CMDLET_CACHE_BATCH,
+      .getInt(SmartConfKeys.SMART_CMDLET_CACHE_BATCH,
         SmartConfKeys.SMART_CMDLET_CACHE_BATCH_DEFAULT);
 
     int reportPeriod = context.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
@@ -166,7 +170,7 @@ public class CmdletManager extends AbstractService {
       numCmdletsFinished.addAndGet(metaStore.getNumCmdletsInTerminiatedStates());
 
       schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
-          getContext().getConf(), getContext(), metaStore, false);
+        getContext().getConf(), getContext(), metaStore, false);
 
       for (ActionSchedulerService s : schedulerServices) {
         s.init();
@@ -227,14 +231,14 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   private void checkActionNames(
-      CmdletDescriptor cmdletDescriptor) throws IOException {
+    CmdletDescriptor cmdletDescriptor) throws IOException {
     for (int index = 0; index < cmdletDescriptor.getActionSize(); index++) {
       if (!ActionRegistry
-          .registeredAction(cmdletDescriptor.getActionName(index))) {
+        .registeredAction(cmdletDescriptor.getActionName(index))) {
         throw new IOException(
-            String.format(
-                "Submit Cmdlet %s error! Action names are not correct!",
-                cmdletDescriptor));
+          String.format(
+            "Submit Cmdlet %s error! Action names are not correct!",
+            cmdletDescriptor));
       }
     }
   }
@@ -251,7 +255,7 @@ public class CmdletManager extends AbstractService {
       for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
         if (!p.onSubmit(actionInfo)) {
           throw new IOException(
-              String.format("Action rejected by scheduler", actionInfo));
+            String.format("Action rejected by scheduler", actionInfo));
         }
       }
       cmdletInfo.addAction(actionInfo.getActionId());
@@ -262,10 +266,10 @@ public class CmdletManager extends AbstractService {
   public void start() throws IOException {
     LOG.info("Starting ...");
     executorService.scheduleAtFixedRate(new CmdletPurgeTask(getContext().getConf()),
-        10, 5000, TimeUnit.MILLISECONDS);
+      10, 5000, TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50, TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new DetectFailedActionTask(), 1000, 5000,
-            TimeUnit.MILLISECONDS);
+      TimeUnit.MILLISECONDS);
 
     for (ActionSchedulerService s : schedulerServices) {
       s.start();
@@ -312,14 +316,14 @@ public class CmdletManager extends AbstractService {
     }
     long submitTime = System.currentTimeMillis();
     CmdletInfo cmdletInfo =
-        new CmdletInfo(
-            maxCmdletId.getAndIncrement(),
-            cmdletDescriptor.getRuleId(),
-            CmdletState.PENDING,
-            cmdletDescriptor.getCmdletString(),
-            submitTime,
-            submitTime,
-            submitTime + cmdletDescriptor.getDeferIntervalMs());
+      new CmdletInfo(
+        maxCmdletId.getAndIncrement(),
+        cmdletDescriptor.getRuleId(),
+        CmdletState.PENDING,
+        cmdletDescriptor.getCmdletString(),
+        submitTime,
+        submitTime,
+        submitTime + cmdletDescriptor.getDeferIntervalMs());
     List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     // Check action names
     checkActionNames(cmdletDescriptor);
@@ -338,7 +342,7 @@ public class CmdletManager extends AbstractService {
    * @throws IOException
    */
   private void syncCmdAction(CmdletInfo cmdletInfo,
-                             List<ActionInfo> actionInfos) throws IOException {
+      List<ActionInfo> actionInfos) throws IOException {
     lockMovefileActionFiles(actionInfos);
     LOG.debug("Cache cmd {}", cmdletInfo);
     for (ActionInfo actionInfo : actionInfos) {
@@ -400,9 +404,9 @@ public class CmdletManager extends AbstractService {
       LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
       try {
         metaStore.insertActions(
-                actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+          actionInfos.toArray(new ActionInfo[actionInfos.size()]));
         metaStore.insertCmdlets(
-                cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
+          cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
       } catch (MetaStoreException e) {
         LOG.error("{} submit to DB error", cmdletInfos, e);
       }
@@ -410,7 +414,7 @@ public class CmdletManager extends AbstractService {
   }
 
   private synchronized Set<String> lockMovefileActionFiles(List<ActionInfo> actionInfos)
-      throws IOException {
+    throws IOException {
     Map<String, Long> filesToLock = new HashMap<>();
     for (ActionInfo info : actionInfos) {
       SmartAction action;
@@ -418,7 +422,7 @@ public class CmdletManager extends AbstractService {
         action = ActionRegistry.createAction(info.getActionName());
       } catch (ActionException e) {
         throw new IOException("Failed to create '" + info.getActionName()
-            + "' action instance", e);
+          + "' action instance", e);
       }
       if (action instanceof AbstractMoveFileAction) {
         Map<String, String> args = info.getArgs();
@@ -497,7 +501,6 @@ public class CmdletManager extends AbstractService {
             } else {
               continue;
             }
-
             try {
               if (result == ScheduleResult.SUCCESS) {
                 idToLaunchCmdlet.put(cmdlet.getCid(), launchCmdlet);
@@ -523,7 +526,8 @@ public class CmdletManager extends AbstractService {
     return nScheduled;
   }
 
-  private ScheduleResult scheduleCmdletActions(CmdletInfo info, LaunchCmdlet launchCmdlet) {
+  private ScheduleResult scheduleCmdletActions(CmdletInfo info,
+      LaunchCmdlet launchCmdlet) {
     List<Long> actIds = info.getAids();
     int idx = 0;
     int schIdx = 0;
@@ -604,7 +608,7 @@ public class CmdletManager extends AbstractService {
         args =  new HashMap<>();
         args.putAll(toLaunch.getArgs());
         launchActions.add(
-            new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), args));
+          new LaunchAction(toLaunch.getActionId(), toLaunch.getActionName(), args));
       }
     }
     return new LaunchCmdlet(cmdletInfo.getCid(), launchActions);
@@ -623,9 +627,10 @@ public class CmdletManager extends AbstractService {
   }
 
   public CmdletGroup listCmdletsInfo(long rid, long pageIndex, long numPerPage,
-      List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+      List<String> orderBy,
+      List<Boolean> isDesc) throws IOException, MetaStoreException {
     List<CmdletInfo> cmdlets = metaStore.listPageCmdlets(rid,
-        (pageIndex - 1) * numPerPage, numPerPage, orderBy, isDesc);
+      (pageIndex - 1) * numPerPage, numPerPage, orderBy, isDesc);
     return new CmdletGroup(cmdlets, metaStore.getNumCmdletsByRid(rid));
   }
 
@@ -676,7 +681,7 @@ public class CmdletManager extends AbstractService {
     if (idToCmdlets.containsKey(cid)) {
       CmdletInfo info = idToCmdlets.get(cid);
       onCmdletStatusUpdate(
-              new CmdletStatus(info.getCid(), System.currentTimeMillis(), CmdletState.DISABLED));
+        new CmdletStatus(info.getCid(), System.currentTimeMillis(), CmdletState.DISABLED));
 
       synchronized (pendingCmdlet) {
         if (pendingCmdlet.contains(cid)) {
@@ -817,7 +822,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-      int actionNum, boolean finished) throws IOException {
+      int actionNum,
+      boolean finished) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, actionNum, finished);
     } catch (MetaStoreException e) {
@@ -827,7 +833,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public List<ActionInfo> listNewCreatedActions(String actionName,
-      boolean successful, int actionNum) throws IOException {
+      boolean successful,
+      int actionNum) throws IOException {
     try {
       return metaStore.getNewCreatedActions(actionName, successful, actionNum);
     } catch (MetaStoreException e) {
@@ -856,7 +863,7 @@ public class CmdletManager extends AbstractService {
     private long totalNumOfActions;
 
     public DetailedFileActionGroup(List<DetailedFileAction> detailedFileActions,
-        long totalNumOfActions) {
+                                   long totalNumOfActions) {
       this.detailedFileActions = detailedFileActions;
       this.totalNumOfActions = totalNumOfActions;
     }
@@ -876,6 +883,10 @@ public class CmdletManager extends AbstractService {
     private List<ActionInfo> actions;
     private long totalNumOfActions;
 
+    public ActionGroup() {
+      this.totalNumOfActions = 0;
+    }
+
     public ActionGroup(List<ActionInfo> actions, long totalNumOfActions) {
       this.actions = actions;
       this.totalNumOfActions = totalNumOfActions;
@@ -884,6 +895,13 @@ public class CmdletManager extends AbstractService {
 
   public ActionGroup listActions(long pageIndex, long numPerPage,
       List<String> orderBy, List<Boolean> isDesc) throws IOException, MetaStoreException {
+    if (pageIndex == Long.parseLong("0")) {
+      if (tmpActions.totalNumOfActions != 0) {
+        return tmpActions;
+      } else {
+        pageIndex = 1;
+      }
+    }
     List<ActionInfo> infos = metaStore.listPageAction((pageIndex - 1) * numPerPage,
         numPerPage, orderBy, isDesc);
     for (ActionInfo info : infos) {
@@ -893,8 +911,36 @@ public class CmdletManager extends AbstractService {
         info.setProgress(memInfo.getProgress());
       }
     }
+    tmpActions = new ActionGroup(infos, metaStore.getCountOfAllAction());
+    return tmpActions;
+  }
 
-    return new ActionGroup(infos, metaStore.getCountOfAllAction());
+  public ActionGroup searchAction(String path, long pageIndex, long numPerPage,
+      List<String> orderBy, List<Boolean> isDesc) throws IOException {
+    try {
+      if (pageIndex == Long.parseLong("0")) {
+        if (tmpActions.totalNumOfActions != 0) {
+          return tmpActions;
+        } else {
+          pageIndex = 1;
+        }
+      }
+      List<ActionInfo> infos =  metaStore.searchAction(path, (pageIndex - 1) * numPerPage,
+          numPerPage, orderBy, isDesc);
+      for (ActionInfo info : infos) {
+        LOG.debug("[metaStore search] " + info.getActionName());
+        ActionInfo memInfo = idToActions.get(info.getActionId());
+        if (memInfo != null) {
+          info.setCreateTime(memInfo.getCreateTime());
+          info.setProgress(memInfo.getProgress());
+        }
+      }
+      tmpActions = new ActionGroup(infos, infos.size());
+      return tmpActions;
+    } catch (MetaStoreException e) {
+      LOG.error("Search [ {} ], Get Finished Actions by search from DB error", path, e);
+      throw new IOException(e);
+    }
   }
 
   public List<ActionInfo> getActions(List<Long> aids) throws IOException {
@@ -915,10 +961,12 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public DetailedFileActionGroup getFileActions(long rid, long pageIndex,
-      long numPerPage) throws IOException, MetaStoreException {
+  public DetailedFileActionGroup getFileActions(long rid,
+      long pageIndex,
+      long numPerPage)
+    throws IOException, MetaStoreException {
     List<DetailedFileAction> detailedFileActions = metaStore.listFileActions(rid,
-        (pageIndex - 1) * numPerPage, numPerPage);
+      (pageIndex - 1) * numPerPage, numPerPage);
     return new DetailedFileActionGroup(detailedFileActions, metaStore.getNumFileAction(rid));
   }
 
@@ -999,7 +1047,7 @@ public class CmdletManager extends AbstractService {
   }
 
   public void onActionStatusUpdate(ActionStatus status)
-          throws IOException, ActionException {
+    throws IOException, ActionException {
     if (status == null) {
       return;
     }
@@ -1014,7 +1062,7 @@ public class CmdletManager extends AbstractService {
             actionInfo.setProgress(status.getPercentage());
             if (actionInfo.getCreateTime() == 0) {
               actionInfo.setCreateTime(
-                      idToCmdlets.get(actionInfo.getCmdletId()).getGenerateTime());
+                idToCmdlets.get(actionInfo.getCmdletId()).getGenerateTime());
             }
             actionInfo.setFinishTime(System.currentTimeMillis());
           } else {
@@ -1054,16 +1102,16 @@ public class CmdletManager extends AbstractService {
     if (!actionInfo.isSuccessful()) {
       for (int i = index + 1; i < aids.size(); i++) {
         ActionStatus actionStatus = new ActionStatus(aids.get(i), ACTION_SKIP_LOG,
-                actionInfo.getFinishTime(), actionInfo.getFinishTime(), new Throwable(), true);
+          actionInfo.getFinishTime(), actionInfo.getFinishTime(), new Throwable(), true);
         onActionStatusUpdate(actionStatus);
       }
       CmdletStatus cmdletStatus =
-              new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.FAILED);
+        new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.FAILED);
       onCmdletStatusUpdate(cmdletStatus);
     } else {
       if (index == aids.size() - 1) {
         CmdletStatus cmdletStatus =
-                new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.DONE);
+          new CmdletStatus(cmdletId, actionInfo.getFinishTime(), CmdletState.DONE);
         onCmdletStatusUpdate(cmdletStatus);
       }
     }
@@ -1092,7 +1140,7 @@ public class CmdletManager extends AbstractService {
   }
 
   protected List<ActionInfo> createActionInfos(CmdletDescriptor cmdletDescriptor, long cid)
-      throws IOException {
+    throws IOException {
     List<ActionInfo> actionInfos = new ArrayList<>();
     for (int index = 0; index < cmdletDescriptor.getActionSize(); index++) {
       Map<String, String> args = cmdletDescriptor.getActionArgs(index);
@@ -1142,13 +1190,13 @@ public class CmdletManager extends AbstractService {
 
     public CmdletPurgeTask(SmartConf conf) throws IOException {
       maxNumRecords = conf.getInt(SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_KEY,
-          SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT);
+        SmartConfKeys.SMART_CMDLET_HIST_MAX_NUM_RECORDS_DEFAULT);
       String lifeString = conf.get(SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY,
-          SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT);
+        SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT);
       maxLifeTime = StringUtil.pharseTimeString(lifeString);
       if (maxLifeTime == -1) {
         throw new IOException("Invalid value format for configure option. "
-            + SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY + "=" + lifeString);
+          + SmartConfKeys.SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_KEY + "=" + lifeString);
       }
       lifeCheckInterval = maxLifeTime / 20 > 5000 ? (maxLifeTime / 20) : 5000;
     }
@@ -1189,7 +1237,7 @@ public class CmdletManager extends AbstractService {
             continue;
           }
           if (cmdletInfo.getState() == CmdletState.DISPATCHED
-                  || cmdletInfo.getState() == CmdletState.EXECUTING) {
+            || cmdletInfo.getState() == CmdletState.EXECUTING) {
             for (long id : cmdletInfo.getAids()) {
               ActionInfo actionInfo = idToActions.get(id);
               if (isTimeout(actionInfo)) {
@@ -1200,7 +1248,7 @@ public class CmdletManager extends AbstractService {
                 }
                 long finishTime = System.currentTimeMillis();
                 ActionStatus actionStatus = new ActionStatus(actionInfo.getActionId(),
-                        TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
+                  TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
                 onActionStatusUpdate(actionStatus);
               }
             }

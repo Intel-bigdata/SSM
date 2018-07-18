@@ -18,20 +18,41 @@
  */
 angular.module('zeppelinWebApp')
 
+
+
   .controller('ActionsCtrl', ActionsCtrl);
   ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
   function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
-    $scope.pageNumber = 10;
+    $scope.pageNumber = 20;
     $scope.totalNumber = 0;
     $scope.actions;
     $scope.currentPage = 1;
     $scope.totalPage = 1;
     $scope.orderby = 'aid';
     $scope.isDesc = true;
+    $scope.searching = false;
+    $scope.currentSearchPage = 1;
+    $scope.path;
 
     function getActions() {
-      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
-        + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc)
+      var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
+        + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
+      setCookie(url, "");
+      setVariables(url);
+    };
+
+    function __search__ (text) {
+      if (!$scope.searching) {
+        $scope.currentSearchPage = 1;
+      }
+      var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/search/'
+        + text + '/' + $scope.currentSearchPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
+      setCookie(url, decodeURIComponent(text));
+      setVariables(url);
+    }
+
+    function setVariables(url) {
+      $http.get(url)
         .then(function(response) {
         var actionData = angular.fromJson(response.data);
         $scope.totalNumber = actionData.body.totalNumOfActions;
@@ -49,11 +70,66 @@ angular.module('zeppelinWebApp')
       }, function(errorResponse) {
           $scope.totalNumber = 0;
       });
+    }
+
+    function search(text) {
+      if (text == "") {
+        $scope.searching = false;
+        getActions();
+      }
+      else {
+        __search__(text);
+        $scope.searching = true;
+      }
+    };
+
+    function setCookie(curl, cvalue) {
+        document.cookie = "tmpURL" + "=" + curl + ";" + ";path=/";
+        document.cookie = "tmpSearch" + "=" + cvalue + ";" + ";path=/";
+    }
+
+    function getCookie(cname) {
+        var name = cname + "=";
+        var decodedCookie = decodeURIComponent(document.cookie);
+        var ca = decodedCookie.split(';');
+        for(var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1);
+            }
+            if (c.indexOf(name) == 0) {
+                return c.substring(name.length, c.length);
+            }
+        }
+        return "";
+    }
+
+    function checkCookie() {
+        var url=getCookie("tmpURL");
+        var search=getCookie("tmpSearch");
+        if (url != "") {
+          document.getElementById('search').value = search;
+          setVariables(url);
+        } else {
+          getActions();
+        }
+    }
+
+    $scope.getContent = function () {
+      var tmp = document.getElementById('search').value;
+      $scope.path = encodeURIComponent(tmp);
+      search($scope.path);
     };
 
     $scope.gotoPage = function (index) {
-      $scope.currentPage = index;
-      getActions();
+      if (!$scope.searching) {
+        $scope.currentPage = index;
+        getActions();
+      }
+      else {
+        $scope.currentSearchPage = index;
+        __search__($scope.path);
+      }
     };
 
     $scope.defindOrderBy = function (filed) {
@@ -63,14 +139,44 @@ angular.module('zeppelinWebApp')
         $scope.orderby = filed;
         $scope.isDesc = true;
       }
-      getActions();
+      if (!$scope.searching) {
+        getActions();
+      }
+      else {
+        __search__($scope.path);
+      }
     };
 
-    getActions();
+    // getActions();
+    if ($scope.totalNumber == 0) {
+      // $scope.currentPage = 0;
+      // getActions();
+      // $scope.currentPage = 1;
+      checkCookie();
+    }
+
+    var input = document.getElementById("search");
+    input.addEventListener("keyup", function(event) {
+        event.preventDefault();
+        if (event.keyCode === 13) {
+            document.getElementById("searchBtn").click();
+        }
+    });
+
+    $(document).keyup(function(event) {
+        if (event.keyCode == 27) {
+          getActions();
+        }
+    });
 
     var timer = $interval(function(){
-      getActions();
-    },5000);
+      if (!$scope.searching) {
+        getActions();
+      }
+      else {
+        __search__($scope.path);
+      }
+    },60000);
 
     $scope.$on('$destroy',function(){
       $interval.cancel(timer);

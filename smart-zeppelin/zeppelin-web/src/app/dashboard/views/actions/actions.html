@@ -16,6 +16,13 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+
+
+<!-- The form -->
+<div align="right">
+  <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
+  <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
+</div>
 <div class="col-md-12" >
   <br/>
   <table class="table table-bordered">
@@ -63,7 +70,7 @@ under the License.
       </td>
       <td>
         <a type="button" class="btn btn-default btn-xs btn-info"
-                href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
+           href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
           <span class="glyphicon glyphicon-info-sign"></span>
         </a>
       </td>
