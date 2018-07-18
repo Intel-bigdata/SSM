@@ -211,7 +211,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    * @param file
    */
   public void insertFile(FileInfo file)
-      throws MetaStoreException {
+    throws MetaStoreException {
     updateCache();
     fileInfoDao.insert(file);
   }
@@ -223,19 +223,19 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    * @param files
    */
   public void insertFiles(FileInfo[] files)
-      throws MetaStoreException {
+    throws MetaStoreException {
     updateCache();
     fileInfoDao.insert(files);
   }
 
   public int updateFileStoragePolicy(String path, String policyName)
-      throws MetaStoreException {
+    throws MetaStoreException {
     if (mapStoragePolicyIdName == null) {
       updateCache();
     }
     if (!mapStoragePolicyNameId.containsKey(policyName)) {
       throw new MetaStoreException("Unknown storage policy name '"
-          + policyName + "'");
+        + policyName + "'");
     }
     try {
       return storageDao.updateFileStoragePolicy(path, mapStoragePolicyNameId.get(policyName));
@@ -300,7 +300,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<FileInfo> getFilesByPaths(Collection<String> paths)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return fileInfoDao.getFilesByPaths(paths);
     } catch (EmptyResultDataAccessException e) {
@@ -311,7 +311,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public Map<String, Long> getFileIDs(Collection<String> paths)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return fileInfoDao.getPathFids(paths);
     } catch (EmptyResultDataAccessException e) {
@@ -322,7 +322,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public Map<Long, String> getFilePaths(Collection<Long> ids)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return fileInfoDao.getFidPaths(ids);
     } catch (EmptyResultDataAccessException e) {
@@ -333,13 +333,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<FileAccessInfo> getHotFiles(
-      List<AccessCountTable> tables,
-      int topNum) throws MetaStoreException {
+    List<AccessCountTable> tables,
+    int topNum) throws MetaStoreException {
     Iterator<AccessCountTable> tableIterator = tables.iterator();
     if (tableIterator.hasNext()) {
       try {
         Map<Long, Integer> accessCounts =
-            accessCountDao.getHotFiles(tables, topNum);
+          accessCountDao.getHotFiles(tables, topNum);
         if (accessCounts.size() == 0) {
           return new ArrayList<>();
         }
@@ -349,7 +349,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           Long fid = entry.getKey();
           if (idToPath.containsKey(fid) && entry.getValue() > 0) {
             result.add(
-                new FileAccessInfo(fid, idToPath.get(fid), entry.getValue()));
+              new FileAccessInfo(fid, idToPath.get(fid), entry.getValue()));
           }
         }
         return result;
@@ -394,7 +394,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteAccessCountTable(
-      AccessCountTable table) throws MetaStoreException {
+    AccessCountTable table) throws MetaStoreException {
     try {
       accessCountDao.delete(table);
     } catch (Exception e) {
@@ -403,7 +403,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertAccessCountTable(
-      AccessCountTable accessCountTable) throws MetaStoreException {
+    AccessCountTable accessCountTable) throws MetaStoreException {
     try {
       accessCountDao.insert(accessCountTable);
     } catch (Exception e) {
@@ -412,7 +412,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertUpdateStoragesTable(StorageCapacity[] storages)
-      throws MetaStoreException {
+    throws MetaStoreException {
     mapStorageCapacity = null;
     try {
       storageDao.insertUpdateStoragesTable(storages);
@@ -422,18 +422,18 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertUpdateStoragesTable(List<StorageCapacity> storages)
-      throws MetaStoreException {
+    throws MetaStoreException {
     mapStorageCapacity = null;
     try {
       storageDao.insertUpdateStoragesTable(
-          storages.toArray(new StorageCapacity[storages.size()]));
+        storages.toArray(new StorageCapacity[storages.size()]));
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
   public void insertUpdateStoragesTable(StorageCapacity storage)
-      throws MetaStoreException {
+    throws MetaStoreException {
     insertUpdateStoragesTable(new StorageCapacity[]{storage});
   }
 
@@ -460,7 +460,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public StorageCapacity getStorageCapacity(
-      String type) throws MetaStoreException {
+    String type) throws MetaStoreException {
     updateCache();
     Map<String, StorageCapacity> currentMapStorageCapacity = mapStorageCapacity;
     while (currentMapStorageCapacity == null) {
@@ -491,7 +491,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertStorageHistTable(StorageCapacity[] storages, long interval)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       storageHistoryDao.insertStorageHistTable(storages, interval);
     } catch (Exception e) {
@@ -505,7 +505,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteStorageHistoryOldRecords(String type, long interval, long beforTimeStamp)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       storageHistoryDao.deleteOldRecords(type, interval, beforTimeStamp);
     } catch (Exception e) {
@@ -547,7 +547,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertCachedFiles(List<CachedFileStatus> s)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       cacheFileDao.insert(s.toArray(new CachedFileStatus[s.size()]));
     } catch (Exception e) {
@@ -564,7 +564,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateCachedFiles(Long fid,
-      Long lastAccessTime, Integer numAccessed) throws MetaStoreException {
+      Long lastAccessTime,
+      Integer numAccessed) throws MetaStoreException {
     try {
       return cacheFileDao.update(fid, lastAccessTime, numAccessed) >= 0;
     } catch (Exception e) {
@@ -574,7 +575,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void updateCachedFiles(Map<String, Long> pathToIds,
       List<FileAccessEvent> events)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       cacheFileDao.update(pathToIds, events);
     } catch (Exception e) {
@@ -611,7 +612,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public CachedFileStatus getCachedFileStatus(
-      long fid) throws MetaStoreException {
+    long fid) throws MetaStoreException {
     try {
       return cacheFileDao.getById(fid);
     } catch (EmptyResultDataAccessException e) {
@@ -623,7 +624,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void createProportionTable(AccessCountTable dest,
       AccessCountTable source)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       accessCountDao.createProportionTable(dest, source);
     } catch (Exception e) {
@@ -657,7 +658,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<String> executeFilesPathQuery(
-      String sql) throws MetaStoreException {
+    String sql) throws MetaStoreException {
     try {
       LOG.debug("ExecuteFilesPathQuery sql = {}", sql);
       return metaStoreHelper.getFilesPath(sql);
@@ -668,7 +669,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public List<DetailedFileAction> listFileActions(long rid, int size) throws MetaStoreException {
+  public List<DetailedFileAction> listFileActions(long rid,
+      int size) throws MetaStoreException {
     if (mapStoragePolicyIdName == null) {
       updateCache();
     }
@@ -683,17 +685,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
         // Add a mock fileInfo
         fileInfo = new FileInfo(filePath, 0L, 0L, false,
-            (short) 0, 0L, 0L, 0L, (short) 0,
-            "root", "root", (byte) 0);
+          (short) 0, 0L, 0L, 0L, (short) 0,
+          "root", "root", (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
       if (actionInfo.getActionName().contains("allssd")
-          || actionInfo.getActionName().contains("onessd")
-          || actionInfo.getActionName().contains("archive")
-          || actionInfo.getActionName().contains("alldisk")
-          || actionInfo.getActionName().contains("onedisk")
-          || actionInfo.getActionName().contains("ramdisk")) {
+        || actionInfo.getActionName().contains("onessd")
+        || actionInfo.getActionName().contains("archive")
+        || actionInfo.getActionName().contains("alldisk")
+        || actionInfo.getActionName().contains("onedisk")
+        || actionInfo.getActionName().contains("ramdisk")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
         detailedFileAction.setSrc(mapStoragePolicyIdName.get((int) fileInfo.getStoragePolicy()));
       } else {
@@ -706,7 +708,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DetailedFileAction> listFileActions(long rid, long start, long offset)
-      throws MetaStoreException {
+    throws MetaStoreException {
     if (mapStoragePolicyIdName == null) {
       updateCache();
     }
@@ -720,17 +722,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // LOG.debug("Namespace is not sync! File {} not in file table!", filePath);
         // Add a mock fileInfo
         fileInfo = new FileInfo(filePath, 0L, 0L, false,
-            (short) 0, 0L, 0L, 0L, (short) 0,
-            "root", "root", (byte) 0);
+          (short) 0, 0L, 0L, 0L, (short) 0,
+          "root", "root", (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
       if (actionInfo.getActionName().contains("allssd")
-          || actionInfo.getActionName().contains("onessd")
-          || actionInfo.getActionName().contains("archive")
-          || actionInfo.getActionName().contains("alldisk")
-          || actionInfo.getActionName().contains("onedisk")
-          || actionInfo.getActionName().contains("ramdisk")) {
+        || actionInfo.getActionName().contains("onessd")
+        || actionInfo.getActionName().contains("archive")
+        || actionInfo.getActionName().contains("alldisk")
+        || actionInfo.getActionName().contains("onedisk")
+        || actionInfo.getActionName().contains("ramdisk")) {
         detailedFileAction.setTarget(actionInfo.getActionName());
         detailedFileAction.setSrc(mapStoragePolicyIdName.get((int) fileInfo.getStoragePolicy()));
       } else {
@@ -751,11 +753,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfo ruleInfo : ruleInfos) {
       if (ruleInfo.getRuleText().contains("allssd")
-          || ruleInfo.getRuleText().contains("onessd")
-          || ruleInfo.getRuleText().contains("archive")
-          || ruleInfo.getRuleText().contains("alldisk")
-          || ruleInfo.getRuleText().contains("onedisk")
-          || ruleInfo.getRuleText().contains("ramdisk")) {
+        || ruleInfo.getRuleText().contains("onessd")
+        || ruleInfo.getRuleText().contains("archive")
+        || ruleInfo.getRuleText().contains("alldisk")
+        || ruleInfo.getRuleText().contains("onedisk")
+        || ruleInfo.getRuleText().contains("ramdisk")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add mover progress
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
@@ -773,7 +775,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           }
         }
         detailedRuleInfo
-            .setBaseProgress(cmdletInfos.size() - currPos);
+          .setBaseProgress(cmdletInfos.size() - currPos);
         detailedRuleInfo.setRunningProgress(countRunning);
         detailedRuleInfos.add(detailedRuleInfo);
       }
@@ -805,7 +807,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           detailedRuleInfo.setRunningProgress(count);
         } else {
           detailedRuleInfo
-              .setBaseProgress(0);
+            .setBaseProgress(0);
           detailedRuleInfo.setRunningProgress(0);
         }
         detailedRuleInfos.add(detailedRuleInfo);
@@ -815,7 +817,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean insertNewRule(RuleInfo info)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return ruleDao.insert(info) >= 0;
     } catch (Exception e) {
@@ -825,21 +827,21 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public boolean updateRuleInfo(long ruleId, RuleState rs,
       long lastCheckTime, long checkedCount, int commandsGen)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       if (rs == null) {
         return ruleDao.update(ruleId,
-            lastCheckTime, checkedCount, commandsGen) >= 0;
+          lastCheckTime, checkedCount, commandsGen) >= 0;
       }
       return ruleDao.update(ruleId,
-          rs.getValue(), lastCheckTime, checkedCount, commandsGen) >= 0;
+        rs.getValue(), lastCheckTime, checkedCount, commandsGen) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
   }
 
   public boolean updateRuleState(long ruleId, RuleState rs)
-      throws MetaStoreException {
+    throws MetaStoreException {
     if (rs == null) {
       throw new MetaStoreException("Rule state can not be null, ruleId = " + ruleId);
     }
@@ -862,7 +864,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<RuleInfo> listPageRule(long start, long offset, List<String> orderBy,
       List<Boolean> desc)
-      throws MetaStoreException {
+    throws MetaStoreException {
     LOG.debug("List Rule, start {}, offset {}", start, offset);
     try {
       if (orderBy.size() == 0) {
@@ -888,7 +890,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<CmdletInfo> listPageCmdlets(long rid, long start, long offset,
       List<String> orderBy, List<Boolean> desc)
-      throws MetaStoreException {
+    throws MetaStoreException {
     LOG.debug("List cmdlet, start {}, offset {}", start, offset);
     try {
       if (orderBy.size() == 0) {
@@ -903,7 +905,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public long getNumCmdletsByRid(long rid) {
     try {
-        return cmdletDao.getNumByRid(rid);
+      return cmdletDao.getNumByRid(rid);
     } catch (Exception e) {
       return 0;
     }
@@ -911,7 +913,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<CmdletInfo> listPageCmdlets(long start, long offset,
       List<String> orderBy, List<Boolean> desc)
-      throws MetaStoreException {
+    throws MetaStoreException {
     LOG.debug("List cmdlet, start {}, offset {}", start, offset);
     try {
       if (orderBy.size() == 0) {
@@ -934,7 +936,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
 
   public void insertCmdlets(CmdletInfo[] commands)
-      throws MetaStoreException {
+    throws MetaStoreException {
     if (commands.length == 0) {
       return;
     }
@@ -946,7 +948,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertCmdlet(CmdletInfo command)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       // Update if exists
       if (getCmdletById(command.getCid()) != null) {
@@ -981,7 +983,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public List<CmdletInfo> getCmdlets(String cidCondition,
-      String ridCondition, CmdletState state) throws MetaStoreException {
+      String ridCondition,
+      CmdletState state) throws MetaStoreException {
     try {
       return cmdletDao.getByCondition(cidCondition, ridCondition, state);
     } catch (EmptyResultDataAccessException e) {
@@ -1002,7 +1005,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateCmdlet(CmdletInfo cmdletInfo)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return cmdletDao.update(cmdletInfo) >= 0;
     } catch (Exception e) {
@@ -1012,7 +1015,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public boolean updateCmdlet(long cid, CmdletState state)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return cmdletDao.update(cid, state.getValue()) >= 0;
     } catch (Exception e) {
@@ -1022,7 +1025,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public boolean updateCmdlet(long cid, String parameters, CmdletState state)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return cmdletDao.update(cid, parameters, state.getValue()) >= 0;
     } catch (Exception e) {
@@ -1080,7 +1083,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertActions(ActionInfo[] actionInfos)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       actionDao.replace(actionInfos);
     } catch (Exception e) {
@@ -1089,7 +1092,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertAction(ActionInfo actionInfo)
-      throws MetaStoreException {
+    throws MetaStoreException {
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     try {
       if (getActionById(actionInfo.getActionId()) != null) {
@@ -1104,7 +1107,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public List<ActionInfo> listPageAction(long start, long offset, List<String> orderBy,
       List<Boolean> desc)
-      throws MetaStoreException {
+    throws MetaStoreException {
     LOG.debug("List Action, start {}, offset {}", start, offset);
     try {
       if (orderBy.size() == 0) {
@@ -1112,6 +1115,18 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       } else {
         return actionDao.getAPageOfAction(start, offset, orderBy, desc);
       }
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ActionInfo> searchAction(String path, long start,
+      long offset, List<String> orderBy,
+      List<Boolean> desc) throws MetaStoreException {
+    try {
+      return actionDao.searchAction(path, start, offset, orderBy, desc);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1175,7 +1190,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void updateActions(ActionInfo[] actionInfos)
-      throws MetaStoreException {
+    throws MetaStoreException {
     if (actionInfos == null || actionInfos.length == 0) {
       return;
     }
@@ -1188,7 +1203,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(
-      int size) throws MetaStoreException {
+    int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1231,7 +1246,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-      int size, boolean finished) throws MetaStoreException {
+      int size,
+      boolean finished) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1245,7 +1261,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getNewCreatedActions(String actionName,
-      boolean successful, int size) throws MetaStoreException {
+      boolean successful,
+      int size) throws MetaStoreException {
     if (size < 0) {
       return new ArrayList<>();
     }
@@ -1260,7 +1277,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
 
   public List<ActionInfo> getActions(
-      List<Long> aids) throws MetaStoreException {
+    List<Long> aids) throws MetaStoreException {
     if (aids == null || aids.size() == 0) {
       return new ArrayList<>();
     }
@@ -1275,7 +1292,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> getActions(String aidCondition,
-      String cidCondition) throws MetaStoreException {
+                                     String cidCondition) throws MetaStoreException {
     LOG.debug("Get aid {} cid {}", aidCondition, cidCondition);
     try {
       return actionDao.getByCondition(aidCondition, cidCondition);
@@ -1378,7 +1395,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertStoragePolicy(StoragePolicy s)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       storageDao.insertStoragePolicyTable(s);
     } catch (Exception e) {
@@ -1398,7 +1415,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public Integer getStoragePolicyID(
-      String policyName) throws MetaStoreException {
+    String policyName) throws MetaStoreException {
     try {
       updateCache();
       return mapStoragePolicyNameId.get(policyName);
@@ -1410,7 +1427,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean insertXattrList(Long fid,
-      List<XAttribute> attributes) throws MetaStoreException {
+                                 List<XAttribute> attributes) throws MetaStoreException {
     try {
       return xattrDao.insertXattrList(fid, attributes);
     } catch (Exception e) {
@@ -1439,7 +1456,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertFileDiffs(FileDiff[] fileDiffs)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       fileDiffDao.insert(fileDiffs);
     } catch (Exception e) {
@@ -1484,7 +1501,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public boolean updateFileDiff(long did,
-      FileDiffState state) throws MetaStoreException {
+                                FileDiffState state) throws MetaStoreException {
     try {
       return fileDiffDao.update(did, state) >= 0;
     } catch (Exception e) {
@@ -1493,8 +1510,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean batchUpdateFileDiff(
-      List<Long> did, List<FileDiffState> states, List<String> parameters)
-      throws MetaStoreException {
+    List<Long> did, List<FileDiffState> states, List<String> parameters)
+    throws MetaStoreException {
     try {
       return fileDiffDao.batchUpdate(did, states, parameters).length > 0;
     } catch (Exception e) {
@@ -1503,8 +1520,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean batchUpdateFileDiff(
-      List<Long> did, FileDiffState state)
-      throws MetaStoreException {
+    List<Long> did, FileDiffState state)
+    throws MetaStoreException {
     try {
       return fileDiffDao.batchUpdate(did, state).length > 0;
     } catch (Exception e) {
@@ -1513,7 +1530,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateFileDiff(long did,
-      FileDiffState state, String parameters) throws MetaStoreException {
+                                FileDiffState state, String parameters) throws MetaStoreException {
     try {
       return fileDiffDao.update(did, state, parameters) >= 0;
     } catch (Exception e) {
@@ -1522,7 +1539,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateFileDiff(long did,
-      String src) throws MetaStoreException {
+                                String src) throws MetaStoreException {
     try {
       return fileDiffDao.update(did, src) >= 0;
     } catch (Exception e) {
@@ -1531,7 +1548,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public boolean updateFileDiff(FileDiff fileDiff)
-      throws MetaStoreException {
+    throws MetaStoreException {
     long did = fileDiff.getDiffId();
     FileDiff preFileDiff = getFileDiff(did);
     if (preFileDiff == null) {
@@ -1625,11 +1642,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       int num = getTablesNum(MetaStoreUtils.TABLESET);
       if (num == 0) {
         LOG.info("The table set required by SSM does not exist. "
-                + "The configured database will be formatted.");
+          + "The configured database will be formatted.");
         formatDataBase();
       } else if (num < MetaStoreUtils.TABLESET.length) {
         LOG.error("One or more tables required by SSM are missing! "
-                + "You can restart SSM with -format option or configure another database.");
+          + "You can restart SSM with -format option or configure another database.");
         System.exit(1);
       }
     } catch (Exception e) {
@@ -1648,7 +1665,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void aggregateTables(AccessCountTable destinationTable
-      , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
+    , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
       accessCountDao.aggregateTables(destinationTable, tablesToAggregate);
     } catch (Exception e) {
@@ -1657,7 +1674,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void setClusterConfig(
-      ClusterConfig clusterConfig) throws MetaStoreException {
+    ClusterConfig clusterConfig) throws MetaStoreException {
     try {
 
       if (clusterConfigDao.getCountByName(clusterConfig.getNodeName()) == 0) {
@@ -1666,7 +1683,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       } else {
         //update
         clusterConfigDao.updateByNodeName(clusterConfig.getNodeName(),
-            clusterConfig.getConfigPath());
+          clusterConfig.getConfigPath());
       }
     } catch (Exception e) {
       throw new MetaStoreException(e);
@@ -1674,7 +1691,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void delClusterConfig(
-      ClusterConfig clusterConfig) throws MetaStoreException {
+    ClusterConfig clusterConfig) throws MetaStoreException {
     try {
       if (clusterConfigDao.getCountByName(clusterConfig.getNodeName()) > 0) {
         //insert
@@ -1694,7 +1711,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public GlobalConfig getDefaultGlobalConfigByName(
-      String configName) throws MetaStoreException {
+    String configName) throws MetaStoreException {
     try {
       if (globalConfigDao.getCountByName(configName) > 0) {
         //the property is existed
@@ -1708,11 +1725,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void setGlobalConfig(
-      GlobalConfig globalConfig) throws MetaStoreException {
+    GlobalConfig globalConfig) throws MetaStoreException {
     try {
       if (globalConfigDao.getCountByName(globalConfig.getPropertyName()) > 0) {
         globalConfigDao.update(globalConfig.getPropertyName(),
-            globalConfig.getPropertyValue());
+          globalConfig.getPropertyValue());
       } else {
         globalConfigDao.insert(globalConfig);
       }
@@ -1722,7 +1739,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertDataNodeInfo(DataNodeInfo dataNodeInfo)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeInfoDao.insert(dataNodeInfo);
     } catch (Exception e) {
@@ -1731,7 +1748,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertDataNodeInfos(DataNodeInfo[] dataNodeInfos)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeInfoDao.insert(dataNodeInfos);
     } catch (Exception e) {
@@ -1740,7 +1757,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertDataNodeInfos(List<DataNodeInfo> dataNodeInfos)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeInfoDao.insert(dataNodeInfos);
     } catch (Exception e) {
@@ -1749,7 +1766,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DataNodeInfo> getDataNodeInfoByUuid(String uuid)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return dataNodeInfoDao.getByUuid(uuid);
     } catch (EmptyResultDataAccessException e) {
@@ -1760,7 +1777,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DataNodeInfo> getAllDataNodeInfo()
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return dataNodeInfoDao.getAll();
     } catch (EmptyResultDataAccessException e) {
@@ -1771,7 +1788,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteDataNodeInfo(String uuid)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeInfoDao.delete(uuid);
     } catch (Exception e) {
@@ -1780,7 +1797,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteAllDataNodeInfo()
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeInfoDao.deleteAll();
     } catch (Exception e) {
@@ -1789,7 +1806,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertDataNodeStorageInfo(DataNodeStorageInfo dataNodeStorageInfo)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeStorageInfoDao.insert(dataNodeStorageInfo);
     } catch (Exception e) {
@@ -1798,8 +1815,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertDataNodeStorageInfos(
-      DataNodeStorageInfo[] dataNodeStorageInfos)
-      throws MetaStoreException {
+    DataNodeStorageInfo[] dataNodeStorageInfos)
+    throws MetaStoreException {
     try {
       dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
     } catch (Exception e) {
@@ -1808,8 +1825,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertDataNodeStorageInfos(
-      List<DataNodeStorageInfo> dataNodeStorageInfos)
-      throws MetaStoreException {
+    List<DataNodeStorageInfo> dataNodeStorageInfos)
+    throws MetaStoreException {
     try {
       dataNodeStorageInfoDao.insert(dataNodeStorageInfos);
     } catch (Exception e) {
@@ -1892,7 +1909,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<DataNodeStorageInfo> getDataNodeStorageInfoByUuid(String uuid)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return dataNodeStorageInfoDao.getByUuid(uuid);
     } catch (EmptyResultDataAccessException e) {
@@ -1904,7 +1921,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
 
   public List<DataNodeStorageInfo> getAllDataNodeStorageInfo()
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return dataNodeStorageInfoDao.getAll();
     } catch (EmptyResultDataAccessException e) {
@@ -1915,7 +1932,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteDataNodeStorageInfo(String uuid)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeStorageInfoDao.delete(uuid);
     } catch (Exception e) {
@@ -1924,7 +1941,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteAllDataNodeStorageInfo()
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       dataNodeStorageInfoDao.deleteAll();
     } catch (Exception e) {
@@ -2013,7 +2030,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   @Override
   public void insertBackUpInfo (
-      BackUpInfo backUpInfo) throws MetaStoreException {
+    BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
       if (setBackSrc == null) {
@@ -2051,7 +2068,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public SystemInfo getSystemInfoByProperty(
-      String property) throws MetaStoreException {
+    String property) throws MetaStoreException {
     try {
       return systemInfoDao.getByProperty(property);
     } catch (Exception e) {
@@ -2076,7 +2093,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void updateSystemInfo(
-      SystemInfo systemInfo) throws MetaStoreException {
+    SystemInfo systemInfo) throws MetaStoreException {
     try {
       systemInfoDao.update(systemInfo);
     } catch (Exception e) {
@@ -2085,7 +2102,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void updateAndInsertIfNotExist(
-      SystemInfo systemInfo) throws MetaStoreException {
+    SystemInfo systemInfo) throws MetaStoreException {
     try {
       if (systemInfoDao.update(systemInfo) <= 0) {
         systemInfoDao.insert(systemInfo);
@@ -2104,7 +2121,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteSystemInfo(
-      String property) throws MetaStoreException {
+    String property) throws MetaStoreException {
     try {
       systemInfoDao.delete(property);
     } catch (Exception e) {
@@ -2113,7 +2130,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertClusterInfo(
-      ClusterInfo clusterInfo) throws MetaStoreException {
+    ClusterInfo clusterInfo) throws MetaStoreException {
     try {
       if (clusterInfoDao.getCountByName(clusterInfo.getName()) != 0) {
         throw new Exception("name has already exist");
@@ -2125,7 +2142,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertSystemInfo(SystemInfo systemInfo)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       if (systemInfoDao.containsProperty(systemInfo.getProperty())) {
         throw new Exception("The system property already exists");
@@ -2137,7 +2154,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertUpdateFileState(FileState fileState)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       // Update corresponding tables according to the file state
       fileStateDao.insertUpdate(fileState);
@@ -2158,7 +2175,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void insertCompactFileStates(CompactFileState[] compactFileStates)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       fileStateDao.batchInsertUpdate(compactFileStates);
       smallFileDao.batchInsertUpdate(compactFileStates);
@@ -2195,7 +2212,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public Map<String, FileState> getFileStates(List<String> paths)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return fileStateDao.getByPaths(paths);
     } catch (EmptyResultDataAccessException e1) {
@@ -2225,7 +2242,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public void deleteCompactFileStates(List<String> paths)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       fileStateDao.batchDelete(paths);
       smallFileDao.batchDelete(paths);
@@ -2235,7 +2252,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<String> getSmallFilesByContainerFile(String containerFilePath)
-      throws MetaStoreException {
+    throws MetaStoreException {
     try {
       return smallFileDao.getSmallFilesByContainerFile(containerFilePath);
     } catch (EmptyResultDataAccessException e1) {
