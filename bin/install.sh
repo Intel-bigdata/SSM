@@ -60,10 +60,17 @@ do
          ssh $host "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
          echo install SSM to $host successfully!
       elif [ $flag = 0 ];then
-         echo "The path you type do not exist in $host!"
-         rm -f ${SSM_NAME}.tar
-         exit 1
-      else
+         FLAG=true
+         ssh $host "mkdir $INPUT_PATH"
+         if [ $? = 0 ];then
+            echo installing SSM to $host...
+            scp ${SSM_NAME}.tar $host:$INPUT_PATH >> /dev/null
+            ssh $host "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
+            echo install SSM to $host successfully!
+         else
+            exit 1
+         fi
+      elsegit
          rm -f ${SSM_NAME}.tar
          exit 1
       fi
