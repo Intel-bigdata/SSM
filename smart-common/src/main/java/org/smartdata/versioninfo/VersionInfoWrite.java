@@ -21,7 +21,6 @@ package org.smartdata.versioninfo;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,6 +32,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 public class VersionInfoWrite {
   File directory = new File("");
@@ -53,6 +56,8 @@ public class VersionInfoWrite {
       prop.store(output, new Date().toString());
     } catch (IOException e) {
       e.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
     } finally {
       if (output != null) {
         try {
@@ -70,18 +75,14 @@ public class VersionInfoWrite {
     return dateFormat.format(new Date());
   }
 
-  private String getVersionInfo(String pom) throws IOException {
-    File file = new File(pom);
-    FileReader fileReader = new FileReader(file);
-    String st;
-    BufferedReader br = new BufferedReader(fileReader);
-    while ((st = br.readLine()) != null) {
-      if (st.contains("<version>")) {
-        return st.trim().substring("<version>".length(),
-            st.trim().length() - "</version>".length());
-      }
-    }
-    return "Not found";
+
+  private String getVersionInfo(String fileName) throws Exception{
+      DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+      DocumentBuilder dbBuilder = dbFactory.newDocumentBuilder();
+      Document doc = dbBuilder.parse(fileName);
+      NodeList nList = doc.getElementsByTagName("version");
+      String version = nList.item(0).getFirstChild().getNodeValue();
+      return version;
   }
 
   private String getUri() {
