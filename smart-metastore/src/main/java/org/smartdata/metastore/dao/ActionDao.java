@@ -183,11 +183,12 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
-  public List<ActionInfo> searchAction(String path, long start,
-      long offset, List<String> orderBy, List<Boolean> isDesc) {
+  public List<ActionInfo> searchAction(String path, long start, long offset, List<String> orderBy,
+      List<Boolean> isDesc, long[] retTotalNumActions) {
+    List<ActionInfo> ret;
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     boolean ifHasAid = false;
-    String sql = "SELECT * FROM " + TABLE_NAME + " WHERE ("
+    String sqlFilter = TABLE_NAME + " WHERE ("
         + "aid LIKE '%" + path + "%' ESCAPE '/' "
         + "OR cid LIKE '%" + path + "%' ESCAPE '/' "
         + "OR args LIKE '%" + path + "%' ESCAPE '/' "
@@ -195,9 +196,11 @@ public class ActionDao {
         + "OR progress LIKE '%" + path + "%' ESCAPE '/' "
         + "OR log LIKE '%" + path + "%' ESCAPE '/' "
         + "OR action_name LIKE '%" + path + "%' ESCAPE '/')";
+    String sql = "SELECT * FROM " + sqlFilter;
+    String sqlCount = "SELECT count(*) FROM " + sqlFilter + ";";
     if (orderBy.size() == 0) {
-          sql += " LIMIT " + start + "," + offset + ";";
-      return jdbcTemplate.query(sql, new ActionRowMapper());
+      sql += " LIMIT " + start + "," + offset + ";";
+      ret = jdbcTemplate.query(sql, new ActionRowMapper());
     } else {
       sql += " ORDER BY ";
 
@@ -222,8 +225,12 @@ public class ActionDao {
       sql = sql.substring(0, sql.length() - 1);
       //add limit
       sql = sql + " LIMIT " + start + "," + offset + ";";
-      return jdbcTemplate.query(sql, new ActionRowMapper());
+      ret = jdbcTemplate.query(sql, new ActionRowMapper());
     }
+    if (retTotalNumActions != null) {
+      retTotalNumActions[0] = jdbcTemplate.queryForObject(sqlCount, Long.class);
+    }
+    return ret;
   }
 
   public List<ActionInfo> getLatestActions(String actionType, int size,

@@ -1121,10 +1121,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   }
 
   public List<ActionInfo> searchAction(String path, long start,
-      long offset, List<String> orderBy,
-      List<Boolean> desc) throws MetaStoreException {
+      long offset, List<String> orderBy, List<Boolean> desc,
+      long[] retTotalNumActions) throws MetaStoreException {
     try {
-      return actionDao.searchAction(path, start, offset, orderBy, desc);
+      return actionDao.searchAction(path, start, offset, orderBy, desc, retTotalNumActions);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {

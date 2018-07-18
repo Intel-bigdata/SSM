@@ -925,8 +925,9 @@ public class CmdletManager extends AbstractService {
           pageIndex = 1;
         }
       }
+      long[] total = new long[1];
       List<ActionInfo> infos =  metaStore.searchAction(path, (pageIndex - 1) * numPerPage,
-          numPerPage, orderBy, isDesc);
+          numPerPage, orderBy, isDesc, total);
       for (ActionInfo info : infos) {
         LOG.debug("[metaStore search] " + info.getActionName());
         ActionInfo memInfo = idToActions.get(info.getActionId());
@@ -935,7 +936,7 @@ public class CmdletManager extends AbstractService {
           info.setProgress(memInfo.getProgress());
         }
       }
-      tmpActions = new ActionGroup(infos, infos.size());
+      tmpActions = new ActionGroup(infos, total[0]);
       return tmpActions;
     } catch (MetaStoreException e) {
       LOG.error("Search [ {} ], Get Finished Actions by search from DB error", path, e);
