@@ -70,7 +70,7 @@ do
          else
             exit 1
          fi
-      elsegit
+      else
          rm -f ${SSM_NAME}.tar
          exit 1
       fi
