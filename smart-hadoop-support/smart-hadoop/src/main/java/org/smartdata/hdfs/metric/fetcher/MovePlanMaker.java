@@ -28,6 +28,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.hdfs.server.balancer.Matcher;
+import org.apache.hadoop.ipc.StandbyException;
 import org.apache.hadoop.net.NetworkTopology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,8 +78,17 @@ public class MovePlanMaker {
   }
 
   private void initStoragePolicies() throws IOException {
-    BlockStoragePolicy[] policies = dfs.getStoragePolicies();
-
+    BlockStoragePolicy[] policies = null;
+    try {
+      policies = dfs.getStoragePolicies();
+    } catch (org.apache.hadoop.ipc.RemoteException e) {
+      if (!(e.getCause() instanceof StandbyException)) {
+        throw new IOException(e);
+      }
+    }
+    if (policies == null) {
+      throw new IOException("Cannot get storage policies!");
+    }
     for (BlockStoragePolicy policy : policies) {
       mapStoragePolicies.put(policy.getName(), policy);
     }
