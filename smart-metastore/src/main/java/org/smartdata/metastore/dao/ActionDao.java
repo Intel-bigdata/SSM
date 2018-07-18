@@ -137,7 +137,7 @@ public class ActionDao {
   public List<ActionInfo> getLatestActions(String actionName, boolean successful,
       int size) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    if (size != 0) {tinkt
+    if (size != 0) {
       jdbcTemplate.setMaxRows(size);
     }
     String sql =
