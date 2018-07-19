@@ -79,12 +79,18 @@ public class MovePlanMaker {
 
   private void initStoragePolicies() throws IOException {
     BlockStoragePolicy[] policies = null;
+    LOG.warn("Current client name", dfs.getClientName());
+    LOG.warn("Current namenode", dfs.getNamenode().toString());
+    LOG.warn("Current CanonicalServiceName", dfs.getCanonicalServiceName());
     try {
       policies = dfs.getStoragePolicies();
     } catch (org.apache.hadoop.ipc.RemoteException e) {
+      LOG.warn("Get policies failed", e);
       if (!(e.getCause() instanceof StandbyException)) {
         throw new IOException(e);
       }
+      // Try again
+      policies = dfs.getStoragePolicies();
     }
     if (policies == null) {
       throw new IOException("Cannot get storage policies!");
