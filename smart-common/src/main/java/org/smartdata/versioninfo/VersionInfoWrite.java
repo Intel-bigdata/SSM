@@ -18,10 +18,16 @@
  */
 package org.smartdata.versioninfo;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,7 +42,7 @@ import java.util.TimeZone;
 
 public class VersionInfoWrite {
   File directory = new File("");
-  String pom = directory.getAbsolutePath() + "/" + "pom.xml";
+  String pom = directory.getAbsolutePath() + "/smart-common/pom.xml";
 
   public void execute() {
     Properties prop = new Properties();
@@ -52,6 +58,8 @@ public class VersionInfoWrite {
       prop.setProperty("branch", getBranch());
       prop.store(output, new Date().toString());
     } catch (IOException e) {
+      e.printStackTrace();
+    } catch (Exception e) {
       e.printStackTrace();
     } finally {
       if (output != null) {
@@ -70,18 +78,18 @@ public class VersionInfoWrite {
     return dateFormat.format(new Date());
   }
 
-  private String getVersionInfo(String pom) throws IOException {
-    File file = new File(pom);
-    FileReader fileReader = new FileReader(file);
-    String st;
-    BufferedReader br = new BufferedReader(fileReader);
-    while ((st = br.readLine()) != null) {
-      if (st.contains("<version>")) {
-        return st.trim().substring("<version>".length(),
-            st.trim().length() - "</version>".length());
-      }
+  private String getVersionInfo(String fileName) throws Exception {
+    DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(fileName);
+    NodeList parentList = doc.getElementsByTagName("parent");
+    Element parent = (Element) parentList.item(0);
+    NodeList versionList = parent.getElementsByTagName("version");
+    if (versionList == null) {
+      return "Not found";
     }
-    return "Not found";
+    String version = versionList.item(0).getFirstChild().getNodeValue();
+    return version;
   }
 
   private String getUri() {
