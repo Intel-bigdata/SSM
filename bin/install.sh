@@ -20,12 +20,27 @@ BIN_HOME=$(cd `dirname $0`;pwd)
 SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 INPUT_PATH=""
-FLAG=false
+
+cd $SSM_HOME/../;
 
 echo "Do you want to install SSM to the hosts configured in the files 'agents' and 'servers'?"
+echo -e "The hosts are shown below(\033[34mempty means there is no host configured\033[0m):"
+
+IFS=$'\n'
+for showhost in `cat $SSM_NAME/conf/servers;echo '';cat $SSM_NAME/conf/agents`
+do
+   showhost=$(echo $showhost | tr -d  " ")
+   if [[ "$showhost" =~ ^#.* ]];then
+        continue
+   else
+        echo -n -e "\033[34m$showhost \033[0m "
+   fi
+done
+
+echo ""
 
 while true;do
-read -p  "Please type [Y|y] or [N|n]:
+read -p  "Do you want to continue installing? Please type [Y|y] or [N|n]:
 "  yn
 case $yn in
         [Yy]* )
@@ -43,9 +58,8 @@ if [[ $INPUT_PATH != */ ]];then
     INPUT_PATH=${INPUT_PATH}/
 fi
 
-cd $SSM_HOME/../; tar cf "${SSM_NAME}.tar" ${SSM_NAME}
+tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
-IFS=$'\n'
 for host in `cat $SSM_NAME/conf/servers;echo '';cat $SSM_NAME/conf/agents`
 do
    host=$(echo $host | tr -d  " ")
@@ -54,13 +68,11 @@ do
    else
       flag=`ssh $host "if [ -d $INPUT_PATH ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
-         FLAG=true
          echo installing SSM to $host...
          scp ${SSM_NAME}.tar $host:$INPUT_PATH >> /dev/null
          ssh $host "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
          echo install SSM to $host successfully!
       elif [ $flag = 0 ];then
-         FLAG=true
          ssh $host "mkdir $INPUT_PATH"
          if [ $? = 0 ];then
             echo installing SSM to $host...
@@ -78,7 +90,3 @@ do
 done
 
 rm -f ${SSM_NAME}.tar
-
-if [ $FLAG = false ];then
-    echo -e No hosts configured in \'servers\' and \'agents\'!
-fi
