@@ -79,8 +79,8 @@ public class VersionInfoWrite {
   }
 
   private String getVersionInfo(String fileName) throws Exception {
-    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder docBuilder = dbFactory.newDocumentBuilder();
+    DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
     Document doc = docBuilder.parse(fileName);
     NodeList parentList = doc.getElementsByTagName("parent");
     Element parent = (Element) parentList.item(0);
