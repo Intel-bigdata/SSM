@@ -42,7 +42,7 @@ import java.util.TimeZone;
 
 public class VersionInfoWrite {
   File directory = new File("");
-  String pom = directory.getAbsolutePath() + "/" + "pom.xml";
+  String pom = directory.getAbsolutePath() + "/smart-common/pom.xml";
 
   public void execute() {
     Properties prop = new Properties();
@@ -82,7 +82,7 @@ public class VersionInfoWrite {
     DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     DocumentBuilder dbBuilder = dbFactory.newDocumentBuilder();
     Document doc = dbBuilder.parse(fileName);
-    NodeList nList = doc.getElementsByTagName("project");
+    NodeList nList = doc.getElementsByTagName("parent");
     Element parent = (Element) nList.item(0);
     NodeList cList = parent.getElementsByTagName("version");
     String version = cList.item(0).getFirstChild().getNodeValue();
