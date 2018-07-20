@@ -80,12 +80,15 @@ public class VersionInfoWrite {
 
   private String getVersionInfo(String fileName) throws Exception {
     DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder dbBuilder = dbFactory.newDocumentBuilder();
-    Document doc = dbBuilder.parse(fileName);
-    NodeList nList = doc.getElementsByTagName("parent");
-    Element parent = (Element) nList.item(0);
-    NodeList cList = parent.getElementsByTagName("version");
-    String version = cList.item(0).getFirstChild().getNodeValue();
+    DocumentBuilder docBuilder = dbFactory.newDocumentBuilder();
+    Document doc = docBuilder.parse(fileName);
+    NodeList parentList = doc.getElementsByTagName("parent");
+    Element parent = (Element) parentList.item(0);
+    NodeList versionList = parent.getElementsByTagName("version");
+    if (versionList == null) {
+      return "Not found";
+    }
+    String version = versionList.item(0).getFirstChild().getNodeValue();
     return version;
   }
 
