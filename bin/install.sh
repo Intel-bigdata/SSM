@@ -38,7 +38,7 @@ while [ $# != 0 ]; do
         if [[ $CONF_DIR != */ ]];then
              CONF_DIR=${CONF_DIR}/
         fi
-      break
+        break
       fi
       ;;
       *)
@@ -97,10 +97,7 @@ do
         continue
    else
       #Before install on a host, delete ssm home directory if there exists
-      if_exist=`ssh $host "if [ -d ${INPUT_PATH}${SSM_NAME} ];then echo 1; else echo 0; fi"`
-      if [ $if_exist = 1 ];then
-          ssh $host "rm -rf ${INPUT_PATH}${SSM_NAME}"
-      fi
+      ssh $host "if [ -d ${INPUT_PATH}${SSM_NAME} ];then rm -rf ${INPUT_PATH}${SSM_NAME};fi"
       flag=`ssh $host "if [ -d $INPUT_PATH ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
          echo installing SSM to $host...
