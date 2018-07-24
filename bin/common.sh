@@ -16,8 +16,8 @@
 # limitations under the License.
 #
 
-export SMART_SERVER_LOG_FILE_NAME=smartserver.log
-export SMART_AGENT_LOG_FILE_NAME=smartagent.log
+export SMART_SERVER_LOG_FILE_NAME=smartserver-$(hostname)-$(whoami).log
+export SMART_AGENT_LOG_FILE_NAME=smartagent-$(hostname)-$(whoami).log
 export SMART_LOG_FILE_NAME=${SMART_SERVER_LOG_FILE_NAME}
 
 if [ -L ${BASH_SOURCE-$0} ]; then
