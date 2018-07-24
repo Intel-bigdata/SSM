@@ -229,7 +229,7 @@ public class MoverExecutor {
           .newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
       StorageGroup target = new StorageGroup(targetDatanode, targetStorageTypes.get(planIndex));
       // generate single move
-      ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient);
+      ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient, conf);
       allMoves.add(replicaMove);
     }
   }

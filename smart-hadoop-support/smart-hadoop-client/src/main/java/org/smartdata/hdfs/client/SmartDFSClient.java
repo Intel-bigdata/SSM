@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartConstants;
 import org.smartdata.client.SmartClient;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileState;
@@ -203,7 +204,7 @@ public class SmartDFSClient extends DFSClient {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
-        return new HdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
+        return CompatibilityHelperLoader.getHelper().createHdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
             oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
             oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
             oldStatus.isSymlink() ? oldStatus.getSymlinkInBytes() : null,

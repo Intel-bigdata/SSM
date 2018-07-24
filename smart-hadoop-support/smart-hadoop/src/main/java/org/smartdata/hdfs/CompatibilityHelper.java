@@ -18,25 +18,24 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileEncryptionInfo;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.hdfs.inotify.Event;
-import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
-import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
-import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
-import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.action.move.StorageGroup;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.List;
 
 public interface CompatibilityHelper {
@@ -77,4 +76,19 @@ public interface CompatibilityHelper {
   OutputStream getS3outputStream(String dest, Configuration conf) throws IOException;
 
   SmartInputStreamFactory getSmartInputStreamFactory();
+
+  int getReadTimeOutConstant();
+
+  Token<BlockTokenIdentifier> getAccessToken(KeyManager km, ExtendedBlock eb, StorageGroup target) throws IOException;
+
+  int getIOFileBufferSize(Configuration conf);
+
+  InputStream getVintPrefixed(DataInputStream in) throws IOException;
+
+  LocatedBlocks getLocatedBlocks(HdfsLocatedFileStatus status);
+
+  HdfsFileStatus createHdfsFileStatus(
+      long length, boolean isdir, int block_replication, long blocksize, long modification_time,
+      long access_time, FsPermission permission, String owner, String group, byte[] symlink, byte[] path,
+      long fileId, int childrenNum, FileEncryptionInfo feInfo, byte storagePolicy);
 }
