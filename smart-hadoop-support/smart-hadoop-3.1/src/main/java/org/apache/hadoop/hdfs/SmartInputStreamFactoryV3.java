@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.hdfs;
 
-import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
@@ -25,11 +24,7 @@ import java.io.IOException;
 /**
  * Factory to create SmartInputStream with corresponding Hadoop version.
  */
-public abstract class SmartInputStreamFactory {
-  public static SmartInputStreamFactory get() {
-    return CompatibilityHelperLoader.getHelper().getSmartInputStreamFactory();
-  }
-
+public class SmartInputStreamFactoryV3 extends SmartInputStreamFactory {
   /**
    *  Get HDFS input stream from dfsClient, file path and its file state.
    *
@@ -40,9 +35,32 @@ public abstract class SmartInputStreamFactory {
    * @return HDFS input stream
    * @throws IOException if IOException occurs
    */
-  public abstract DFSInputStream create(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState) throws IOException;
+  public DFSInputStream create(DFSClient dfsClient, String src,
+                               boolean verifyChecksum, FileState fileState) throws IOException {
+    dfsClient.checkOpen();
+    return createSmartInputStream(dfsClient, src, verifyChecksum, fileState);
+  }
 
-  protected abstract DFSInputStream createSmartInputStream(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState) throws IOException;
+  @Override
+  protected DFSInputStream createSmartInputStream(DFSClient dfsClient, String src,
+                                                  boolean verifyChecksum, FileState fileState) throws IOException{
+    DFSInputStream inputStream;
+    switch (fileState.getFileType()) {
+      case NORMAL:
+        inputStream = new DFSInputStream(dfsClient, src, verifyChecksum, null);
+        break;
+      case COMPACT:
+        inputStream = new CompactInputStream(dfsClient, verifyChecksum, fileState);
+        break;
+      case COMPRESSION:
+        inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState);
+        break;
+      case S3:
+        inputStream = new S3InputStream(dfsClient, src, verifyChecksum, fileState);
+        break;
+      default:
+        throw new IOException("Unsupported file type");
+    }
+    return inputStream;
+  }
 }

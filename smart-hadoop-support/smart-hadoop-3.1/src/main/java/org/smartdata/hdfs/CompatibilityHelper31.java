@@ -17,36 +17,33 @@
  */
 package org.smartdata.hdfs;
 
-import org.apache.hadoop.fs.CreateFlag;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.SmartInputStreamFactory;
-import org.apache.hadoop.hdfs.SmartInputStreamFactory27;
+import org.apache.hadoop.hdfs.SmartInputStreamFactoryV3;
 import org.apache.hadoop.hdfs.inotify.Event;
-import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
-import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
-import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
-import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
+import org.apache.hadoop.hdfs.protocolPB.PBHelperClient;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.balancer.KeyManager;
+import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
-import org.apache.hadoop.conf.Configuration;
+import org.smartdata.hdfs.action.move.StorageGroup;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-public class CompatibilityHelper27 extends CompatibilityHelper2 implements CompatibilityHelper {
-
+public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public String[] getStorageTypes(LocatedBlock lb) {
     List<String> types = new ArrayList<>();
@@ -65,7 +62,7 @@ public class CompatibilityHelper27 extends CompatibilityHelper2 implements Compa
       String dnUUID,
       DatanodeInfo info)
       throws IOException {
-    new Sender(out).replaceBlock(eb, StorageType.valueOf(storageType), accessToken, dnUUID, info);
+    new Sender(out).replaceBlock(eb, StorageType.valueOf(storageType), accessToken, dnUUID, info, null);
   }
 
   @Override
@@ -98,39 +95,24 @@ public class CompatibilityHelper27 extends CompatibilityHelper2 implements Compa
 
   @Override
   public DatanodeInfo newDatanodeInfo(String ipAddress, int xferPort) {
-    return new DatanodeInfo(
-      ipAddress,
-      null,
-      null,
-      xferPort,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      null,
-      null);
+    DatanodeID datanodeID = new DatanodeID(ipAddress, null, null,
+    xferPort, 0, 0, 0);
+    DatanodeDescriptor datanodeDescriptor = new DatanodeDescriptor(datanodeID);
+    return datanodeDescriptor;
   }
 
   @Override
   public InotifyProtos.AppendEventProto getAppendEventProto(Event.AppendEvent event) {
     return InotifyProtos.AppendEventProto.newBuilder()
-      .setPath(event.getPath())
-      .setNewBlock(event.toNewBlock()).build();
+        .setPath(event.getPath())
+        .setNewBlock(event.toNewBlock()).build();
   }
 
   @Override
   public Event.AppendEvent getAppendEvent(InotifyProtos.AppendEventProto proto) {
     return new Event.AppendEvent.Builder().path(proto.getPath())
-      .newBlock(proto.hasNewBlock() && proto.getNewBlock())
-      .build();
+        .newBlock(proto.hasNewBlock() && proto.getNewBlock())
+        .build();
   }
 
   @Override
@@ -151,7 +133,7 @@ public class CompatibilityHelper27 extends CompatibilityHelper2 implements Compa
 
   @Override
   public OutputStream getDFSClientAppend(DFSClient client, String dest,
-      int buffersize, long offset) throws IOException {
+                                         int buffersize, long offset) throws IOException {
     if (client.exists(dest) && offset != 0) {
       return client
           .append(dest, buffersize,
@@ -173,6 +155,59 @@ public class CompatibilityHelper27 extends CompatibilityHelper2 implements Compa
 
   @Override
   public SmartInputStreamFactory getSmartInputStreamFactory() {
-    return new SmartInputStreamFactory27();
+    return new SmartInputStreamFactoryV3();
+  }
+
+  @Override
+  public int getReadTimeOutConstant() {
+    return HdfsConstants.READ_TIMEOUT;
+  }
+
+  @Override
+  public Token<BlockTokenIdentifier> getAccessToken(
+      KeyManager km, ExtendedBlock eb, StorageGroup target) throws IOException {
+    return km.getAccessToken(eb, new StorageType[]{StorageType.parseStorageType(target.getStorageType())}, new String[0]);
+  }
+
+  @Override
+  public int getIOFileBufferSize(Configuration conf) {
+    return conf.getInt(CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_KEY,
+        CommonConfigurationKeysPublic.IO_FILE_BUFFER_SIZE_DEFAULT);
+  }
+
+  @Override
+  public InputStream getVintPrefixed(DataInputStream in) throws IOException {
+    return PBHelperClient.vintPrefixed(in);
+  }
+
+  @Override
+  public LocatedBlocks getLocatedBlocks(HdfsLocatedFileStatus status) {
+    return status.getLocatedBlocks();
+  }
+
+  @Override
+  public HdfsFileStatus createHdfsFileStatus(
+      long length, boolean isdir, int block_replication, long blocksize, long modification_time,
+      long access_time, FsPermission permission, String owner, String group, byte[] symlink, byte[] path,
+      long fileId, int childrenNum, FileEncryptionInfo feInfo, byte storagePolicy) {
+//    return new HdfsNamedFileStatus(length, isdir, block_replication, blocksize, modification_time, access_time, permission,
+//        null, owner, group, symlink, path, fileId, childrenNum, feInfo, storagePolicy, null);
+    return new HdfsFileStatus.Builder()
+        .length(length)
+        .isdir(isdir)
+        .replication(block_replication)
+        .blocksize(blocksize)
+        .mtime(modification_time)
+        .atime(access_time)
+        .perm(permission)
+        .owner(owner)
+        .group(group)
+        .symlink(symlink)
+        .path(path)
+        .fileId(fileId)
+        .children(childrenNum)
+        .feInfo(feInfo)
+        .storagePolicy(storagePolicy)
+        .build();
   }
 }

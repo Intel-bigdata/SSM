@@ -22,19 +22,9 @@ import org.smartdata.model.FileState;
 
 import java.io.IOException;
 
-/**
- * DFSInputStream for SSM.
- */
-public abstract class SmartInputStream extends DFSInputStream {
-  protected final FileState fileState;
-
-  SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+public class CompressionInputStream extends SmartInputStream {
+  CompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
       FileState fileState) throws IOException, UnresolvedLinkException {
-    super(dfsClient, src, verifyChecksum);
-    this.fileState = fileState;
-  }
-
-  public FileState.FileType getType() {
-    return fileState.getFileType();
+    super(dfsClient, src, verifyChecksum, fileState);
   }
 }

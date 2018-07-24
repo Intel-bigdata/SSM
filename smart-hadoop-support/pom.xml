@@ -43,13 +43,21 @@
             </activation>
             <!-- Default hadoop profile. Uses global properties. -->
             <modules>
+                <module>smart-hadoop-2</module>
                 <module>smart-hadoop-2.7</module>
             </modules>
         </profile>
         <profile>
             <id>hadoop-cdh-2.6</id>
             <modules>
+                <module>smart-hadoop-2</module>
                 <module>smart-hadoop-cdh-2.6</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>hadoop-3.1</id>
+            <modules>
+                <module>smart-hadoop-3.1</module>
             </modules>
         </profile>
     </profiles>

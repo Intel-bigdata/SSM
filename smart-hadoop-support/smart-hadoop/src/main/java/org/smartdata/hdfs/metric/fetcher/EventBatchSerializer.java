@@ -30,11 +30,13 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.inotify.EventBatch;
 import org.apache.hadoop.hdfs.protocol.FsPermissionExtension;
 import org.apache.hadoop.hdfs.protocol.proto.AclProtos;
+import org.apache.hadoop.hdfs.protocol.proto.AclProtos.*;
 import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos;
+import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.*;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.protocol.proto.XAttrProtos;
-import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FsPermissionProto;
-import org.apache.hadoop.hdfs.protocol.proto.AclProtos.AclEntryProto;
+//import org.apache.hadoop.hdfs.protocol.proto.HdfsProtos.FsPermissionProto;
+//import org.apache.hadoop.hdfs.protocol.proto.AclProtos.AclEntryProto;
 import org.apache.hadoop.hdfs.protocol.proto.XAttrProtos.XAttrProto;
 import org.apache.hadoop.hdfs.protocol.proto.XAttrProtos.XAttrProto.XAttrNamespaceProto;
 import org.apache.hadoop.hdfs.protocol.proto.AclProtos.AclEntryProto.AclEntryTypeProto;
@@ -283,7 +285,7 @@ public class EventBatchSerializer {
     }
   }
 
-  public static HdfsProtos.FsPermissionProto convert(FsPermission p) {
+  public static FsPermissionProto convert(FsPermission p) {
     return FsPermissionProto.newBuilder().setPerm(p.toExtendedShort()).build();
   }
 

@@ -25,6 +25,7 @@ public class CompatibilityHelperLoader {
   private static CompatibilityHelper instance;
   private static final String HADOOP_26_HELPER_CLASS = "org.smartdata.hdfs.CompatibilityHelper26";
   private static final String HADOOP_27_HELPER_CLASS = "org.smartdata.hdfs.CompatibilityHelper27";
+  private static final String HADOOP_31_HELPER_CLASS = "org.smartdata.hdfs.CompatibilityHelper31";
   public static final Logger LOG =
       LoggerFactory.getLogger(CompatibilityHelperLoader.class);
 
@@ -46,8 +47,10 @@ public class CompatibilityHelperLoader {
       Integer second = Integer.parseInt(parts[1]);
       if (first == 2 && second <= 6) {
         instance = create(HADOOP_26_HELPER_CLASS);
-      } else {
+      } else if (first == 2 && second <= 9){
         instance = create(HADOOP_27_HELPER_CLASS);
+      } else {
+        instance = create(HADOOP_31_HELPER_CLASS);
       }
     }
     return instance;
