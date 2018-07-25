@@ -20,25 +20,24 @@ BIN_HOME=$(cd `dirname $0`;pwd)
 SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 CONF_DIR=$SSM_HOME/conf
-INPUT_PATH=""
+INSTALL_PATH=""
 
 cd $SSM_HOME/../;
 
-#config option to let user give conf directory, "./install.sh --config" . If not given, use the default conf
+#config option is used to specify SSM's conf directory, e.g. "./install.sh --config ". If not given, the default conf is $SSM_HOME/config.
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
       shift
-      CONF_DIR_TMP="$1"
-      if [[ ! -d "${CONF_DIR_TMP}" ]]; then
-        echo "ERROR : ${CONF_DIR_TMP} is not a directory"
+      CONF_DIR="$1"
+      if [[ ! -d "${CONF_DIR}" ]]; then
+        echo "ERROR : ${CONF_DIR} is not a directory"
         exit 1
       else
-        CONF_DIR="$1"
         if [[ $CONF_DIR != */ ]];then
              CONF_DIR=${CONF_DIR}/
         fi
-      break
+        break
       fi
       ;;
       *)
@@ -57,13 +56,13 @@ fi
 echo -e "The configured hosts are shown below(\033[34mempty means there is no host configured\033[0m):"
 
 IFS=$'\n'
-for showhost in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
+for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
 do
-   showhost=$(echo $showhost | tr -d  " ")
-   if [[ "$showhost" =~ ^#.* ]];then
+   host=$(echo $host | tr -d  " ")
+   if [[ "$host" =~ ^#.* ]];then
         continue
    else
-        echo -n -e "\033[34m$showhost \033[0m "
+        echo -n -e "\033[34m$host \033[0m "
    fi
 done
 
@@ -75,7 +74,7 @@ read -p  "Do you want to continue installing? Please type [Y|y] or [N|n]:
 case $yn in
         [Yy]* )
         read -p "Please type in the path where you want to install SSM:
-" INPUT_PATH
+" INSTALL_PATH
         break;;
         [Nn]* ) exit 1;;
         * ) continue;;
@@ -84,8 +83,8 @@ done
 
 echo installing...
 
-if [[ $INPUT_PATH != */ ]];then
-    INPUT_PATH=${INPUT_PATH}/
+if [[ $INSTALL_PATH != */ ]];then
+    INSTALL_PATH=${INSTALL_PATH}/
 fi
 
 tar cf "${SSM_NAME}.tar" ${SSM_NAME}
@@ -97,22 +96,19 @@ do
         continue
    else
       #Before install on a host, delete ssm home directory if there exists
-      if_exist=`ssh $host "if [ -d ${INPUT_PATH}${SSM_NAME} ];then echo 1; else echo 0; fi"`
-      if [ $if_exist = 1 ];then
-          ssh $host "rm -rf ${INPUT_PATH}${SSM_NAME}"
-      fi
-      flag=`ssh $host "if [ -d $INPUT_PATH ];then echo 1; else echo 0; fi"`
+      ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
+      flag=`ssh $host "if [ -d $INSTALL_PATH ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
          echo installing SSM to $host...
-         scp ${SSM_NAME}.tar $host:$INPUT_PATH >> /dev/null
-         ssh $host "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
+         scp ${SSM_NAME}.tar $host:$INSTALL_PATH >> /dev/null
+         ssh $host "cd ${INSTALL_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
          echo install SSM to $host successfully!
       elif [ $flag = 0 ];then
-         ssh $host "mkdir $INPUT_PATH"
+         ssh $host "mkdir $INSTALL_PATH"
          if [ $? = 0 ];then
             echo installing SSM to $host...
-            scp ${SSM_NAME}.tar $host:$INPUT_PATH >> /dev/null
-            ssh $host "cd ${INPUT_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
+            scp ${SSM_NAME}.tar $host:$INSTALL_PATH >> /dev/null
+            ssh $host "cd ${INSTALL_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
             echo install SSM to $host successfully!
          else
             exit 1
