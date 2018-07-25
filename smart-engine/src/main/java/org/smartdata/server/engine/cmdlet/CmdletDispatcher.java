@@ -203,17 +203,6 @@ public class CmdletDispatcher {
       return stat;
     }
 
-    public CmdletDispatcherStat getStat() {
-      CmdletDispatcherStat stat = new CmdletDispatcherStat(statRound, statFail,
-          statDispatched, statNoMoreCmdlet, statFull);
-      statRound = 0;
-      statFail = 0;
-      statDispatched = 0;
-      statFull = 0;
-      statNoMoreCmdlet = 0;
-      return stat;
-    }
-
     @Override
     public void run() {
       statRound++;

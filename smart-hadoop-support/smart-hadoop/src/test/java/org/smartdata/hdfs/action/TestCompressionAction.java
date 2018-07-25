@@ -44,7 +44,6 @@ public class TestCompressionAction extends MiniClusterHarness {
     CompressionAction compressionAction = new CompressionAction();
     compressionAction.setDefaultDfsClient(dfsClient);
     compressionAction.setContext(smartContext);
-    compressionAction.setStatusReporter(new MockActionStatusReporter());
     Map<String, String> args = new HashMap<>();
     args.put(compressionAction.FILE_PATH, filePath);
     args.put(compressionAction.BUF_SIZE, "" + bufferSize);
@@ -65,7 +64,6 @@ public class TestCompressionAction extends MiniClusterHarness {
 //    args.put(CompressionAction.COMPRESS_IMPL,"Zlib");
     CompressionAction compressionAction = new CompressionAction();
     compressionAction.init(args);
-    compressionAction.setStatusReporter(new MockActionStatusReporter());
   }
 
   @Test
