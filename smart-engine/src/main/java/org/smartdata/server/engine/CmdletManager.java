@@ -941,7 +941,7 @@ public class CmdletManager extends AbstractService {
           info.setProgress(memInfo.getProgress());
         }
       }
-      tmpActions = new ActionGroup(infos, infos.size());
+      tmpActions = new ActionGroup(infos, metaStore.getCountOfSearchAction(path));
       return tmpActions;
     } catch (MetaStoreException e) {
       LOG.error("Search [ {} ], Get Finished Actions by search from DB error", path, e);

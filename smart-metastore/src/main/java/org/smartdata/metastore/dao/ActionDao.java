@@ -183,6 +183,19 @@ public class ActionDao {
     return jdbcTemplate.query(sql, new ActionRowMapper());
   }
 
+  public Long getCountOfSearchAction(String path) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT COUNT(*) FROM " + TABLE_NAME + " WHERE ("
+        + "aid LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR cid LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR args LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR result LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR progress LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR log LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR action_name LIKE '%" + path + "%' ESCAPE '/')";
+    return jdbcTemplate.queryForObject(sql, Long.class);
+  }
+
   public List<ActionInfo> searchAction(String path, long start,
       long offset, List<String> orderBy, List<Boolean> isDesc) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);

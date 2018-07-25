@@ -1394,6 +1394,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public long getCountOfSearchAction(String path) throws MetaStoreException {
+    try {
+      return actionDao.getCountOfSearchAction(path);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void insertStoragePolicy(StoragePolicy s)
     throws MetaStoreException {
     try {
