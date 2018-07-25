@@ -208,14 +208,6 @@
   </property>
 
   <property>
-    <name>smart.top.hot.files.num</name>
-    <value>200</value>
-    <description>
-      The number of top hot files displayed on web UI.
-    </description>
-  </property>
-
-  <property>
     <name>pd.client.port</name>
     <value>7060</value>
     <description>Pd port in client-url option</description>
