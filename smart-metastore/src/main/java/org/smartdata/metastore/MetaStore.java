@@ -1013,10 +1013,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public boolean updateCmdlet(long cid, long rid, CmdletState state)
+  public boolean updateCmdlet(long cid, CmdletState state)
       throws MetaStoreException {
     try {
-      return cmdletDao.update(cid, rid, state.getValue()) >= 0;
+      return cmdletDao.update(cid, state.getValue()) >= 0;
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1034,6 +1034,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteCmdlet(long cid) throws MetaStoreException {
     try {
       cmdletDao.delete(cid);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void batchDeleteCmdlet(List<Long> cids) throws MetaStoreException {
+    try {
+      cmdletDao.batchDelete(cids);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1084,7 +1092,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       throws MetaStoreException {
     LOG.debug("Insert Action ID {}", actionInfo.getActionId());
     try {
-      actionDao.insert(actionInfo);
+      if (getActionById(actionInfo.getActionId()) != null) {
+        actionDao.update(actionInfo);
+      } else {
+        actionDao.insert(actionInfo);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -1108,6 +1120,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteCmdletActions(long cmdletId) throws MetaStoreException {
     try {
       actionDao.deleteCmdletActions(cmdletId);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void batchDeleteCmdletActions(List<Long> cmdletIds) throws MetaStoreException {
+    try {
+      actionDao.batchDeleteCmdletActions(cmdletIds);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

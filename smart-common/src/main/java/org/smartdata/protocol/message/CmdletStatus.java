@@ -17,33 +17,30 @@
  */
 package org.smartdata.protocol.message;
 
-public class ActionStarted implements StatusMessage {
-  private long actionId;
-  private long timestamp;
+import org.smartdata.model.CmdletState;
 
-  public ActionStarted(long actionId, long timestamp) {
-    this.actionId = actionId;
-    this.timestamp = timestamp;
+import java.io.Serializable;
+
+public class CmdletStatus implements Serializable{
+  private long cmdletId;
+  private long stateUpdateTime;
+  private CmdletState currentState;
+
+  public CmdletStatus(long cmdletId, long stateUpdateTime, CmdletState state) {
+    this.cmdletId = cmdletId;
+    this.stateUpdateTime = stateUpdateTime;
+    this.currentState = state;
   }
 
-  public long getActionId() {
-    return actionId;
+  public long getCmdletId() {
+    return cmdletId;
   }
 
-  public void setActionId(long actionId) {
-    this.actionId = actionId;
+  public long getStateUpdateTime() {
+    return stateUpdateTime;
   }
 
-  public long getTimestamp() {
-    return timestamp;
-  }
-
-  public void setTimestamp(long timestamp) {
-    this.timestamp = timestamp;
-  }
-
-  @Override
-  public String toString() {
-    return String.format("Action %s started at %s", actionId, timestamp);
+  public CmdletState getCurrentState() {
+    return currentState;
   }
 }

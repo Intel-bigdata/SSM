@@ -30,6 +30,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfoBatch;
 import org.smartdata.metastore.ingestion.FileStatusIngester;
+import org.smartdata.protocol.message.StatusReport;
 
 
 import java.io.IOException;

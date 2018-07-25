@@ -206,6 +206,22 @@ public class ActionDao {
     jdbcTemplate.update(sql, cid);
   }
 
+  public int[] batchDeleteCmdletActions(final List<Long> cids) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE cid = ?";
+    return jdbcTemplate.batchUpdate(
+            sql,
+            new BatchPreparedStatementSetter() {
+              public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, cids.get(i));
+              }
+
+              public int getBatchSize() {
+                return cids.size();
+              }
+            });
+  }
+
   public void deleteAll() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME;

@@ -41,6 +41,9 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReporter;
+import org.smartdata.server.engine.cmdlet.CmdletExecutor;
+import org.smartdata.server.engine.cmdlet.StatusReportTask;
+import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
@@ -57,6 +60,8 @@ import org.smartdata.utils.SecurityUtil;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import scala.concurrent.duration.Duration;
@@ -67,6 +72,7 @@ public class SmartAgent implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(SmartAgent.class);
   private ActorSystem system;
   private ActorRef agentActor;
+  private CmdletExecutor cmdletExecutor;
 
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
@@ -119,6 +125,7 @@ public class SmartAgent implements StatusReporter {
     system = ActorSystem.apply(NAME, config);
     agentActor = system.actorOf(
             Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
+
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -133,6 +140,18 @@ public class SmartAgent implements StatusReporter {
     });
     Services.init(new SmartAgentContext(conf, this));
     Services.start();
+
+    AgentCmdletService agentCmdletService =
+            (AgentCmdletService) Services.getService(AgentCmdletService.NAME);
+    cmdletExecutor = agentCmdletService.getCmdletExecutor();
+
+    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    int reportPeriod = conf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+            SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, conf);
+    executorService.scheduleAtFixedRate(
+            statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
+
     system.awaitTermination();
   }
 

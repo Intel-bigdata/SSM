@@ -145,6 +145,7 @@ public class ProtoBufferHelper {
         .setCreateTime(infoProto.getCreateTime())
         .setFinished(infoProto.getFinished())
         .setFinishTime(infoProto.getFinishTime())
+        .setProgress(infoProto.getProgress())
         .setActionId(infoProto.getActionId())
         .setCmdletId(infoProto.getCmdletId());
     List<String> list = infoProto.getArgsList();

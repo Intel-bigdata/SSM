@@ -195,6 +195,22 @@ public class CmdletDao {
     jdbcTemplate.update(sql, cid);
   }
 
+  public int[] batchDelete(final List<Long> cids) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE cid = ?";
+    return jdbcTemplate.batchUpdate(
+            sql,
+            new BatchPreparedStatementSetter() {
+              public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, cids.get(i));
+              }
+
+              public int getBatchSize() {
+                return cids.size();
+              }
+            });
+  }
+
   public int deleteBeforeTime(long timestamp) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
@@ -282,11 +298,11 @@ public class CmdletDao {
             });
   }
 
-  public int update(long cid, long rid, int state) {
+  public int update(long cid, int state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql =
-        "UPDATE " + TABLE_NAME + " SET state = ?, state_changed_time = ? WHERE cid = ? AND rid = ?";
-    return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid, rid);
+            "UPDATE " + TABLE_NAME + " SET state = ?, state_changed_time = ? WHERE cid = ?";
+    return jdbcTemplate.update(sql, state, System.currentTimeMillis(), cid);
   }
 
   public int update(long cid, String parameters, int state) {
@@ -356,15 +372,15 @@ public class CmdletDao {
 
     @Override
     public CmdletInfo mapRow(ResultSet resultSet, int i) throws SQLException {
-      CmdletInfo cmdletInfo = new CmdletInfo();
-      cmdletInfo.setCid(resultSet.getLong("cid"));
-      cmdletInfo.setRid(resultSet.getLong("rid"));
-      cmdletInfo.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
-      cmdletInfo.setState(CmdletState.fromValue((int) resultSet.getByte("state")));
-      cmdletInfo.setParameters(resultSet.getString("parameters"));
-      cmdletInfo.setGenerateTime(resultSet.getLong("generate_time"));
-      cmdletInfo.setStateChangedTime(resultSet.getLong("state_changed_time"));
-      return cmdletInfo;
+      CmdletInfo.Builder builder = CmdletInfo.newBuilder();
+      builder.setCid(resultSet.getLong("cid"));
+      builder.setRid(resultSet.getLong("rid"));
+      builder.setAids(convertStringListToLong(resultSet.getString("aids").split(",")));
+      builder.setState(CmdletState.fromValue((int) resultSet.getByte("state")));
+      builder.setParameters(resultSet.getString("parameters"));
+      builder.setGenerateTime(resultSet.getLong("generate_time"));
+      builder.setStateChangedTime(resultSet.getLong("state_changed_time"));
+      return builder.build();
     }
 
     private List<Long> convertStringListToLong(String[] strings) {

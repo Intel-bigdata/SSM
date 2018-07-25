@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -45,7 +44,6 @@ public class TestMetaDataAction extends MiniClusterHarness {
     MetaDataAction metaFileAction = new MetaDataAction();
     metaFileAction.setDfsClient(dfsClient);
     metaFileAction.setContext(smartContext);
-    metaFileAction.setStatusReporter(new MockActionStatusReporter());
 
     Map<String, String> args = new HashMap<>();
     args.put(MetaDataAction.FILE_PATH, srcPath + "/" + file);
@@ -55,6 +53,7 @@ public class TestMetaDataAction extends MiniClusterHarness {
     metaFileAction.init(args);
     metaFileAction.run();
 
+    Assert.assertTrue(metaFileAction.getExpectedAfterRun());
     Assert.assertTrue(dfs.getFileStatus(new Path(srcPath + "/" + file)).getOwner().equals("test"));
     Assert.assertTrue(dfs.getFileStatus(new Path(srcPath + "/" + file)).getPermission().toString().equals("rwxrwxrwx"));
   }
@@ -71,7 +70,6 @@ public class TestMetaDataAction extends MiniClusterHarness {
     MetaDataAction metaFileAction = new MetaDataAction();
     metaFileAction.setDfsClient(dfsClient);
     metaFileAction.setContext(smartContext);
-    metaFileAction.setStatusReporter(new MockActionStatusReporter());
 
     Map<String, String> args = new HashMap<>();
     args.put(MetaDataAction.FILE_PATH, dfs.getUri() + srcPath + "/" + file);
@@ -81,6 +79,7 @@ public class TestMetaDataAction extends MiniClusterHarness {
     metaFileAction.init(args);
     metaFileAction.run();
 
+    Assert.assertTrue(metaFileAction.getExpectedAfterRun());
     Assert.assertTrue(dfs.getFileStatus(new Path(srcPath + "/" + file)).getOwner().equals("test"));
     Assert.assertTrue(dfs.getFileStatus(new Path(srcPath + "/" + file)).getPermission().toString().equals("rwxrwxrwx"));
 

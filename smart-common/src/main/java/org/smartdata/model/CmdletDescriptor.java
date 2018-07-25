@@ -17,6 +17,8 @@
  */
 package org.smartdata.model;
 
+import org.smartdata.utils.StringUtil;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ public class CmdletDescriptor {
   private List<String> actionNames = new ArrayList<>();
   private List<Map<String, String>> actionArgs = new ArrayList<>();
   private String cmdletString = null;
+  private long deferIntervalMs = 0L;  // Not persist into DB now
 
   private static final String REG_ACTION_NAME = "^[a-zA-Z]+[a-zA-Z0-9_]*";
 
@@ -289,6 +292,12 @@ public class CmdletDescriptor {
       throw new ParseException("Contains NULL action", offset);
     }
 
+    if (blocks.get(0).startsWith(".")) {
+      procMetaCmdlet(blocks, offset);
+      blocks.clear();
+      return;
+    }
+
     boolean matched = blocks.get(0).matches(REG_ACTION_NAME);
     if (!matched) {
       throw new ParseException("Invalid action name: "
@@ -299,6 +308,32 @@ public class CmdletDescriptor {
     Map<String, String> args = toArgMap(blocks);
     addAction(name, args);
     blocks.clear();
+  }
+
+  private void procMetaCmdlet(List<String> blocks, int offset) throws ParseException {
+    if (blocks.get(0).equals(".defer")) {
+      long interval = -1;
+      if (blocks.size() == 2) {
+        interval = StringUtil.pharseTimeString(blocks.get(1));
+      }
+
+      if (interval == -1) {
+        throw new ParseException("Invalid meta cmdlet parameter: "
+            + StringUtil.join(" ", blocks), offset);
+      }
+
+      deferIntervalMs = interval;
+      return;
+    }
+    throw new ParseException("Unknown meta cmdlet: " + StringUtil.join(" ", blocks), offset);
+  }
+
+  public long getDeferIntervalMs() {
+    return deferIntervalMs;
+  }
+
+  public void setDeferIntervalMs(long deferIntervalMs) {
+    this.deferIntervalMs = deferIntervalMs;
   }
 
   public static List<String> toArgList(Map<String, String> args) {

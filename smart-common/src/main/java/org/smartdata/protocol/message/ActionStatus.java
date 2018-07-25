@@ -24,12 +24,42 @@ public class ActionStatus implements Serializable {
   private float percentage;
   private String result;
   private String log;
+  private long startTime;
+  private long finishTime;
+  private Throwable throwable;
+  private boolean finished;
 
-  public ActionStatus(long actionId, float percentage, String result, String log) {
+  public ActionStatus(long actionId, float percentage, String result, String log,
+                      long startTime, long finishTime, Throwable t, boolean finished) {
     this.actionId = actionId;
     this.percentage = percentage;
     this.result = result;
     this.log = log;
+    this.startTime = startTime;
+    this.finishTime = finishTime;
+    this.throwable = t;
+    this.finished = finished;
+  }
+
+  public ActionStatus(long actionId, String log, long startTime,
+                      long finishTime, Throwable t, boolean finished) {
+    this.actionId = actionId;
+    this.log = log;
+    this.startTime = startTime;
+    this.finishTime = finishTime;
+    this.throwable = t;
+    this.finished = finished;
+  }
+
+  public ActionStatus(long actionId, long finishTime) {
+    this.actionId = actionId;
+    this.finishTime = finishTime;
+  }
+
+  public ActionStatus(long actionId, long startTime, Throwable t) {
+    this.actionId = actionId;
+    this.startTime = startTime;
+    this.throwable = t;
   }
 
   public long getActionId() {
@@ -49,6 +79,9 @@ public class ActionStatus implements Serializable {
   }
 
   public String getResult() {
+    if (result == null) {
+      return "";
+    }
     return result;
   }
 
@@ -57,10 +90,29 @@ public class ActionStatus implements Serializable {
   }
 
   public String getLog() {
+    if (log == null) {
+      return "";
+    }
     return log;
   }
 
   public void setLog(String log) {
     this.log = log;
+  }
+
+  public long getStartTime() {
+    return startTime;
+  }
+
+  public long getFinishTime() {
+    return finishTime;
+  }
+
+  public Throwable getThrowable() {
+    return throwable;
+  }
+
+  public boolean isFinished() {
+    return finished;
   }
 }

@@ -70,13 +70,13 @@
   <property>
     <name>smart.namespace.fetcher.producers.num</name>
     <value>3</value>
-    <description>Number of producers to produce data fetched by Namespace fetcher</description>
+    <description>Number of producers in namespace fetcher</description>
   </property>
 
   <property>
     <name>smart.namespace.fetcher.consumers.num</name>
     <value>6</value>
-    <description>Number of consumers to consume data fetched by Namespace fetcher</description>
+    <description>Number of consumers in namespace fetcher</description>
   </property>
 
   <property>
@@ -87,8 +87,14 @@
 
   <property>
     <name>smart.cmdlet.executors</name>
-    <value>40</value>
+    <value>10</value>
     <description>Max number of cmdlets that can be executed in parallel</description>
+  </property>
+
+  <property>
+    <name>smart.dispatch.cmdlets.extra.num</name>
+    <value>10</value>
+    <description>The number of extra cmdlets dispatched by Smart Server</description>
   </property>
 
   <property>
@@ -104,6 +110,18 @@
       Max number of file mover cmdlets that can be executed in parallel per SSM service.
       0 means unlimited.
     </description>
+  </property>
+
+  <property>
+    <name>smart.action.move.throttle.mb</name>
+    <value>0</value>
+    <description>The throughput limit (MB) for SSM move overall</description>
+  </property>
+
+  <property>
+    <name>smart.action.copy.throttle.mb</name>
+    <value>0</value>
+    <description>The throughput limit (MB) for SSM copy overall</description>
   </property>
 
   <property>
@@ -153,7 +171,39 @@
     <name>smart.copy.scheduler.base.sync.batch</name>
     <value>500</value>
     <description>
-      Maximum batch size of copyscheduer base sync batch insert.
+      Maximum batch size of copyscheduler base sync batch insert.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.status.report.period</name>
+    <value>10</value>
+    <description>
+      The status report period for actions. The time unit is millisecond.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.status.report.period.multiplier</name>
+    <value>50</value>
+    <description>
+      The report period multiplied by this multiplier defines largest report interval.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.status.report.ratio</name>
+    <value>0.2</value>
+    <description>
+      If the finished actions ratio equals or exceeds this value, status report will be triggered.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.top.hot.files.num</name>
+    <value>200</value>
+    <description>
+      The number of top hot files displayed on web UI.
     </description>
   </property>
 
@@ -195,6 +245,14 @@
     <description>
       Skip fetch the entire namespace and only use available iNotify events to update namespace if true.
       NOTE: This may leads to some unpredictable consequences and should only be used for testing.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.dispatcher.log.disp.result</name>
+    <value>true</value>
+    <description>
+      Log dispatch result for each cmdlet been dispatched.
     </description>
   </property>
 </configuration>

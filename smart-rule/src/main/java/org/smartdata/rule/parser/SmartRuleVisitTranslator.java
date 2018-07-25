@@ -884,7 +884,9 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
           return new NodeTransResult(virTab, realParas.formatParameters());
         }
 
-        if (p.getPropertyName().equals("accessCountTop")) {
+        if (p.getPropertyName().equals("accessCountTop")
+            || p.getPropertyName().equals("accessCountBottom")) {
+          boolean topFlag = p.getPropertyName().equals("accessCountTop");
           String rid = "";
           if (transCtx != null) {
             rid = transCtx.getRuleId() + "_";
@@ -897,9 +899,11 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
             sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
             dynamicParameters.put(virTab, Arrays.asList(realParas.getValues(), virTab));
           }
-          String mStr = virTab + "_top_" + realParas.getValues().get(1).toString();
+          String mStr = virTab + (topFlag ? "_top_" : "_bottom_")
+              + realParas.getValues().get(1).toString();
+          String func = "$@genVirtualAccessCountTable" + (topFlag ? "Top" : "Bottom") + "Value";
           String mStrValue = mStr + "_value";
-          sqlStatements.add("$@genVirtualAccessCountTableTopValue(" + mStr + ")");
+          sqlStatements.add(func + "(" + mStr + ")");
           dynamicParameters.put(mStr, Arrays.asList(realParas.getValues(), virTab, mStrValue));
           procAcc = true;
           return new NodeTransResult(null, "$" + mStrValue);
