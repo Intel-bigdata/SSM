@@ -19,7 +19,10 @@
  */
 package org.smartdata.utils;
 
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -126,5 +129,92 @@ public class StringUtil {
       start += m.group().length();
     }
     return intval;
+  }
+
+  public static List<String> parseCmdletString(String cmdlet)
+      throws ParseException {
+    if (cmdlet == null || cmdlet.length() == 0) {
+      return new ArrayList<>();
+    }
+
+    char[] chars = (cmdlet + " ").toCharArray();
+    List<String> blocks = new ArrayList<String>();
+    char c;
+    char[] token = new char[chars.length];
+    int tokenlen = 0;
+    boolean sucing = false;
+    boolean string = false;
+    for (int idx = 0; idx < chars.length; idx++) {
+      c = chars[idx];
+      if (c == ' ' || c == '\t') {
+        if (string) {
+          token[tokenlen++] = c;
+        }
+        if (sucing) {
+          blocks.add(String.valueOf(token, 0, tokenlen));
+          tokenlen = 0;
+          sucing = false;
+        }
+      } else if (c == ';') {
+        if (string) {
+          throw new ParseException("Unexpected break of string", idx);
+        }
+
+        if (sucing) {
+          blocks.add(String.valueOf(token, 0, tokenlen));
+          tokenlen = 0;
+          sucing = false;
+        }
+      } else if (c == '\\') {
+        boolean tempAdded = false;
+        if (sucing || string) {
+          token[tokenlen++] = chars[++idx];
+          tempAdded = true;
+        }
+
+        if (!tempAdded && !sucing) {
+          sucing = true;
+          token[tokenlen++] = chars[++idx];
+        }
+      } else if (c == '"') {
+        if (sucing) {
+          throw new ParseException("Unexpected \"", idx);
+        }
+
+        if (string) {
+          if (chars[idx + 1] != '"') {
+            string = false;
+            blocks.add(String.valueOf(token, 0, tokenlen));
+            tokenlen = 0;
+          } else {
+            idx++;
+          }
+        } else {
+          string = true;
+        }
+      } else if (c == '\r' || c == '\n') {
+        if (sucing) {
+          sucing = false;
+          blocks.add(String.valueOf(token, 0, tokenlen));
+          tokenlen = 0;
+        }
+
+        if (string) {
+          throw new ParseException("String cannot in more than one line", idx);
+        }
+      } else {
+        if (string) {
+          token[tokenlen++] = chars[idx];
+        } else {
+          sucing = true;
+          token[tokenlen++] = chars[idx];
+        }
+      }
+    }
+
+    if (string) {
+      throw new ParseException("Unexpected tail of string", chars.length);
+    }
+    return blocks;
   }
 }
