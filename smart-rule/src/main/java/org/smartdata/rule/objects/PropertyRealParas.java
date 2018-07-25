@@ -64,4 +64,8 @@ public class PropertyRealParas {
   public String instId() {
     return property.instId(values);
   }
+
+  public String instId(int s, int e) {
+    return property.instId(values.subList(s, e));
+  }
 }

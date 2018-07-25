@@ -18,6 +18,7 @@
 package org.smartdata.hdfs;
 
 import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.StorageType;
 import org.apache.hadoop.hdfs.DFSClient;
@@ -28,6 +29,7 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
@@ -163,16 +165,6 @@ public class CompatibilityHelper27 implements CompatibilityHelper {
     // Copy to s3
     org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
     return fs.create(new Path(dest), true);
-  }
-
-  @Override
-  public boolean setLen2Zero(DFSClient client, String src) throws IOException {
-    return client.truncate(src, 0);
-  }
-
-  @Override
-  public boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException {
-    return fileSystem.truncate(new Path(src), 0);
   }
 
   @Override

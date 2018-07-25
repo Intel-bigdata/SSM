@@ -33,6 +33,7 @@ trigger
     : AT timepointexpr                      #triTimePoint
     | EVERY timeintvalexpr duringexpr?      #triCycle
     | ON fileEvent duringexpr?              #triFileEvent
+    | ONCE                                  #triOnce
     ;
 
 duringexpr : FROM timepointexpr (TO timepointexpr)? ;
@@ -107,6 +108,17 @@ stringexpr
 
 cmdlet
     : .*
+    | ';'
+    | '@'
+    | '$'
+    | '&'
+    | '='
+    | '{'
+    | '}'
+    | '['
+    | ']'
+    | '"'
+    | '?'
     ;
 
 id
@@ -164,6 +176,7 @@ AND : 'and' ;
 EVERY : 'every' ;
 FROM : 'from' ;
 ON : 'on' ;
+ONCE : 'once' ;
 OR : 'or' ;
 NOW : 'now' ;
 NOT : 'not' ;

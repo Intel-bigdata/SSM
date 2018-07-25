@@ -18,6 +18,7 @@
 package org.smartdata.metastore.utils;
 
 import com.mysql.jdbc.NonRegisteringDriver;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
@@ -39,6 +40,10 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.springframework.jdbc.support.JdbcUtils.closeConnection;
 
 /**
  * Utilities for table operations.
@@ -58,6 +63,31 @@ public class MetaStoreUtils {
   public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
   private static boolean tidbInited = false;
+  public static final String TABLESET[] = new String[]{
+    "access_count_table",
+            "blank_access_count_info",
+            "cached_file",
+            "ec_policy",
+            "file",
+            "user_group",
+            "owner",
+            "storage",
+            "storage_hist",
+            "storage_policy",
+            "xattr",
+            "datanode_info",
+            "datanode_storage_info",
+            "rule",
+            "cmdlet",
+            "action",
+            "file_diff",
+            "global_config",
+            "cluster_config",
+            "sys_info",
+            "cluster_info",
+            "backup_file",
+            "file_state"
+  };
 
   public static Connection createConnection(String url,
       String userName, String password)
@@ -89,87 +119,44 @@ public class MetaStoreUtils {
     }
   }
 
-  public static boolean isTableSetExist(Connection conn) throws MetaStoreException {
-    String tableSet[] = new String[]{
-            "access_count_table",
-            "blank_access_count_info",
-            "cached_file",
-            "ec_policy",
-            "file",
-            "user_group",
-            "owner",
-            "storage",
-            "storage_policy",
-            "xattr",
-            "datanode_info",
-            "datanode_storage_info",
-            "rule",
-            "cmdlet",
-            "action",
-            "file_diff",
-            "global_config",
-            "cluster_config",
-            "sys_info",
-            "cluster_info",
-            "backup_file",
-            "file_state"
-    };
+  public static int getTableSetNum(Connection conn, String tableSet[]) throws MetaStoreException {
+    String tables = "('" + StringUtils.join(tableSet, "','") + "')";
     try {
       String url = conn.getMetaData().getURL();
+      String query;
       if (url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX)) {
         String dbName = getMysqlDBName(url);
-        for (String table : tableSet) {
-          String query = String.format("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES "
-                  + "WHERE TABLE_SCHEMA='%s' and TABLE_NAME='%s'", dbName, table);
-          if (isEmptyResultSet(conn, query)) {
-            return false;
-          }
-        }
-        return true;
+        query = String.format("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+                + "WHERE TABLE_SCHEMA='%s' AND TABLE_NAME IN %s", dbName, tables);
       } else if (url.startsWith(MetaStoreUtils.SQLITE_URL_PREFIX)) {
-        for (String table : tableSet) {
-          String query = String.format(
-                  "SELECT * FROM sqlite_master WHERE TYPE='table' AND NAME='%s'", table);
-          if (isEmptyResultSet(conn, query)) {
-            return false;
-          }
-        }
-        return true;
+        query = String.format("SELECT COUNT(*) FROM sqlite_master "
+                + "WHERE TYPE='table' AND NAME IN %s", tables);
       } else {
         throw new MetaStoreException("The jdbc url is not valid for SSM use.");
       }
+
+      int num = 0;
+      Statement s = conn.createStatement();
+      ResultSet rs = s.executeQuery(query);
+      if (rs.next()) {
+        num = rs.getInt(1);
+      }
+      return num;
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    } finally {
+      closeConnection(conn);
     }
   }
 
   public static void initializeDataBase(
       Connection conn) throws MetaStoreException {
-    String deleteExistingTables[] = new String[] {
-        "DROP TABLE IF EXISTS access_count_table;",
-        "DROP TABLE IF EXISTS cached_file;",
-        "DROP TABLE IF EXISTS ec_policy;",
-        "DROP TABLE IF EXISTS file;",
-        "DROP TABLE IF EXISTS user_group;",
-        "DROP TABLE IF EXISTS owner;",
-        "DROP TABLE IF EXISTS storage;",
-        "DROP TABLE IF EXISTS storage_policy;",
-        "DROP TABLE IF EXISTS xattr;",
-        "DROP TABLE IF EXISTS datanode_info;",
-        "DROP TABLE IF EXISTS datanode_storage_info;",
-        "DROP TABLE IF EXISTS rule;",
-        "DROP TABLE IF EXISTS cmdlet;",
-        "DROP TABLE IF EXISTS action;",
-        "DROP TABLE IF EXISTS blank_access_count_info;",  // for special cases
-        "DROP TABLE IF EXISTS file_diff;",  // incremental diff for disaster recovery
-        "DROP TABLE IF EXISTS global_config",
-        "DROP TABLE IF EXISTS cluster_config",
-        "DROP TABLE IF EXISTS backup_file",
-        "DROP TABLE IF EXISTS sys_info",
-        "DROP TABLE IF EXISTS cluster_info",
-        "DROP TABLE IF EXISTS file_state",
-        "DROP TABLE IF EXISTS compression_file"
-    };
+    ArrayList<String> tableList = new ArrayList<>();
+    for (String table: TABLESET) {
+      tableList.add("DROP TABLE IF EXISTS " + table);
+    }
+    String deleteExistingTables[] = tableList.toArray(new String[tableList.size()]);
+
     String createEmptyTables[] =
         new String[] {
           "CREATE TABLE access_count_table (\n"
@@ -224,15 +211,24 @@ public class MetaStoreUtils {
               + "  owner_name varchar(255) DEFAULT NULL\n"
               + ") ;",
           "CREATE TABLE storage (\n"
-              + "  type varchar(255) PRIMARY KEY,\n"
+              + "  type varchar(32) PRIMARY KEY,\n"
+              + "  time_stamp bigint(20) DEFAULT NULL,\n"
               + "  capacity bigint(20) NOT NULL,\n"
               + "  free bigint(20) NOT NULL\n"
               + ") ;",
+          "CREATE TABLE storage_hist (\n" // Keep this compatible with Table 'storage'
+              + "  type varchar(64),\n"
+              + "  time_stamp bigint(20) DEFAULT NULL,\n"
+              + "  capacity bigint(20) NOT NULL,\n"
+              + "  free bigint(20) NOT NULL\n"
+              + ") ;",
+          "CREATE INDEX type_idx ON storage_hist (type);",
+          "CREATE INDEX time_stamp_idx ON storage_hist (time_stamp);",
           "CREATE TABLE storage_policy (\n"
               + "  sid tinyint(4) PRIMARY KEY,\n"
               + "  policy_name varchar(64) DEFAULT NULL\n"
               + ") ;",
-          "INSERT INTO storage_policy VALUES ('0', 'HOT');",
+          "INSERT INTO storage_policy VALUES ('0', 'UNDEF');",
           "INSERT INTO storage_policy VALUES ('2', 'COLD');",
           "INSERT INTO storage_policy VALUES ('5', 'WARM');",
           "INSERT INTO storage_policy VALUES ('7', 'HOT');",
@@ -292,7 +288,7 @@ public class MetaStoreUtils {
               + "  aid INTEGER PRIMARY KEY,\n"
               + "  cid INTEGER NOT NULL,\n"
               + "  action_name varchar(4096) NOT NULL,\n"
-              + "  args varchar(4096) NOT NULL,\n"
+              + "  args text NOT NULL,\n"
               + "  result text NOT NULL,\n"
               + "  log text NOT NULL,\n"
               + "  successful tinyint(4) NOT NULL,\n"
@@ -381,11 +377,21 @@ public class MetaStoreUtils {
           // path/src index should be set to less than 767
           // to avoid "Specified key was too long" in
           // Mysql 5.6 or previous version
-          if (mysqlOldRelease
-              && s.startsWith("CREATE INDEX")
-              && (s.contains("path") || s.contains("src"))) {
+          if (mysqlOldRelease) {
             // Fix index size 767 in mysql 5.6 or previous version
-            s = s.replace(");", "(750));");
+            if (s.startsWith("CREATE INDEX")
+                && (s.contains("path") || s.contains("src"))) {
+              // Index longer than 767
+              s = s.replace(");", "(749));");
+            } else if (s.contains(") PRIMARY KEY")) {
+              // Primary key longer than 749
+              Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}). PRIMARY KEY");
+              Matcher m = p.matcher(s);
+              if (m.find()) {
+                String targetStr = m.group(0);
+                s = s.replace(targetStr, "749) PRIMARY KEY");
+              }
+            }
           }
           // Replace AUTOINCREMENT with AUTO_INCREMENT
           if (s.contains("AUTOINCREMENT")) {
@@ -405,17 +411,6 @@ public class MetaStoreUtils {
     try {
       Statement s = conn.createStatement();
       s.execute(sql);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
-    }
-  }
-
-  public static boolean isEmptyResultSet(Connection conn, String sql)
-          throws MetaStoreException {
-    try {
-      Statement s = conn.createStatement();
-      ResultSet rs = s.executeQuery(sql);
-      return !rs.next();
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

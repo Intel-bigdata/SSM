@@ -68,6 +68,18 @@
   </property>
 
   <property>
+    <name>smart.namespace.fetcher.producers.num</name>
+    <value>3</value>
+    <description>Number of producers to produce data fetched by Namespace fetcher</description>
+  </property>
+
+  <property>
+    <name>smart.namespace.fetcher.consumers.num</name>
+    <value>6</value>
+    <description>Number of consumers to consume data fetched by Namespace fetcher</description>
+  </property>
+
+  <property>
     <name>smart.rule.executors</name>
     <value>5</value>
     <description>Max number of rules that can be executed in parallel</description>
@@ -76,7 +88,22 @@
   <property>
     <name>smart.cmdlet.executors</name>
     <value>40</value>
-    <description>Max number of cmdlets that can be executed in parallel on agent</description>
+    <description>Max number of cmdlets that can be executed in parallel</description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.dispatchers</name>
+    <value>3</value>
+    <description>Max number of cmdlet dispatchers that work in parallel</description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.mover.max.concurrent.blocks.per.srv.inst</name>
+    <value>0</value>
+    <description>
+      Max number of file mover cmdlets that can be executed in parallel per SSM service.
+      0 means unlimited.
+    </description>
   </property>
 
   <property>
@@ -115,6 +142,30 @@
   </property>
 
   <property>
+    <name>smart.cmdlet.cache.batch</name>
+    <value>600</value>
+    <description>
+      Maximum batch size of cmdlet batch insert.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.copy.scheduler.base.sync.batch</name>
+    <value>500</value>
+    <description>
+      Maximum batch size of copyscheduer base sync batch insert.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.top.hot.files.num</name>
+    <value>200</value>
+    <description>
+      The number of top hot files displayed on web UI.
+    </description>
+  </property>
+
+  <property>
     <name>pd.client.port</name>
     <value>7060</value>
     <description>Pd port in client-url option</description>
@@ -136,5 +187,14 @@
     <name>tidb.service.port</name>
     <value>7070</value>
     <description>SmartAgent master port</description>
+  </property>
+
+  <property>
+    <name>smart.namespace.fetcher.ignore.unsuccessive.inotify.event</name>
+    <value>false</value>
+    <description>
+      Skip fetch the entire namespace and only use available iNotify events to update namespace if true.
+      NOTE: This may leads to some unpredictable consequences and should only be used for testing.
+    </description>
   </property>
 </configuration>

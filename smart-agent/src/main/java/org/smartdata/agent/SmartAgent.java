@@ -72,6 +72,7 @@ public class SmartAgent implements StatusReporter {
     SmartAgent agent = new SmartAgent();
 
     SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
+
     String[] masters = AgentUtils.getMasterAddress(conf);
     if (masters == null) {
       throw new IOException("No master address found!");
@@ -82,27 +83,29 @@ public class SmartAgent implements StatusReporter {
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
 
+    HadoopUtil.setSmartConfByHadoop(conf);
     agent.authentication(conf);
 
     agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
         agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
   }
 
+  //TODO: remove loadHadoopConf
   private void authentication(SmartConf conf) throws IOException {
     if (!SecurityUtil.isSecurityEnabled(conf)) {
       return;
     }
 
     // Load Hadoop configuration files
-    String hadoopConfPath = conf.get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HadoopUtil.loadHadoopConf(conf, hadoopConfPath);
+      HadoopUtil.loadHadoopConf(conf);
     } catch (IOException e) {
       LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-          + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+              + "Please config smart.hadoop.conf.path property in smart-site.xml.");
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.security.authorization", "true");
     }
+
     UserGroupInformation.setConfiguration(conf);
 
     String keytabFilename = conf.get(SmartConfKeys.SMART_AGENT_KEYTAB_FILE_KEY);
@@ -221,6 +224,14 @@ public class SmartAgent implements StatusReporter {
           master = identity.getRef();
           if (master != null) {
             findMaster.cancel();
+
+            String rpcHost = master.path().address().host().get();
+            String rpcPort = conf
+                    .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                            SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
+                    .split(":")[1];
+            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, rpcHost + ":" + rpcPort);
+
             Cancellable registerAgent =
                 AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
                     RETRY_INTERVAL, TIMEOUT,

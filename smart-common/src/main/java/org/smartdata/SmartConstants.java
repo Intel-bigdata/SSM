@@ -26,8 +26,9 @@ public class SmartConstants {
 
   public static final String SMART_ACTION_SCHEDULER_SERVICE_IMPL =
     "org.smartdata.hdfs.scheduler.MoverScheduler, "
-    + "org.smartdata.hdfs.scheduler.CopyScheduler, "
-    + "org.smartdata.hdfs.scheduler.CompressionScheduler";
+        + "org.smartdata.hdfs.scheduler.CopyScheduler, "
+        + "org.smartdata.hdfs.scheduler.Copy2S3Scheduler,"
+        + "org.smartdata.hdfs.scheduler.CompressionScheduler";
 
   public static final String SMART_HADOOP_LAST_INOTIFY_TXID =
     "smart_hadoop_last_inotify_txid";
@@ -42,4 +43,6 @@ public class SmartConstants {
     "/tmp/SMART_CLIENT_DISABLED_ID_FILE";
 
   public static final String NUMBER_OF_SMART_AGENT = "number_of_smart_agent_in_agents_file";
+
+  public static final String SMART_SERVER_ID_FILE = "/system/ssm.id";
 }

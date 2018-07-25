@@ -39,7 +39,6 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.SystemInfo;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,7 +84,8 @@ public class InotifyEventFetcher {
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
-    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service);
+    // use independent thread pool
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, null);
     this.conf = new SmartConf();
   }
 
@@ -98,15 +98,25 @@ public class InotifyEventFetcher {
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
     this.conf = conf;
-    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, service,conf);
+    this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, null, conf);
   }
 
   public void start() throws IOException {
-    Long lastTxid = getLastTxid();
-    if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
-      startFromLastTxid(lastTxid);
+    boolean ignore = conf.getBoolean(
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_KEY,
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT);
+    if (!ignore) {
+      Long lastTxid = getLastTxid();
+      if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
+        startFromLastTxid(lastTxid);
+      } else {
+        startWithFetchingNameSpace();
+      }
     } else {
-      startWithFetchingNameSpace();
+      long id = client.getNamenode().getCurrentEditLogTxid();
+      LOG.warn("NOTE: Incomplete iNotify event may cause unpredictable consequences. "
+          + "This should only be used for testing.");
+      startFromLastTxid(id);
     }
   }
 
@@ -171,7 +181,7 @@ public class InotifyEventFetcher {
   private class NameSpaceFetcherCallBack implements FutureCallback<Object> {
 
     @Override
-    public void onSuccess(@Nullable Object o) {
+    public void onSuccess(Object o) {
       inotifyFetchFuture.cancel(false);
       nameSpaceFetcher.stop();
       try {

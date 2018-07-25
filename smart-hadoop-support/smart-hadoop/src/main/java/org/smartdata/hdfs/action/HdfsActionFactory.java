@@ -26,13 +26,17 @@ public class HdfsActionFactory extends AbstractActionFactory {
 
   static {
     addAction(AllSsdFileAction.class);
+    addAction(AllDiskFileAction.class);
     addAction(OneSsdFileAction.class);
+    addAction(OneDiskFileAction.class);
+    addAction(RamDiskFileAction.class);
     addAction(ArchiveFileAction.class);
     addAction(CacheFileAction.class);
     addAction(UncacheFileAction.class);
     addAction(ReadFileAction.class);
     addAction(WriteFileAction.class);
     addAction(CheckStorageAction.class);
+    addAction(SetXAttrAction.class);
 //    addAction("stripec", StripErasureCodeFileAction.class);
 //    addAction("blockec", BlockErasureCodeFileAction.class);
     addAction(CopyFileAction.class);
@@ -45,6 +49,7 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(MetaDataAction.class);
     addAction(Copy2S3Action.class);
     addAction(CompressionAction.class);
+    addAction(Truncate0Action.class);
 //    addAction("list", ListFileAction.class);
 //    addAction("fsck", FsckAction.class);
 //    addAction("diskbalance", DiskBalanceAction.class);

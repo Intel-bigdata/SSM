@@ -37,11 +37,23 @@ public class SmartConfKeys {
 
   public static final String SMART_DFS_NAMENODE_RPCSERVER_KEY = "smart.dfs.namenode.rpcserver";
 
-  // confKeys for alluxio
+  // Configure keys for HDFS
+  public static final String SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_KEY =
+      "smart.namespace.fetcher.ignore.unsuccessive.inotify.event";
+  public static final boolean SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT =
+      false;
+  public static final String SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_KEY =
+      "smart.namespace.fetcher.producers.num";
+  public static final int SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_DEFAULT = 3;
+  public static final String SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_KEY =
+      "smart.namespace.fetcher.consumers.num";
+  public static final int SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_DEFAULT = 3;
+
+  // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
   public static final String SMART_ALLUXIO_CONF_DIR_KEY = "smart.alluxio.conf.dir";
 
-  //ssm
+  // SSM
   public static final String SMART_SERVER_RPC_ADDRESS_KEY = "smart.server.rpc.address";
   public static final String SMART_SERVER_RPC_ADDRESS_DEFAULT = "0.0.0.0:7042";
   public static final String SMART_SERVER_RPC_HANDLER_COUNT_KEY = "smart.server.rpc.handler.count";
@@ -88,10 +100,29 @@ public class SmartConfKeys {
       "smart.cmdlet.hist.max.record.lifetime";
   public static final String SMART_CMDLET_HIST_MAX_RECORD_LIFETIME_DEFAULT =
       "30day";
+  public static final String SMART_CMDLET_CACHE_BATCH =
+      "smart.cmdlet.cache.batch";
+  public static final int SMART_CMDLET_CACHE_BATCH_DEFAULT =
+      600;
+
+  // Schedulers
+  public static final String SMART_COPY_SCHEDULER_BASE_SYNC_BATCH =
+      "smart.copy.scheduler.base.sync.batch";
+  public static final int SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT =
+      500;
+
+  // Dispatcher
+  public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =
+      "smart.cmdlet.dispatcher.log.disp.result";
+  public static final boolean SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT = true;
+  public static final String SMART_CMDLET_DISPATCHERS_KEY = "smart.cmdlet.dispatchers";
+  public static final int SMART_CMDLET_DISPATCHERS_DEFAULT = 3;
 
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
   public static final long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
+  public static final String SMART_ACTION_COPY_THROTTLE_MB_KEY = "smart.action.copy.throttle.mb";
+  public static final long SMART_ACTION_COPY_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
   public static final String SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY =
     "smart.action.local.execution.disabled";
   public static final boolean SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT = false;
@@ -115,6 +146,17 @@ public class SmartConfKeys {
    * Directories are separated with ','.
    */
   public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
+
+  // Target cluster
+  public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =
+      "smart.storage.info.update.interval";
+  public static final int SMART_STORAGE_INFO_UPDATE_INTERVAL_DEFAULT = 60;
+  public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_KEY =
+      "smart.storage.info.sampling.intervals";
+  public static final String SMART_STORAGE_INFO_SAMPLING_INTERVALS_DEFAULT =
+      "60s,60;1hour,60;1day";
+  public static final String SMART_TOP_HOT_FILES_NUM_KEY = "smart.top.hot.files.num";
+  public static final int SMART_TOP_HOT_FILES_NUM_DEFAULT = 200;
 
   //Tidb
   public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";

@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,7 +28,6 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
-import org.smartdata.hdfs.CompatibilityHelper;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.Map;
-
+import java.util.EnumSet;
 /**
  * An action to copy a single file from src to destination.
  * If dest doesn't contains "hdfs" prefix, then destination will be set to
@@ -45,14 +45,15 @@ import java.util.Map;
 @ActionSignature(
     actionId = "copy2s3",
     displayName = "copy2s3",
-    usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST_PATH +
-        " $dest "
+    usage = HdfsAction.FILE_PATH + " $src " + Copy2S3Action.DEST +
+        " $dest " + Copy2S3Action.BUF_SIZE + " $size"
 )
 public class Copy2S3Action extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CopyFileAction.class);
   public static final String BUF_SIZE = "-bufSize";
-  public static final String DEST_PATH = "-dest";
+  public static final String SRC = HdfsAction.FILE_PATH;
+  public static final String DEST = "-dest";
   private String srcPath;
   private String destPath;
   private int bufferSize = 64 * 1024;
@@ -71,8 +72,8 @@ public class Copy2S3Action extends HdfsAction {
     }
     super.init(args);
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(DEST_PATH)) {
-      this.destPath = args.get(DEST_PATH);
+    if (args.containsKey(DEST)) {
+      this.destPath = args.get(DEST);
     }
     if (args.containsKey(BUF_SIZE)) {
       bufferSize = Integer.valueOf(args.get(BUF_SIZE));
@@ -97,7 +98,9 @@ public class Copy2S3Action extends HdfsAction {
         String.format("Copy from %s to %s", srcPath, destPath));
     copySingleFile(srcPath, destPath);
     appendLog("Copy Successfully!!");
-  }
+    setXAttribute(srcPath, destPath);
+    appendLog("SetXattr Successfully!!");
+}
 
   private long getFileSize(String fileName) throws IOException {
     if (fileName.startsWith("hdfs")) {
@@ -109,6 +112,14 @@ public class Copy2S3Action extends HdfsAction {
     }
   }
 
+  private boolean setXAttribute(String src, String dest) throws IOException {
+
+    String name = "user.coldloc";
+    dfsClient.setXAttr(srcPath, name, dest.getBytes(), EnumSet.of(XAttrSetFlag.CREATE,XAttrSetFlag.REPLACE) );
+    appendLog(" SetXattr feature is set - srcPath  " + srcPath + "destination" + dest.getBytes() );
+    return true; 
+  }
+
   private boolean copySingleFile(String src, String dest) throws IOException {
     //get The file size of source file
     InputStream in = null;
@@ -116,7 +127,8 @@ public class Copy2S3Action extends HdfsAction {
 
     try {
       in = getSrcInputStream(src);
-      out = CompatibilityHelperLoader.getHelper().getS3outputStream(dest,conf);
+      out = CompatibilityHelperLoader
+          .getHelper().getS3outputStream(dest, conf);
       byte[] buf = new byte[bufferSize];
       long bytesRemaining = getFileSize(src);
 

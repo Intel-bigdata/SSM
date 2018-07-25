@@ -172,6 +172,15 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
           }]
         }
       })
+      .when('/node/info', {
+        templateUrl: 'app/dashboard/views/cluster/nodeinfo/nodes.html',
+        controller: 'NodesCtrl',
+        resolve: {
+          nodes0: ['models', function (models) {
+            return models.$get.nodes();
+          }]
+        }
+      })
       .when('/jobmanager', {
         templateUrl: 'app/jobmanager/jobmanager.html',
         controller: 'JobmanagerCtrl'
@@ -202,22 +211,8 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         controller: 'SearchResultCtrl'
       })
       .when('/storage', {
-        templateUrl: 'app/dashboard/views/cluster/storage/storage.html',
-        controller: 'StorageCtrl',
-        resolve: {
-          cache: ['models', function (models) {
-            return models.$get.storageUsage('cache');
-          }],
-          ssd: ['models', function (models) {
-            return models.$get.storageUsage('ssd');
-          }],
-          disk: ['models', function (models) {
-            return models.$get.storageUsage('disk');
-          }],
-          archive: ['models', function (models) {
-            return models.$get.storageUsage('archive');
-          }]
-        }
+        templateUrl: 'app/dashboard/views/cluster/storage/storages.html',
+        controller: 'StoragesCtrl'
       })
       .otherwise({
         redirectTo: '/notebook'

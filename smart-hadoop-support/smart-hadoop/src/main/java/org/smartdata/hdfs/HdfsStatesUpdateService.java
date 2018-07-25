@@ -26,16 +26,20 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
+import org.smartdata.hdfs.metric.fetcher.StorageInfoSampler;
+import org.smartdata.hdfs.ruleplugin.CheckSsdRulePlugin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;
+import org.smartdata.model.rule.RulePluginManager;
+import org.smartdata.utils.SsmHostUtils;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URI;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -45,7 +49,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * Polls metrics and events from NameNode
  */
 public class HdfsStatesUpdateService extends StatesUpdateService {
-  private static final Path MOVER_ID_PATH = new Path("/system/mover.id");
+  private static final String MOVER_ID_PATH = "/system/mover.id";
   private volatile boolean inSafeMode;
   private DFSClient client;
   private ScheduledExecutorService executorService;
@@ -53,6 +57,8 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
   private CachedListFetcher cachedListFetcher;
   private DataNodeInfoFetcher dataNodeInfoFetcher;
   private FSDataOutputStream moverIdOutputStream;
+  private FSDataOutputStream ssmIdOutputStream;
+  private StorageInfoSampler storageInfoSampler;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(HdfsStatesUpdateService.class);
@@ -67,6 +73,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
    *
    * @return true if initialized successfully
    */
+  //@TODO: remove loadHadoopConf because it is done in Smart Server
   @Override
   public void init() throws IOException {
     LOG.info("Initializing ...");
@@ -75,20 +82,23 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     String hadoopConfPath = getContext().getConf()
         .get(SmartConfKeys.SMART_HADOOP_CONF_DIR_KEY);
     try {
-      HadoopUtil.loadHadoopConf(context.getConf(), hadoopConfPath);
+      HadoopUtil.loadHadoopConf(hadoopConfPath, conf);
     } catch (IOException e) {
       throw new IOException("Fail to load Hadoop configuration for : " + e.getMessage());
     }
     final URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     LOG.debug("Final Namenode URL:" + nnUri.toString());
+
+
     client = HadoopUtil.getDFSClient(nnUri, conf);
-    moverIdOutputStream = checkAndMarkRunning(nnUri, context.getConf());
+    checkAndCreateIdFiles(nnUri, context.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);
     this.cachedListFetcher = new CachedListFetcher(client, metaStore);
     this.inotifyEventFetcher = new InotifyEventFetcher(client,
         metaStore, executorService, new FetchFinishedCallBack(), context.getConf());
     this.dataNodeInfoFetcher = new DataNodeInfoFetcher(
         client, metaStore, executorService, context.getConf());
+    this.storageInfoSampler = new StorageInfoSampler(metaStore, conf);
     LOG.info("Initialized.");
   }
 
@@ -114,6 +124,8 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.inotifyEventFetcher.start();
     this.cachedListFetcher.start();
     this.dataNodeInfoFetcher.start();
+    this.storageInfoSampler.start();
+    RulePluginManager.addPlugin(new CheckSsdRulePlugin(metaStore));
     LOG.info("Started. ");
   }
 
@@ -123,8 +135,19 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     if (moverIdOutputStream != null) {
       try {
         moverIdOutputStream.close();
+        moverIdOutputStream = null;
       } catch (IOException e) {
         LOG.debug("Close 'mover' ID output stream error", e);
+        // ignore this
+      }
+    }
+
+    if (ssmIdOutputStream != null) {
+      try {
+        ssmIdOutputStream.close();
+        ssmIdOutputStream = null;
+      } catch (IOException e) {
+        LOG.debug("Close SSM ID output stream error", e);
         // ignore this
       }
     }
@@ -140,27 +163,61 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     if (dataNodeInfoFetcher != null) {
       dataNodeInfoFetcher.stop();
     }
+
+    if (storageInfoSampler != null) {
+      storageInfoSampler.stop();
+    }
     LOG.info("Stopped.");
   }
 
-  private FSDataOutputStream checkAndMarkRunning(URI namenodeURI, Configuration conf)
-      throws IOException {
+  private void checkAndCreateIdFiles(URI namenodeURI, Configuration conf) throws IOException {
     try {
-      DistributedFileSystem fs = (DistributedFileSystem) FileSystem.get(namenodeURI, conf);
-      if (fs.exists(MOVER_ID_PATH)) {
-        // try appending to it so that it will fail fast if another instance is
-        // running.
-        IOUtils.closeStream(fs.append(MOVER_ID_PATH));
-        fs.delete(MOVER_ID_PATH, true);
-      }
-      FSDataOutputStream fsout = fs.create(MOVER_ID_PATH, false);
-      fs.deleteOnExit(MOVER_ID_PATH);
-      fsout.writeBytes(InetAddress.getLocalHost().getHostName());
-      fsout.hflush();
-      return fsout;
-    } catch (Exception e) {
-      LOG.error("Unable to lock 'mover', please stop 'mover' first.");
+      moverIdOutputStream = checkAndMarkRunning(namenodeURI, conf, MOVER_ID_PATH);
+      LOG.info("Mover ID file " + MOVER_ID_PATH + " created successfully.");
+    } catch (IOException e) {
+      LOG.error("Unable to create " + MOVER_ID_PATH + " in HDFS. "
+          + "Please check the permission or if it is being written by another instance.");
       throw e;
     }
+
+    try {
+      ssmIdOutputStream = checkAndMarkRunning(namenodeURI, conf,
+          SmartConstants.SMART_SERVER_ID_FILE);
+      LOG.info("Smart server ID file " + SmartConstants.SMART_SERVER_ID_FILE
+          + " created successfully.");
+    } catch (IOException e) {
+      LOG.error("Unable to create SSM ID file: " + SmartConstants.SMART_SERVER_ID_FILE
+          + " in HDFS. Please check the permission or if it is being written by "
+          + "another instance.");
+      try {
+        moverIdOutputStream.close();
+        moverIdOutputStream = null;
+      } catch (IOException ie) {
+        // ignore this one
+      }
+      throw e;
+    }
+  }
+
+  private FSDataOutputStream checkAndMarkRunning(URI namenodeURI, Configuration conf, String filePath)
+      throws IOException {
+    Path path = new Path(filePath);
+    DistributedFileSystem fs = (DistributedFileSystem) FileSystem.get(namenodeURI, conf);
+    if (fs.exists(path)) {
+      // try appending to it so that it will fail fast if another instance is
+      // running.
+      IOUtils.closeStream(fs.append(path));
+      fs.delete(path, true);
+    }
+    FSDataOutputStream fsout = fs.create(path, false);
+    try {
+      fs.deleteOnExit(path);
+      fsout.writeBytes(SsmHostUtils.getHostNameOrIp());
+      fsout.hflush();
+    } catch (IOException e) {
+      fsout.close();
+      throw e;
+    }
+    return fsout;
   }
 }

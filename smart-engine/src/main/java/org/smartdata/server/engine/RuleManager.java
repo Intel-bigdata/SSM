@@ -37,6 +37,7 @@ import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
+import org.smartdata.server.engine.rule.FileCopy2S3Plugin;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
 import org.smartdata.server.engine.rule.RuleExecutor;
 import org.smartdata.server.engine.rule.RuleInfoRepo;
@@ -81,6 +82,7 @@ public class RuleManager extends AbstractService {
     this.metaStore = context.getMetaStore();
 
     RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
+    RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
   }
 
   /**
@@ -134,7 +136,7 @@ public class RuleManager extends AbstractService {
 
   private void doCheckActions(CmdletDescriptor cd) throws IOException {
     String error = "";
-    for (int i = 0; i < cd.actionSize(); i++) {
+    for (int i = 0; i < cd.getActionSize(); i++) {
       if (!ActionRegistry.registeredAction(cd.getActionName(i))) {
         error += "Action '" + cd.getActionName(i) + "' not supported.\n";
       }
@@ -209,7 +211,10 @@ public class RuleManager extends AbstractService {
       if (ruleInfo.getState() != RuleState.DELETED) {
         if (ruleInfo.getRuleText().contains("allssd")
             || ruleInfo.getRuleText().contains("onessd")
-            || ruleInfo.getRuleText().contains("archive")) {
+            || ruleInfo.getRuleText().contains("archive")
+            || ruleInfo.getRuleText().contains("alldisk")
+            || ruleInfo.getRuleText().contains("onedisk")
+            || ruleInfo.getRuleText().contains("ramdisk")) {
           DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
           List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
           cmdletInfos = cmdletManager.listCmdletsInfo(ruleInfo.getId());

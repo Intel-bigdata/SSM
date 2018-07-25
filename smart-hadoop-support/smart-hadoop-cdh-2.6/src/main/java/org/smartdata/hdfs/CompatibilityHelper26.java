@@ -35,7 +35,6 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
-import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
 
@@ -158,49 +157,6 @@ public class CompatibilityHelper26 implements CompatibilityHelper {
     // Copy to s3
     org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
     return fs.create(new Path(dest), true);
-  }
-
-  @Override
-  public boolean setLen2Zero(DFSClient client, String src) throws IOException {
-    //Delete file and create file
-    //save the metadata
-    HdfsFileStatus fileStatus = client.getFileInfo(src);
-
-    //delete file
-    client.delete(src, true);
-    //create file
-    client.create(src, true);
-    //set metadata
-    client.setOwner(src, fileStatus.getOwner(), fileStatus.getGroup());
-    client.setPermission(src, fileStatus.getPermission());
-    client.setReplication(src, fileStatus.getReplication());
-    // TODO set Storagepolicy
-    client.setStoragePolicy(src, "Hot");
-    // client.setTimes(src, fileStatus.getAccessTime(), client.getFileInfo(src).getModificationTime());
-
-    return true;
-  }
-
-  @Override
-  public boolean setLen2Zero(DistributedFileSystem fileSystem, String src) throws IOException {
-    //Delete file and create file
-    //save the metadata
-    FileStatus fileStatus = fileSystem.getFileStatus(new Path(src));
-
-    //delete file
-    fileSystem.delete(new Path(src), true);
-    //create file
-    fileSystem.create(new Path(src), true);
-    //set metadata
-    fileSystem.setOwner(new Path(src), fileStatus.getOwner(), fileStatus.getGroup());
-    fileSystem.setPermission(new Path(src), fileStatus.getPermission());
-    fileSystem.setReplication(new Path(src), fileStatus.getReplication());
-    // TODO set Storagepolicy
-    fileSystem.setStoragePolicy(new Path(src), "Hot");
-    // fileSystem.setTimes(new Path(src), fileStatus.getAccessTime(),
-    //     fileSystem.getFileStatus(new Path(src)).getModificationTime());
-
-    return true;
   }
 
   @Override

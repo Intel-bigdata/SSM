@@ -47,6 +47,9 @@ public class SmartRuleStringParser {
     optCond.put("allssd", "storagePolicy != \"ALL_SSD\"");
     optCond.put("onessd", "storagePolicy != \"ONE_SSD\"");
     optCond.put("archive", "storagePolicy != \"COLD\"");
+    optCond.put("alldisk", "storagePolicy != \"HOT\"");
+    optCond.put("onedisk", "storagePolicy != \"WARM\"");
+    optCond.put("ramdisk", "storagePolicy != \"LAZY_PERSIST\"");
     optCond.put("cache", "not inCache");
     optCond.put("uncache", "inCache");
     optCond.put("sync", "unsynced");
@@ -79,11 +82,11 @@ public class SmartRuleStringParser {
   public TranslateResult translate() throws IOException {
     TranslateResult tr = doTranslate(rule);
     CmdletDescriptor cmdDes = tr.getCmdDescriptor();
-    if (cmdDes.actionSize() == 0) {
+    if (cmdDes.getActionSize() == 0) {
       throw new IOException("No cmdlet specified in Rule");
     }
     String actName = cmdDes.getActionName(0);
-    if (cmdDes.actionSize() != 1 || optCond.get(actName) == null) {
+    if (cmdDes.getActionSize() != 1 || optCond.get(actName) == null) {
       return tr;
     }
     int[] condPosition = tr.getCondPosition();

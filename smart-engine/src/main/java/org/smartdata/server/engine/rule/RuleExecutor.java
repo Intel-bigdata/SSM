@@ -95,7 +95,7 @@ public class RuleExecutor implements Runnable {
       String paraName = m.groupCount() == 2 ? m.group(2) : null;
       List<Object> params = tr.getParameter(paraName);
       String value = callFunction(funcName, params);
-      ret = ret.replace(rep, value);
+      ret = ret.replace(rep, value == null ? "" : value);
     }
     return ret;
   }
@@ -112,7 +112,10 @@ public class RuleExecutor implements Runnable {
         if (index == tr.getRetSqlIndex()) {
           ret = adapter.executeFilesPathQuery(sql);
         } else {
-          adapter.execute(sql);
+          sql = sql.trim();
+          if (sql.length() > 5) {
+            adapter.execute(sql);
+          }
         }
         index++;
       } catch (MetaStoreException e) {
@@ -141,6 +144,23 @@ public class RuleExecutor implements Runnable {
       LOG.error("Rule " + ctx.getRuleId() + " exception when call " + funcName, e);
       return null;
     }
+  }
+
+  public String genVirtualAccessCountTableTopValue(List<Object> parameters) {
+    List<Object> paraList = (List<Object>) parameters.get(0);
+    String table = (String) parameters.get(1);
+    String var = (String) parameters.get(2);
+    Long num = (Long) paraList.get(1);
+    String sql0 = "SELECT min(count) FROM ( SELECT * FROM " + table
+        + " ORDER BY count LIMIT " + num + ") AS " + table + "_TMP;";
+    Long count = null;
+    try {
+      count = adapter.queryForLong(sql0);
+    } catch (MetaStoreException e) {
+      LOG.error("Get top access count from table '" + table + "' error.", e);
+    }
+    ctx.setProperty(var, count == null ? 0L : count);
+    return null;
   }
 
   public String genVirtualAccessCountTable(List<Object> parameters) {
@@ -229,6 +249,7 @@ public class RuleExecutor implements Runnable {
 
   @Override
   public void run() {
+    long startCheckTime = System.currentTimeMillis();
     if (exited) {
       exitSchedule();
     }
@@ -237,7 +258,6 @@ public class RuleExecutor implements Runnable {
 
     long rid = ctx.getRuleId();
     try {
-      long startCheckTime = System.currentTimeMillis();
       if (ruleManager.isClosed()) {
         exitSchedule();
       }
@@ -265,13 +285,21 @@ public class RuleExecutor implements Runnable {
       }
       TimeBasedScheduleInfo scheduleInfo = tr.getTbScheduleInfo();
 
-      if (scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER
-          // TODO: tricky here, time passed
-          && startCheckTime - scheduleInfo.getEndTime() > 0) {
-        // TODO: special for scheduleInfo.isOneShot()
-        LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed or finished");
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
-        exitSchedule();
+      if (!scheduleInfo.isOnce() && scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER) {
+        boolean befExit = false;
+        if (scheduleInfo.isOneShot()) {
+          if (scheduleInfo.getSubScheduleTime() > scheduleInfo.getStartTime()) {
+            befExit = true;
+          }
+        } else if (startCheckTime - scheduleInfo.getEndTime() > 0) {
+          befExit = true;
+        }
+
+        if (befExit) {
+          LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed");
+          ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+          exitSchedule();
+        }
       }
 
       if (doExec) {
@@ -288,13 +316,9 @@ public class RuleExecutor implements Runnable {
         numCmdSubmitted = submitCmdlets(info, files);
       }
       ruleManager.updateRuleInfo(rid, null, System.currentTimeMillis(), 1, numCmdSubmitted);
-      if (exited) {
-        exitSchedule();
-      }
-      // System.out.println(this + " -> " + System.currentTimeMillis());
-      long endProcessTime = System.currentTimeMillis();
 
-      if (endProcessTime - startCheckTime > 3000 || LOG.isDebugEnabled()) {
+      long endProcessTime = System.currentTimeMillis();
+      if (endProcessTime - startCheckTime > 2000 || LOG.isDebugEnabled()) {
         LOG.warn(
             "Rule "
                 + ctx.getRuleId()
@@ -304,9 +328,25 @@ public class RuleExecutor implements Runnable {
                 + (endCheckTime - startCheckTime)
                 + "ms, SubmitTime = "
                 + (endProcessTime - endCheckTime)
-                + "ms.");
+                + "ms, fileNum = "
+                + numCmdSubmitted
+                + ".");
       }
 
+      if (scheduleInfo.isOneShot()) {
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+        exitSchedule();
+      }
+
+      if (endProcessTime + scheduleInfo.getEvery() > scheduleInfo.getEndTime()) {
+        LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to finished");
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+        exitSchedule();
+      }
+
+      if (exited) {
+        exitSchedule();
+      }
     } catch (IOException e) {
       LOG.error("Rule " + ctx.getRuleId() + " exception", e);
     }

@@ -21,7 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.Utilization;
+import org.smartdata.server.cluster.NodeInfo;
+import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
@@ -34,7 +37,10 @@ import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 public class SmartEngine extends AbstractService {
   private ConfManager confMgr;
@@ -140,5 +146,45 @@ public class SmartEngine extends AbstractService {
 
   public Utilization getUtilization(String resourceName) throws IOException {
     return getStatesManager().getStorageUtilization(resourceName);
+  }
+
+  public List<Utilization> getHistUtilization(String resourceName, long granularity,
+      long begin, long end) throws IOException {
+    long now = System.currentTimeMillis();
+    if (begin == end && Math.abs(begin - now) <= 5) {
+      return Arrays.asList(getUtilization(resourceName));
+    }
+
+    List<StorageCapacity> cs = serverContext.getMetaStore().getStorageHistoryData(
+        resourceName, granularity, begin, end);
+    List<Utilization> us = new ArrayList<>(cs.size());
+    for (StorageCapacity c : cs) {
+      us.add(new Utilization(c.getTimeStamp(), c.getCapacity(), c.getUsed()));
+    }
+    return us;
+  }
+
+  private List<Utilization> getFackData(String resourceName, long granularity,
+      long begin, long end) {
+    List<Utilization> utils = new ArrayList<>();
+    long ts = begin;
+    if (ts % granularity != 0) {
+      ts += granularity;
+      ts = (ts / granularity) * granularity;
+    }
+    Random rand = new Random(ts);
+
+    for (; ts <= end; ts += granularity) {
+      utils.add(new Utilization(ts, 100, rand.nextInt(100)));
+    }
+    return utils;
+  }
+
+  public List<NodeInfo> getSsmNodesInfo() {
+    List<NodeInfo> ret = new LinkedList<>();
+    ret.addAll(Arrays.asList(ActiveServerInfo.getInstance()));
+    ret.addAll(getStandbyServers());
+    ret.addAll(getAgents());
+    return ret;
   }
 }

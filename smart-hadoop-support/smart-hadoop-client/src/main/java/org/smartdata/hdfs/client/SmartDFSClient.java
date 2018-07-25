@@ -30,6 +30,8 @@ import org.smartdata.SmartConstants;
 import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
+import org.smartdata.model.FileState.FileStage;
+import org.smartdata.model.FileState.FileType;
 
 import java.io.File;
 import java.io.IOException;
@@ -126,10 +128,15 @@ public class SmartDFSClient extends DFSClient {
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum)
       throws IOException, UnresolvedLinkException {
-    FileState fileState = smartClient.getFileState(src);
-    if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
-      throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
-          + fileState.getFileType());
+    FileState fileState;
+    if (healthy) { // TODO: required indeed
+      fileState = smartClient.getFileState(src);
+      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
+        throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
+            + fileState.getFileType());
+      }
+    } else {
+      fileState = new FileState(src, FileType.NORMAL, FileStage.DONE);
     }
     DFSInputStream is = SmartInputStreamFactory.get().create(this, src,
         verifyChecksum, fileState);

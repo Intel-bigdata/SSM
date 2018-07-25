@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.scheduler;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -27,6 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.action.SyncAction;
+import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -81,13 +84,16 @@ public class CopyScheduler extends ActionSchedulerService {
   // Check interval of executorService
   private long checkInterval = 150;
   // Base sync batch insert size
-  private int batchSize = 300;
+  private int batchSize = 500;
   // Cache of the file_diff
   private Map<Long, FileDiff> fileDiffCache;
-  // cache sync threshold, default 50
-  private int cacheSyncTh = 50;
+  // cache sync threshold, default 100
+  private int cacheSyncTh = 100;
   // record the file_diff whether being changed
   private Map<Long, Boolean> fileDiffCacheChanged;
+  // throttle for copy action
+  private long throttleInMb;
+  private RateLimiter rateLimiter = null;
 
 
   public CopyScheduler(SmartContext context, MetaStore metaStore) {
@@ -102,12 +108,21 @@ public class CopyScheduler extends ActionSchedulerService {
     this.executorService = Executors.newSingleThreadScheduledExecutor();
     try {
       conf = getContext().getConf();
+      cacheSyncTh = conf.getInt(SmartConfKeys
+          .SMART_COPY_SCHEDULER_BASE_SYNC_BATCH,
+          SmartConfKeys.SMART_COPY_SCHEDULER_BASE_SYNC_BATCH_DEFAULT);
     } catch (NullPointerException e) {
       // SmartContext is empty
       conf = new Configuration();
     }
     this.fileDiffCache = new ConcurrentHashMap<>();
     this.fileDiffCacheChanged = new ConcurrentHashMap<>();
+
+    throttleInMb = conf.getLong(SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_KEY,
+        SmartConfKeys.SMART_ACTION_COPY_THROTTLE_MB_DEFAULT);
+    if (throttleInMb > 0) {
+      rateLimiter = RateLimiter.create(throttleInMb);
+    }
   }
 
   @Override
@@ -116,7 +131,7 @@ public class CopyScheduler extends ActionSchedulerService {
       return ScheduleResult.FAIL;
     }
     String srcDir = action.getArgs().get(SyncAction.SRC);
-    String path = action.getArgs().get("-file");
+    String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String destDir = action.getArgs().get(SyncAction.DEST);
     // Check again to avoid corner cases
     long did = fileDiffChainMap.get(path).getHead();
@@ -138,14 +153,28 @@ public class CopyScheduler extends ActionSchedulerService {
       case APPEND:
         action.setActionType("copy");
         action.getArgs().put("-dest", path.replace(srcDir, destDir));
+        if (rateLimiter != null) {
+          String strLen = fileDiff.getParameters().get("-length");
+          if (strLen != null) {
+            int appendLen = (int)(Long.valueOf(strLen) >> 20);
+            if (appendLen > 0) {
+              if (!rateLimiter.tryAcquire(appendLen)) {
+                if (LOG.isDebugEnabled()) {
+                  LOG.debug("Cancel Scheduling COPY action {} due to throttling.", actionInfo);
+                }
+                return ScheduleResult.RETRY;
+              }
+            }
+          }
+        }
         break;
       case DELETE:
         action.setActionType("delete");
-        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
         break;
       case RENAME:
         action.setActionType("rename");
-        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
         // TODO scope check
         String remoteDest = fileDiff.getParameters().get("-dest");
         action.getArgs().put("-dest", remoteDest.replace(srcDir, destDir));
@@ -153,7 +182,7 @@ public class CopyScheduler extends ActionSchedulerService {
         break;
       case METADATA:
         action.setActionType("metadata");
-        action.getArgs().put("-file", path.replace(srcDir, destDir));
+        action.getArgs().put(HdfsAction.FILE_PATH, path.replace(srcDir, destDir));
         break;
       default:
         break;
@@ -165,13 +194,14 @@ public class CopyScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
+  @Override
   public List<String> getSupportedActions() {
     return actions;
   }
   
   private boolean isFileLocked(String path) {
     if(fileLock.size() == 0) {
-      LOG.info("Lock is empty");
+      LOG.debug("File Lock is empty. Current path = {}", path);
     }
     if (fileLock.containsKey(path)) {
       // File is locked
@@ -194,7 +224,7 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
-    String path = actionInfo.getArgs().get("-file");
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     LOG.debug("Submit file {} with lock {}", path, fileLock.keySet());
     // If locked then false
     if (!isFileLocked(path)) {
@@ -309,7 +339,7 @@ public class CopyScheduler extends ActionSchedulerService {
         }
       }
     } catch (IOException e) {
-      LOG.error("Fetch remote file list error!", e);
+      LOG.debug("Fetch remote file list error!", e);
     }
     if (returnStatus.size() == 0) {
       return new FileStatus[0];
@@ -320,7 +350,9 @@ public class CopyScheduler extends ActionSchedulerService {
   private void baseSync(String srcDir,
       String destDir) throws MetaStoreException {
     List<FileInfo> srcFiles = metaStore.getFilesByPrefix(srcDir);
-    LOG.debug("Directory Base Sync {} files", srcFiles.size());
+    if (srcFiles.size() > 0) {
+      LOG.info("Directory Base Sync {} files", srcFiles.size());
+    }
     // <file name, fileInfo>
     Map<String, FileInfo> srcFileSet = new HashMap<>();
     for (FileInfo fileInfo : srcFiles) {
@@ -547,6 +579,11 @@ public class CopyScheduler extends ActionSchedulerService {
 
   @Override
   public void stop() throws IOException {
+    try {
+      batchDirectSync();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
+    }
     executorService.shutdown();
   }
 

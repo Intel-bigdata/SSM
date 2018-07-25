@@ -19,8 +19,8 @@
 angular.module('zeppelinWebApp')
 
   .controller('ActionsCtrl', ActionsCtrl);
-  ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf'];
-  function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf) {
+  ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
+  function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
     $scope.pageNumber = 10;
     $scope.totalNumber = 0;
     $scope.actions;
@@ -42,6 +42,7 @@ angular.module('zeppelinWebApp')
             $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
           data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
             $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+          data.progress = Math.round(data.progress * 100);
           data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
         });
         $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
@@ -67,7 +68,11 @@ angular.module('zeppelinWebApp')
 
     getActions();
 
-    setInterval(function(){
-      $scope.$apply(getActions());
-    },10000);
+    var timer = $interval(function(){
+      getActions();
+    },5000);
+
+    $scope.$on('$destroy',function(){
+      $interval.cancel(timer);
+    });
   }

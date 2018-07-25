@@ -39,6 +39,10 @@ public class FileObject extends SmartObject {
         new Property("accessCount", ValueType.LONG,
             Arrays.asList(ValueType.TIMEINTVAL),
             "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
+    PROPERTIES.put("accessCountTop",
+        new Property("accessCountTop", ValueType.LONG,
+            Arrays.asList(ValueType.TIMEINTVAL, ValueType.LONG),
+            "VIRTUAL_ACCESS_COUNT_TABLE", "", false, "count"));
     PROPERTIES.put("length",
         new Property("length", ValueType.LONG,
             null, "file", "length", false));
@@ -66,6 +70,9 @@ public class FileObject extends SmartObject {
         new Property("unsynced", ValueType.BOOLEAN,
             null, "file_diff", null, false,
             "state = 0"));
+    PROPERTIES.put("isDir",
+        new Property("isDir", ValueType.BOOLEAN,
+            null, "file", "is_dir", false));
   }
 
   public FileObject() {

@@ -31,6 +31,7 @@ import './app/visualization/builtins/visualization-piechart.js';
 import './app/visualization/builtins/visualization-areachart.js';
 import './app/visualization/builtins/visualization-linechart.js';
 import './app/visualization/builtins/visualization-scatterchart.js';
+import './app/visualization/builtins/storage-areachart.js';
 /** end: global variable `zeppelin` related files */
 
 import './app/credential/credential.controller.js';
@@ -71,6 +72,8 @@ import './app/dashboard/services/models/models.js';
 import './app/dashboard/views/cluster/cluster_hottestFiles.js';
 import './app/dashboard/views/cluster/cluster_fileInCache.js';
 import './app/dashboard/views/cluster/storage/storage.js';
+import './app/dashboard/views/cluster/nodeinfo/nodes.js';
+import './app/dashboard/views/cluster/storage/storages.js';
 import './app/dashboard/views/actions/actions.js';
 import './app/dashboard/views/actions/action/action.js';
 import './app/dashboard/views/actions/submit/submit.js';

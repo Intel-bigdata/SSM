@@ -5,10 +5,13 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.S3FileState;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
@@ -62,6 +65,12 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
     return 0;
   }
 
+  private boolean isOnS3(String fileName) {
+    return metaStore.getFileState(fileName)
+        .getFileType().getValue() == FileState.FileType.S3.getValue();
+  }
+
+  @Override
   public List<String> getSupportedActions() {
     return actions;
   }
@@ -73,31 +82,35 @@ public class Copy2S3Scheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) {
-    String path = actionInfo.getArgs().get("-file");
-    if (checkTheLengthOfFile(path) == 0) {
-      LOG.info("The submit file {}'s length is 0", path);
-      return false;
-    }
-
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (ifLocked(path)) {
-      LOG.info("The submit file {} is locked", path);
+      LOG.debug("The submit file {} is locked", path);
       return false;
     }
-
+    if (checkTheLengthOfFile(path) == 0) {
+      LOG.debug("The submit file {}'s length is 0", path);
+      return false;
+    }
+    if (isOnS3(path)) {
+      LOG.debug("The submit file {} is already copied", path);
+      return false;
+    }
     lockTheFile(path);
-
-    LOG.info("The file {} can be submited", path);
+    LOG.debug("The file {} can be submitted", path);
     return true;
   }
 
   @Override
   public void onActionFinished(ActionInfo actionInfo) {
-    String path = actionInfo.getArgs().get("-file");
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    if (actionInfo.isFinished() && actionInfo.isSuccessful()) {
+      // Insert fileState
+      metaStore.insertUpdateFileState(new S3FileState(path));
+    }
     // unlock filelock
     if (ifLocked(path)) {
       unLockTheFile(path);
-    } else {
-      LOG.info("The file {} has already unlocked", path);
+      LOG.debug("unlocked copy2s3 file {}", path);
     }
   }
 

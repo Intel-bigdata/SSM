@@ -31,6 +31,8 @@ public class TestSmartRuleStringParser {
   public void testRuleTranslate() throws Exception {
     List<String> rules = new LinkedList<>();
     rules.add("file : path matches \"/test/*\" | sync -dest \"hdfs://remotecluster:port/somedir\"");
+    rules.add("file : accessCount(10min) > accessCountTop(10min, 10) | sleep -ms 0");
+
     for (String rule : rules) {
       parseRule(rule);
     }

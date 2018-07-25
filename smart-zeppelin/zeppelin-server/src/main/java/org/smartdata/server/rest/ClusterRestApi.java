@@ -31,6 +31,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import java.util.List;
 
 /**
@@ -76,6 +77,8 @@ public class ClusterRestApi {
     }
   }
 
+  //TODO(Philo): Make topNum settable on web UI.
+  //Currently, topNum=0 means that SSM will use the value configured in smart-default.xml
   @GET
   @Path("/primary/hotfiles")
   public Response hotFiles() {
@@ -83,7 +86,7 @@ public class ClusterRestApi {
       List<AccessCountTable> tables =
           smartEngine.getStatesManager().getTablesInLast(Constants.ONE_HOUR_IN_MILLIS);
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getStatesManager().getHotFiles(tables, 20)).build();
+          smartEngine.getStatesManager().getHotFiles(tables, 0)).build();
     } catch (Exception e) {
       logger.error("Exception in ClusterRestApi while listing hot files", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
@@ -105,6 +108,49 @@ public class ClusterRestApi {
     }
   }
 
+  /**
+   *
+   * @param resourceName
+   * @param timeGranularity  Time interval of successive data points in milliseconds
+   * @param beginTs  Begin timestamp in milliseconds. If <=0 denotes the value related to 'endTs'
+   * @param endTs  Like 'beginTs'. If <= 0 denotes the time related to current server time.
+   * @return
+   */
+  @GET
+  @Path("/primary/hist_utilization/{resourceName}/{timeGranularity}/{beginTs}/{endTs}")
+  public Response utilization(@PathParam("resourceName") String resourceName,
+      @PathParam("timeGranularity") String timeGranularity,
+      @PathParam("beginTs") String beginTs,
+      @PathParam("endTs") String endTs) {
+    try {
+      long now = System.currentTimeMillis();
+      long granularity = Long.valueOf(timeGranularity);
+      if (granularity <= 0) {
+        return new JsonResponse<>(Status.BAD_REQUEST,
+            "Invalid time granularity, must larger than 0").build();
+      }
+      long tsEnd = Long.valueOf(endTs);
+      long tsBegin = Long.valueOf(beginTs);
+      if (tsEnd <= 0) {
+        tsEnd += now;
+      }
+      if (tsBegin <= 0) {
+        tsBegin += tsEnd;
+      }
+      if (tsBegin > tsEnd) {
+        return new JsonResponse<>(Status.BAD_REQUEST, "Invalid time range").build();
+      }
+
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getHistUtilization(resourceName, granularity, tsBegin, tsEnd)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while getting [" + resourceName
+          + "] utilization", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
   @GET
   @Path("/primary/fileinfo")
   public Response fileInfo(String path) {
@@ -113,6 +159,18 @@ public class ClusterRestApi {
           smartEngine.getStatesManager().getFileInfo(path)).build();
     } catch (Exception e) {
       logger.error("Exception in ClusterRestApi while listing hot files", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
+  @Path("/primary/ssmnodesinfo")
+  public Response ssmNodesInfo() {
+    try {
+      return new JsonResponse<>(Response.Status.OK, smartEngine.getSsmNodesInfo()).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while listing SSM nodes", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }

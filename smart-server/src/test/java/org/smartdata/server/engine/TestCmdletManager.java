@@ -65,7 +65,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
     CmdletDescriptor cmdletDescriptor = generateCmdletDescriptor();
     List<ActionInfo> actionInfos = ssm.getCmdletManager().createActionInfos(cmdletDescriptor, 0);
-    Assert.assertTrue(cmdletDescriptor.actionSize() == actionInfos.size());
+    Assert.assertTrue(cmdletDescriptor.getActionSize() == actionInfos.size());
   }
 
   @Test
@@ -173,11 +173,12 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
 
     cmdletManager.start();
     cmdletManager.submitCmdlet("hello");
-    verify(metaStore, times(1)).insertCmdlet(any(CmdletInfo.class));
-    verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
 
+    Thread.sleep(500);
     Assert.assertEquals(1, cmdletManager.getCmdletsSizeInCache());
-    Thread.sleep(1000);
+    verify(metaStore, times(1)).insertCmdlets(any(CmdletInfo[].class));
+    verify(metaStore, times(1)).insertActions(any(ActionInfo[].class));
+    Thread.sleep(500);
 
     long actionStartTime = System.currentTimeMillis();
     cmdletManager.updateStatus(new ActionStarted(actionId, actionStartTime));
@@ -203,7 +204,9 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     cmdletManager.updateStatus(
         new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.DONE));
     Assert.assertEquals(info.getState(), CmdletState.DONE);
-    Assert.assertEquals(0, cmdletManager.getCmdletsSizeInCache());
+    Thread.sleep(500);
+    verify(metaStore, times(2)).insertCmdlets(any(CmdletInfo[].class));
+    verify(metaStore, times(2)).insertActions(any(ActionInfo[].class));
 
     Assert.assertNull(cmdletManager.getCmdletInfo(cmdletId));
     Assert.assertNull(cmdletManager.getActionInfo(actionId));

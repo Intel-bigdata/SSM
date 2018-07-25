@@ -19,8 +19,8 @@
 angular.module('zeppelinWebApp')
 
   .controller('CopyActionsCtrl', CopyActionsCtrl);
-  CopyActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route'];
-  function CopyActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route) {
+  CopyActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$route', '$interval'];
+  function CopyActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $route, $interval) {
     $scope.pageNumber = 10;
     $scope.totalNumber = 0;
     $scope.copyActions;
@@ -42,6 +42,7 @@ angular.module('zeppelinWebApp')
               $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
             data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
               $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+            data.progress = Math.round(data.progress * 100);
             data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
           });
           $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
@@ -65,8 +66,12 @@ angular.module('zeppelinWebApp')
 
     getCopyActions();
 
-    setInterval(function(){
-      $scope.$apply(getCopyActions());
-    },10000);
+    var timer=$interval(function(){
+      getCopyActions();
+    },5000);
+
+    $scope.$on('$destroy',function(){
+      $interval.cancel(timer);
+    });
   }
 

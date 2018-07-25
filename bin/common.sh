@@ -49,12 +49,6 @@ if [[ -f "${SMART_CONF_DIR}/smart-env.sh" ]]; then
   . "${SMART_CONF_DIR}/smart-env.sh"
 fi
 
-if [ "$SMART_CLASSPATH" = "" ]; then
-  SMART_CLASSPATH="${SMART_CONF_DIR}"
-else
-  SMART_CLASSPATH+=":${SMART_CONF_DIR}"
-fi
-
 function get_smart_servers(){
   ORGSMARTSERVERS=
   export SERVERS_FILE="${SMART_CONF_DIR}/servers"
@@ -271,6 +265,13 @@ function smart_stop_daemon() {
   fi
 }
 
+function reorder_lib() {
+  local ajar="lib/jersey-core-1.9.jar"
+  if [ -f "${SMART_HOME}/${ajar}" ]; then
+    SMART_CLASSPATH="${SMART_HOME}/${ajar}:${SMART_CLASSPATH}"
+  fi
+}
+
 function init_command() {
   local subcmd=$1
   shift
@@ -282,13 +283,16 @@ function init_command() {
       ALLOW_DAEMON_OPT=true
       SMART_VARGS+=" -format"
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
     ;;
     smartserver)
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
+      reorder_lib
     ;;
     smartagent)
       SMART_CLASSNAME=org.smartdata.agent.SmartAgent
@@ -297,6 +301,7 @@ function init_command() {
       export SMART_LOG_FILE_NAME=${SMART_AGENT_LOG_FILE_NAME}
       export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_AGENT_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
     ;;
     getconf)

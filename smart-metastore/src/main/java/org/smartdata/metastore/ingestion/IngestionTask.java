@@ -20,39 +20,42 @@ package org.smartdata.metastore.ingestion;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileInfoBatch;
 
-import java.util.ArrayDeque;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class IngestionTask implements Runnable {
-  public static long numFilesFetched = 0L;
-  public static long numDirectoriesFetched = 0L;
-  public static long numPersisted = 0L;
+  public static AtomicLong numFilesFetched = new AtomicLong(0);
+  public static AtomicLong numDirectoriesFetched = new AtomicLong(0);
+  public static AtomicLong numPersisted = new AtomicLong(0);
 
   protected int defaultBatchSize = 20;
+  protected int maxPendingBatches = 80;
 
   protected static final String ROOT = "/";
   // Deque for Breadth-First-Search
-  protected ArrayDeque<String> deque;
+  protected static LinkedBlockingDeque<String> deque = new LinkedBlockingDeque<>();
   // Queue for outer-consumer to fetch file status
-  protected LinkedBlockingDeque<FileInfoBatch> batches;
+  protected static LinkedBlockingDeque<FileInfoBatch> batches = new LinkedBlockingDeque<>();
   protected FileInfoBatch currentBatch;
-  protected volatile boolean isFinished = false;
+  protected static volatile boolean isFinished = false;
 
   protected long lastUpdateTime = System.currentTimeMillis();
   protected long startTime = lastUpdateTime;
 
-  public IngestionTask() {
-    this.deque = new ArrayDeque<>();
-    this.batches = new LinkedBlockingDeque<>();
-    this.currentBatch = new FileInfoBatch(defaultBatchSize);
-    this.deque.add(ROOT);
-  }
-  public boolean finished() {
-    return this.isFinished;
+  static {
+    deque.add(ROOT);
   }
 
-  public FileInfoBatch pollBatch() {
-    return this.batches.poll();
+  public IngestionTask() {
+    this.currentBatch = new FileInfoBatch(defaultBatchSize);
+  }
+
+  public static boolean finished() {
+    return isFinished;
+  }
+
+  public static FileInfoBatch pollBatch() {
+    return batches.poll();
   }
 
   public void addFileStatus(FileInfo status) throws InterruptedException {
