@@ -65,7 +65,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public void testSubmitCompressionAction() throws Exception {
     waitTillSSMExitSafeMode();
 
-    initDB();
+    // initDB();
     int arraySize = 1024 * 1024 * 8;
     String fileName = "/ssm/compression/file1";
     byte[] bytes = prepareFile(fileName, arraySize);
@@ -110,7 +110,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public void testCompressEmptyFile() throws Exception {
     waitTillSSMExitSafeMode();
 
-    initDB();
+    // initDB();
     String fileName = "/ssm/compression/file1";
     prepareFile(fileName, 0);
     MetaStore metaStore = ssm.getMetaStore();
@@ -142,7 +142,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public void testCompressedFileRandomRead() throws Exception {
     waitTillSSMExitSafeMode();
 
-    initDB();
+    // initDB();
     int arraySize = 1024 * 1024 * 8;
     String fileName = "/ssm/compression/file1";
     byte[] bytes = prepareFile(fileName, arraySize);
@@ -230,6 +230,8 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         return;
       } else if (state == CmdletState.FAILED) {
         Assert.fail("Compression action failed.");
+      } else {
+        System.out.println(state);
       }
     }
   }
