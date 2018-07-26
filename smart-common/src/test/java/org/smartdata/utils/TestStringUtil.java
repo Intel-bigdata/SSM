@@ -17,25 +17,28 @@
  */
 package org.smartdata.utils;
 
+import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Test for StringUtil.
+ * Tests for StringUtil.
  */
 public class TestStringUtil {
 
   @Test
   public void testCmdletString() throws Exception {
-    List<String> strs = new ArrayList<>();
-    strs.add("int a b -c d -e f \"gg ' kk ' ff\" \" mn \"");
-    strs.add("cat /dir/file ");
+    Map<String, Integer> strs = new HashMap<>();
+    strs.put("int a b -c d -e f \"gg ' kk ' ff\" \" mn \"", 9);
+    strs.put("cat /dir/file ", 2);
 
     List<String> items;
-    for (String str : strs) {
+    for (String str : strs.keySet()) {
       items = StringUtil.parseCmdletString(str);
+      Assert.assertTrue(strs.get(str) == items.size());
       System.out.println(items.size() + " -> " + str);
     }
   }
