@@ -32,16 +32,19 @@ import java.util.Map;
  * An action to execute general command.
  *
  */
+// TODO: Add security restrictions
 @ActionSignature(
     actionId = "exec",
     displayName = "exec",
     usage = ExecAction.CMD + " $cmdString"
         + " [" + ExecAction.EXECDIR + " $executionDirectory" + "]"
+        + " [" + ExecAction.ENV + " $envKVs" + "]"
 )
 public class ExecAction extends SmartAction {
   public static final String CMD = "-cmd";
   public static final String EXECDIR = "-execdir";
-  public static final String ENV_PREFIX = "SSM";
+  public static final String ENV = "-env"; // multi-KVs separated with '|'
+  public static final String SSM_ENV_PREFIX = "SSMENV";
   private Map<String, String> env = new HashMap<>();
   private String cmdStr = "";
   private String execDir = "";
@@ -49,6 +52,8 @@ public class ExecAction extends SmartAction {
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
+    String key;
+    String value;
     for (String arg : args.keySet()) {
       switch (arg) {
         case CMD:
@@ -57,11 +62,41 @@ public class ExecAction extends SmartAction {
         case EXECDIR:
           execDir = args.get(arg);
           break;
+        case ENV:
+          value = args.get(ENV);
+          if (value == null || value.length() == 0) {
+            break;
+          }
+          env.putAll(parseEnvString(value));
+          break;
         default:
-          String key = ENV_PREFIX + (arg.startsWith("-") ? arg.replaceFirst("-", "_") : arg);
+          key = SSM_ENV_PREFIX + (arg.startsWith("-") ? arg.replaceFirst("-", "_") : arg);
           env.put(key, args.get(arg));
       }
     }
+  }
+
+  private Map<String, String> parseEnvString(String envStr) {
+    String[] items = envStr.split("\\|");
+    String key;
+    String temp;
+    Map<String, String> ret = new HashMap<>();
+    for (String it : items) {
+      int idx = it.indexOf("=");
+      if (idx != -1) {
+        key = it.substring(0, idx).trim();
+        if (it.length() == idx + 1) {
+          temp = "";
+        } else {
+          temp = it.substring(idx + 1, it.length());
+          temp = temp.replaceAll("\\s+$", "");
+        }
+        if (key.length() > 0) {
+          ret.put(key, temp);
+        }
+      }
+    }
+    return ret;
   }
 
   @Override
@@ -70,10 +105,15 @@ public class ExecAction extends SmartAction {
     if (cmdItems.size() == 0) {
       return;
     }
+
     ProcessBuilder builder = new ProcessBuilder(cmdItems);
     if (execDir != null && execDir.length() > 0) {
       builder.directory(new File(execDir));
     }
+
+    Map<String, String> envVars = builder.environment();
+    envVars.putAll(env);
+
     builder.redirectErrorStream(true);
     Process p = builder.start();
 
