@@ -224,7 +224,7 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    `http://Active_SSM_Server_IP:7045`
 
-   If you meet any problem, please open the smartserver.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
+   If you meet any problem, please open the smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
 ##  **Start Smart Agent independently**(optional)
 
@@ -571,7 +571,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
- All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
+ All logs will go to smartserver.$hostname-$user.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
@@ -587,7 +587,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
    Possible causes:
   
-   a. Cannot lock system mover locker. You may see something like follows in the smartserver.log file. Make sure there is no system mover running. Try to restart the SSM service will solve the problem.
+   a. Cannot lock system mover locker. You may see something like follows in the smartserver-$hostname-$user.log file. Make sure there is no system mover running. Try to restart the SSM service will solve the problem.
 
 ```
    2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...
