@@ -18,12 +18,13 @@
 package org.smartdata.model;
 
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * FileState.
  */
-public class FileState {
+public class FileState implements Serializable {
   protected String path;
   protected FileType fileType;
   protected FileStage fileStage;

@@ -23,7 +23,6 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -207,8 +206,16 @@ public class InotifyEventApplier {
     } else {
       ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
           renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') WHERE path = '%s';",
+          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') WHERE path = '%s';",
+          renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
       if (info.isdir()) {
         ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
+            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+        ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
+            renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
+        ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') WHERE path LIKE '%s/%%';",
             renameEvent.getSrcPath(), renameEvent.getDstPath(), renameEvent.getSrcPath()));
       }
     }
@@ -307,7 +314,9 @@ public class InotifyEventApplier {
       LOG.warn("Deleting root directory!!!");
       insertDeleteDiff(root, true);
       return Arrays.asList(
-          String.format("DELETE FROM file WHERE path like '%s%%'", root));
+          String.format("DELETE FROM file WHERE path like '%s%%'", root),
+          String.format("DELETE FROM file_state WHERE path like '%s%%'", root),
+          String.format("DELETE FROM small_file WHERE path like '%s%%'", root));
     }
     FileInfo fileInfo = metaStore.getFile(unlinkEvent.getPath());
     if (fileInfo == null) return Arrays.asList();
@@ -316,12 +325,18 @@ public class InotifyEventApplier {
       // delete all files in this dir from file table
       return Arrays.asList(
           String.format("DELETE FROM file WHERE path LIKE '%s/%%';", unlinkEvent.getPath()),
-          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()));
+          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()),
+          String.format("DELETE FROM file_state WHERE path LIKE '%s/%%';", unlinkEvent.getPath()),
+          String.format("DELETE FROM file_state WHERE path = '%s';", unlinkEvent.getPath()),
+          String.format("DELETE FROM small_file WHERE path LIKE '%s/%%';", unlinkEvent.getPath()),
+          String.format("DELETE FROM small_file WHERE path = '%s';", unlinkEvent.getPath()));
     } else {
       insertDeleteDiff(unlinkEvent.getPath(), false);
       // delete file in file table
       return Arrays.asList(
-          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()));
+          String.format("DELETE FROM file WHERE path = '%s';", unlinkEvent.getPath()),
+          String.format("DELETE FROM file_state WHERE path = '%s';", unlinkEvent.getPath()),
+          String.format("DELETE FROM small_file WHERE path = '%s';", unlinkEvent.getPath()));
     }
   }
 

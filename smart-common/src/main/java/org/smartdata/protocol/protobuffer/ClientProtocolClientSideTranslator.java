@@ -60,12 +60,12 @@ public class ClientProtocolClientSideTranslator implements
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
-    GetFileStateRequestProto  req = GetFileStateRequestProto.newBuilder()
+    GetFileStateRequestProto req = GetFileStateRequestProto.newBuilder()
         .setFilePath(filePath)
         .build();
     try {
       GetFileStateResponseProto response = rpcProxy.getFileState(null, req);
-      return ProtoBufferHelper.convert(response);
+      return ProtoBufferHelper.convert(response.getFileState());
     } catch (ServiceException e) {
       throw ProtoBufferHelper.getRemoteException(e);
     }

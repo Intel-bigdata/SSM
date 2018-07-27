@@ -242,7 +242,8 @@ public class SmartRpcServer implements SmartServerProtocols {
   }
 
   @Override
-  public void reportFileAccessEvent(FileAccessEvent event) throws IOException {
+  public void reportFileAccessEvent(FileAccessEvent event)
+      throws IOException {
     checkIfActive();
     ssm.getStatesManager().reportFileAccessEvent(event);
   }
@@ -260,6 +261,7 @@ public class SmartRpcServer implements SmartServerProtocols {
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
+    checkIfActive();
     try {
       return ssm.getMetaStore().getFileState(filePath);
     } catch (MetaStoreException e) {

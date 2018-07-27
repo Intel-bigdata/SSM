@@ -41,8 +41,8 @@ public class TestFileStateDao extends TestDaoUtil {
         FileState.FileStage.PROCESSING);
     FileState fileState2 = new FileState("/file2", FileState.FileType.COMPRESSION,
         FileState.FileStage.DONE);
-    fileStateDao.insertUpate(fileState1);
-    fileStateDao.insertUpate(fileState2);
+    fileStateDao.insertUpdate(fileState1);
+    fileStateDao.insertUpdate(fileState2);
     List<FileState> fileStates = fileStateDao.getAll();
     Assert.assertEquals(2, fileStates.size());
     Assert.assertEquals(fileState1, fileStateDao.getByPath("/file1"));
@@ -50,7 +50,7 @@ public class TestFileStateDao extends TestDaoUtil {
 
     fileState1 = new FileState("/file1", FileState.FileType.COMPACT,
         FileState.FileStage.DONE);
-    fileStateDao.insertUpate(fileState1);
+    fileStateDao.insertUpdate(fileState1);
     fileStates = fileStateDao.getAll();
     Assert.assertEquals(2, fileStates.size());
     Assert.assertEquals(fileState1, fileStateDao.getByPath("/file1"));
@@ -65,11 +65,11 @@ public class TestFileStateDao extends TestDaoUtil {
         FileState.FileStage.DONE);
     FileState fileState3 = new FileState("/file3", FileState.FileType.S3,
         FileState.FileStage.DONE);
-    fileStateDao.insertUpate(fileState1);
-    fileStateDao.insertUpate(fileState2);
-    fileStateDao.insertUpate(fileState3);
+    fileStateDao.insertUpdate(fileState1);
+    fileStateDao.insertUpdate(fileState2);
+    fileStateDao.insertUpdate(fileState3);
 
-    fileStateDao.deleteByPath(fileState1.getPath());
+    fileStateDao.deleteByPath(fileState1.getPath(), false);
     List<FileState> fileStates = fileStateDao.getAll();
     Assert.assertEquals(2, fileStates.size());
     try {

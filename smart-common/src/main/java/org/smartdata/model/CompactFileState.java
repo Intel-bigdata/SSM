@@ -15,27 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hdfs;
+package org.smartdata.model;
 
-import org.apache.htrace.TraceScope;
-import org.smartdata.model.FileState;
+import java.io.Serializable;
 
-import java.io.IOException;
+public class CompactFileState extends FileState implements Serializable {
+  private FileContainerInfo fileContainerInfo;
 
-/**
- * Factory to create SmartInputStream for Apache Hadoop 2.7.
- */
-public class SmartInputStreamFactory27 extends SmartInputStreamFactory {
-  @Override
-  public DFSInputStream create(DFSClient dfsClient, String src,
-      boolean verifyChecksum, FileState fileState)
-      throws IOException {
-    dfsClient.checkOpen();
-    TraceScope scope = dfsClient.getPathTraceScope("newDFSInputStream", src);
-    try {
-      return createSmartInputStream(dfsClient, src, verifyChecksum, fileState);
-    } finally {
-      scope.close();
-    }
+  public CompactFileState(String path, FileContainerInfo fileContainerInfo) {
+    super(path, FileType.COMPACT, FileStage.DONE);
+    this.fileContainerInfo = fileContainerInfo;
+  }
+
+  public FileContainerInfo getFileContainerInfo() {
+    return fileContainerInfo;
   }
 }

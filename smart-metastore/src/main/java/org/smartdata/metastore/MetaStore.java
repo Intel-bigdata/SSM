@@ -41,6 +41,7 @@ import org.smartdata.metastore.dao.GlobalConfigDao;
 import org.smartdata.metastore.dao.GroupsDao;
 import org.smartdata.metastore.dao.MetaStoreHelper;
 import org.smartdata.metastore.dao.RuleDao;
+import org.smartdata.metastore.dao.SmallFileDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.StorageHistoryDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
@@ -56,6 +57,7 @@ import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.CompressionFileState;
+import org.smartdata.model.CompactFileState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
@@ -126,6 +128,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private FileStateDao fileStateDao;
   private CompressionFileDao compressionFileDao;
   private GeneralDao generalDao;
+  private SmallFileDao smallFileDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -152,6 +155,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     fileStateDao = new FileStateDao(pool.getDataSource());
     compressionFileDao = new CompressionFileDao(pool.getDataSource());
     generalDao = new GeneralDao(pool.getDataSource());
+    smallFileDao = new SmallFileDao(pool.getDataSource());
   }
 
   public Connection getConnection() throws MetaStoreException {
@@ -312,6 +316,17 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     updateCache();
     try {
       return fileInfoDao.getFilesByPrefix(path);
+    } catch (EmptyResultDataAccessException e) {
+      return new ArrayList<>();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<FileInfo> getFilesByPaths(Collection<String> paths)
+      throws MetaStoreException {
+    try {
+      return fileInfoDao.getFilesByPaths(paths);
     } catch (EmptyResultDataAccessException e) {
       return new ArrayList<>();
     } catch (Exception e) {
@@ -972,6 +987,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public CmdletInfo getCmdletById(long cid) throws MetaStoreException {
     LOG.debug("Get cmdlet by cid {}", cid);
     try {
@@ -983,6 +999,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public List<CmdletInfo> getCmdlets(String cidCondition,
       String ridCondition, CmdletState state) throws MetaStoreException {
     try {
@@ -1013,6 +1030,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public boolean updateCmdlet(long cid, CmdletState state)
       throws MetaStoreException {
     try {
@@ -1022,6 +1040,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public boolean updateCmdlet(long cid, String parameters, CmdletState state)
       throws MetaStoreException {
     try {
@@ -1031,6 +1050,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public void deleteCmdlet(long cid) throws MetaStoreException {
     try {
       cmdletDao.delete(cid);
@@ -1908,6 +1928,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public List<BackUpInfo> listAllBackUpInfo() throws MetaStoreException {
     try {
       return backUpInfoDao.getAll();
@@ -1933,6 +1954,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     return false;
   }
 
+  @Override
   public BackUpInfo getBackUpInfo(long rid) throws MetaStoreException {
     try {
       return backUpInfoDao.getByRid(rid);
@@ -1943,6 +1965,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public void deleteAllBackUpInfo() throws MetaStoreException {
     try {
       backUpInfoDao.deleteAll();
@@ -1952,6 +1975,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  @Override
   public void deleteBackUpInfo(long rid) throws MetaStoreException {
     try {
       BackUpInfo backUpInfo = getBackUpInfo(rid);
@@ -1968,7 +1992,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertBackUpInfo(
+  @Override
+  public void insertBackUpInfo (
       BackUpInfo backUpInfo) throws MetaStoreException {
     try {
       backUpInfoDao.insert(backUpInfo);
@@ -2080,8 +2105,8 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void insertSystemInfo(
-      SystemInfo systemInfo) throws MetaStoreException {
+  public void insertSystemInfo(SystemInfo systemInfo)
+      throws MetaStoreException {
     try {
       if (systemInfoDao.containsProperty(systemInfo.getProperty())) {
         throw new Exception("The system property already exists");
@@ -2098,19 +2123,33 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    * @param fileState
    * @throws MetaStoreException
    */
-  public synchronized void insertUpdateFileState(FileState fileState) throws MetaStoreException {
+  public void insertUpdateFileState(FileState fileState)
+      throws MetaStoreException {
     try {
-      fileStateDao.insertUpate(fileState);
-      // Update corresponding table if fileState is a specific FileState
-      if (fileState instanceof CompressionFileState) {
-       insertCompressedFile((CompressionFileState) fileState);
+      // Update corresponding tables according to the file state
+      fileStateDao.insertUpdate(fileState);
+      switch (fileState.getFileType()) {
+        case COMPACT:
+          CompactFileState compactFileState = (CompactFileState) fileState;
+          smallFileDao.insertUpdate(compactFileState);
+          break;
+        case COMPRESSION:
+          insertCompressedFile((CompressionFileState) fileState);
+          break;
+        case S3:
+          break;
+        default:
       }
-      /*else if (fileState instanceof CompactFileState) {
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 
-      } else if (fileState instanceof S3FileState) {
-
-      }
-      */
+  public void insertCompactFileStates(CompactFileState[] compactFileStates)
+      throws MetaStoreException {
+    try {
+      fileStateDao.batchInsertUpdate(compactFileStates);
+      smallFileDao.batchInsertUpdate(compactFileStates);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -2123,36 +2162,97 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    * @return
    * @throws MetaStoreException
    */
-  public synchronized FileState getFileState(String path) throws MetaStoreException {
+  public FileState getFileState(String path) throws MetaStoreException {
     FileState fileState;
     try {
       fileState = fileStateDao.getByPath(path);
-    } catch (EmptyResultDataAccessException e) {
+      // Fetch info from corresponding table to regenerate a specific file state
+      switch (fileState.getFileType()) {
+        case NORMAL:
+          fileState = new NormalFileState(path);
+          break;
+        case COMPACT:
+          fileState = smallFileDao.getFileStateByPath(path);
+          break;
+        case COMPRESSION:
+          CompressionFileState compressionFileState = getCompressionInfo(path);
+          if (compressionFileState != null) {
+            compressionFileState.setFileStage(fileState.getFileStage());
+            fileState = compressionFileState;
+          }
+          break;
+        case S3:
+          fileState = new S3FileState(path);
+          break;
+        default:
+      }
+    } catch (EmptyResultDataAccessException e1) {
       fileState = new NormalFileState(path);
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
+    return fileState;
+  }
+
+  public Map<String, FileState> getFileStates(List<String> paths)
+      throws MetaStoreException {
+    try {
+      return fileStateDao.getByPaths(paths);
+    } catch (EmptyResultDataAccessException e1) {
+      return new HashMap<>();
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
+  }
+
+  public void deleteFileState(String filePath) throws MetaStoreException {
+    try {
+      FileState fileState = getFileState(filePath);
+      fileStateDao.deleteByPath(filePath, false);
+      switch (fileState.getFileType()) {
+        case COMPACT:
+          smallFileDao.deleteByPath(filePath, false);
+          break;
+        case COMPRESSION:
+          break;
+        case S3:
+          break;
+        default:
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
+  }
 
-    // Fetch info from corresponding table to regenerate a specific FileState
-    switch (fileState.getFileType()) {
-      case NORMAL:
-        fileState = new NormalFileState(path);
-        break;
-      case COMPACT:
-        break;
-      case COMPRESSION:
-        CompressionFileState compressionFileState = getCompressionInfo(path);
-        if (compressionFileState != null) {
-          compressionFileState.setFileStage(fileState.getFileStage());
-          fileState = compressionFileState;
-        }
-        break;
-      case S3:
-        fileState = new S3FileState(path);
-        break;
-      default:
+  public void deleteCompactFileStates(List<String> paths)
+      throws MetaStoreException {
+    try {
+      fileStateDao.batchDelete(paths);
+      smallFileDao.batchDelete(paths);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
     }
-    return fileState;
+  }
+
+  public List<String> getSmallFilesByContainerFile(String containerFilePath)
+      throws MetaStoreException {
+    try {
+      return smallFileDao.getSmallFilesByContainerFile(containerFilePath);
+    } catch (EmptyResultDataAccessException e1) {
+      return new ArrayList<>();
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
+  }
+
+  public List<String> getAllContainerFiles() throws MetaStoreException {
+    try {
+      return smallFileDao.getAllContainerFiles();
+    } catch (EmptyResultDataAccessException e1) {
+      return new ArrayList<>();
+    } catch (Exception e2) {
+      throw new MetaStoreException(e2);
+    }
   }
 
   /**
