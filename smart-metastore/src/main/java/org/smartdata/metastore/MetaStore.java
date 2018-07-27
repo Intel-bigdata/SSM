@@ -56,8 +56,8 @@ import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
-import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
@@ -2205,6 +2205,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  /**
+   * Delete FileState of the given fileName (including its corresponding compression/
+   * compact/s3 state).
+   *
+   * @param filePath
+   * @throws MetaStoreException
+   */
   public void deleteFileState(String filePath) throws MetaStoreException {
     try {
       FileState fileState = getFileState(filePath);
@@ -2214,6 +2221,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           smallFileDao.deleteByPath(filePath, false);
           break;
         case COMPRESSION:
+          deleteCompressedFile(filePath);
           break;
         case S3:
           break;
@@ -2252,23 +2260,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       return new ArrayList<>();
     } catch (Exception e2) {
       throw new MetaStoreException(e2);
-    }
-  }
-
-  /**
-   * Delete FileState of the given fileName (including its corresponding compression/
-   * compact/s3 state).
-   *
-   * @param fileName
-   * @throws MetaStoreException
-   */
-  public synchronized void deleteFileState(String fileName) throws MetaStoreException {
-    try {
-      fileStateDao.deleteByPath(fileName);
-      // Delete other states
-      deleteCompressedFile(fileName);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
     }
   }
 

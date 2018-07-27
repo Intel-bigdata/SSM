@@ -42,6 +42,7 @@ message CompressionFileStateProto {
   required int64 compressedLength = 4;
   repeated int64 originalPos = 5;
   repeated int64 compressedPos = 6;
+}
 
 message FileStateProto {
   required string path = 1;

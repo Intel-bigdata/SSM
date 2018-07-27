@@ -36,8 +36,8 @@ public class TestCompressionAction extends MiniClusterHarness {
 
   @Override
   @Before
-  public void setup() throws Exception {
-    init(DEFAULT_BLOCK_SIZE);
+  public void init() throws Exception {
+    super.init();
   }
 
   protected void compressoin(String filePath, long bufferSize) throws IOException {

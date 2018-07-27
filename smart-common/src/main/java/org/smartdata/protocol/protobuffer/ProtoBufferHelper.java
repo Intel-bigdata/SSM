@@ -24,8 +24,8 @@ import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
-import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
@@ -230,8 +230,8 @@ public class ProtoBufferHelper {
           .setOffset(fileContainerInfo.getOffset())
           .setLength(fileContainerInfo.getLength()));
     } else if (fileState instanceof CompressionFileState) {
-      builder.setCompressionFileState();
-    } 
+      builder.setCompressionFileState(convert((CompressionFileState) fileState));
+    }
     /*else if (fileState instanceof S3FileState) {
       builder.setS3FileState();
     } else if (fileState instanceof ) {
