@@ -29,6 +29,6 @@ public class EchoAction extends SmartAction {
 
     @Override
     protected void execute() throws Exception {
-        this.appendResult(getArguments().get(PRINT_MESSAGE));
+        appendLog(getArguments().get(PRINT_MESSAGE));
     }
 }

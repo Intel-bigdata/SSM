@@ -78,7 +78,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
 
     if (movePlan.isDir()) {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
-      appendResult("Directory moved successfully.");
+      appendLog("Directory moved successfully.");
       return;
     }
 
@@ -91,10 +91,10 @@ public class MoveFileAction extends AbstractMoveFileAction {
     int numFailed = move();
     if (numFailed == 0) {
       dfsClient.setStoragePolicy(fileName, storagePolicy);
-      appendResult("All the " + totalReplicas + " replicas moved successfully.");
+      appendLog("All the " + totalReplicas + " replicas moved successfully.");
     } else {
       String res = numFailed + " of " + totalReplicas + " replicas movement failed.";
-      appendResult(res);
+      appendLog(res);
       throw new IOException(res);
     }
   }
