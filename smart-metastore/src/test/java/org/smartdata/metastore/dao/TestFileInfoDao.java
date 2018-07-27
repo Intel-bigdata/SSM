@@ -57,12 +57,6 @@ public class TestFileInfoDao extends TestDaoUtil {
     String group = "admin";
     long fileId = 312321L;
     byte storagePolicy = 0;
-    Map<Integer, String> mapOwnerIdName = new HashMap<>();
-    mapOwnerIdName.put(1, "root");
-    Map<Integer, String> mapGroupIdName = new HashMap<>();
-    mapGroupIdName.put(1, "admin");
-    fileInfoDao.updateUsersMap(mapOwnerIdName);
-    fileInfoDao.updateGroupsMap(mapGroupIdName);
     FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication,
         blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
     fileInfoDao.insert(fileInfo);
@@ -103,8 +97,6 @@ public class TestFileInfoDao extends TestDaoUtil {
     mapOwnerIdName.put(1, "root");
     Map<Integer, String> mapGroupIdName = new HashMap<>();
     mapGroupIdName.put(1, "admin");
-    fileInfoDao.updateUsersMap(mapOwnerIdName);
-    fileInfoDao.updateGroupsMap(mapGroupIdName);
     FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication,
         blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
     fileInfoDao.insert(fileInfo);

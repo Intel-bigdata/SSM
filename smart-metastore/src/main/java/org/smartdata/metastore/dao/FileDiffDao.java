@@ -39,6 +39,7 @@ import java.util.Map;
 public class FileDiffDao {
   private static final String TABLE_NAME = "file_diff";
   private DataSource dataSource;
+  public String uselessFileDiffStates;
 
   public void setDataSource(DataSource dataSource) {
     this.dataSource = dataSource;
@@ -46,6 +47,15 @@ public class FileDiffDao {
 
   public FileDiffDao(DataSource dataSource) {
     this.dataSource = dataSource;
+    this.uselessFileDiffStates = getUselessFileDiffState();
+  }
+
+  public String getUselessFileDiffState() {
+    List<String> stateValues = new ArrayList<>();
+    for (FileDiffState state: FileDiffState.getUselessFileDiffState()) {
+      stateValues.add(String.valueOf(state.getValue()));
+    }
+    return StringUtils.join(stateValues, ",");
   }
 
   public List<FileDiff> getAll() {
@@ -111,7 +121,6 @@ public class FileDiffDao {
         .queryForList(sql, String.class, FileDiffState.RUNNING.getValue());
   }
 
-
   public FileDiff getById(long did) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE did = ?",
@@ -122,6 +131,28 @@ public class FileDiffDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME + " WHERE did = ?";
     jdbcTemplate.update(sql, did);
+  }
+
+  public int getUselessRecordsNum() {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String query = "SELECT count(*) FROM " + TABLE_NAME + " WHERE state IN ("
+        + uselessFileDiffStates + ")";
+    return jdbcTemplate.queryForObject(query, Integer.class);
+  }
+
+  public int deleteUselessRecords(int num) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    final String queryDids = "SELECT did FROM " + TABLE_NAME + " WHERE state IN ("
+        + uselessFileDiffStates + ") ORDER BY create_time DESC LIMIT 1000 OFFSET " + num;
+    List<Long> dids = jdbcTemplate.queryForList(queryDids, Long.class);
+    if (dids.isEmpty()) {
+      return 0;
+    }
+    String unusedDids = StringUtils.join(dids, ",");
+    final String deleteUnusedFileDiff = "DELETE FROM " + TABLE_NAME + " where did IN ("
+        + unusedDids + ")";
+    jdbcTemplate.update(deleteUnusedFileDiff);
+    return dids.size();
   }
 
   public long insert(FileDiff fileDiff) {
@@ -153,7 +184,8 @@ public class FileDiffDao {
   }
 
   public int[] batchUpdate(
-      final List<Long> dids, final List<FileDiffState> states, final List<String> parameters) {
+      final List<Long> dids, final List<FileDiffState> states,
+      final List<String> parameters) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
 
     final String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
@@ -173,6 +205,27 @@ public class FileDiffDao {
     });
   }
 
+  public int[] batchUpdate(
+      final List<Long> dids, final FileDiffState state) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+
+    final String sql = "UPDATE " + TABLE_NAME + " SET state = ? "
+        + "WHERE did = ?";
+    return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+      @Override
+      public void setValues(PreparedStatement ps, int i) throws SQLException {
+        ps.setShort(1, (short) state.getValue());
+        ps.setLong(2, dids.get(i));
+      }
+
+      @Override
+      public int getBatchSize() {
+        return dids.size();
+      }
+    });
+  }
+
+
   public int update(long did, FileDiffState state) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "UPDATE " + TABLE_NAME + " SET state = ? WHERE did = ?";
@@ -191,6 +244,37 @@ public class FileDiffDao {
     String sql = "UPDATE " + TABLE_NAME + " SET state = ?, "
         + "parameters = ? WHERE did = ?";
     return jdbcTemplate.update(sql, state.getValue(), parameters, did);
+  }
+
+  public int[] update(final FileDiff[] fileDiffs) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "UPDATE " + TABLE_NAME + " SET "
+        + "rid = ?, "
+        + "diff_type = ?, "
+        + "src = ?, "
+        + "parameters = ?, "
+        + "state = ?, "
+        + "create_time = ? "
+        + "WHERE did = ?";
+    return jdbcTemplate.batchUpdate(sql,
+        new BatchPreparedStatementSetter() {
+          @Override
+          public void setValues(PreparedStatement ps,
+              int i) throws SQLException {
+            ps.setLong(1, fileDiffs[i].getRuleId());
+            ps.setInt(2, fileDiffs[i].getDiffType().getValue());
+            ps.setString(3, fileDiffs[i].getSrc());
+            ps.setString(4, fileDiffs[i].getParametersJsonString());
+            ps.setInt(5, fileDiffs[i].getState().getValue());
+            ps.setLong(6, fileDiffs[i].getCreateTime());
+            ps.setLong(7, fileDiffs[i].getDiffId());
+          }
+
+          @Override
+          public int getBatchSize() {
+            return fileDiffs.length;
+          }
+        });
   }
 
   public int update(final FileDiff fileDiff) {

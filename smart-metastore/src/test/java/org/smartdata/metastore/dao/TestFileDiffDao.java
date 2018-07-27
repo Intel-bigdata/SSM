@@ -100,6 +100,8 @@ public class TestFileDiffDao extends TestDaoUtil {
     fileInfoList = fileDiffDao.getAll();
 
     Assert.assertTrue(fileInfoList.get(0).getState().equals(FileDiffState.APPLIED));
+    fileDiffDao.batchUpdate(dids, FileDiffState.MERGED);
+    Assert.assertTrue(fileDiffDao.getAll().get(0).getState().equals(FileDiffState.MERGED));
 
   }
 
@@ -135,28 +137,71 @@ public class TestFileDiffDao extends TestDaoUtil {
 
   @Test
   public void testUpdate() {
-    FileDiff fileDiff = new FileDiff();
-    fileDiff.setDiffId(1);
-    fileDiff.setParameters(new HashMap<String, String>());
-    fileDiff.setSrc("test");
-    fileDiff.setState(FileDiffState.PENDING);
-    fileDiff.setDiffType(FileDiffType.APPEND);
-    fileDiff.setCreateTime(1);
-    fileDiffDao.insert(fileDiff);
+    FileDiff[] fileDiffs = new FileDiff[2];
+    fileDiffs[0] = new FileDiff();
+    fileDiffs[0].setDiffId(1);
+    fileDiffs[0].setRuleId(1);
+    fileDiffs[0].setParameters(new HashMap<String, String>());
+    fileDiffs[0].setSrc("test");
+    fileDiffs[0].setState(FileDiffState.PENDING);
+    fileDiffs[0].setDiffType(FileDiffType.APPEND);
+    fileDiffs[0].setCreateTime(1);
 
+    fileDiffs[1] = new FileDiff();
+    fileDiffs[1].setDiffId(2);
+    fileDiffs[0].setRuleId(1);
+    fileDiffs[1].setParameters(new HashMap<String, String>());
+    fileDiffs[1].setSrc("src");
+    fileDiffs[1].setState(FileDiffState.PENDING);
+    fileDiffs[1].setDiffType(FileDiffType.APPEND);
+    fileDiffs[1].setCreateTime(1);
+
+    fileDiffDao.insert(fileDiffs);
     fileDiffDao.update(1, FileDiffState.RUNNING);
-    fileDiff.setState(FileDiffState.RUNNING);
+    fileDiffs[0].setState(FileDiffState.RUNNING);
 
-    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
-    Assert.assertTrue(fileDiffDao.getPendingDiff().size() == 0);
-    fileDiff.getParameters().put("-offset", "0");
-    fileDiffDao.update(1, FileDiffState.RUNNING, fileDiff.getParametersJsonString());
-    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
-    fileDiff.setSrc("test1");
-    fileDiffDao.update(1, "test1");
-    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
-    fileDiff.setRuleId(1L);
-    fileDiffDao.update(fileDiff);
-    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiff));
+    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiffs[0]));
+    Assert.assertTrue(fileDiffDao.getPendingDiff().size() == 1);
+    fileDiffs[0].getParameters().put("-offset", "0");
+    fileDiffs[0].setSrc("test1");
+    fileDiffs[1].setCreateTime(2);
+    fileDiffs[1].setRuleId(2);
+    fileDiffs[1].setDiffType(FileDiffType.RENAME);
+    fileDiffDao.update(fileDiffs);
+    Assert.assertTrue(fileDiffDao.getById(1).equals(fileDiffs[0]));
+    Assert.assertTrue(fileDiffDao.getById(2).equals(fileDiffs[1]));
+  }
+
+  @Test
+  public void testDeleteUselessRecords() {
+    FileDiff[] fileDiffs = new FileDiff[2];
+    fileDiffs[0] = new FileDiff();
+    fileDiffs[0].setDiffId(1);
+    fileDiffs[0].setRuleId(1);
+    fileDiffs[0].setParameters(new HashMap<String, String>());
+    fileDiffs[0].setSrc("test");
+    fileDiffs[0].setState(FileDiffState.PENDING);
+    fileDiffs[0].setDiffType(FileDiffType.APPEND);
+    fileDiffs[0].setCreateTime(1);
+
+    fileDiffs[1] = new FileDiff();
+    fileDiffs[1].setDiffId(2);
+    fileDiffs[0].setRuleId(1);
+    fileDiffs[1].setParameters(new HashMap<String, String>());
+    fileDiffs[1].setSrc("src");
+    fileDiffs[1].setState(FileDiffState.PENDING);
+    fileDiffs[1].setDiffType(FileDiffType.APPEND);
+    fileDiffs[1].setCreateTime(2);
+
+    fileDiffDao.insert(fileDiffs);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 0);
+    fileDiffDao.update(1, FileDiffState.APPLIED);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 1);
+    fileDiffDao.update(2, FileDiffState.FAILED);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 2);
+    fileDiffDao.update(2, FileDiffState.DELETED);
+    Assert.assertEquals(fileDiffDao.getUselessRecordsNum(), 2);
+    fileDiffDao.deleteUselessRecords(1);
+    Assert.assertEquals(fileDiffDao.getAll().size(), 1);
   }
 }

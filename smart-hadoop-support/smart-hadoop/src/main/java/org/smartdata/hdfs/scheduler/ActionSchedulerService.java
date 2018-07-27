@@ -25,6 +25,8 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
 
+import java.io.IOException;
+
 public abstract class ActionSchedulerService extends AbstractService implements ActionScheduler {
   private MetaStore metaStore;
 
@@ -33,7 +35,7 @@ public abstract class ActionSchedulerService extends AbstractService implements 
     this.metaStore = metaStore;
   }
 
-  public boolean onSubmit(ActionInfo actionInfo) {
+  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
     return true;
   }
 

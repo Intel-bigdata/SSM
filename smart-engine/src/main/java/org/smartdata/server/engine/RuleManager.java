@@ -25,8 +25,6 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
-import org.smartdata.model.CmdletInfo;
-import org.smartdata.model.CmdletState;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
@@ -207,43 +205,11 @@ public class RuleManager extends AbstractService {
   }
 
   public List<DetailedRuleInfo> listRulesMoveInfo() throws IOException {
-    List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
-    for (RuleInfoRepo infoRepo : mapRules.values()) {
-      RuleInfo ruleInfo = infoRepo.getRuleInfoRef();
-      if (ruleInfo.getState() != RuleState.DELETED) {
-        if (ruleInfo.getRuleText().contains("allssd")
-            || ruleInfo.getRuleText().contains("onessd")
-            || ruleInfo.getRuleText().contains("archive")
-            || ruleInfo.getRuleText().contains("alldisk")
-            || ruleInfo.getRuleText().contains("onedisk")
-            || ruleInfo.getRuleText().contains("ramdisk")) {
-          DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
-          List<CmdletInfo> cmdletInfos = new ArrayList<CmdletInfo>();
-          cmdletInfos = cmdletManager.listCmdletsInfo(ruleInfo.getId());
-          int currPos = 0;
-          for (CmdletInfo cmdletInfo : cmdletInfos) {
-            if (cmdletInfo.getState() == CmdletState.EXECUTING
-                || cmdletInfo.getState() == CmdletState.NOTINITED
-                || cmdletInfo.getState() == CmdletState.PENDING) {
-              break;
-            }
-            currPos += 1;
-          }
-          int countRunning = 0;
-          for (int i = 0; i < cmdletInfos.size(); i++) {
-            if (cmdletInfos.get(i).getState() == CmdletState.EXECUTING
-                || cmdletInfos.get(i).getState() == CmdletState.PENDING
-                || cmdletInfos.get(i).getState() == CmdletState.NOTINITED) {
-              countRunning += 1;
-            }
-          }
-          detailedRuleInfo.setBaseProgress(cmdletInfos.size() - currPos);
-          detailedRuleInfo.setRunningProgress(countRunning);
-          detailedRuleInfos.add(detailedRuleInfo);
-        }
-      }
+    try {
+      return metaStore.listMoveRules();
+    } catch (MetaStoreException e) {
+      throw new IOException(e);
     }
-    return detailedRuleInfos;
   }
 
   public List<DetailedRuleInfo> listRulesSyncInfo() throws IOException {

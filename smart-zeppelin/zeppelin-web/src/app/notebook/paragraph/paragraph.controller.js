@@ -113,7 +113,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
           $scope.paragraph.results= results;
 
           result.type = "TEXT";
-          result.data = actionInfo.result;
+          result.data = actionInfo.log;
           results.code = actionInfo.successful ? "SUCCESS" : "ERROR";
           $scope.paragraph.status = actionInfo.successful ? "FINISHED" : "ERROR";
 

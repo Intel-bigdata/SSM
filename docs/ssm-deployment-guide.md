@@ -204,7 +204,7 @@ On the SSM service server, switch to the SSM installation directory, ready to st
 
 # Run SSM
 ---------------------------------------------------------------------------------
-Enter into ${SMART_HOME} directory for running SSM.
+Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` to show specific version information for SSM.
 ##  **Start SSM server**
    
    SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
@@ -224,7 +224,7 @@ Enter into ${SMART_HOME} directory for running SSM.
 
    `http://Active_SSM_Server_IP:7045`
 
-   If you meet any problem, please open the smartserver.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
+   If you meet any problem, please open the smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
 ##  **Start Smart Agent independently**(optional)
 
@@ -324,7 +324,7 @@ Follow the steps to add SSM Jars to classpath
    #### Copy the Jars  
 Copy the SSM jars to the default Hadoop class path
   1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-  2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/hdfs/`.
+  2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
 
 
 ## CDH5.10.1
@@ -571,7 +571,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
- All logs will go to smartserver.log under ${SMART_HOME}/logs directory.
+ All logs will go to smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
@@ -587,7 +587,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
    Possible causes:
   
-   a. Cannot lock system mover locker. You may see something like follows in the smartserver.log file. Make sure there is no system mover running. Try to restart the SSM service will solve the problem.
+   a. Cannot lock system mover locker. You may see something like follows in the smartserver-$hostname-$user.log file. Make sure there is no system mover running. Try to restart the SSM service will solve the problem.
 
 ```
    2017-07-15 00:38:28,619 INFO org.smartdata.hdfs.HdfsStatesUpdateService.init 68: Initializing ...

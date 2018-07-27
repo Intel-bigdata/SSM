@@ -26,6 +26,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionRegistry;
+import org.smartdata.model.ActionInfo;
 import org.smartdata.server.SmartEngine;
 import org.smartdata.server.rest.message.JsonResponse;
 
@@ -46,7 +47,7 @@ import java.util.List;
 public class ActionRestApi {
   SmartEngine smartEngine;
   private static final Logger logger =
-      LoggerFactory.getLogger(ActionRestApi.class);
+    LoggerFactory.getLogger(ActionRestApi.class);
 
   public ActionRestApi(SmartEngine smartEngine) {
     this.smartEngine = smartEngine;
@@ -57,11 +58,11 @@ public class ActionRestApi {
   public Response actionTypes() {
     try {
       return new JsonResponse<>(Response.Status.OK,
-          ActionRegistry.supportedActions()).build();
+        ActionRegistry.supportedActions()).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -73,7 +74,7 @@ public class ActionRestApi {
       @PathParam("isDesc") String isDesc) {
     if (logger.isDebugEnabled()) {
       logger.debug("pageIndex={}, numPerPage={}, orderBy={}, isDesc={}",
-          pageIndex, numPerPage, orderBy, isDesc);
+        pageIndex, numPerPage, orderBy, isDesc);
     }
     try {
       List<String> orderByList = Arrays.asList(orderBy.split(","));
@@ -83,12 +84,44 @@ public class ActionRestApi {
         isDescList.add(Boolean.parseBoolean(isDescStringList.get(i)));
       }
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().listActions(Long.parseLong(pageIndex),
-              Long.parseLong(numPerPage), orderByList, isDescList)).build();
+        smartEngine.getCmdletManager().listActions(Long.parseLong(pageIndex),
+          Long.parseLong(numPerPage), orderByList, isDescList)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
+  @GET
+  @Path("/search/{search}/{pageIndex}/{numPerPage}/{orderBy}/{isDesc}")
+  public Response searchActoin(@PathParam("search") String path,
+      @PathParam("pageIndex") String pageIndex,
+      @PathParam("numPerPage") String numPerPage, @PathParam("orderBy") String orderBy,
+      @PathParam("isDesc") String isDesc) {
+    String res = "";
+    for (Character i: path.toCharArray()) {
+      if (i == '%' || i == '_' || i == '"' || i == '/' || i == '\'') {
+        res += '/';
+      }
+      res += i;
+    }
+    path = res;
+
+    try {
+      List<String> orderByList = Arrays.asList(orderBy.split(","));
+      List<String> isDescStringList = Arrays.asList(isDesc.split(","));
+      List<Boolean> isDescList = new ArrayList<>();
+      for (int i = 0; i < isDescStringList.size(); i++) {
+        isDescList.add(Boolean.parseBoolean(isDescStringList.get(i)));
+      }
+      return new JsonResponse<>(Response.Status.OK,
+        smartEngine.getCmdletManager().searchAction(path, Long.parseLong(pageIndex),
+          Long.parseLong(numPerPage), orderByList, isDescList)).build();
+    } catch (Exception e) {
+      logger.error("Exception in ActionRestApi while listing action types", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -100,11 +133,11 @@ public class ActionRestApi {
     intNumber = intNumber > 0 ? intNumber : 0;
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().getActions(Long.valueOf(ruleId), intNumber)).build();
+        smartEngine.getCmdletManager().getActions(Long.valueOf(ruleId), intNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -115,16 +148,16 @@ public class ActionRestApi {
       @PathParam("numPerPage") String numPerPage) {
     if (logger.isDebugEnabled()) {
       logger.debug("ruleId={}, pageIndex={}, numPerPage={}", ruleId,
-          pageIndex, numPerPage);
+        pageIndex, numPerPage);
     }
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().getFileActions(Long.valueOf(ruleId),
-              Long.valueOf(pageIndex), Long.valueOf(numPerPage))).build();
+        smartEngine.getCmdletManager().getFileActions(Long.valueOf(ruleId),
+          Long.valueOf(pageIndex), Long.valueOf(numPerPage))).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing file actions", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -136,11 +169,11 @@ public class ActionRestApi {
     intNumber = intNumber > 0 ? intNumber : 0;
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().getFileActions(Long.valueOf(ruleId), intNumber)).build();
+        smartEngine.getCmdletManager().getFileActions(Long.valueOf(ruleId), intNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing file actions", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -153,12 +186,12 @@ public class ActionRestApi {
     intNumber = intNumber > 0 ? intNumber : 0;
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager()
-              .listNewCreatedActions(actionName, intNumber)).build();
+        smartEngine.getCmdletManager()
+          .listNewCreatedActions(actionName, intNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while listing action types", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 
@@ -168,11 +201,11 @@ public class ActionRestApi {
     Long longNumber = Long.parseLong(actionId);
     try {
       return new JsonResponse<>(Response.Status.OK,
-          smartEngine.getCmdletManager().getActionInfo(longNumber)).build();
+        smartEngine.getCmdletManager().getActionInfo(longNumber)).build();
     } catch (Exception e) {
       logger.error("Exception in ActionRestApi while getting info", e);
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
-          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+        e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
   }
 }

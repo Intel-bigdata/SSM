@@ -73,7 +73,7 @@ public class FileCopy2S3Plugin implements RuleExecutorPlugin {
         // O(n)
         for (String srcBase : srcBases) {
           if (srcPath.startsWith(srcBase)) {
-            workPath = srcPath.replace(srcBase, "");
+            workPath = srcPath.replaceFirst(srcBase, "");
             break;
           }
         }

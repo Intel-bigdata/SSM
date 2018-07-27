@@ -579,7 +579,7 @@ public class SmartDFSClient extends DFSClient {
    * @return the message of unsupported exception
    */
   public String getExceptionMsg(String operation, String fileType) {
-    return String.format("%s is not supported for %s", operation, fileType);
+    return String.format("%s is not supported for %s.", operation, fileType);
   }
 
   /**

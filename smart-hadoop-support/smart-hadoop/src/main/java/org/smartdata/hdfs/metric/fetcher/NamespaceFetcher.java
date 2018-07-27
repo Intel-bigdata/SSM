@@ -36,6 +36,7 @@ import org.smartdata.protocol.message.StatusReport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -111,7 +112,7 @@ public class NamespaceFetcher {
     this.consumerFutures = new ScheduledFuture[consumers.length];
     for (int i = 0; i < consumers.length; i++) {
       consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
-          consumers[i], 0, 100, TimeUnit.MILLISECONDS);
+          consumers[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
     }
     LOG.info("Started.");
   }
@@ -159,21 +160,12 @@ public class NamespaceFetcher {
       defaultBatchSize = conf.getInt(SmartConfKeys
               .SMART_NAMESPACE_FETCHER_BATCH_KEY,
           SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
-      if (ignoreList == null) {
-        ignoreList = new ArrayList<>();
-        String configString = conf.get(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-        if (configString != null) {
-          configString = configString.trim();
-          if (!configString.equals("")) {
-            //only when parent dir is not ignored we run the follow code
-            ignoreList = Arrays.asList(configString.split(","));
-            for (int i = 0; i < ignoreList.size(); i++) {
-              if (!ignoreList.get(i).endsWith("/")) {
-                ignoreList.set(i, ignoreList.get(i).concat("/"));
-              }
-            }
-          }
-        }
+
+      Collection<String> ignoreDirs =
+          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+      ignoreList = new ArrayList<>(ignoreDirs.size());
+      for (String dir : ignoreDirs) {
+        ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
       }
     }
 
@@ -226,8 +218,8 @@ public class NamespaceFetcher {
             IngestionTask.isFinished = true;
             long curr = System.currentTimeMillis();
             LOG.info(String.format(
-                "Finished fetch Namespace! %d secs used, numDirs = %d, numFiles = %d",
-                (curr - startTime) / 1000,
+                "Finished fetch Namespace! %ds, %dms used, numDirs = %d, numFiles = %d",
+                (curr - startTime) / 1000, (curr -  startTime) % 1000,
                 numDirectoriesFetched.get(), numFilesFetched.get()));
           }
         }
@@ -235,12 +227,9 @@ public class NamespaceFetcher {
       }
 
       if (startAfter == null) {
-        String tmpParent = parent;
-        if (!tmpParent.endsWith("/")) {
-          tmpParent = tmpParent.concat("/");
-        }
-        for (int i = 0; i < ignoreList.size(); i++) {
-          if (ignoreList.get(i).equals(tmpParent)) {
+        String tmpParent = parent.endsWith("/") ? parent : parent + "/";
+        for (String dir : ignoreList) {
+          if (tmpParent.startsWith(dir)) {
             return;
           }
         }

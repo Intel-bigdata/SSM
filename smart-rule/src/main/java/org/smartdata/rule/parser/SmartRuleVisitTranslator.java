@@ -868,43 +868,52 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         }
 
         // TODO: hard code now, abstract later
-        if (p.getPropertyName().equals("accessCount")) {
-          String rid = "";
-          if (transCtx != null) {
-            rid = transCtx.getRuleId() + "_";
-          }
-          String virTab = "VIR_ACC_CNT_TAB_" + rid + realParas.instId();
-          if (!tempTableNames.contains(virTab)) {
-            tempTableNames.add(virTab);
-            sqlStatements.add("DROP TABLE IF EXISTS " + virTab + ";");
-            sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
-            dynamicParameters.put(virTab, Arrays.asList(realParas.getValues(), virTab));
-          }
+        if (p.getPropertyName().equals("accessCount")
+            || p.getPropertyName().equals("ac")) {
+          String virTab = genAccessCountTable(transCtx == null ? 0 : transCtx.getRuleId(),
+              (Long) realParas.getValues().get(0));
           procAcc = true;
           return new NodeTransResult(virTab, realParas.formatParameters());
         }
 
         if (p.getPropertyName().equals("accessCountTop")
-            || p.getPropertyName().equals("accessCountBottom")) {
-          boolean topFlag = p.getPropertyName().equals("accessCountTop");
-          String rid = "";
-          if (transCtx != null) {
-            rid = transCtx.getRuleId() + "_";
-          }
-          String virTab = "VIR_ACC_CNT_TAB_" + rid + "accessCount_"
-              + realParas.getValues().get(0).toString();
-          if (!tempTableNames.contains(virTab)) {
-            tempTableNames.add(virTab);
-            sqlStatements.add("DROP TABLE IF EXISTS " + virTab + ";");
-            sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
-            dynamicParameters.put(virTab, Arrays.asList(realParas.getValues(), virTab));
-          }
+            || p.getPropertyName().equals("accessCountBottom")
+            || p.getPropertyName().equals("acTop")
+            || p.getPropertyName().equals("acBot")) {
+          boolean topFlag = p.getPropertyName().equals("accessCountTop")
+              || p.getPropertyName().equals("acTop");
+          String virTab = genAccessCountTable(transCtx == null ? 0 : transCtx.getRuleId(),
+              (Long) realParas.getValues().get(0));
+          String func = "$@genVirtualAccessCountTable" + (topFlag ? "Top" : "Bottom") + "Value";
           String mStr = virTab + (topFlag ? "_top_" : "_bottom_")
               + realParas.getValues().get(1).toString();
-          String func = "$@genVirtualAccessCountTable" + (topFlag ? "Top" : "Bottom") + "Value";
           String mStrValue = mStr + "_value";
-          sqlStatements.add(func + "(" + mStr + ")");
-          dynamicParameters.put(mStr, Arrays.asList(realParas.getValues(), virTab, mStrValue));
+          if (!sqlStatements.contains(func + "(" + mStr + ")")) {
+            sqlStatements.add(func + "(" + mStr + ")");
+            dynamicParameters.put(mStr, Arrays.asList(realParas.getValues(), virTab, mStrValue));
+          }
+          procAcc = true;
+          return new NodeTransResult(null, "$" + mStrValue);
+        }
+
+        if (p.getPropertyName().equals("accessCountTopOnStoragePolicy")
+            || p.getPropertyName().equals("accessCountBottomOnStoragePolicy")
+            || p.getPropertyName().equals("acTopSp")
+            || p.getPropertyName().equals("acBotSp")) {
+          boolean topFlag = p.getPropertyName().equals("accessCountTopOnStoragePolicy")
+              || p.getPropertyName().equals("acTopSp");
+          String virTab = genAccessCountTable(transCtx == null ? 0 : transCtx.getRuleId(),
+              (Long) realParas.getValues().get(0));
+          String func = "$@genVirtualAccessCountTable" + (topFlag ? "Top" : "Bottom")
+              + "ValueOnStoragePolicy";
+          String mStr = virTab + (topFlag ? "_top_" : "_bottom_")
+              + realParas.getValues().get(1).toString() + "_on_storage_policy_"
+              + realParas.getValues().get(2).toString();
+          String mStrValue = mStr + "_value";
+          if (!sqlStatements.contains(func + "(" + mStr + ")")) {
+            sqlStatements.add(func + "(" + mStr + ")");
+            dynamicParameters.put(mStr, Arrays.asList(realParas.getValues(), virTab, mStrValue));
+          }
           procAcc = true;
           return new NodeTransResult(null, "$" + mStrValue);
         }
@@ -913,5 +922,19 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
       }
     }
     // return new NodeTransResult(tableName, "");
+  }
+
+  private String genAccessCountTable(long rid, long interval) {
+    String virTab = "VIR_ACC_CNT_TAB_" + rid + "_" + interval;
+    if (!tempTableNames.contains(virTab)) {
+      tempTableNames.add(virTab);
+      sqlStatements.add("DROP TABLE IF EXISTS " + virTab + ";");
+      sqlStatements.add("$@genVirtualAccessCountTable(" + virTab + ")");
+      List<Object> args = new ArrayList<>();
+      args.add(Arrays.asList((Long) interval));
+      args.add(virTab);
+      dynamicParameters.put(virTab, args);
+    }
+    return virTab;
   }
 }
