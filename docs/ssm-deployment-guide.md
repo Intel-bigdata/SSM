@@ -198,7 +198,7 @@ For deploy standalone SSM, SSM will only start SSM server without SSM agents. Di
 
    ## SSM Service with multiple Agents
 
-To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), you should enter into ${SMART_HOME} directory and type ./bin/install.sh. You can use --config <config-dir> to specify where SSM's config directory is.${SMART_HOME}/conf is the default config directory if the config option is not used.Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
+Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend to deploy one agent on each Datanode. To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), you should enter into ${SMART_HOME} directory and type ./bin/install.sh. You can use --config <config-dir> to specify where SSM's config directory is.${SMART_HOME}/conf is the default config directory if the config option is not used.Of course, Smart Agents on servers other than Datanodes and different numbers of Smart Agents than Datanodes are also supported.
 On the SSM service server, switch to the SSM installation directory, ready to start and run the SSM service.
 
 
