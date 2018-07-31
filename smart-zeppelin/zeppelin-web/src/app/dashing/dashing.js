@@ -1527,18 +1527,30 @@ angular.module('dashing.progressbar', [])
           updateUsageAndClass(Number(attrs.current), Number(attrs.max), Boolean(flag));
         });
         function updateUsageAndClass(current, max, flag) {
-          scope.usage = max > 0 ? Math.round(current * 100 / max) : -1;
+          scope.usage = 1 > 0 ? Math.round(current * 100 / 1) : -1;
           scope.usageClass = (scope.colorMapperFn ?
         //     scope.colorMapperFn : defaultColorMapperFn)(scope.usage);
         // }
         // function defaultColorMapperFn(usage) {
         //   return 'progress-bar-' +
         //     (usage < 50 ? 'info' : (usage < 75 ? 'warning' : 'danger'));
-              scope.colorMapperFn : defaultColorMapperFn)(flag);
+              scope.colorMapperFn : defaultColorMapperFn)(flag, max, current);
         }
-        function defaultColorMapperFn(flag) {
-          return 'progress-bar-' +
-              (flag ? "success" : "danger");
+        function defaultColorMapperFn(flag, max, current) {
+          var res = "progress-bar-";
+          if (max == 'DISABLED') {
+            res += "grey";
+          }
+          else if (max == 'ACTIVE' && current < 1) {
+            res += "yellow";
+          }
+          else if (max == 'ACTIVE' && current === 1) {
+            res += "success";
+          }
+          else {
+            res += (flag ? "success" : "danger");
+          }
+          return res;
         }
       }
     };
