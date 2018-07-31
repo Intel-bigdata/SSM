@@ -55,6 +55,8 @@ public class CheckStorageAction extends HdfsAction {
     }
     if (fileStatus.isDir()) {
       appendResult("This is a directory which has no storage result!");
+      // Append to log for the convenience of UI implementation
+      appendLog("This is a directory which has no storage result!");
       return;
     }
     long length = fileStatus.getLen();
@@ -63,6 +65,8 @@ public class CheckStorageAction extends HdfsAction {
 
     if (locatedBlocks.size() == 0) {
       appendResult("File '" + fileName + "' has no blocks.");
+      appendLog("File '" + fileName + "' has no blocks.");
+      return;
     }
 
     for (LocatedBlock locatedBlock : locatedBlocks) {
@@ -81,6 +85,7 @@ public class CheckStorageAction extends HdfsAction {
       }
       blockInfo.append("}");
       appendResult(blockInfo.toString());
+      appendLog(blockInfo.toString());
     }
   }
 }
