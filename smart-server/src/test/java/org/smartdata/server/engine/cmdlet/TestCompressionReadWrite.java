@@ -35,6 +35,7 @@ import org.smartdata.model.FileState;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
+import java.io.File;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testSubmitCompressionAction() throws Exception {
+    if (!loadedNative()) return;
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -139,6 +141,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testCompressedFileRandomRead() throws Exception {
+    if (!loadedNative()) return;
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -175,6 +178,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testListLocatedStatus() throws Exception {
+    if (!loadedNative()) return;
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -261,5 +265,24 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
       }
       return array;
     }
+  }
+
+  private boolean loadedNative() {
+    String hadoopNativePath = "";
+    //hadoopnativePath used to suport Bzip2 compresionImpl
+    try {
+      if (!(System.getenv("HADOOP_HOME") == null)) {
+        hadoopNativePath =
+            System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
+      } else {
+        hadoopNativePath =
+            System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
+      }
+    } catch (Exception e) {
+      return false;
+    }
+    if (hadoopNativePath.isEmpty() || !new File(hadoopNativePath).isFile())
+      return false;
+    return true;
   }
 }
