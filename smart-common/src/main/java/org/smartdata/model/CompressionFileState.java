@@ -18,13 +18,14 @@
 package org.smartdata.model;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
 /**
  * A class to maintain info of compressed files.
  */
-public class CompressionFileState extends FileState {
+public class CompressionFileState extends FileState implements Serializable {
 
   private int bufferSize;
   private String compressionImpl;

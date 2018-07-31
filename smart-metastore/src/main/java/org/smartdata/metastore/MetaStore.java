@@ -2174,7 +2174,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           smallFileDao.insertUpdate(compactFileState);
           break;
         case COMPRESSION:
-          insertCompressedFile((CompressionFileState) fileState);
+          CompressionFileState compressionFileState =
+              (CompressionFileState) fileState;
+          compressionFileDao.insert(compressionFileState);
           break;
         case S3:
           break;
@@ -2317,16 +2319,6 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
-  }
-
-  /**
-   * Insert a new compressed file into database.
-   *
-   * @param compressionInfo
-   */
-  private synchronized void insertCompressedFile(
-      CompressionFileState compressionInfo) throws MetaStoreException {
-    compressionFileDao.insert(compressionInfo);
   }
 
   /**

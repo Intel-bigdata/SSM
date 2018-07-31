@@ -103,6 +103,7 @@ public class CompressionScheduler extends ActionSchedulerService {
       if (!supportCompression(path)) {
         return false;
       }
+      // TODO remove this part
       FileState fileState = new FileState(path, FileState.FileType.COMPRESSION,
           FileState.FileStage.PROCESSING);
       metaStore.insertUpdateFileState(fileState);

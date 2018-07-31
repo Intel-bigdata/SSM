@@ -177,7 +177,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   public void testListLocatedStatus() throws Exception {
     waitTillSSMExitSafeMode();
 
-    initDB();
+    // initDB();
     SmartFileSystem smartDfs = new SmartFileSystem();
     smartDfs.initialize(dfs.getUri(), ssm.getContext().getConf());
 
