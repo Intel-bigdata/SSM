@@ -61,7 +61,7 @@ public class CompressionAction extends HdfsAction {
 
   private String filePath;
   private int bufferSize = 1024 * 1024;
-  private String compressionImpl = "snappy";
+  private String compressionImpl = "Zlib";
   private int UserDefinedbuffersize;
   private int Calculatedbuffersize;
 

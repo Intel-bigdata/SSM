@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Random;
 
 public class TestCompressionAction extends MiniClusterHarness {
-  public static final int DEFAULT_BLOCK_SIZE = 1024 * 64;
+  public static final int DEFAULT_BLOCK_SIZE = 1024 * 1024;
 
   @Override
   @Before
@@ -70,13 +70,13 @@ public class TestCompressionAction extends MiniClusterHarness {
   public void testExecute() throws Exception {
 
     String filePath = "/testCompressFile/fadsfa/213";
-    int bufferSize = 1024*128;
+    int bufferSize = 1024 * 128;
 //    String compressionImpl = "Lz4";
 //    String compressionImpl = "Bzip2";
 //    String compressionImpl = "Zlib";
     byte[] bytes = TestCompressionAction.BytesGenerator.get(bufferSize);
 
-    short replication = 4;
+    short replication = 3;
     long blockSize = DEFAULT_BLOCK_SIZE;
     // Create HDFS file
     OutputStream outputStream = dfsClient.create(filePath, true,

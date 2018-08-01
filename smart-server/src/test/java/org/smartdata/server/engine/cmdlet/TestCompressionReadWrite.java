@@ -64,9 +64,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testSubmitCompressionAction() throws Exception {
-    if (!loadedNative()) {
-      return;
-    }
+    // if (!loadedNative()) {
+    //   return;
+    // }
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -81,7 +81,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
-
+    Thread.sleep(500);
     // metastore  test
     FileState fileState = metaStore.getFileState(fileName);
     Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
@@ -125,7 +125,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
-
+    Thread.sleep(500);
     // metastore  test
     FileState fileState = metaStore.getFileState(fileName);
     Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
@@ -144,9 +144,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testCompressedFileRandomRead() throws Exception {
-    if (!loadedNative()) {
-      return;
-    }
+    // if (!loadedNative()) {
+    //   return;
+    // }
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -183,9 +183,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testListLocatedStatus() throws Exception {
-    if (!loadedNative()) {
-      return;
-    }
+    // if (!loadedNative()) {
+    //   return;
+    // }
     waitTillSSMExitSafeMode();
 
     // initDB();
