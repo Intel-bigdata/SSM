@@ -18,10 +18,13 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang.SerializationUtils;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartConstants;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
@@ -33,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -64,6 +68,7 @@ public class CompressionAction extends HdfsAction {
   private String compressionImpl = "Zlib";
   private int UserDefinedbuffersize;
   private int Calculatedbuffersize;
+  private String xAttrName = null;
 
   private CompressionFileInfo compressionFileInfo;
   private CompressionFileState compressionFileState;
@@ -71,6 +76,7 @@ public class CompressionAction extends HdfsAction {
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
+    this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     this.filePath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE)) {
       this.UserDefinedbuffersize = Integer.valueOf(args.get(BUF_SIZE));
@@ -129,6 +135,9 @@ public class CompressionAction extends HdfsAction {
     }
     String compressionInfoJson = new Gson().toJson(compressionFileInfo);
     appendResult(compressionInfoJson);
+    dfsClient.setXAttr(filePath,
+        xAttrName, SerializationUtils.serialize(compressionFileState),
+        EnumSet.of(XAttrSetFlag.CREATE));
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {

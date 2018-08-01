@@ -57,11 +57,6 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     smartDFSClient = new SmartDFSClient(ssm.getContext().getConf());
   }
 
-  private void initDB() throws Exception {
-    MetaStore metaStore = ssm.getMetaStore();
-    metaStore.formatDataBase();
-  }
-
   @Test
   public void testSubmitCompressionAction() throws Exception {
     // if (!loadedNative()) {
@@ -81,7 +76,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
-    Thread.sleep(500);
+    Thread.sleep(1000);
     // metastore  test
     FileState fileState = metaStore.getFileState(fileName);
     Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());

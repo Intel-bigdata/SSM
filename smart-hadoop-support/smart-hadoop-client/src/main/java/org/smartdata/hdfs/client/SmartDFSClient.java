@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.CorruptFileBlocks;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -42,6 +43,7 @@ import org.smartdata.SmartConstants;
 import org.smartdata.client.SmartClient;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
 
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -323,6 +326,52 @@ public class SmartDFSClient extends DFSClient {
           blockLocation.setOffset(blockLocation.getOffset() - offset);
         }
         return blockLocations;
+      } else if (fileState instanceof CompressionFileState) {
+        CompressionFileState compressionInfo = (CompressionFileState) fileState;
+        Long[] originalPos =
+            compressionInfo.getOriginalPos().clone();
+        Long[] compressedPos =
+            compressionInfo.getCompressedPos().clone();
+        int startIndex = compressionInfo.getPosIndexByOriginalOffset(start);
+        int endIndex =
+            compressionInfo.getPosIndexByOriginalOffset(start + length - 1);
+        long compressedStart = compressedPos[startIndex];
+        long compressedLength = 0;
+        if (endIndex < compressedPos.length - 1) {
+          compressedLength = compressedPos[endIndex + 1] - compressedStart;
+        } else {
+          compressedLength =
+              compressionInfo.getCompressedLength() - compressedStart;
+        }
+
+        LocatedBlocks originalLocatedBlocks =
+            super.getLocatedBlocks(src, compressedStart, compressedLength);
+
+        List<LocatedBlock> blocks = new ArrayList<>();
+        for (LocatedBlock block : originalLocatedBlocks.getLocatedBlocks()) {
+
+          blocks.add(new LocatedBlock(
+              block.getBlock(),
+              block.getLocations(),
+              block.getStorageIDs(),
+              block.getStorageTypes(),
+              compressionInfo
+                  .getPosIndexByCompressedOffset(block.getStartOffset()),
+              block.isCorrupt(),
+              block.getCachedLocations()
+          ));
+        }
+        LocatedBlock lastLocatedBlock =
+            originalLocatedBlocks.getLastLocatedBlock();
+        long fileLength = compressionInfo.getOriginalLength();
+
+        return new LocatedBlocks(fileLength,
+            originalLocatedBlocks.isUnderConstruction(),
+            blocks,
+            lastLocatedBlock,
+            originalLocatedBlocks.isLastBlockComplete(),
+            originalLocatedBlocks.getFileEncryptionInfo())
+            .getLocatedBlocks().toArray(new BlockLocation[0]);
       }
     }
     return blockLocations;
