@@ -1518,13 +1518,13 @@ angular.module('dashing.progressbar', [])
       },
       link: function(scope, elem, attrs) {
         attrs.$observe('current', function(current) {
-          updateUsageAndClass(Number(current), Number(attrs.max), Boolean(attrs.flag));
+          updateUsageAndClass(Number(current), String(attrs.max), Boolean(attrs.flag));
         });
         attrs.$observe('max', function(max) {
-          updateUsageAndClass(Number(attrs.current), Number(max), Boolean(attrs.flag));
+          updateUsageAndClass(Number(attrs.current), String(max), Boolean(attrs.flag));
         });
         attrs.$observe('flag', function(flag) {
-          updateUsageAndClass(Number(attrs.current), Number(attrs.max), Boolean(flag));
+          updateUsageAndClass(Number(attrs.current), String(attrs.max), Boolean(flag));
         });
         function updateUsageAndClass(current, max, flag) {
           scope.usage = 1 > 0 ? Math.round(current * 100 / 1) : -1;
