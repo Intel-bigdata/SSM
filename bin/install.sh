@@ -20,7 +20,7 @@ BIN_HOME=$(cd `dirname $0`;pwd)
 SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 CONF_DIR=$SSM_HOME/conf
-INSTALL_PATH=""
+INSTALL_PATH=''
 
 cd $SSM_HOME/../;
 
@@ -49,11 +49,11 @@ done
 
 cat $CONF_DIR/servers $CONF_DIR/agents >>/dev/null 2>/dev/null
 if [ $? = 1 ];then
- echo -e "maybe there is no 'agents' or 'servers' under $CONF_DIR"
+ echo -e "there is no file named 'agents' or 'servers' under $CONF_DIR"
  exit 1
 fi
 
-echo -e "The configured hosts are shown below(\033[34mempty means there is no host configured\033[0m):"
+echo -e "SSM will be installed on the below hosts (\033[33mempty means there is no host configured\033[0m):"
 
 IFS=$'\n'
 for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
@@ -62,7 +62,7 @@ do
    if [[ "$host" =~ ^#.* ]];then
         continue
    else
-        echo -n -e "\033[34m$host \033[0m "
+        echo -n -e "\033[33m$host \033[0m "
    fi
 done
 
@@ -80,6 +80,15 @@ case $yn in
         * ) continue;;
 esac
 done
+
+if [ -z $INSTALL_PATH  ];then
+     user=`whoami`
+     if [[ "$user" = "root" ]] ;then
+           INSTALL_PATH=/root/
+     else INSTALL_PATH=/home/$user/
+     fi
+     echo -e "SSM will be installed under \033[33m$INSTALL_PATH\033[0m"
+fi
 
 echo installing...
 
