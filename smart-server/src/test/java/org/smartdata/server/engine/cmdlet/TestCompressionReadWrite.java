@@ -63,7 +63,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testSubmitCompressionAction() throws Exception {
-    if (!loadedNative()) return;
+    if (!loadedNative()) {
+      return;
+    }
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -141,7 +143,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testCompressedFileRandomRead() throws Exception {
-    if (!loadedNative()) return;
+    if (!loadedNative()) {
+      return;
+    }
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -178,7 +182,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
   @Test
   public void testListLocatedStatus() throws Exception {
-    if (!loadedNative()) return;
+    if (!loadedNative()) {
+      return;
+    }
     waitTillSSMExitSafeMode();
 
     // initDB();
@@ -281,8 +287,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     } catch (Exception e) {
       return false;
     }
-    if (hadoopNativePath.isEmpty() || !new File(hadoopNativePath).isFile())
+    if (hadoopNativePath.isEmpty() || !new File(hadoopNativePath).isFile()) {
       return false;
+    }
     return true;
   }
 }
