@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.util.NativeCodeLoader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -288,6 +289,9 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
       return false;
     }
     if (hadoopNativePath.isEmpty() || !new File(hadoopNativePath).isFile()) {
+      return false;
+    }
+    if (!NativeCodeLoader.isNativeCodeLoaded()) {
       return false;
     }
     return true;

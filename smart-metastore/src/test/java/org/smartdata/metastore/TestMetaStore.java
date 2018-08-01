@@ -834,10 +834,10 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertEquals(fileState, metaStore.getFileState("/test1"));
 
     // Compression & Processing (without compression info)
-    fileState = new FileState("/test1", FileState.FileType.COMPRESSION,
-        FileState.FileStage.PROCESSING);
-    metaStore.insertUpdateFileState(fileState);
-    Assert.assertEquals(fileState, metaStore.getFileState("/test1"));
+    // fileState = new FileState("/test1", FileState.FileType.COMPRESSION,
+    //     FileState.FileStage.PROCESSING);
+    // metaStore.insertUpdateFileState(fileState);
+    // Assert.assertEquals(fileState, metaStore.getFileState("/test1"));
 
     // Compression & Done (with compression info)
     int bufferSize = 1024;
@@ -877,10 +877,10 @@ public class TestMetaStore extends TestDaoUtil {
     Assert.assertEquals(fileState1, metaStore.getFileState("/test1"));
 
     // Compression & Processing (without compression info)
-    FileState fileState2 = new FileState("/test2", FileState.FileType.COMPRESSION,
-        FileState.FileStage.PROCESSING);
-    metaStore.insertUpdateFileState(fileState2);
-    Assert.assertEquals(fileState2, metaStore.getFileState("/test2"));
+    // FileState fileState2 = new FileState("/test2", FileState.FileType.COMPRESSION,
+    //     FileState.FileStage.PROCESSING);
+    // metaStore.insertUpdateFileState(fileState2);
+    // Assert.assertEquals(fileState2, metaStore.getFileState("/test2"));
 
     // Compression & Done (with compression info)
     int bufferSize = 1024;
