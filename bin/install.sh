@@ -68,12 +68,18 @@ done
 
 echo ""
 
+user=`whoami`
+if [[ "$user" = "root" ]];then
+      DEFAULT_PATH=/root/
+      else DEFAULT_PATH=/home/$user/
+fi
+
 while true;do
 read -p  "Do you want to continue installing? Please type [Y|y] or [N|n]:
 "  yn
 case $yn in
         [Yy]* )
-        read -p "Please type in the path where you want to install SSM:
+        read -p "$(echo -e "Please type in the path where you want to install SSM (\033[33mempty means using default path '$DEFAULT_PATH'\033[0m)":)
 " INSTALL_PATH
         break;;
         [Nn]* ) exit 1;;
@@ -81,13 +87,8 @@ case $yn in
 esac
 done
 
-if [ -z $INSTALL_PATH  ];then
-     user=`whoami`
-     if [[ "$user" = "root" ]] ;then
-           INSTALL_PATH=/root/
-     else INSTALL_PATH=/home/$user/
-     fi
-     echo -e "SSM will be installed under \033[33m$INSTALL_PATH\033[0m"
+if [ -z "$INSTALL_PATH"  ];then
+     INSTALL_PATH=$DEFAULT_PATH
 fi
 
 echo installing...
@@ -111,17 +112,11 @@ do
          echo installing SSM to $host...
          scp ${SSM_NAME}.tar $host:$INSTALL_PATH >> /dev/null
          ssh $host "cd ${INSTALL_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
-         echo install SSM to $host successfully!
       elif [ $flag = 0 ];then
          ssh $host "mkdir $INSTALL_PATH"
-         if [ $? = 0 ];then
-            echo installing SSM to $host...
-            scp ${SSM_NAME}.tar $host:$INSTALL_PATH >> /dev/null
-            ssh $host "cd ${INSTALL_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
-            echo install SSM to $host successfully!
-         else
-            exit 1
-         fi
+         echo installing SSM to $host...
+         scp ${SSM_NAME}.tar $host:$INSTALL_PATH >> /dev/null
+         ssh $host "cd ${INSTALL_PATH};tar xf ${SSM_NAME}.tar;rm -f ${SSM_NAME}.tar"
       else
          rm -f ${SSM_NAME}.tar
          exit 1
