@@ -190,7 +190,7 @@ After finishing the SSM configuration, we can start to deploy the SSM package wi
 # Deploy SSM
 ---------------------------------------------------------------------------------
 
-SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
+SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode. To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), you can enter into ${SMART_HOME} directory and type ./bin/install.sh. You can use --config <config-dir> to specify where SSM's config directory is.${SMART_HOME}/conf is the default config directory if the config option is not used.
    
    ## Standalone SSM Service
 
