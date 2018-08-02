@@ -349,16 +349,23 @@ public class SmartDFSClient extends DFSClient {
 
         List<LocatedBlock> blocks = new ArrayList<>();
         for (LocatedBlock block : originalLocatedBlocks.getLocatedBlocks()) {
-
+          // TODO handle CDH2.6 storage type
+          // blocks.add(new LocatedBlock(
+          //     block.getBlock(),
+          //     block.getLocations(),
+          //     block.getStorageIDs(),
+          //     block.getStorageTypes(),
+          //     compressionInfo
+          //         .getPosIndexByCompressedOffset(block.getStartOffset()),
+          //     block.isCorrupt(),
+          //     block.getCachedLocations()
+          // ));
           blocks.add(new LocatedBlock(
               block.getBlock(),
               block.getLocations(),
-              block.getStorageIDs(),
-              block.getStorageTypes(),
               compressionInfo
                   .getPosIndexByCompressedOffset(block.getStartOffset()),
-              block.isCorrupt(),
-              block.getCachedLocations()
+              block.isCorrupt()
           ));
         }
         LocatedBlock lastLocatedBlock =
