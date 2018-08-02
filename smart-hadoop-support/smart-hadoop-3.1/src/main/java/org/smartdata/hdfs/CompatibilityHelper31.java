@@ -22,8 +22,6 @@ import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.SmartInputStreamFactory;
-import org.apache.hadoop.hdfs.SmartInputStreamFactoryV3;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
@@ -135,11 +133,17 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   public OutputStream getDFSClientAppend(DFSClient client, String dest,
                                          int buffersize, long offset) throws IOException {
     if (client.exists(dest) && offset != 0) {
-      return client
-          .append(dest, buffersize,
-              EnumSet.of(CreateFlag.APPEND), null, null);
+      return getDFSClientAppend(client, dest, buffersize);
     }
     return client.create(dest, true);
+  }
+
+  @Override
+  public OutputStream getDFSClientAppend(DFSClient client, String dest,
+                                         int buffersize) throws IOException {
+    return client
+        .append(dest, buffersize,
+            EnumSet.of(CreateFlag.APPEND), null, null);
   }
 
   @Override
@@ -151,11 +155,6 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
     // Copy to s3
     org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
     return fs.create(new Path(dest), true);
-  }
-
-  @Override
-  public SmartInputStreamFactory getSmartInputStreamFactory() {
-    return new SmartInputStreamFactoryV3();
   }
 
   @Override
@@ -190,8 +189,6 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       long length, boolean isdir, int block_replication, long blocksize, long modification_time,
       long access_time, FsPermission permission, String owner, String group, byte[] symlink, byte[] path,
       long fileId, int childrenNum, FileEncryptionInfo feInfo, byte storagePolicy) {
-//    return new HdfsNamedFileStatus(length, isdir, block_replication, blocksize, modification_time, access_time, permission,
-//        null, owner, group, symlink, path, fileId, childrenNum, feInfo, storagePolicy, null);
     return new HdfsFileStatus.Builder()
         .length(length)
         .isdir(isdir)

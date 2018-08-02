@@ -26,66 +26,39 @@
         <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>smart-hadoop-3.1</artifactId>
+    <artifactId>smart-hadoop-common</artifactId>
     <version>1.5.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties>
-        <hadoop.version>3.1.0</hadoop.version>
-    </properties>
-
     <dependencies>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs-client</artifactId>
-            <version>${hadoop.version}</version>
-            <scope>provided</scope>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-common</artifactId>
+            <version>1.5.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
-            <artifactId>smart-hadoop-common</artifactId>
+            <artifactId>smart-metastore</artifactId>
             <version>1.5.0-SNAPSHOT</version>
-        </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.smartdata</groupId>-->
-            <!--<artifactId>smart-inputstream</artifactId>-->
-            <!--<version>1.5.0-SNAPSHOT</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>org.smartdata</groupId>-->
-            <!--<artifactId>smart-hadoop</artifactId>-->
-            <!--<version>1.5.0-SNAPSHOT</version>-->
-            <!--<scope>test</scope>-->
-            <!--<type>test-jar</type>-->
-        <!--</dependency>-->
-        <dependency>
-            <groupId>org.smartdata</groupId>
-            <artifactId>smart-hadoop-common</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
-            <scope>test</scope>
-            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-action</artifactId>
             <version>1.5.0-SNAPSHOT</version>
-            <scope>test</scope>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
+            <version>${hadoop.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>tape</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-action</artifactId>
+            <version>1.5.0-SNAPSHOT</version>
             <scope>test</scope>
             <type>test-jar</type>
         </dependency>
@@ -100,6 +73,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-metastore</artifactId>
             <version>1.5.0-SNAPSHOT</version>
@@ -107,14 +92,14 @@
             <type>test-jar</type>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-aws</artifactId>
-            <version>${hadoop.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>1.6</version>
         </dependency>
     </dependencies>
 </project>

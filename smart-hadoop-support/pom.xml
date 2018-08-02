@@ -33,6 +33,8 @@
     <modules>
         <module>smart-hadoop</module>
         <module>smart-hadoop-client</module>
+        <module>smart-hadoop-common</module>
+        <module>smart-inputstream</module>
     </modules>
 
     <profiles>

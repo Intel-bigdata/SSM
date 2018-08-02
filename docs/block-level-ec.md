@@ -14,7 +14,7 @@ lot from its design and experience.
 
 Striped EC vs Block EC
 ======================
-EC with striped layout can achieve storage saving with both small files and large files. It supports online erasure coding and when data writen to HDFS, the coding is already done. On high speed network environment, it outperforms than replica because at the same time it can write to more than one datanode in parallevel. While one drawback is it loses the data locality advantage which may impact the performance of upper layer applications especially for those particularly optimized according to the advantage. For more Striped EC introduction,
+EC with striped layout can achieve storage saving with both small files and large files. It supports online erasure coding and when data writen to HDFS, the coding is already done. On high speed network environment, it outperforms than replica because at the same time it can write to more than one datanode in parallel. While one drawback is it loses the data locality advantage which may impact the performance of upper layer applications especially for those particularly optimized according to the advantage. For more Striped EC introduction,
 refer to this [our joint blog with Cloudera](https://blog.cloudera.com/blog/2015/09/introduction-to-hdfs-erasure-coding-in-apache-hadoop/).
 
 Block EC is very suitable for very large files of enough blocks needed by a erasure coding group. The erasure coding is done offline and in background instead of online while client writing data. Compared with striped EC, block EC keeps data locality, being of less performance impact to some frameworks and applications.

@@ -21,8 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.SmartInputStreamFactory;
-import org.apache.hadoop.hdfs.SmartInputStreamFactory26;
 import org.apache.hadoop.hdfs.StorageType;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
@@ -139,10 +137,16 @@ public class CompatibilityHelper26 extends CompatibilityHelper2 implements Compa
   public OutputStream getDFSClientAppend(DFSClient client, String dest,
       int buffersize, long offset) throws IOException {
     if (client.exists(dest) && offset != 0) {
-      return client
-          .append(dest, buffersize, null, null);
+      return getDFSClientAppend(client, dest, buffersize);
     }
     return client.create(dest, true);
+  }
+
+  @Override
+  public OutputStream getDFSClientAppend(
+      DFSClient client, String dest, int buffersize) throws IOException {
+    return client
+        .append(dest, buffersize, null, null);
   }
 
   @Override
@@ -154,10 +158,5 @@ public class CompatibilityHelper26 extends CompatibilityHelper2 implements Compa
     // Copy to s3
     org.apache.hadoop.fs.FileSystem fs = org.apache.hadoop.fs.FileSystem.get(URI.create(dest), conf);
     return fs.create(new Path(dest), true);
-  }
-
-  @Override
-  public SmartInputStreamFactory getSmartInputStreamFactory() {
-    return new SmartInputStreamFactory26();
   }
 }

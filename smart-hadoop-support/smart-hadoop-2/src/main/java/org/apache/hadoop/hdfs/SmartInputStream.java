@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  * DFSInputStream for SSM.
  */
-public abstract class SmartInputStream extends DFSInputStream {
+public class SmartInputStream extends DFSInputStream {
   protected final FileState fileState;
 
   SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,

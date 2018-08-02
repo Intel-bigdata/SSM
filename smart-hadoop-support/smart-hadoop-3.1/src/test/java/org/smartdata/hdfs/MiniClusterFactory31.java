@@ -15,26 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hdfs;
+package org.smartdata.hdfs;
 
-import org.apache.hadoop.fs.UnresolvedLinkException;
-import org.smartdata.model.FileState;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.StorageType;
+import org.apache.hadoop.hdfs.MiniDFSCluster;
 
 import java.io.IOException;
 
-/**
- * DFSInputStream for SSM.
- */
-public class SmartInputStream extends DFSInputStream {
-  protected final FileState fileState;
-
-  SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-      FileState fileState) throws IOException, UnresolvedLinkException {
-    super(dfsClient, src, verifyChecksum, null);
-    this.fileState = fileState;
+public class MiniClusterFactory31 extends MiniClusterFactory {
+  @Override
+  public MiniDFSCluster create(int dataNodes, Configuration conf) throws IOException {
+    return new MiniDFSCluster.Builder(conf)
+      .numDataNodes(dataNodes)
+      .build();
   }
 
-  public FileState.FileType getType() {
-    return fileState.getFileType();
+  @Override
+  public MiniDFSCluster createWithStorages(int dataNodes, Configuration conf) throws IOException {
+    return new MiniDFSCluster.Builder(conf)
+      .numDataNodes(dataNodes)
+      .storagesPerDatanode(3)
+      .storageTypes(new StorageType[]{StorageType.DISK, StorageType.ARCHIVE,
+        StorageType.SSD})
+      .build();
   }
 }
