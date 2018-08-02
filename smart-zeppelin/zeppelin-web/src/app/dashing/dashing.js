@@ -1527,7 +1527,7 @@ angular.module('dashing.progressbar', [])
           updateUsageAndClass(Number(attrs.current), String(attrs.max), Boolean(flag));
         });
         function updateUsageAndClass(current, max, flag) {
-          scope.usage = 1 > 0 ? Math.round(current * 100 / 1) : -1;
+          scope.usage = Math.round(current * 100);
           scope.usageClass = (scope.colorMapperFn ?
         //     scope.colorMapperFn : defaultColorMapperFn)(scope.usage);
         // }
