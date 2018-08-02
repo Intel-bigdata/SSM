@@ -34,6 +34,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.smartdata.SmartConstants;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.TestDaoUtil;
@@ -202,5 +203,7 @@ public abstract class TestInotifyFetcher extends TestDaoUtil {
     }
   }
 
-  public abstract HdfsDataOutputStream append(DFSClient client, String src, int bufferSize) throws IOException;
+  public HdfsDataOutputStream append(DFSClient client, String src, int bufferSize) throws IOException {
+    return (HdfsDataOutputStream)CompatibilityHelperLoader.getHelper().getDFSClientAppend(client, src, bufferSize);
+  }
 }
