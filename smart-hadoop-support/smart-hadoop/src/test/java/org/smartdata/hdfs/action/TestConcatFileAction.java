@@ -44,13 +44,13 @@ public class TestConcatFileAction extends MiniClusterHarness {
     //write to DISK
     //write 50 Bytes to file1 and 50 Byte to file2. then concat them
     FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       out1.writeByte(1);
     }
     out1.close();
 
     out1 = dfs.create(new Path(srcPath + "/" + file2));
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       out1.writeByte(2);
     }
     out1.close();
@@ -69,10 +69,10 @@ public class TestConcatFileAction extends MiniClusterHarness {
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       Assert.assertTrue(in.readByte() == 1);
     }
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       Assert.assertTrue(in.readByte() == 2);
     }
   }
@@ -88,13 +88,13 @@ public class TestConcatFileAction extends MiniClusterHarness {
     dfs.mkdirs(new Path(target));
     //write to DISK
     FSDataOutputStream out1 = dfs.create(new Path(srcPath + "/" + file1));
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       out1.writeByte(1);
     }
     out1.close();
 
     out1 = dfs.create(new Path(srcPath + "/" + file2));
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       out1.writeByte(2);
     }
     out1.close();
@@ -113,10 +113,10 @@ public class TestConcatFileAction extends MiniClusterHarness {
     Assert.assertTrue(dfsClient.exists(target));
     //read and check file
     FSDataInputStream in = dfs.open(new Path(target),50);
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       Assert.assertTrue(in.readByte() == 1);
     }
-    for (int i = 0; i < 50; i++) {
+    for (int i = 0; i < DEFAULT_BLOCK_SIZE; i++) {
       Assert.assertTrue(in.readByte() == 2);
     }
   }

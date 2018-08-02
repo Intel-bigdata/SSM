@@ -49,6 +49,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   @Override
   @Before
   public void init() throws Exception {
+    DEFAULT_BLOCK_SIZE = 1024 * 1024;
     super.init();
 //    this.compressionImpl = "snappy";
 //    this.compressionImpl = "Lz4";
