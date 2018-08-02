@@ -53,7 +53,7 @@ if [ $? = 1 ];then
  exit 1
 fi
 
-echo -e "SSM will be installed on the below hosts (\033[33mempty means there is no host configured\033[0m):"
+echo -e "SSM will be installed on the below hosts \033[33m(empty means there is no host configured)\033[0m"
 
 IFS=$'\n'
 for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
@@ -79,7 +79,7 @@ read -p  "Do you want to continue installing? Please type [Y|y] or [N|n]:
 "  yn
 case $yn in
         [Yy]* )
-        read -p "$(echo -e "Please type in the path where you want to install SSM (\033[33mempty means using default path '$DEFAULT_PATH'\033[0m)":)
+        read -p "$(echo -e "Please type in the path where you want to install SSM \033[33m(empty means using default path '$DEFAULT_PATH')\033[0m":)
 " INSTALL_PATH
         break;;
         [Nn]* ) exit 1;;
