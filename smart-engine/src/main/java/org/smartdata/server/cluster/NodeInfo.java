@@ -26,13 +26,14 @@ import org.smartdata.model.ExecutorType;
  */
 public class NodeInfo {
   private String id;
-  private String location;
+  private String host;
+  private int port;
   private ExecutorType executorType;
 
   public NodeInfo(String id, String location, ExecutorType executorType) {
     this.id = id;
-    this.location = location;
     this.executorType = executorType;
+    doSetLocation(location);
   }
 
   public String getId() {
@@ -44,11 +45,31 @@ public class NodeInfo {
   }
 
   public String getLocation() {
-    return location;
+    return host + ":" + port;
   }
 
   public void setLocation(String location) {
-    this.location = location;
+    doSetLocation(location);
+  }
+
+  private void doSetLocation(String location) {
+    host = null;
+    port = 0;
+    if (location != null) {
+      String[] its = location.split(":");
+      if (its.length > 1) {
+        port = Integer.valueOf(its[1]);
+      }
+      host = its[0];
+    }
+  }
+
+  public String getHost() {
+    return host;
+  }
+
+  public int getPort() {
+    return port;
   }
 
   public ExecutorType getExecutorType() {
@@ -57,7 +78,7 @@ public class NodeInfo {
 
   @Override
   public String toString() {
-    return String.format("{id=%s, location=%s, executorType=%s}", id, location, executorType);
+    return String.format("{id=%s, location=%s, executorType=%s}", id, getLocation(), executorType);
   }
 }
 

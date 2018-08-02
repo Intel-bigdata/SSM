@@ -30,6 +30,7 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.CmdletStatus;
+import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.NodeMessage;
@@ -72,6 +73,7 @@ public class CmdletDispatcher {
   private AtomicInteger index = new AtomicInteger(0);
 
   private Map<String, AtomicInteger> regNodes = new HashMap<>();
+  private Map<String, NodeInfo> regNodeInfos = new HashMap<>();
 
   private List<List<String>> cmdExecSrvNodeIds = new ArrayList<>();
   private String[] completeOn = new String[ExecutorType.values().length];
@@ -158,7 +160,15 @@ public class CmdletDispatcher {
     return launchCmdlet;
   }
 
-  private void updateCmdActionStatus(LaunchCmdlet cmdlet) {
+  private void updateCmdActionStatus(LaunchCmdlet cmdlet, String host) {
+    if (cmdletManager != null) {
+      try {
+        cmdletManager.updateCmdletExecHost(cmdlet.getCmdletId(), host);
+      } catch (IOException e) {
+        // Ignore this
+      }
+    }
+
     try {
       for (LaunchAction action : cmdlet.getLaunchActions()) {
         ActionStatus actionStatus = new ActionStatus(
@@ -339,14 +349,16 @@ public class CmdletDispatcher {
         return false;
       }
 
-      updateCmdActionStatus(cmdlet);
+      NodeInfo nodeInfo = regNodeInfos.get(nodeId);
+      String host = nodeInfo == null ? "" : nodeInfo.getHost();
+      updateCmdActionStatus(cmdlet, host);
       dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
       if (logDispResult) {
         LOG.info(
             String.format(
                 "Dispatching cmdlet->[%s] to executor service %s : %s",
-                cmdlet.getCmdletId(), selected.getExecutorType(), nodeId));
+                cmdlet.getCmdletId(), selected.getExecutorType(), host));
       }
       return true;
     }
@@ -422,6 +434,7 @@ public class CmdletDispatcher {
           return;
         } else {
           regNodes.put(nodeId, new AtomicInteger(defaultSlots));
+          regNodeInfos.put(nodeId, msg.getNodeInfo());
           cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
         }
       } else {
@@ -430,6 +443,7 @@ public class CmdletDispatcher {
           return;
         } else {
           regNodes.remove(nodeId);
+          regNodeInfos.remove(nodeId);
           cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).remove(nodeId);
         }
       }

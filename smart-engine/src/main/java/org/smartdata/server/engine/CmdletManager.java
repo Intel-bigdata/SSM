@@ -980,6 +980,21 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  public void updateCmdletExecHost(long cmdletId, String host) throws IOException {
+    CmdletInfo cmdlet = getCmdletInfo(cmdletId);
+    if (cmdlet == null) {
+      return;
+    }
+
+    ActionInfo action;
+    for (long id : cmdlet.getAids()) {
+      action = getActionInfo(id);
+      if (action != null) {
+        action.setExecHost(host);
+      }
+    }
+  }
+
   /**
    * Delete all cmdlets related with rid.
    * @param rid
