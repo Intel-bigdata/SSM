@@ -193,6 +193,7 @@ public class ActionDao {
         + "OR cid LIKE '%" + path + "%' ESCAPE '/' "
         + "OR args LIKE '%" + path + "%' ESCAPE '/' "
         + "OR result LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR exec_host LIKE '%" + path + "%' ESCAPE '/' "
         + "OR progress LIKE '%" + path + "%' ESCAPE '/' "
         + "OR log LIKE '%" + path + "%' ESCAPE '/' "
         + "OR action_name LIKE '%" + path + "%' ESCAPE '/')";
@@ -309,8 +310,9 @@ public class ActionDao {
         + "create_time, "
         + "finished, "
         + "finish_time, "
+        + "exec_host, "
         + "progress)"
-        + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     return jdbcTemplate.batchUpdate(sql,
       new BatchPreparedStatementSetter() {
         public void setValues(PreparedStatement ps,
@@ -325,7 +327,8 @@ public class ActionDao {
           ps.setLong(8, actionInfos[i].getCreateTime());
           ps.setBoolean(9, actionInfos[i].isFinished());
           ps.setLong(10, actionInfos[i].getFinishTime());
-          ps.setFloat(11, actionInfos[i].getProgress());
+          ps.setString(11, actionInfos[i].getExecHost());
+          ps.setFloat(12, actionInfos[i].getProgress());
         }
         public int getBatchSize() {
           return actionInfos.length;
@@ -349,6 +352,7 @@ public class ActionDao {
         + "create_time = ?, "
         + "finished = ?, "
         + "finish_time = ?, "
+        + "exec_host = ?, "
         + "progress = ? "
         + "WHERE aid = ?";
     return jdbcTemplate.batchUpdate(sql,
@@ -361,8 +365,9 @@ public class ActionDao {
           ps.setLong(4, actionInfos[i].getCreateTime());
           ps.setBoolean(5, actionInfos[i].isFinished());
           ps.setLong(6, actionInfos[i].getFinishTime());
-          ps.setFloat(7, actionInfos[i].getProgress());
-          ps.setLong(8, actionInfos[i].getActionId());
+          ps.setString(7, actionInfos[i].getExecHost());
+          ps.setFloat(8, actionInfos[i].getProgress());
+          ps.setLong(9, actionInfos[i].getActionId());
         }
 
         public int getBatchSize() {
@@ -395,6 +400,7 @@ public class ActionDao {
     parameters.put("create_time", actionInfo.getCreateTime());
     parameters.put("finished", actionInfo.isFinished());
     parameters.put("finish_time", actionInfo.getFinishTime());
+    parameters.put("exec_host", actionInfo.getExecHost());
     parameters.put("progress", actionInfo.getProgress());
     return parameters;
   }
@@ -416,6 +422,7 @@ public class ActionDao {
       actionInfo.setCreateTime(resultSet.getLong("create_time"));
       actionInfo.setFinished(resultSet.getBoolean("finished"));
       actionInfo.setFinishTime(resultSet.getLong("finish_time"));
+      actionInfo.setExecHost(resultSet.getString("exec_host"));
       actionInfo.setProgress(resultSet.getFloat("progress"));
       return actionInfo;
     }
