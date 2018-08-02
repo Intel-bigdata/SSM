@@ -32,11 +32,11 @@ import java.util.Map;
 import java.util.Random;
 
 public class TestCompressionAction extends MiniClusterHarness {
-  public static final int DEFAULT_BLOCK_SIZE = 1024 * 1024;
 
   @Override
   @Before
   public void init() throws Exception {
+    DEFAULT_BLOCK_SIZE = 1024 * 1024;
     super.init();
   }
 
