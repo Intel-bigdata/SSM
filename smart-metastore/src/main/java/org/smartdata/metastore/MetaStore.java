@@ -2176,7 +2176,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         case COMPRESSION:
           CompressionFileState compressionFileState =
               (CompressionFileState) fileState;
-          compressionFileDao.insert(compressionFileState);
+          compressionFileDao.insertUpdate(compressionFileState);
           break;
         case S3:
           break;

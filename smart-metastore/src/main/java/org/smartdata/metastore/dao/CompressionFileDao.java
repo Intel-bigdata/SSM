@@ -54,6 +54,22 @@ public class CompressionFileDao {
     simpleJdbcInsert.execute(toMap(compressionInfo));
   }
 
+  public void insertUpdate(CompressionFileState compressionInfo) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    Gson gson = new Gson();
+    String sql = "REPLACE INTO " + TABLE_NAME
+        + "(file_name, buffer_size, compression_impl, " +
+        "original_length, compressed_length, originalPos, compressedPos)"
+        + " VALUES(?,?,?,?,?,?,?);";
+    jdbcTemplate.update(sql, compressionInfo.getPath(),
+        compressionInfo.getBufferSize(),
+        compressionInfo.getCompressionImpl(),
+        compressionInfo.getOriginalLength(),
+        compressionInfo.getCompressedLength(),
+        gson.toJson(compressionInfo.getOriginalPos()),
+        gson.toJson(compressionInfo.getCompressedPos()));
+  }
+
   public void deleteByName(String fileName) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql = "DELETE FROM " + TABLE_NAME + " WHERE file_name = ?";

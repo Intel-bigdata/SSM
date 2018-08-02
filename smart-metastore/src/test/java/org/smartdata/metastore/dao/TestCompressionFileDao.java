@@ -67,6 +67,26 @@ public class TestCompressionFileDao extends TestDaoUtil {
   }
 
   @Test
+  public void testInsertUpdate() throws Exception {
+    CompressionFileState compressionInfo = new CompressionFileState(
+        "/test", 131072, compressionImpl, originalPos.toArray(new Long[0]),
+        compressedPos.toArray(new Long[0]));
+
+    //insert test
+    compressionFileDao.insertUpdate(compressionInfo);
+    Assert.assertTrue(compressionFileDao.getInfoByName("/test").
+        getOriginalPos()[0].equals(9000L));
+
+    //update test
+    compressionInfo.setOriginalLength(1000);
+    compressionInfo.setCompressedLength(100);
+    compressionFileDao.insertUpdate(compressionInfo);
+    CompressionFileState newCompressionInfo = compressionFileDao.getInfoByName("/test");
+    Assert.assertEquals(compressionInfo.getOriginalLength(), newCompressionInfo.getOriginalLength());
+    Assert.assertEquals(compressionInfo.getCompressedLength(), newCompressionInfo.getCompressedLength());
+  }
+
+  @Test
   public void testGetCompressionInfo() throws Exception {
     long originalLen = 100;
     long compressedLen = 50;
