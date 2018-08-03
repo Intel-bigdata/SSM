@@ -32,7 +32,6 @@
 
     <modules>
         <module>smart-hadoop</module>
-        <module>smart-hadoop-client</module>
         <module>smart-hadoop-common</module>
         <module>smart-inputstream</module>
     </modules>
@@ -47,6 +46,7 @@
             <modules>
                 <module>smart-hadoop-2</module>
                 <module>smart-hadoop-2.7</module>
+                <module>smart-hadoop-client-2.7</module>
             </modules>
         </profile>
         <profile>
@@ -54,12 +54,14 @@
             <modules>
                 <module>smart-hadoop-2</module>
                 <module>smart-hadoop-cdh-2.6</module>
+                <module>smart-hadoop-client-cdh-2.6</module>
             </modules>
         </profile>
         <profile>
             <id>hadoop-3.1</id>
             <modules>
                 <module>smart-hadoop-3.1</module>
+                <module>smart-hadoop-client-3.1</module>
             </modules>
         </profile>
     </profiles>
