@@ -58,8 +58,8 @@ public class CompressionFileDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Gson gson = new Gson();
     String sql = "REPLACE INTO " + TABLE_NAME
-        + "(file_name, buffer_size, compression_impl, " +
-        "original_length, compressed_length, originalPos, compressedPos)"
+        + "(file_name, buffer_size, compression_impl, "
+        + "original_length, compressed_length, originalPos, compressedPos)"
         + " VALUES(?,?,?,?,?,?,?);";
     jdbcTemplate.update(sql, compressionInfo.getPath(),
         compressionInfo.getBufferSize(),

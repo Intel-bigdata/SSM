@@ -82,8 +82,10 @@ public class TestCompressionFileDao extends TestDaoUtil {
     compressionInfo.setCompressedLength(100);
     compressionFileDao.insertUpdate(compressionInfo);
     CompressionFileState newCompressionInfo = compressionFileDao.getInfoByName("/test");
-    Assert.assertEquals(compressionInfo.getOriginalLength(), newCompressionInfo.getOriginalLength());
-    Assert.assertEquals(compressionInfo.getCompressedLength(), newCompressionInfo.getCompressedLength());
+    Assert.assertEquals(compressionInfo.getOriginalLength(),
+        newCompressionInfo.getOriginalLength());
+    Assert.assertEquals(compressionInfo.getCompressedLength(),
+        newCompressionInfo.getCompressedLength());
   }
 
   @Test
