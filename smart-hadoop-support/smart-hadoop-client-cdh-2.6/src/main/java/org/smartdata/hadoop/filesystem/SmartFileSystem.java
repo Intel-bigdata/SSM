@@ -121,34 +121,34 @@ public class SmartFileSystem extends DistributedFileSystem {
     this.verifyChecksum = verifyChecksum;
   }
 
-  @Override
-  public FSDataOutputStream append(Path f, final int bufferSize,
-      final Progressable progress) throws IOException {
-    try {
-      return super.append(f, bufferSize, progress);
-    } catch (IOException e) {
-      FileState fileState = smartDFSClient.getFileState(getPathName(f));
-      if (fileState instanceof CompactFileState) {
-        throw new IOException(
-            smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
-      }
-      throw e;
-    }
-  }
-
 //  @Override
-//  public FSDataOutputStream append(Path f, final int bufferSize, final Progressable progress)
-//      throws IOException {
-//    FSDataOutputStream out = super.append(f, bufferSize, progress);
-//    if (out.getPos() == 0) {
+//  public FSDataOutputStream append(Path f, final int bufferSize,
+//      final Progressable progress) throws IOException {
+//    try {
+//      return super.append(f, bufferSize, progress);
+//    } catch (IOException e) {
 //      FileState fileState = smartDFSClient.getFileState(getPathName(f));
 //      if (fileState instanceof CompactFileState) {
 //        throw new IOException(
 //            smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
 //      }
+//      throw e;
 //    }
-//    return out;
 //  }
+
+  @Override
+  public FSDataOutputStream append(Path f, final int bufferSize, final Progressable progress)
+      throws IOException {
+    FSDataOutputStream out = super.append(f, bufferSize, progress);
+    if (out.getPos() == 0) {
+      FileState fileState = smartDFSClient.getFileState(getPathName(f));
+      if (fileState instanceof CompactFileState) {
+        throw new IOException(
+            smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
+      }
+    }
+    return out;
+  }
 
 //  @Override
 //  public FSDataOutputStream append(Path f, final EnumSet<CreateFlag> flag,

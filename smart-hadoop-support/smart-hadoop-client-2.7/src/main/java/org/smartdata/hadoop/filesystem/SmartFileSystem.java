@@ -124,16 +124,7 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public FSDataOutputStream append(Path f, final int bufferSize,
       final Progressable progress) throws IOException {
-    try {
-      return super.append(f, bufferSize, progress);
-    } catch (IOException e) {
-      FileState fileState = smartDFSClient.getFileState(getPathName(f));
-      if (fileState instanceof CompactFileState) {
-        throw new IOException(
-            smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
-      }
-      throw e;
-    }
+    return append(f, EnumSet.of(CreateFlag.APPEND), bufferSize, progress);
   }
 
   @Override
