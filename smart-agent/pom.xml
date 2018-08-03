@@ -61,47 +61,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <!--<profiles>-->
-    <!--<profile>-->
-      <!--<id>hadoop-2.7</id>-->
-      <!--<activation>-->
-        <!--<activeByDefault>true</activeByDefault>-->
-      <!--</activation>-->
-      <!--&lt;!&ndash; Default hadoop profile. Uses global PROPERTIES. &ndash;&gt;-->
-      <!--<dependencies>-->
-        <!--<dependency>-->
-          <!--<groupId>org.smartdata</groupId>-->
-          <!--<artifactId>smart-hadoop-client-2.7</artifactId>-->
-          <!--<version>1.5.0-SNAPSHOT</version>-->
-          <!--<scope>runtime</scope>-->
-        <!--</dependency>-->
-      <!--</dependencies>-->
-    <!--</profile>-->
-    <!--<profile>-->
-      <!--<id>hadoop-cdh-2.6</id>-->
-      <!--<dependencies>-->
-        <!--<dependency>-->
-          <!--<groupId>org.smartdata</groupId>-->
-          <!--<artifactId>smart-hadoop-client-cdh-2.6</artifactId>-->
-          <!--<version>1.5.0-SNAPSHOT</version>-->
-          <!--<scope>runtime</scope>-->
-        <!--</dependency>-->
-      <!--</dependencies>-->
-    <!--</profile>-->
-    <!--<profile>-->
-      <!--<id>hadoop-3.1</id>-->
-      <!--<dependencies>-->
-        <!--<dependency>-->
-          <!--<groupId>org.smartdata</groupId>-->
-          <!--<artifactId>smart-hadoop-client-3.1</artifactId>-->
-          <!--<version>1.5.0-SNAPSHOT</version>-->
-          <!--<scope>runtime</scope>-->
-        <!--</dependency>-->
-      <!--</dependencies>-->
-    <!--</profile>-->
-  <!--</profiles>-->
-
+  
   <build>
     <plugins>
       <plugin>
