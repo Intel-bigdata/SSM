@@ -934,6 +934,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteRule(long cid) throws MetaStoreException {
+    try {
+      ruleDao.delete(cid);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
 
   public void insertCmdlets(CmdletInfo[] commands)
     throws MetaStoreException {
