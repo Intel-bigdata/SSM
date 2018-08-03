@@ -1542,7 +1542,7 @@ angular.module('dashing.progressbar', [])
             res += "grey";
           }
           else if (max == 'ACTIVE' && current < 1) {
-            res += "yellow";
+            res += "warning";
           }
           else if (max == 'ACTIVE' && current === 1) {
             res += "success";
