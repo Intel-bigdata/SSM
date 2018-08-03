@@ -179,22 +179,6 @@ public class SmartDFSClient extends DFSClient {
     return out;
   }
 
-//  @Override
-//  public HdfsDataOutputStream append(final String src, final int buffersize,
-//      final Progressable progress, final FileSystem.Statistics statistics,
-//      final InetSocketAddress[] favoredNodes) throws IOException {
-//    HdfsDataOutputStream out = super.append(
-//        src, buffersize, progress, statistics, favoredNodes);
-//    if (out.getPos() == 0) {
-//      FileState fileState = getFileState(src);
-//      if (fileState instanceof CompactFileState) {
-//        out.close();
-//        throw new IOException(getExceptionMsg("Append", "SSM Small File"));
-//      }
-//    }
-//    return out;
-//  }
-
   @Override
   public HdfsFileStatus getFileInfo(String src) throws IOException {
     HdfsFileStatus oldStatus = super.getFileInfo(src);
