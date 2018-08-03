@@ -934,9 +934,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  public void deleteRule(long cid) throws MetaStoreException {
+  public void deleteRule(long rid) throws MetaStoreException {
     try {
-      ruleDao.delete(cid);
+      ruleDao.delete(rid);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
