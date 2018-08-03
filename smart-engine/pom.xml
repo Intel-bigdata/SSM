@@ -47,11 +47,6 @@
             <artifactId>smart-hadoop</artifactId>
             <version>1.5.0-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>org.smartdata</groupId>
-            <artifactId>smart-hadoop-client</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
-        </dependency>
         <!--
         <dependency>
             <groupId>org.smartdata</groupId>
@@ -159,6 +154,11 @@
                     <artifactId>smart-hadoop-2.7</artifactId>
                     <version>1.5.0-SNAPSHOT</version>
                 </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-client-2.7</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
             </dependencies>
         </profile>
         <profile>
@@ -167,6 +167,26 @@
                 <dependency>
                     <groupId>org.smartdata</groupId>
                     <artifactId>smart-hadoop-cdh-2.6</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-client-cdh-2.6</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hadoop-3.1</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-3.1</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-client-3.1</artifactId>
                     <version>1.5.0-SNAPSHOT</version>
                 </dependency>
             </dependencies>

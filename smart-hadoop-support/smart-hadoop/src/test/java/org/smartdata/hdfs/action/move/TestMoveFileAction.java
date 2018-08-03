@@ -17,11 +17,13 @@
  */
 package org.smartdata.hdfs.action.move;
 
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.StorageType;
-import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.DFSTestUtil;
+//import org.apache.hadoop.fs.FSDataOutputStream;
+//import org.apache.hadoop.fs.Path;
+//import org.apache.hadoop.fs.StorageType;
+//import org.apache.hadoop.hdfs.DFSClient;
+//import org.apache.hadoop.hdfs.DFSTestUtil;
+import org.apache.hadoop.fs.*;
+import org.apache.hadoop.hdfs.*;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
