@@ -33,6 +33,7 @@ under the License.
       <th ng-click="defindOrderBy('create_time')">Create Time</th>
       <th ng-click="defindOrderBy('finish_time')">Finish Time</th>
       <th>Running Time</th>
+      <th>Host</th>
       <th ng-click="defindOrderBy('successful')">Status</th>
       <th>Progress</th>
       <th>Actions</th>
@@ -57,6 +58,7 @@ under the License.
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
       <td>{{action.finished ? action.runTime : "-"}}ms</td>
+      <td>{{action.execHost}}</td>execHostexecHost
       <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
       <td>
         <div style="width: 100%"><span class="small pull-left"></span>
@@ -102,3 +104,10 @@ under the License.
   </div>
 </div>
 
+<!-- <script>
+  function getContent() {
+    text = document.getElementById('search').value;
+    debugger;
+    return text;
+  }
+</script> -->
