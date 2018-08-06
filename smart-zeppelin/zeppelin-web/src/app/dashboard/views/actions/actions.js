@@ -65,6 +65,10 @@ angular.module('zeppelinWebApp')
             $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
           data.progress = Math.round(data.progress * 100);
           data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
+          for(var key in data.args) {
+            var value = data.args[key];
+            data.actionName += (' ' + key + ' ' + value);
+          }
         });
         $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
       }, function(errorResponse) {
