@@ -55,6 +55,10 @@ public class TestTruncateAction extends MiniClusterHarness {
 
     truncateAction.init(args);
     truncateAction.run();
+    // Hadoop 2.6 doesn't support truncate action
+    if (truncateAction.getActionStatus().getThrowable() instanceof UnsupportedOperationException) {
+      return;
+    }
     Assert.assertTrue(truncateAction.getExpectedAfterRun());
 
     FSDataInputStream in = dfs.open(new Path(srcPath + "/" + file),50);
@@ -88,6 +92,10 @@ public class TestTruncateAction extends MiniClusterHarness {
 
     truncateAction.init(args);
     truncateAction.run();
+    // Hadoop 2.6 doesn't support truncate action
+    if (truncateAction.getActionStatus().getThrowable() instanceof UnsupportedOperationException) {
+      return;
+    }
     Assert.assertTrue(truncateAction.getExpectedAfterRun());
 
     FSDataInputStream in = dfs.open(new Path(srcPath + "/" + file),50);
