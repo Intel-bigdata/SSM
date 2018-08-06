@@ -16,7 +16,20 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-
+<style type="text/css">
+  table{ table-layout: fixed;}
+  .cell_bk { display: table; width: 100%; table-layout: fixed; word-wrap: break-word; }
+  .bk { white-space: nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .aid{ width: 6px;}
+  .action_name{ width: 150px;}
+  .create_time{ width: 50px;}
+  .finish_time{ width: 50px;}
+  .running_time{ width: 50px;}
+  .host{ width: 100px;}
+  .status{ width: 30px;}
+  .progress{ width: 50px;}
+  .actions{ width: 15px;}
+</style>
 
 <!-- The form -->
 <div align="right">
@@ -28,15 +41,15 @@ under the License.
   <table class="table table-bordered">
     <thead ng-show="totalNumber > 0">
     <tr>
-      <th ng-click="defindOrderBy('aid')">ID</th>
-      <th ng-click="defindOrderBy('action_name')">Name</th>
-      <th ng-click="defindOrderBy('create_time')">Create Time</th>
-      <th ng-click="defindOrderBy('finish_time')">Finish Time</th>
-      <th>Running Time</th>
-      <th>Host</th>
-      <th ng-click="defindOrderBy('successful')">Status</th>
-      <th>Progress</th>
-      <th>Actions</th>
+      <th ng-click="defindOrderBy('aid')" class="aid">ID</th>
+      <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
+      <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
+      <th ng-click="defindOrderBy('finish_time')" class="finish_time">Finish Time</th>
+      <th class="running_time">Running Time</th>
+      <th class="host">Host</th>
+      <th ng-click="defindOrderBy('successful')" class="status">Status</th>
+      <th class="progress">Progress</th>
+      <th class="actions">Actions</th>
     </tr>
     </thead>
     <thead ng-if="totalNumber < 1">
@@ -53,13 +66,13 @@ under the License.
     </thead>
     <tbody>
     <tr ng-repeat="action in actions">
-      <td>{{action.actionId}}</td>
-      <td>{{action.actionName}}</td>
-      <td>{{action.createTime}}</td>
-      <td>{{action.finishTime}}</td>
-      <td>{{action.finished ? action.runTime : "-"}}ms</td>
-      <td>{{action.execHost}}</td>
-      <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
+      <td class="bk">{{action.actionId}}</td>
+      <td class="bk">{{action.actionName}}</td>
+      <td class="bk">{{action.createTime}}</td>
+      <td class="bk">{{action.finishTime}}</td>
+      <td class="bk">{{action.finished ? action.runTime : "-"}}ms</td>
+      <td class="bk">{{action.execHost}}</td>
+      <td class="bk">{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
       <td>
         <div style="width: 100%"><span class="small pull-left"></span>
           <span class="small pull-right" ng-bind="action.progress + '%'"></span>
@@ -103,3 +116,11 @@ under the License.
     <button type="button" class="btn btn-default" ng-click="gotoPage(totalPage)">Last</button>
   </div>
 </div>
+
+<!-- <script>
+  function getContent() {
+    text = document.getElementById('search').value;
+    debugger;
+    return text;
+  }
+</script> -->
