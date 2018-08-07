@@ -173,7 +173,7 @@ public class RuleManager extends AbstractService {
       if (dropPendingCmdlets && getCmdletManager() != null) {
         getCmdletManager().deleteCmdletByRule(ruleID);
         metaStore.deleteRule(ruleID);
-      }
+       }
     } catch (MetaStoreException e) {
       e.printStackTrace();
     } finally {
