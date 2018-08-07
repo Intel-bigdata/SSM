@@ -19,7 +19,7 @@ under the License.
 <style type="text/css">
   table{ table-layout: fixed;}
 
-  td.bk { 
+  .bk { 
     white-space: nowrap; 
     overflow:hidden; 
     text-overflow:ellipsis; 
@@ -27,23 +27,16 @@ under the License.
 
   .tooltiptext {
     visibility: hidden;
-    width: auto;
-    background-color: black;
     color: #fff;
+    position:fixed;
     text-align: center;
     border-radius: 6px;
     padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-    bottom: 100%;
-    left: 20%;
-    margin-left: -60px;
-    
     opacity: 0;
     transition: opacity 1s;
   }
 
-  td.bk:hover .tooltiptext {
+  .bk:hover .tooltiptext {
     visibility: visible;
     opacity: 1;
   }
@@ -64,7 +57,7 @@ under the License.
   <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
   <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
 </div>
-<div class="col-md-12" >
+<div class="col-md-12" onmousemove="getPosition(event)">
   <br/>
   <table class="table table-bordered">
     <thead ng-show="totalNumber > 0">
@@ -73,10 +66,10 @@ under the License.
       <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
       <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
       <th ng-click="defindOrderBy('finish_time')" class="finish_time">Finish Time</th>
-      <th class="running_time">Running Time</th>
+      <th ng-click="defindOrderBy('running_time')" class="running_time">Running Time</th>
       <th class="host">Host</th>
       <th ng-click="defindOrderBy('successful')" class="status">Status</th>
-      <th class="progress">Progress</th>
+      <th ng-click="defindOrderBy('progress')" class="progress">Progress</th>
       <th class="actions">Actions</th>
     </tr>
     </thead>
@@ -95,11 +88,11 @@ under the License.
     <tbody>
     <tr ng-repeat="action in actions">
       <td>{{action.actionId}}</td>
-      <td class="bk">{{action.actionName}}<span class="tooltiptext">{{action.actionName}}</span></td>
+      <td class="bk">{{action.actionName}}<span class="tooltiptext bg-primary">{{action.actionName}}</span></td>
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
       <td>{{action.finished ? action.runTime : "-"}}ms</td>
-      <td class="bk">{{action.execHost}}<span class="tooltiptext">{{action.execHost}}</span></td>
+      <td class="bk">{{action.execHost}}<span class="tooltiptext bg-primary">{{action.execHost}}</span></td>
       <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
       <td>
         <div style="width: 100%"><span class="small pull-left"></span>
@@ -144,3 +137,20 @@ under the License.
     <button type="button" class="btn btn-default" ng-click="gotoPage(totalPage)">Last</button>
   </div>
 </div>
+
+<script>
+function getPosition(e) {
+  var x = e.clientX,
+      y = e.clientY;
+  var tips = document.getElementsByClassName("tooltiptext");
+  
+  for (i=0 ; i<tips.length; i++) {
+    setPosition(tips[i], x, y);
+  }
+}
+
+function setPosition(ele, x, y) {
+  ele.style.top = (y + 20) + 'px';
+  ele.style.left = (x + 20) + 'px';
+}
+</script>
