@@ -1117,8 +1117,9 @@ public class CmdletManager extends AbstractService {
     int index = aids.indexOf(actionId);
     if (!actionInfo.isSuccessful()) {
       for (int i = index + 1; i < aids.size(); i++) {
-        ActionStatus actionStatus = new ActionStatus(aids.get(i), ACTION_SKIP_LOG,
-          actionInfo.getFinishTime(), actionInfo.getFinishTime(), new Throwable(), true);
+        ActionStatus actionStatus = new ActionStatus(cmdletId, i == aids.size() - 1,
+            aids.get(i), ACTION_SKIP_LOG, actionInfo.getFinishTime(),
+            actionInfo.getFinishTime(), new Throwable(), true);
         onActionStatusUpdate(actionStatus);
       }
       CmdletStatus cmdletStatus =
@@ -1263,8 +1264,9 @@ public class CmdletManager extends AbstractService {
                   startTime = cmdletInfo.getGenerateTime();
                 }
                 long finishTime = System.currentTimeMillis();
-                ActionStatus actionStatus = new ActionStatus(actionInfo.getActionId(),
-                  TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
+                ActionStatus actionStatus = new ActionStatus(
+                    cid, id == cmdletInfo.getAids().get(cmdletInfo.getAids().size() - 1),
+                    id, TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
                 onActionStatusUpdate(actionStatus);
               }
             }

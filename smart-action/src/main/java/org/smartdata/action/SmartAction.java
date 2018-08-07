@@ -36,7 +36,8 @@ import java.util.Map;
  */
 public abstract class SmartAction {
   static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
-
+  private long cmdletId;
+  private boolean lastAction;
   private long actionId;
   private Map<String, String> actionArgs;
   private SmartContext context;
@@ -66,6 +67,22 @@ public abstract class SmartAction {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
+
+  public boolean isLastAction() {
+    return lastAction;
+  }
+
+  public void setLastAction(boolean lastAction) {
+    this.lastAction = lastAction;
   }
 
   public SmartContext getContext() {
@@ -161,6 +178,8 @@ public abstract class SmartAction {
 
   public ActionStatus getActionStatus() throws UnsupportedEncodingException {
     return new ActionStatus(
+        cmdletId,
+        lastAction,
         actionId,
         getProgress(),
         resultOs.toString("UTF-8"),
