@@ -28,7 +28,9 @@ import com.hazelcast.core.MessageListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.model.ExecutorType;
+import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.StatusMessage;
+import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.cluster.HazelcastInstanceProvider;
 import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.CmdletManager;
@@ -43,11 +45,9 @@ import org.smartdata.server.utils.HazelcastUtil;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 public class HazelcastExecutorService extends CmdletExecutorService {
   private static final Logger LOG = LoggerFactory.getLogger(HazelcastExecutorService.class);
@@ -56,14 +56,14 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   private final HazelcastInstance instance;
   private Random random;
   private Map<String, ITopic<Serializable>> masterToWorkers;
-  private Map<String, Set<Long>> scheduledCmdlets;
+  private Map<Long, String> executingCmdlets;
   private Map<String, Member> members;
   private ITopic<StatusMessage> statusTopic;
 
   public HazelcastExecutorService(CmdletManager cmdletManager) {
     super(cmdletManager, ExecutorType.REMOTE_SSM);
     this.random = new Random();
-    this.scheduledCmdlets = new HashMap<>();
+    this.executingCmdlets = new HashMap<>();
     this.masterToWorkers = new HashMap<>();
     this.members = new HashMap<>();
     this.instance = HazelcastInstanceProvider.getInstance();
@@ -77,7 +77,6 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     for (Member worker : HazelcastUtil.getWorkerMembers(instance)) {
       ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
       this.masterToWorkers.put(worker.getUuid(), topic);
-      this.scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
     }
   }
 
@@ -115,16 +114,17 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   public String execute(LaunchCmdlet cmdlet) {
     String member = cmdlet.getNodeId();
     masterToWorkers.get(member).publish(cmdlet);
-    scheduledCmdlets.get(member).add(cmdlet.getCmdletId());
+    executingCmdlets.put(cmdlet.getCmdletId(), member);
     LOG.debug("Executing cmdlet {} on worker {}", cmdlet.getCmdletId(), member);
     return member;
   }
 
   @Override
   public void stop(long cmdletId) {
-    for (Map.Entry<String, Set<Long>> entry : scheduledCmdlets.entrySet()) {
-      if (entry.getValue().contains(cmdletId)) {
-        masterToWorkers.get(entry.getKey()).publish(new StopCmdlet(cmdletId));
+    if (executingCmdlets.containsKey(cmdletId)) {
+      String member = executingCmdlets.get(cmdletId);
+      if (member != null) {
+        masterToWorkers.get(member).publish(new StopCmdlet(cmdletId));
       }
     }
   }
@@ -134,6 +134,14 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   }
 
   public void onStatusMessage(StatusMessage message) {
+    if (message instanceof StatusReport) {
+      StatusReport report = (StatusReport) message;
+      for (ActionStatus s : report.getActionStatuses()) {
+        if (s.isFinished() && s.isLastAction()) {
+          executingCmdlets.remove(s.getCmdletId());
+        }
+      }
+    }
     cmdletManager.updateStatus(message);
   }
 
@@ -150,7 +158,6 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       if (!masterToWorkers.containsKey(worker.getUuid())) {
         ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
         masterToWorkers.put(worker.getUuid(), topic);
-        scheduledCmdlets.put(worker.getUuid(), new HashSet<Long>());
         members.put(worker.getUuid(), worker);
         EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(worker)));
       }
