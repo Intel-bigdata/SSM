@@ -170,9 +170,13 @@ public class CmdletDispatcher {
     }
 
     try {
-      for (LaunchAction action : cmdlet.getLaunchActions()) {
-        ActionStatus actionStatus = new ActionStatus(
-                action.getActionId(), System.currentTimeMillis());
+      LaunchAction action;
+      ActionStatus actionStatus;
+      for (int i = 0; i < cmdlet.getLaunchActions().size(); i++) {
+        action = cmdlet.getLaunchActions().get(i);
+        actionStatus = new ActionStatus(cmdlet.getCmdletId(),
+            i == cmdlet.getLaunchActions().size() - 1,
+            action.getActionId(), System.currentTimeMillis());
         cmdletManager.onActionStatusUpdate(actionStatus);
       }
       CmdletStatus cmdletStatus = new CmdletStatus(cmdlet.getCmdletId(),
