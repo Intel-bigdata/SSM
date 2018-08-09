@@ -78,12 +78,21 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
 
   if [ x"${SMARTSERVERS}" != x"${FIRST_MASTER}" ]; then
     OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
-    sleep 4
+    if [ x"${DEBUG_OPT}" != x"" ]; then
+      echo
+      echo "    Please attache to SmartServer@${FIRST_MASTER} and resume the execution first!!"
+      read -n1 -s -p "    And then hit any key to continue ... "
+      echo -e "\n\nStarting other SmartServers on [${OTHER_MASTERS}]"
+      sleep 1
+    else
+      sleep 2
+    fi
+    sleep 2
     . "${SMART_HOME}/bin/ssm" \
       --remote \
       --config "${SMART_CONF_DIR}" \
       --hosts "${OTHER_MASTERS}" --hostsend \
-      --daemon start ${DEBUG_OPT} \
+      --daemon start \
       smartserver $SMART_VARGS_STANDBY
   fi
 else

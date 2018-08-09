@@ -289,6 +289,9 @@ function init_command() {
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
+      if [ $SSM_DEBUG_ENABLED == "true" ]; then
+        JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
+      fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
       JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
