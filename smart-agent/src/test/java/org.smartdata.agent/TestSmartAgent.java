@@ -49,7 +49,7 @@ public class TestSmartAgent extends ActorSystemHarness {
     runner.start();
 
     masters[0].expectMsgClass(RegisterNewAgent.class);
-    masters[0].reply(new MasterToAgent.AgentRegistered(new MasterToAgent.AgentId(0)));
+    masters[0].reply(new MasterToAgent.AgentRegistered(new MasterToAgent.AgentId("test")));
 
     system.stop(masters[0].getRef());
 
