@@ -35,9 +35,10 @@ public class TestAgentMaster {
       // Do nothing
     }
 
-    Object answer = master.askMaster(AgentToMaster.RegisterNewAgent.getInstance());
+    String instId = "instance-0";
+    Object answer = master.askMaster(AgentToMaster.RegisterNewAgent.getInstance(instId));
     assertTrue(answer instanceof MasterToAgent.AgentRegistered);
     MasterToAgent.AgentRegistered registered = (MasterToAgent.AgentRegistered) answer;
-    assertEquals(0, registered.getAgentId().getId());
+    assertEquals(instId, registered.getAgentId().getId());
   }
 }

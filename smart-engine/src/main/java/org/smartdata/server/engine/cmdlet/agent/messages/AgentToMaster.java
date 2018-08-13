@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,23 +18,41 @@
 package org.smartdata.server.engine.cmdlet.agent.messages;
 
 import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
+import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 
 import java.io.Serializable;
 
 /**
- * Messages sent from {@link SmartAgent} to {@link AgentMaster}.
+ * Messages sent from SmartAgent to {@link AgentMaster}.
  */
 public class AgentToMaster {
 
   public static class RegisterNewAgent implements Serializable {
 
     private static final long serialVersionUID = -2967492906579132942L;
-    private static final RegisterNewAgent instance = new RegisterNewAgent();
+    private static RegisterNewAgent instance = new RegisterNewAgent();
+    private MasterToAgent.AgentId id;
 
-    private RegisterNewAgent() {}
+    private RegisterNewAgent() {
+      id = new AgentId("Default");
+    }
 
     public static RegisterNewAgent getInstance() {
       return instance;
+    }
+
+    public static RegisterNewAgent getInstance(String id) {
+      instance = new RegisterNewAgent();
+      instance.setId(new AgentId(id));
+      return instance;
+    }
+
+    public AgentId getId() {
+      return id;
+    }
+
+    public void setId(AgentId id) {
+      this.id = id;
     }
   }
 
