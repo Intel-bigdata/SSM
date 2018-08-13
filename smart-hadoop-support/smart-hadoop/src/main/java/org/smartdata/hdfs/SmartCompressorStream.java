@@ -119,6 +119,7 @@ public class SmartCompressorStream {
   }
 
   protected void compress() throws IOException {
+    // TODO when compressed result is larger than raw
     int len = compressor.compress(buffer, 0, buffer.length);
     if (len > 0) {
       // Write out the compressed chunk

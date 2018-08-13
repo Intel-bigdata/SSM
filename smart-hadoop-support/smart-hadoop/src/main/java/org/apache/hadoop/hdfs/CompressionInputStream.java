@@ -149,12 +149,10 @@ public class CompressionInputStream extends SmartInputStream {
         + ((bytes[2] & 0xff) << 8) + ((bytes[3] & 0xff) << 0));
   }
 
-/*
-  @Override
+ /* @Override
   public long getFileLength() {
-    return compressionFileState.getOriginalLength();
-  }
-  */
+    return originalLength;
+  }*/
 
   @Override
   public long skip(long n) throws IOException {

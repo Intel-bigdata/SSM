@@ -597,6 +597,26 @@ public class SmartFileSystem extends DistributedFileSystem {
                   next.isSymlink() ? next.getSymlink() : null,
                   next.getPath(),
                   blockLocations);
+            } else if (fileState instanceof CompressionFileState) {
+              CompressionFileState compressionFileState = (CompressionFileState) fileState;
+              long fileLen = compressionFileState.getOriginalLength();
+              BlockLocation[] blockLocations =
+                  ((LocatedFileStatus)next).getBlockLocations();
+              for (BlockLocation blockLocation : blockLocations) {
+                convertBlockLocation(blockLocation, compressionFileState);
+              }
+              next = (T) new LocatedFileStatus(fileLen,
+                  next.isDirectory(),
+                  next.getReplication(),
+                  next.getBlockSize(),
+                  next.getModificationTime(),
+                  next.getAccessTime(),
+                  next.getPermission(),
+                  next.getOwner(),
+                  next.getGroup(),
+                  next.isSymlink() ? next.getSymlink() : null,
+                  next.getPath(),
+                  blockLocations);
             }
           }
         } else {
@@ -620,6 +640,26 @@ public class SmartFileSystem extends DistributedFileSystem {
                   next.getGroup(),
                   next.isSymlink() ? next.getSymlink() : null,
                   next.getPath());
+            } else if (fileState instanceof CompressionFileState) {
+              CompressionFileState compressionFileState = (CompressionFileState) fileState;
+              long fileLen = compressionFileState.getOriginalLength();
+              BlockLocation[] blockLocations =
+                  ((LocatedFileStatus)next).getBlockLocations();
+              for (BlockLocation blockLocation : blockLocations) {
+                convertBlockLocation(blockLocation, compressionFileState);
+              }
+              next = (T) new LocatedFileStatus(fileLen,
+                  next.isDirectory(),
+                  next.getReplication(),
+                  next.getBlockSize(),
+                  next.getModificationTime(),
+                  next.getAccessTime(),
+                  next.getPermission(),
+                  next.getOwner(),
+                  next.getGroup(),
+                  next.isSymlink() ? next.getSymlink() : null,
+                  next.getPath(),
+                  blockLocations);
             }
           }
         }
@@ -631,6 +671,43 @@ public class SmartFileSystem extends DistributedFileSystem {
       }
       return curStat != null;
     }
+
+    // Definitions:
+    // * Compression trunk doesn't cross over two blocks:
+    // - Offset = original start of the first trunk
+    // - End = original end of the last trunk
+    // * Compression trunk crosses over two blocks:
+    // - Offset = original middle of the first incomplete trunk
+    // - End = original middle of the last incomplete trunk
+    private void convertBlockLocation(BlockLocation blockLocation,
+        CompressionFileState compressionInfo) throws IOException {
+      long compressedStart = blockLocation.getOffset();
+      long compressedEnd = compressedStart + blockLocation.getLength() - 1;
+
+      CompressionTrunk startTrunk = compressionInfo.locateCompressionTrunk(
+          true, compressedStart);
+      CompressionTrunk endTrunk = compressionInfo.locateCompressionTrunk(
+          true, compressedEnd);
+
+      long originStart;
+      // If the first trunk crosses over two blocks, set start as middle of the trunk
+      if (startTrunk.getCompressedOffset() < compressedStart) {
+        originStart = startTrunk.getOriginOffset() + startTrunk.getOriginLength() / 2 + 1;
+      } else {
+        originStart = startTrunk.getOriginOffset();
+      }
+
+      long originEnd;
+      // If the last trunk corsses over two blocks, set end as middle of the trunk
+      if (endTrunk.getCompressedOffset() + endTrunk.getCompressedLength() - 1 > compressedEnd) {
+        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() / 2;
+      } else {
+        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() - 1;
+      }
+      blockLocation.setOffset(originStart);
+      blockLocation.setLength(originEnd - originStart + 1);
+    }
+
 
     /**
      * Check if there is a next item before applying the given filter
@@ -687,175 +764,6 @@ public class SmartFileSystem extends DistributedFileSystem {
       }
     }
   }
-
-
-  /*@Override
-  protected RemoteIterator<LocatedFileStatus> listLocatedStatus(final Path p,
-      final PathFilter filter) throws IOException {
-    Path absF = fixRelativePart(p);
-    return new FileSystemLinkResolver<RemoteIterator<LocatedFileStatus>>() {
-      @Override
-      public RemoteIterator<LocatedFileStatus> doCall(final Path p)
-          throws IOException, UnresolvedLinkException {
-        return new SmartDirListingIterator<LocatedFileStatus>(p, filter, true);
-      }
-
-      @Override
-      public RemoteIterator<LocatedFileStatus> next(final FileSystem fs, final Path p)
-          throws IOException {
-        if (fs instanceof SmartFileSystem) {
-          return ((SmartFileSystem)fs).listLocatedStatus(p, filter);
-        }
-        // symlink resolution for this methos does not work cross file systems
-        // because it is a protected method.
-        throw new IOException("Link resolution does not work with multiple " +
-            "file systems for listLocatedStatus(): " + p);
-      }
-    }.resolve(this, absF);
-  }
-
-  private class SmartDirListingIterator<T extends FileStatus>
-      implements RemoteIterator<T> {
-    private DirectoryListing thisListing;
-    private int i;
-    private Path p;
-    private String src;
-    private T curStat = null;
-    private PathFilter filter;
-    private boolean needLocation;
-
-    private SmartDirListingIterator(Path p, PathFilter filter,
-        boolean needLocation) throws IOException {
-      this.p = p;
-      this.src = getPathName(p);
-      this.filter = filter;
-      this.needLocation = needLocation;
-      // fetch the first batch of entries in the directory
-      thisListing = smartClient.listPaths(src, HdfsFileStatus.EMPTY_NAME,
-          needLocation);
-      statistics.incrementReadOps(1);
-      if (thisListing == null) { // the directory does not exist
-        throw new FileNotFoundException("File " + p + " does not exist.");
-      }
-      i = 0;
-    }
-
-    private SmartDirListingIterator(Path p, boolean needLocation)
-        throws IOException {
-      this(p, null, needLocation);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public boolean hasNext() throws IOException {
-      while (curStat == null && hasNextNoFilter()) {
-        T next;
-        HdfsFileStatus fileStat = thisListing.getPartialListing()[i++];
-        if (needLocation) {
-          next = (T)((HdfsLocatedFileStatus)fileStat)
-              .makeQualifiedLocated(getUri(), p);
-          String fileName = next.getPath().toUri().getPath();
-          // Reconstruct FileStatus if this file is compressed
-          // Two segments to be replaced : length, blockLocations
-          FileState fileState = smartClient.getSmartClient().getFileState(fileName);
-          if (fileState instanceof CompressionFileState) {
-            CompressionFileState compressionFileState = (CompressionFileState) fileState;
-            long fileLen = compressionFileState.getOriginalLength();
-            BlockLocation[] blockLocations =
-                ((LocatedFileStatus)next).getBlockLocations();
-            for (BlockLocation blockLocation : blockLocations) {
-              convertBlockLocation(blockLocation, compressionFileState);
-            }
-            next = (T) new LocatedFileStatus(fileLen,
-                next.isDirectory(),
-                next.getReplication(),
-                next.getBlockSize(),
-                next.getModificationTime(),
-                next.getAccessTime(),
-                next.getPermission(),
-                next.getOwner(),
-                next.getGroup(),
-                next.isSymlink() ? next.getSymlink() : null,
-                next.getPath(),
-                blockLocations);
-          }
-        } else {
-          next = (T)fileStat.makeQualified(getUri(), p);
-        }
-        // apply filter if not null
-        if (filter == null || filter.accept(next.getPath())) {
-          curStat = next;
-        }
-      }
-      return curStat != null;
-    }
-
-    // Definitions:
-    // * Compression trunk doesn't cross over two blocks:
-    // - Offset = original start of the first trunk
-    // - End = original end of the last trunk
-    // * Compression trunk crosses over two blocks:
-    // - Offset = original middle of the first incomplete trunk
-    // - End = original middle of the last incomplete trunk
-    private void convertBlockLocation(BlockLocation blockLocation,
-        CompressionFileState compressionInfo) throws IOException {
-      long compressedStart = blockLocation.getOffset();
-      long compressedEnd = compressedStart + blockLocation.getLength() - 1;
-
-      CompressionTrunk startTrunk = compressionInfo.locateCompressionTrunk(
-          true, compressedStart);
-      CompressionTrunk endTrunk = compressionInfo.locateCompressionTrunk(
-          true, compressedEnd);
-
-      long originStart;
-      // If the first trunk crosses over two blocks, set start as middle of the trunk
-      if (startTrunk.getCompressedOffset() < compressedStart) {
-        originStart = startTrunk.getOriginOffset() + startTrunk.getOriginLength() / 2 + 1;
-      } else {
-        originStart = startTrunk.getOriginOffset();
-      }
-
-      long originEnd;
-      // If the last trunk corsses over two blocks, set end as middle of the trunk
-      if (endTrunk.getCompressedOffset() + endTrunk.getCompressedLength() - 1 > compressedEnd) {
-        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() / 2;
-      } else {
-        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() - 1;
-      }
-      blockLocation.setOffset(originStart);
-      blockLocation.setLength(originEnd - originStart + 1);
-    }
-
-    *//** Check if there is a next item before applying the given filter *//*
-    private boolean hasNextNoFilter() throws IOException {
-      if (thisListing == null) {
-        return false;
-      }
-      if (i >= thisListing.getPartialListing().length
-          && thisListing.hasMore()) {
-        // current listing is exhausted & fetch a new listing
-        thisListing = smartClient.listPaths(src, thisListing.getLastName(),
-            needLocation);
-        statistics.incrementReadOps(1);
-        if (thisListing == null) {
-          return false;
-        }
-        i = 0;
-      }
-      return (i < thisListing.getPartialListing().length);
-    }
-
-    @Override
-    public T next() throws IOException {
-      if (hasNext()) {
-        T tmp = curStat;
-        curStat = null;
-        return tmp;
-      }
-      throw new java.util.NoSuchElementException("No more entry in " + p);
-    }
-  }*/
-
 
   /**
    * Checks that the passed URI belongs to this filesystem and returns
