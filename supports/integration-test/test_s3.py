@@ -12,7 +12,7 @@ DEST_DIR = "s3a://xxxctest"
 class TestS3(unittest.TestCase):
 
     # copy to S3
-    def test_S3(self):
+    def test_s3(self):
         file_paths = []
         cids = []
         # create random directory
@@ -29,7 +29,7 @@ class TestS3(unittest.TestCase):
         # submit actions
         cids = []
         for i in range(MAX_NUMBER):
-            cids.append(copy_file_to_S3(file_paths[i],
+            cids.append(copy_file_to_s3(file_paths[i],
                                         DEST_DIR + file_paths[i]))
         failed_cids = wait_for_cmdlets(cids)
         self.assertTrue(len(failed_cids) == 0)
