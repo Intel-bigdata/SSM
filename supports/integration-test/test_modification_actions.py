@@ -54,7 +54,7 @@ if __name__ == '__main__':
     sys.argv[1:] = unknown_args
     print "The file size for test is {}.".format(args.size)
     FILE_SIZE = convert_to_byte(args.size)
-    print "The file number for contact and merge test is {}.".format(args.num)
+    print "The file number for concat and merge test is {}.".format(args.num)
     MAX_NUMBER = int(args.num)
 
     unittest.main()
