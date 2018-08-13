@@ -59,6 +59,8 @@ import org.smartdata.utils.SecurityUtil;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -88,6 +90,7 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
+    RegisterNewAgent.getInstance(agentAddress + "-" + getDateString());
 
     HadoopUtil.setSmartConfByHadoop(conf);
     agent.authentication(conf);
@@ -120,6 +123,11 @@ public class SmartAgent implements StatusReporter {
     SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
 
+  private static String getDateString() {
+    Date now = new Date();
+    SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+    return df.format(now);
+  }
 
   public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
