@@ -597,7 +597,10 @@ public class SmartFileSystem extends DistributedFileSystem {
                   next.isSymlink() ? next.getSymlink() : null,
                   next.getPath(),
                   blockLocations);
-            } else if (fileState instanceof CompressionFileState) {
+            }
+          } else {
+            FileState fileState = smartDFSClient.getFileState(fileName);
+            if (fileState instanceof CompressionFileState) {
               CompressionFileState compressionFileState = (CompressionFileState) fileState;
               long fileLen = compressionFileState.getOriginalLength();
               BlockLocation[] blockLocations =
@@ -640,7 +643,10 @@ public class SmartFileSystem extends DistributedFileSystem {
                   next.getGroup(),
                   next.isSymlink() ? next.getSymlink() : null,
                   next.getPath());
-            } else if (fileState instanceof CompressionFileState) {
+            }
+          } else {
+            FileState fileState = smartDFSClient.getFileState(fileName);
+            if (fileState instanceof CompressionFileState) {
               CompressionFileState compressionFileState = (CompressionFileState) fileState;
               long fileLen = compressionFileState.getOriginalLength();
               BlockLocation[] blockLocations =

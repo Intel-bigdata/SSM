@@ -64,7 +64,7 @@ public class CompressionAction extends HdfsAction {
     "Lz4","Bzip2","Zlib","snappy"});
 
   private String filePath;
-  private int bufferSize = 4 * 1024;
+  private int bufferSize = 1024 * 1024;
   private String compressionImpl = "Zlib";
   private int UserDefinedbuffersize;
   private int Calculatedbuffersize;
@@ -135,6 +135,7 @@ public class CompressionAction extends HdfsAction {
     }
     String compressionInfoJson = new Gson().toJson(compressionFileInfo);
     appendResult(compressionInfoJson);
+    LOG.warn(compressionInfoJson);
     dfsClient.setXAttr(filePath,
         xAttrName, SerializationUtils.serialize(compressionFileState),
         EnumSet.of(XAttrSetFlag.CREATE));

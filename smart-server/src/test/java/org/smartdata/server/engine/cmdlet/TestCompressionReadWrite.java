@@ -193,7 +193,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     byte[] bytes = prepareFile(fileName, arraySize);
 
     // For uncompressed file, SmartFileSystem and DistributedFileSystem behave exactly the same
-    RemoteIterator<LocatedFileStatus> iter1 = dfs.listLocatedStatus(new Path("/ssm/compression"));
+    RemoteIterator<LocatedFileStatus> iter1 = dfs.listLocatedStatus(new Path(fileName));
     LocatedFileStatus stat1 = iter1.next();
     RemoteIterator<LocatedFileStatus> iter2 = smartDfs.listLocatedStatus(new Path(fileName));
     LocatedFileStatus stat2 = iter2.next();
@@ -224,7 +224,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     Assert.assertEquals(stat1.getBlockSize(), stat4.getBlockSize());
     Assert.assertEquals(stat1.getLen(), stat4.getLen());
 
-    return;
+    Thread.sleep(5000);
   }
 
   private void waitTillActionDone(long cmdId) throws Exception {
