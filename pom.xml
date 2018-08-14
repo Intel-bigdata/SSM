@@ -37,6 +37,7 @@
     <module>smart-dist</module>
     <module>smart-integration</module>
     <module>smart-tidb</module>
+    <module>smart-web</module>
   </modules>
 
   <properties>
