@@ -133,12 +133,20 @@ public class CompressionAction extends HdfsAction {
       compressionFileState.setCompressedLength(destFile.getLen());
       compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
     }
+    if (compressionFileInfo.needReplace()) {
+      // Add to temp path
+      dfsClient.setXAttr(compressionFileInfo.getTempPath(),
+          xAttrName, SerializationUtils.serialize(compressionFileState),
+          EnumSet.of(XAttrSetFlag.CREATE));
+    } else {
+      // Add to raw path
+      dfsClient.setXAttr(filePath,
+          xAttrName, SerializationUtils.serialize(compressionFileState),
+          EnumSet.of(XAttrSetFlag.CREATE));
+    }
     String compressionInfoJson = new Gson().toJson(compressionFileInfo);
     appendResult(compressionInfoJson);
     LOG.warn(compressionInfoJson);
-    dfsClient.setXAttr(filePath,
-        xAttrName, SerializationUtils.serialize(compressionFileState),
-        EnumSet.of(XAttrSetFlag.CREATE));
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {

@@ -121,7 +121,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
-    Thread.sleep(500);
+    Thread.sleep(600);
     // metastore  test
     FileState fileState = metaStore.getFileState(fileName);
     Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
@@ -223,8 +223,6 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     Assert.assertEquals(stat1.getPath(), stat4.getPath());
     Assert.assertEquals(stat1.getBlockSize(), stat4.getBlockSize());
     Assert.assertEquals(stat1.getLen(), stat4.getLen());
-
-    Thread.sleep(5000);
   }
 
   private void waitTillActionDone(long cmdId) throws Exception {
