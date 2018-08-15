@@ -88,7 +88,7 @@ under the License.
     <tbody>
     <tr ng-repeat="action in actions">
       <td>{{action.actionId}}</td>
-      <td class="bk">{{action.actionName}}<span class="tooltiptext bg-primary">{{action.actionName}}</span></td>
+      <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 74" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
       <td>{{action.finished ? action.runTime : "-"}}ms</td>
