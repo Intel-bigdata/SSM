@@ -25,11 +25,16 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule, MatCheckboxModule } from '@angular/material';
 
 import { AppComponent } from './app.component';
-import { LoginComponent } from './login/login.component';
+import { routing } from "./app.routers";
+import { HeaderComponent } from "../components/header/header.component";
+
+import { LoginComponent } from '../pages/login/login.component';
+
 
 @NgModule({
   declarations: [
     AppComponent,
+    HeaderComponent,
     LoginComponent
   ],
   imports: [
@@ -42,7 +47,8 @@ import { LoginComponent } from './login/login.component';
     MatRadioModule,
     MatInputModule,
     MatMenuModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    routing
   ],
   providers: [],
   bootstrap: [AppComponent]
