@@ -27,6 +27,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +50,7 @@ public class VersionInfoWrite {
     OutputStream output = null;
     String s = this.getClass().getResource("/").getPath() + "common-versionInfo.properties";
     try {
+      prop.load(new FileInputStream(s));
       output = new FileOutputStream(s);
       prop.setProperty("version", getVersionInfo(pom));
       prop.setProperty("revision", getCommit());
