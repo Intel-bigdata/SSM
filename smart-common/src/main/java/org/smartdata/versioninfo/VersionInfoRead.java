@@ -69,11 +69,16 @@ public class VersionInfoRead {
     return info.prop.getProperty("branch", "Unknown");
   }
 
+  protected String getHadoopVersion() {
+    return info.prop.getProperty("hadoopVersion", "Unknown");
+  }
+
   public void printInfo() {
     System.out.println("SSM " + getVersion());
     System.out.println("Subversion " + getUrl());
     System.out.println("Last commit " + getRevision() + " on branch " + getBranch());
     System.out.println("Compiled by " + getUser() + " on " + getTime());
+    System.out.println("Compiled for hadoop " + getHadoopVersion());
   }
 
   public static void main(String[] args) {
