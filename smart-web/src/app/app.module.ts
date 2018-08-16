@@ -26,7 +26,6 @@ import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule, MatChec
 
 import { AppComponent } from './app.component';
 import { routing } from "./app.routers";
-import { HeaderComponent } from "../components/header/header.component";
 
 import { LoginComponent } from '../pages/login/login.component';
 
@@ -34,7 +33,6 @@ import { LoginComponent } from '../pages/login/login.component';
 @NgModule({
   declarations: [
     AppComponent,
-    HeaderComponent,
     LoginComponent
   ],
   imports: [
