@@ -27,12 +27,17 @@ import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule, MatChec
 import { AppComponent } from './app.component';
 import { routing } from "./app.routers";
 
+import { SidebarComponent } from "../components/sidebar/sidebar.component";
+
+import { RootComponent } from "../pages/root/root.component";
 import { LoginComponent } from '../pages/login/login.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
+    RootComponent,
+    SidebarComponent,
     LoginComponent
   ],
   imports: [

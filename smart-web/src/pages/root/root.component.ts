@@ -16,14 +16,22 @@
  */
 
 
-import { RouterModule, Routes } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 
-import { RootComponent } from "../pages/root/root.component";
-import { LoginComponent } from "../pages/login/login.component";
+@Component({
+  selector: 'app-root',
+  templateUrl: './root.component.html',
+  styleUrls: ['./root.component.css']
+})
+export class RootComponent implements OnInit, OnDestroy {
+  public id: number;
+  public backgroundColor: string;
+  constructor() {
+  }
 
-const routes: Routes = [
-  { path: '', component: RootComponent },
-  { path: 'login', component: LoginComponent }
-];
+  ngOnInit() {
+  }
 
-export const routing = RouterModule.forRoot(routes);
+  ngOnDestroy() {
+  }
+}
