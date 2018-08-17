@@ -21,6 +21,8 @@ SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 CONF_DIR=$SSM_HOME/conf
 INSTALL_PATH=''
+IP=`ifconfig | grep -o "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}"| head -n 1`
+HOSTNAME=`hostname`
 
 cd $SSM_HOME/../;
 
@@ -94,6 +96,7 @@ fi
 echo installing...
 
 if [[ $INSTALL_PATH != */ ]];then
+    INSTALL_PATH=$(echo $INSTALL_PATH | tr -d  " ")
     INSTALL_PATH=${INSTALL_PATH}/
 fi
 
@@ -106,7 +109,7 @@ do
         continue
    else
       #Before install on a host, delete ssm home directory if there exists
-      if [[ "$host" != "localhost" ]];then
+      if [[ "$host" != "localhost" && "$host" != "$HOSTNAME" && "$host" != "$IP" && "$host" != "127.0.0.1" && "$host" != "127.0.1.1" ]];then
          ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
       else
          SSM_UP_HOME=${SSM_HOME%/*}/
