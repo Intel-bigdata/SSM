@@ -548,8 +548,7 @@ public class CmdletManager extends AbstractService {
         try {
           scheduleResult = s.onSchedule(actionInfo, launchAction);
         } catch (Throwable t) {
-          actionInfo.setLog((actionInfo.getLog() == null ? "" : actionInfo.getLog())
-              + "\nOnSchedule exception: " + t);
+          actionInfo.appendLogLine("\nOnSchedule exception: " + t);
           scheduleResult = ScheduleResult.FAIL;
         }
         if (scheduleResult != ScheduleResult.SUCCESS) {
