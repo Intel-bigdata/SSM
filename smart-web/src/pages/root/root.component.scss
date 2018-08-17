@@ -15,42 +15,33 @@
  * limitations under the License.
  */
 
+
 .wrapper {
-  position: relative;
-  top: 0;
-  height: 100vh;
   display: flex;
+  height: 100vh;
   width: 100%;
-  flex: 1;
+  padding: 15px;
 }
 
 .sidebar-panel {
+  display: inline-block;
   width: 260px;
-  position: fixed;
   height: 100%;
-  /*background-color: #D80B0B;*/
   box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.42), 0 4px 25px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.2);
   transition: all 500ms;
+  margin-right: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #eee;
 }
 
 .main-panel {
-  width: 100%;
   flex: 1;
-  padding-left: 260px;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.42), 0 4px 25px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.2);
 }
 
-.sidebar-background {
-  position: absolute;
-  z-index: 0;
-  height: 100%;
-  width: 100%;
-  display: block;
-  top: 0;
-  left: 0;
-  background-size: cover;
-  background-position: center center;
-  opacity: 0.2;
-  filter: alpha(opacity=10);
-  transition: all 500ms;
+@media (max-width: 776px) {
+  .sidebar-panel {
+    display: none;
+  }
 }
-

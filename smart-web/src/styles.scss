@@ -18,6 +18,10 @@
 
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   padding: 0;
   margin: 0;
@@ -29,7 +33,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6, p, a, b, button, div, label, small {
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-family: "Helvetica", "Arial", sans-serif;
   font-weight: 300;
   margin: 0;
 }
@@ -71,6 +75,3 @@ a:hover{
   text-decoration: none;
 }
 
-* {
-  box-sizing: border-box;
-}

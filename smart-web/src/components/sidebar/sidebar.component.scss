@@ -17,17 +17,14 @@
 
 
 .logo {
+  display: flex;
+  align-content: center;
+  justify-content: center;
   padding: 25px 0 20px 0;
-  color: #fff;
   font-size: 18px;
-  text-align: center;
-  position: relative;
 
-  img {
-    width: 42px;
-    position: absolute;
-    top: 16px;
-    left: 13px;
+  i {
+    margin-right: 5px;
   }
 }
 
@@ -37,15 +34,13 @@
   height: 1px;
   left: 15px;
   width: calc(100% - 30px);
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: #eeeeee;
 }
 
 .sidebar-wrapper {
   overflow-y: auto;
   padding-bottom: 30px;
   width: 260px;
-  position: relative;
-  height: 100%;
 }
 
 .nav-container {
@@ -53,7 +48,8 @@
 }
 
 .nav {
-  padding-top: 15px;
+  margin-top: 15px;
+  padding: 0 15px;
 
   li {
     margin-bottom: 9px;
@@ -62,8 +58,7 @@
   a {
     display: flex;
     align-items: center;
-    color: rgba(255, 255, 255, .8);
-    margin: 0 15px;
+    color: #eee;
     border-radius: 3px;
     transition: all 400ms;
     height: 50px;
@@ -74,16 +69,22 @@
     }
 
     span {
-      margin-left: 20px;
+      margin-left: 10px;
+    }
+
+    b {
+      color: #eee; 
     }
   }
 }
 
-.active a, .active a:hover {
-  /*color: rgba(0,0,0,.6) !important;*/
-  /*background-color: #fff !important;*/
-  box-shadow: 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(60, 72, 88, 0.4);
-  transition: all 400ms;
+.active {
+  a, a:hover {
+    color: rgba(0,0,0,.6) !important;
+    background-color: #fff !important;
+    box-shadow: 0 4px 20px 0px rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(60, 72, 88, 0.4);
+    transition: all 400ms;
+  }
 }
 
 .collapse-a {

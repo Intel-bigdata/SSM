@@ -39,6 +39,7 @@ export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit() {
   }
+
   ngOnDestroy() {
   }
 
