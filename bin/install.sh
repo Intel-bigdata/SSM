@@ -113,7 +113,7 @@ do
          if [[ "$SSM_UP_HOME" != "${INSTALL_PATH}" ]];then
             rm -rf ${INSTALL_PATH}${SSM_NAME}
          else
-           break
+            continue
          fi
       fi
       flag=`ssh $host "if [ -d $INSTALL_PATH ];then echo 1; else echo 0; fi"`
