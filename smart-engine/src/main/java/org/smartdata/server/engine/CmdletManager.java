@@ -752,6 +752,7 @@ public class CmdletManager extends AbstractService {
         actionInfo.setFinished(true);
         actionInfo.setCreateTime(cmdletInfo.getStateChangedTime());
         actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
+        actionInfo.setExecHost(ActiveServerInfo.getInstance().getHost());
       }
     }
   }
