@@ -78,7 +78,7 @@ public class VersionInfoRead {
     System.out.println("Subversion " + getUrl());
     System.out.println("Last commit " + getRevision() + " on branch " + getBranch());
     System.out.println("Compiled by " + getUser() + " on " + getTime());
-    System.out.println("Current SSM supports for hadoop" + getHadoopVersion());
+    System.out.println("Compiled for hadoop " + getHadoopVersion());
   }
 
   public static void main(String[] args) {
