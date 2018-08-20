@@ -139,9 +139,26 @@ angular.module('zeppelinWebApp')
     $scope.defindOrderBy = function (filed) {
       if ($scope.orderby === filed) {
         $scope.isDesc = ! $scope.isDesc;
-      } else {
+        if (filed == 'running_time') {
+          SortByRunnintTime();
+          return;
+        }
+        else if (filed == 'progress') {
+          SortByProgress();
+          return;
+        }
+      }
+      else {
         $scope.orderby = filed;
         $scope.isDesc = true;
+        if (filed == 'running_time') {
+          SortByRunnintTime();
+          return;
+        }
+        else if (filed == 'progress') {
+          SortByProgress();
+          return;
+        }
       }
       if (!$scope.searching) {
         getActions();
@@ -150,6 +167,53 @@ angular.module('zeppelinWebApp')
         __search__($scope.path);
       }
     };
+
+    function SortByRunnintTime() {
+      var count = Object.keys($scope.actions).length;
+      for (var i = 0; i < count && $scope.isDesc; i++) {
+        for (var j = i; j < count ; j++) {
+          if ($scope.actions[i].runTime > $scope.actions[j].runTime) {
+            var tmp = $scope.actions[i];
+            $scope.actions[i] = $scope.actions[j];
+            $scope.actions[j] = tmp;
+          }
+        }
+      }
+
+      for (var i = 0; i < count && !$scope.isDesc; i++) {
+        for (var j = i; j < count ; j++) {
+          if ($scope.actions[i].runTime < $scope.actions[j].runTime) {
+            var tmp = $scope.actions[i];
+            $scope.actions[i] = $scope.actions[j];
+            $scope.actions[j] = tmp;
+          }
+        }
+      }
+    }
+
+
+    function SortByProgress() {
+      var count = Object.keys($scope.actions).length;
+      for (var i = 0; i < count&& $scope.isDesc; i++) {
+        for (var j = i; j < count ; j++) {
+          if ($scope.actions[i].progress > $scope.actions[j].progress) {
+            var tmp = $scope.actions[i];
+            $scope.actions[i] = $scope.actions[j];
+            $scope.actions[j] = tmp;
+          }
+        }
+      }
+
+      for (var i = 0; i < count&& !$scope.isDesc; i++) {
+        for (var j = i; j < count ; j++) {
+          if ($scope.actions[i].progress < $scope.actions[j].progress) {
+            var tmp = $scope.actions[i];
+            $scope.actions[i] = $scope.actions[j];
+            $scope.actions[j] = tmp;
+          }
+        }
+      }
+    }
 
     // getActions();
     if ($scope.totalNumber == 0) {
