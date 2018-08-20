@@ -30,7 +30,79 @@
     <version>1.5.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
+    <profiles>
+        <profile>
+            <id>hadoop-2.7</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-2</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-2.7</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-2.7</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hadoop-cdh-2.6</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-2</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-cdh-2.6</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-cdh-2.6</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>hadoop-3.1</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-3.1</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.smartdata</groupId>
+                    <artifactId>smart-hadoop-3.1</artifactId>
+                    <version>1.5.0-SNAPSHOT</version>
+                    <scope>test</scope>
+                    <type>test-jar</type>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
     <dependencies>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-hadoop-common</artifactId>
+            <version>1.5.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
             <artifactId>smart-common</artifactId>
@@ -51,10 +123,16 @@
             <artifactId>hadoop-hdfs</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
-
         <dependency>
             <groupId>com.squareup</groupId>
             <artifactId>tape</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-hadoop-common</artifactId>
+            <version>1.5.0-SNAPSHOT</version>
+            <scope>test</scope>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>org.smartdata</groupId>
@@ -96,6 +174,17 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-configuration</groupId>
+            <artifactId>commons-configuration</artifactId>
+            <version>1.6</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-beanutils</groupId>
+                    <artifactId>commons-beanutils</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 </project>
