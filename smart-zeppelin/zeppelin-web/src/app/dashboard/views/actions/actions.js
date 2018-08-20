@@ -238,11 +238,13 @@ angular.module('zeppelinWebApp')
     });
 
     var timer = $interval(function(){
-      if (!$scope.searching) {
-        getActions();
-      }
-      else {
-        __search__($scope.path);
+      if ($scope.orderby != 'running_time' && $scope.orderby != 'progress') {
+        if (!$scope.searching) {
+          getActions();
+        }
+        else {
+          __search__($scope.path);
+        }
       }
     },60000);
 
