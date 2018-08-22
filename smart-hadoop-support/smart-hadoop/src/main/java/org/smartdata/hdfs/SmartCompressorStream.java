@@ -54,6 +54,7 @@ public class SmartCompressorStream {
     this.compressionCodec = new CompressionCodec();
 
     this.bufferSize = bufferSize;
+    // This is overhead for snappy
     int overHead = bufferSize / 6 + 32;
     buffer = new byte[bufferSize + overHead];
     this.compressor = compressionCodec.createCompressor(bufferSize + overHead, compressionInfo.getCompressionImpl());
@@ -98,6 +99,7 @@ public class SmartCompressorStream {
       return;
     }
 
+    // TODO add check to avoid buff overflow
     originPositions.add(originPos);
     compressedPositions.add(compressedPos);
 

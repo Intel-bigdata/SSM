@@ -32,7 +32,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.EnumSet;
 
-public class CompressionInputStream extends SmartInputStream {
+public class SmartCompressionInputStream extends SmartInputStream {
   private Decompressor decompressor = null;
   private byte[] buffer;
   private boolean closed = false;
@@ -42,7 +42,7 @@ public class CompressionInputStream extends SmartInputStream {
   private final long originalLength;
   private CompressionCodec compressionCodec;
 
-  CompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+  SmartCompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
       FileState fileState) throws IOException, UnresolvedLinkException {
     super(dfsClient, src, verifyChecksum, fileState);
     if (fileState instanceof CompressionFileState) {

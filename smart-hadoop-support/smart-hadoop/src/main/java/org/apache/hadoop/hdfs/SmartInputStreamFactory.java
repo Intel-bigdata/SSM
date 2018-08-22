@@ -54,7 +54,7 @@ public abstract class SmartInputStreamFactory {
         inputStream = new CompactInputStream(dfsClient, verifyChecksum, fileState);
         break;
       case COMPRESSION:
-        inputStream = new CompressionInputStream(dfsClient, src, verifyChecksum, fileState);
+        inputStream = new SmartCompressionInputStream(dfsClient, src, verifyChecksum, fileState);
         break;
       case S3:
         inputStream = new S3InputStream(dfsClient, src, verifyChecksum, fileState);

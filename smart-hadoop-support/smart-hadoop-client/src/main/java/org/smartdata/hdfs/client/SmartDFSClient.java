@@ -335,7 +335,10 @@ public class SmartDFSClient extends DFSClient {
           blockLocation.setOffset(blockLocation.getOffset() - offset);
         }
         return blockLocations;
-      } else if (fileState instanceof CompressionFileState) {
+      }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
         CompressionFileState compressionInfo = (CompressionFileState) fileState;
         Long[] originalPos =
             compressionInfo.getOriginalPos().clone();
