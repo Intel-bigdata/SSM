@@ -16,17 +16,3 @@
  */
 
 
-import { RouterModule, Routes } from '@angular/router';
-
-import { RootComponent } from "./pages/root/root.component";
-import { LoginComponent } from "./pages/login/login.component";
-import { HomeComponent } from "./pages/home/home.component";
-
-const routes: Routes = [
-  { path: '', component: LoginComponent },
-  { path: 'app', component:  RootComponent, children: [
-      { path: '', component: HomeComponent }
-  ]}
-];
-
-export const routing = RouterModule.forRoot(routes);

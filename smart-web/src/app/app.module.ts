@@ -23,14 +23,17 @@ import { HttpModule } from '@angular/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule, MatCheckboxModule } from '@angular/material';
+import { AceEditorModule } from'ng2-ace-editor';
 
 import { AppComponent } from './app.component';
 import { routing } from "./app.routers";
 
-import { SidebarComponent } from "../components/sidebar/sidebar.component";
+import { SidebarComponent } from "./components/sidebar/sidebar.component";
+import { NavbarComponent } from "./components/navbar/navbar.component";
 
-import { RootComponent } from "../pages/root/root.component";
-import { LoginComponent } from '../pages/login/login.component';
+import { RootComponent } from "./pages/root/root.component";
+import { LoginComponent } from './pages/login/login.component';
+import { HomeComponent } from './pages/home/home.component';
 
 
 @NgModule({
@@ -38,7 +41,9 @@ import { LoginComponent } from '../pages/login/login.component';
     AppComponent,
     RootComponent,
     SidebarComponent,
-    LoginComponent
+    NavbarComponent,
+    LoginComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
@@ -51,6 +56,7 @@ import { LoginComponent } from '../pages/login/login.component';
     MatInputModule,
     MatMenuModule,
     MatCheckboxModule,
+    AceEditorModule,
     routing
   ],
   providers: [],

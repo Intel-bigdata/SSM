@@ -16,17 +16,19 @@
  */
 
 
-import { RouterModule, Routes } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
 
-import { RootComponent } from "./pages/root/root.component";
-import { LoginComponent } from "./pages/login/login.component";
-import { HomeComponent } from "./pages/home/home.component";
+@Component({
+  selector: 'app-home',
+  templateUrl: './home.component.html',
+  styleUrls: ['./home.component.scss']
+})
+export class HomeComponent implements OnInit {
+  text: string = "aaa";
 
-const routes: Routes = [
-  { path: '', component: LoginComponent },
-  { path: 'app', component:  RootComponent, children: [
-      { path: '', component: HomeComponent }
-  ]}
-];
+  constructor() { }
 
-export const routing = RouterModule.forRoot(routes);
+  ngOnInit() {
+  }
+
+}

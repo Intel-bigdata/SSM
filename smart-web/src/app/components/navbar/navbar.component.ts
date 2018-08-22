@@ -16,32 +16,17 @@
  */
 
 
-.wrapper {
-  display: flex;
-  height: 100vh;
-  width: 100%;
-  padding: 15px;
-}
+import { Component, OnInit, Input } from '@angular/core';
 
-.sidebar-panel {
-  display: inline-block;
-  width: 260px;
-  height: 100%;
-  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.42), 0 4px 25px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.2);
-  transition: all 500ms;
-  margin-right: 12px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #eee;
-}
+@Component({
+  selector: 'app-navbar',
+  templateUrl: './navbar.component.html',
+  styleUrls: ['./navbar.component.scss']
+})
+export class NavbarComponent implements OnInit {
+  @Input() title: string;
+  constructor() {}
 
-.main-panel {
-  flex: 1;
-  background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.42), 0 4px 25px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(0, 0, 0, 0.2);
-}
-
-@media (max-width: 776px) {
-  .sidebar-panel {
-    display: none;
+  ngOnInit() {
   }
 }
