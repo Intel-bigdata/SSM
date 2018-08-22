@@ -47,7 +47,7 @@ public class RulePluginManager {
     }
   }
 
-  public static List<RulePlugin> getPlugins() {
+  public static synchronized List<RulePlugin> getPlugins() {
     List<RulePlugin> copy = new ArrayList<>();
     copy.addAll(plugins);
     return copy;
