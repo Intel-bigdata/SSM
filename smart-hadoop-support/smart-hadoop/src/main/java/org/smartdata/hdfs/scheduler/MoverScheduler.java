@@ -120,6 +120,7 @@ public class MoverScheduler extends ActionSchedulerService {
 
     String file = action.getArgs().get(HdfsAction.FILE_PATH);
     if (file == null) {
+      actionInfo.appendLog("File path not specified!\n");
       return ScheduleResult.FAIL;
     }
 
@@ -163,9 +164,11 @@ public class MoverScheduler extends ActionSchedulerService {
       action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
       return ScheduleResult.SUCCESS;
     } catch (IOException e) {
+      actionInfo.appendLogLine(e.getMessage());
       LOG.error("Exception while processing " + action, e);
       return ScheduleResult.FAIL;
     } catch (Throwable t) {
+      actionInfo.appendLogLine(t.getMessage());
       LOG.error("Unexpected exception when scheduling move " + policy + " '" + file + "'.", t);
       return ScheduleResult.FAIL;
     }

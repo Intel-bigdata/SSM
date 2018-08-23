@@ -42,6 +42,8 @@ public class ActionInfo {
   private float progress;
 
   public ActionInfo() {
+    this.result = "";
+    this.log = "";
   }
 
   public ActionInfo(long actionId, long cmdletId, String actionName,
@@ -114,12 +116,24 @@ public class ActionInfo {
     this.result = result;
   }
 
+  public void appendResult(String result) {
+    this.result += result;
+  }
+
   public String getLog() {
     return log;
   }
 
   public void setLog(String log) {
     this.log = log;
+  }
+
+  public void appendLog(String log) {
+    this.log += log;
+  }
+
+  public void appendLogLine(String logLine) {
+    this.log += logLine + "\n";
   }
 
   public boolean isSuccessful() {

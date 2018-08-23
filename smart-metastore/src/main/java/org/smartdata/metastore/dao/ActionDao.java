@@ -18,6 +18,8 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.model.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +30,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,14 +41,28 @@ import java.util.Map;
 public class ActionDao {
 
   private static final String TABLE_NAME = "action";
+  private static final String RUNNING_TIME = "running_time";
   private DataSource dataSource;
+  private final List<String> tableColumns;
 
-  public void setDataSource(DataSource dataSource) {
+  public ActionDao(DataSource dataSource) throws MetaStoreException {
     this.dataSource = dataSource;
-  }
-
-  public ActionDao(DataSource dataSource) {
-    this.dataSource = dataSource;
+    Connection conn = null;
+    try {
+      conn = dataSource.getConnection();
+      tableColumns = MetaStoreUtils.getTableColumns(conn, "action");
+    } catch (SQLException e) {
+      throw new MetaStoreException(e);
+    } finally {
+      if (conn != null) {
+        try {
+          conn.close();
+        } catch (Exception e) {
+          // ignore
+        }
+      }
+    }
+    tableColumns.add(RUNNING_TIME);
   }
 
   public List<ActionInfo> getAll() {
@@ -154,10 +171,20 @@ public class ActionDao {
     String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
 
     for (int i = 0; i < orderBy.size(); i++) {
-      if (orderBy.get(i).equals("aid")) {
+      String ob = orderBy.get(i);
+      if (!tableColumns.contains(ob)) {
+        continue;
+      }
+
+      if (ob.equals("aid")) {
         ifHasAid = true;
       }
-      sql = sql + orderBy.get(i);
+
+      if (ob.equals(RUNNING_TIME)) {
+        sql = sql + "(finish_time - create_time)";
+      } else {
+        sql = sql + ob;
+      }
       if (isDesc.size() > i) {
         if (isDesc.get(i)) {
           sql = sql + " desc ";
@@ -206,10 +233,21 @@ public class ActionDao {
       sql += " ORDER BY ";
 
       for (int i = 0; i < orderBy.size(); i++) {
-        if (orderBy.get(i).equals("aid")) {
+        String ob = orderBy.get(i);
+        if (!tableColumns.contains(ob)) {
+          continue;
+        }
+
+        if (ob.equals("aid")) {
           ifHasAid = true;
         }
-        sql = sql + orderBy.get(i);
+
+        if (ob.equals(RUNNING_TIME)) {
+          sql = sql + "(finish_time - create_time)";
+        } else {
+          sql = sql + ob;
+        }
+
         if (isDesc.size() > i) {
           if (isDesc.get(i)) {
             sql = sql + " desc ";

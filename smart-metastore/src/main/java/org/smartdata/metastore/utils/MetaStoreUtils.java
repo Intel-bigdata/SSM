@@ -537,6 +537,28 @@ public class MetaStoreUtils {
   }
 
   /**
+   * Retrieve table column names.
+   *
+   * @param conn
+   * @param tableName
+   * @return
+   * @throws MetaStoreException
+   */
+  public static List<String> getTableColumns(Connection conn, String tableName)
+    throws MetaStoreException {
+    List<String> ret = new ArrayList<>();
+    try {
+      ResultSet res = conn.getMetaData().getColumns(null, null, tableName, null);
+      while (res.next()) {
+        ret.add(res.getString("COLUMN_NAME"));
+      }
+      return ret;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  /**
    * This default behavior provided here is mainly for convenience.
    *
    * @return
