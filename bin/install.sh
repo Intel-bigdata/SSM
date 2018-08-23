@@ -101,14 +101,14 @@ fi
 
 TARGET=",,,,,,"
 FLAG=0
-ip=0
+ipOrHost=0
 for TARGET in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
 do
    TARGET=$(echo $TARGET | tr -d  " ")
-   for ip in `ifconfig | grep -o "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}"`
+   for ipOrHost in `echo $(hostname -A;hostname -I) | sed 's/ /\n/g';echo "localhost";echo "$HOSTNAME";echo "127.0.1.1";echo "127.0.0.1"`
    do
-        ip=$(echo $ip | tr -d  " ")
-        if [[ "$TARGET" == "$ip" || "$TARGET" == "localhost" || "$TARGET" == "$HOSTNAME" || "$TARGET" == "127.0.1.1" ]];then
+        ipOrHost=$(echo $ipOrHost | tr -d  " ")
+        if [[ "$TARGET" == "$ipOrHost" ]];then
             FLAG=1
             break
         fi
