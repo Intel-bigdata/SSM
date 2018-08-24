@@ -57,6 +57,24 @@ public class CompressionCodec {
   }
 
   /**
+   * Return compression overhead of given codec
+   * @param bufferSize buffSize of codec (int)
+   * @param compressionImpl codec name (String)
+   * @return compression overhead (int)
+   */
+  public int compressionOverhead(int bufferSize, String compressionImpl) {
+    // According to Hadoop 3.0
+    switch (compressionImpl) {
+      case "Lz4":
+        return bufferSize / 255 + 16;
+      case "snappy" :
+        return bufferSize / 6 + 32;
+      default:
+        return 18;
+    }
+  }
+
+  /**
    *  Create a compressor
    */
   public Compressor createCompressor(int bufferSize, String compressionImpl) {
@@ -82,7 +100,7 @@ public class CompressionCodec {
             ZlibCompressor.CompressionHeader.DEFAULT_HEADER,
             bufferSize);
         } else {
-          // TODO buffer size
+          // TODO buffer size for build-in zlib codec
           return ZlibFactory.getZlibCompressor(conf);
         }
       default:

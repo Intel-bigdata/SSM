@@ -54,10 +54,16 @@ public class SmartCompressorStream {
     this.compressionCodec = new CompressionCodec();
 
     this.bufferSize = bufferSize;
-    // This is overhead for snappy
-    int overHead = bufferSize / 6 + 32;
+    // Compression overHead, e.g., Snappy's overHead is buffSize/6 + 32
+
+    int overHead = compressionCodec.compressionOverhead(bufferSize,
+        compressionInfo.getCompressionImpl());
+    // Add overhead to buffer
+    // TODO this part is different from Hadoop, where MAXLEN = buff - overhead
     buffer = new byte[bufferSize + overHead];
-    this.compressor = compressionCodec.createCompressor(bufferSize + overHead, compressionInfo.getCompressionImpl());
+    this.compressor = compressionCodec
+        .createCompressor(bufferSize + overHead,
+            compressionInfo.getCompressionImpl());
     if (compressor instanceof SnappyCompressor) {
       compressionInfo.setCompressionImpl("snappy");
     }
