@@ -19,10 +19,10 @@ under the License.
 <style type="text/css">
   table{ table-layout: fixed;}
 
-  .bk { 
-    white-space: nowrap; 
-    overflow:hidden; 
-    text-overflow:ellipsis; 
+  .bk {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
 
   .tooltiptext {
@@ -48,7 +48,7 @@ under the License.
   .running_time{ width: 50px;}
   .host{ width: 100px;}
   .status{ width: 30px;}
-  .progress{ width: 50px;}
+  .progress1{ width: 50px;}
   .actions{ width: 15px;}
 </style>
 
@@ -57,19 +57,19 @@ under the License.
   <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
   <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
 </div>
-<div class="col-md-12" onmousemove="getPosition(event)" onmouseout="clearCoor()">
+<div class="col-md-12" onmousemove="getPosition(event)">
   <br/>
   <table class="table table-bordered">
     <thead ng-show="totalNumber > 0">
     <tr>
       <th ng-click="defindOrderBy('aid')" class="aid">ID</th>
       <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
-      <th ng-click="defindOrderBy('exec_host')" class="host">Host</th>
+      <th class="host">Host</th>
       <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
       <th ng-click="defindOrderBy('finish_time')" class="finish_time">Finish Time</th>
       <th ng-click="defindOrderBy('running_time')" class="running_time">Running Time</th>
       <th ng-click="defindOrderBy('successful')" class="status">Status</th>
-      <th ng-click="defindOrderBy('progress')" class="progress">Progress</th>
+      <th ng-click="defindOrderBy('progress')" class="progress1">Progress</th>
       <th class="actions">Actions</th>
     </tr>
     </thead>
@@ -89,7 +89,7 @@ under the License.
     <tr ng-repeat="action in actions">
       <td>{{action.actionId}}</td>
       <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 74" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
-      <td class="bk">{{action.execHost}}</td>
+      <td class="bk">{{action.execHost}}<span class="tooltiptext bg-primary">{{action.execHost}}</span></td>
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
       <td>{{action.finished ? action.runTime : "-"}}ms</td>
@@ -142,9 +142,8 @@ under the License.
 function getPosition(e) {
   var x = e.clientX,
       y = e.clientY;
-  var coor = "Coordinates: (" + x + "," + y + ")";
   var tips = document.getElementsByClassName("tooltiptext");
-  
+
   for (i=0 ; i<tips.length; i++) {
     setPosition(tips[i], x, y);
   }
