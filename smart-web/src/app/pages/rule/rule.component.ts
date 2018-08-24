@@ -16,30 +16,18 @@
  */
 
 
-.wrapper {
-  display: flex;
-  height: 100vh;
-  width: 100%;
-  padding: 15px;
-}
+import { Component, OnInit } from '@angular/core';
 
-.sidebar-panel {
-  display: inline-block;
-  width: 260px;
-  height: 100%;
-  box-shadow: 0 0 0 -12px rgba(0, 0, 0, 0.42);
-  transition: all 500ms;
-  margin-right: 12px;
-  background: none;
-  color: #eee;
-}
+@Component({
+  selector: 'app-rule',
+  templateUrl: './rule.component.html',
+  styleUrls: ['./rule.component.scss']
+})
+export class RuleComponent implements OnInit {
 
-.main-panel {
-  flex: 1;
-}
+  constructor() { }
 
-@media (max-width: 776px) {
-  .sidebar-panel {
-    display: none;
+  ngOnInit() {
   }
+
 }

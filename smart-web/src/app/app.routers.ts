@@ -21,11 +21,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { RootComponent } from "./pages/root/root.component";
 import { LoginComponent } from "./pages/login/login.component";
 import { HomeComponent } from "./pages/home/home.component";
+import { RuleComponent } from "./pages/rule/rule.component";
 
 const routes: Routes = [
   { path: '', component: LoginComponent },
   { path: 'app', component:  RootComponent, children: [
-      { path: '', component: HomeComponent }
+      { path: '', component: HomeComponent },
+      { path: 'rules', component: RuleComponent }
   ]}
 ];
 

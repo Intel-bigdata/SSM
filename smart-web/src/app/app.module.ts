@@ -22,7 +22,8 @@ import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule, MatCheckboxModule } from '@angular/material';
+import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule,
+  MatCheckboxModule, MatIconModule } from '@angular/material';
 import { AceEditorModule } from'ng2-ace-editor';
 
 import { AppComponent } from './app.component';
@@ -34,6 +35,7 @@ import { NavbarComponent } from "./components/navbar/navbar.component";
 import { RootComponent } from "./pages/root/root.component";
 import { LoginComponent } from './pages/login/login.component';
 import { HomeComponent } from './pages/home/home.component';
+import { RuleComponent } from './pages/rule/rule.component';
 
 
 @NgModule({
@@ -43,7 +45,8 @@ import { HomeComponent } from './pages/home/home.component';
     SidebarComponent,
     NavbarComponent,
     LoginComponent,
-    HomeComponent
+    HomeComponent,
+    RuleComponent
   ],
   imports: [
     BrowserModule,
@@ -56,6 +59,7 @@ import { HomeComponent } from './pages/home/home.component';
     MatInputModule,
     MatMenuModule,
     MatCheckboxModule,
+    MatIconModule,
     AceEditorModule,
     routing
   ],

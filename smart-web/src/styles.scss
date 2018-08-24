@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import '~material-design-icons/iconfont/material-icons.css';
 
 * {
   box-sizing: border-box;
@@ -46,6 +45,8 @@ h2 {
   font-size: 2.6em;
 }
 
+1
+
 h3 {
   font-size: 1.825em;
 }
@@ -69,7 +70,7 @@ a {
   text-decoration: none;
 }
 
-a:hover{
+a:hover {
   color: #007aff;
   text-decoration: none;
 }
