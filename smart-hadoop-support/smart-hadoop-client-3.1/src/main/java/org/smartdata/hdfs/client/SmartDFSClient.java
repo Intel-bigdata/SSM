@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.CorruptFileBlocks;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.HdfsPathHandle;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -55,7 +56,7 @@ import java.util.List;
 
 public class SmartDFSClient extends DFSClient {
   private static final Logger LOG = LoggerFactory.getLogger(SmartDFSClient.class);
-  private static final String CALLER_CLASS = "org.apache.hadoop.hdfs.DFSInputStream";
+  private static final String CALLER_CLASS = "org.apache.hadoop.hdfs.DFSClient";
   private SmartClient smartClient = null;
   private boolean healthy = false;
 
@@ -163,6 +164,24 @@ public class SmartDFSClient extends DFSClient {
       boolean verifyChecksum, FileSystem.Statistics stats)
       throws IOException {
     return open(src, buffersize, verifyChecksum);
+  }
+
+  @Override
+  public DFSInputStream open(HdfsPathHandle fd, int buffersize, boolean verifyChecksum) throws IOException {
+    String src = fd.getPath();
+    DFSInputStream is = super.open(fd, buffersize, verifyChecksum);
+    if (is.getFileLength() == 0) {
+      is.close();
+      FileState fileState = getFileState(src);
+      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
+        throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
+            + fileState.getFileType());
+      }
+      is = SmartInputStreamFactory.create(this, src,
+          verifyChecksum, fileState);
+    }
+    reportFileAccessEvent(src);
+    return is;
   }
 
   @Override

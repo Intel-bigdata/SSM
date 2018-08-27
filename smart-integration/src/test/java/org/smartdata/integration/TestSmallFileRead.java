@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSInputStream;
-import org.apache.hadoop.util.VersionInfo;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -88,12 +87,6 @@ public class TestSmallFileRead extends MiniSmartClusterHarness {
   @Test
   public void testRead() throws Exception {
     waitTillSSMExitSafeMode();
-    // Not support hdfs3.x temporarily
-    String version = VersionInfo.getVersion();
-    String[] parts = version.split("\\.");
-    if (Integer.valueOf(parts[0]) == 3) {
-      return;
-    }
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     DFSInputStream is = smartDFSClient.open("/test/small_files/file_0");
     Assert.assertEquals(1, is.getAllBlocks().size());

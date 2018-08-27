@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.hdfs;
 
-import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
@@ -29,8 +28,8 @@ public class SmartInputStream extends DFSInputStream {
   protected final FileState fileState;
 
   SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-      FileState fileState) throws IOException, UnresolvedLinkException {
-    super(dfsClient, src, verifyChecksum, null);
+      FileState fileState) throws IOException {
+    super(dfsClient, src, verifyChecksum, dfsClient.getLocatedBlocks(src, 0));
     this.fileState = fileState;
   }
 
