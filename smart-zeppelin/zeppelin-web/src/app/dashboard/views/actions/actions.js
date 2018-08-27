@@ -19,7 +19,6 @@
 angular.module('zeppelinWebApp')
 
 
-
   .controller('ActionsCtrl', ActionsCtrl);
   ActionsCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval'];
   function ActionsCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
