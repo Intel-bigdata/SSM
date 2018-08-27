@@ -267,8 +267,12 @@ function smart_stop_daemon() {
 
 function reorder_lib() {
   local ajar="lib/jersey-core-1.9.jar"
+  local bjar="lib/jsr311-api-1.1.1.jar"
   if [ -f "${SMART_HOME}/${ajar}" ]; then
     SMART_CLASSPATH="${SMART_HOME}/${ajar}:${SMART_CLASSPATH}"
+  fi
+  if [ -f "${SMART_HOME}/${bjar}" ]; then
+    SMART_CLASSPATH="${SMART_HOME}/${bjar}:${SMART_CLASSPATH}"
   fi
 }
 
