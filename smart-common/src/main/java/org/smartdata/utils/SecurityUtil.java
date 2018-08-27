@@ -158,7 +158,7 @@ public class SecurityUtil {
     File keytabPath = new File(keytabFilename);
     String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
     try {
-      SecurityUtil.loginUsingKeytab(principal, keytabPath.getAbsolutePath());
+      SecurityUtil.loginUsingKeytab(keytabPath.getAbsolutePath(), principal);
     } catch (IOException e) {
       LOG.error("Fail to login using keytab. " + e);
       throw new IOException("Fail to login using keytab. " + e);

@@ -165,9 +165,11 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     long cmdletId = 10;
     long actionId = 101;
     MetaStore metaStore = mock(MetaStore.class);
+    Assert.assertNotNull(metaStore);
     when(metaStore.getMaxCmdletId()).thenReturn(cmdletId);
     when(metaStore.getMaxActionId()).thenReturn(actionId);
     CmdletDispatcher dispatcher = mock(CmdletDispatcher.class);
+    Assert.assertNotNull(dispatcher);
     when(dispatcher.canDispatchMore()).thenReturn(true);
     ServerContext serverContext = new ServerContext(new SmartConf(), metaStore);
     CmdletManager cmdletManager = new CmdletManager(serverContext);

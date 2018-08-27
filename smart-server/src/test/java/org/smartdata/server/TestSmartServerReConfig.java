@@ -69,6 +69,7 @@ public class TestSmartServerReConfig {
       serverConf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
       // rpcServer start in SmartServer
       ssm = SmartServer.launchWith(serverConf);
+      Assert.assertNotNull(ssm);
 
       Thread.sleep(2000);
       Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.DISABLED);
