@@ -35,6 +35,9 @@ import org.smartdata.model.action.FileMovePlan;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -117,6 +120,9 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
   public void moveCrossNodes() throws Exception {
     Configuration conf = smartContext.getConf();
     URI namenode = cluster.getURI();
+    if (namenode == null) {
+      throw new Exception("Cannot get namenode url.");
+    }
 
     generateFile("One-block file");
 
@@ -128,14 +134,16 @@ public class TestMoverExecutor extends MiniClusterWithStoragesHarness {
     ExtendedBlock block = null;
     for (LocatedBlock lb : getLocatedBlocks(dfsClient, fileName, plan)) {
       block = lb.getBlock();
-      for (DatanodeInfo datanodeInfo : lb.getLocations()) {
-        fileNodes.add(datanodeInfo);
-      }
+      fileNodes.addAll(Arrays.asList(lb.getLocations()));
     }
     final DatanodeStorageReport[] reports = nnc.getLiveDatanodeStorageReport();
+    nnc.close();
     for (DatanodeStorageReport report : reports) {
       DatanodeInfo targetDatanode = report.getDatanodeInfo();
       if (!fileNodes.contains(targetDatanode)) {
+        if (block == null) {
+          continue;
+        }
         StorageGroup source = new StorageGroup(fileNodes.iterator().next(), StorageType.DISK.toString());
         StorageGroup target = new StorageGroup(targetDatanode, StorageType.SSD.toString());
         addPlan(plan, source, target, block.getBlockId());

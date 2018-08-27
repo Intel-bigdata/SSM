@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,15 +43,21 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 public class VersionInfoWrite {
-  File directory = new File("");
-  String pom = directory.getAbsolutePath() + "/smart-common/pom.xml";
+  private File directory = new File("");
+  private String pom = directory.getAbsolutePath() + "/smart-common/pom.xml";
 
   public void execute() {
     Properties prop = new Properties();
+    InputStream in = null;
     OutputStream output = null;
-    String s = this.getClass().getResource("/").getPath() + "common-versionInfo.properties";
+    URL resourceUrl = this.getClass().getResource("/");
+    if (resourceUrl == null) {
+      throw new RuntimeException("Cannot find resource file common-versionInfo.properties.");
+    }
+    String s = resourceUrl.getPath() + "common-versionInfo.properties";
     try {
-      prop.load(new FileInputStream(s));
+      in = new FileInputStream(s);
+      prop.load(in);
       output = new FileOutputStream(s);
       prop.setProperty("version", getVersionInfo(pom));
       prop.setProperty("revision", getCommit());
@@ -59,11 +66,16 @@ public class VersionInfoWrite {
       prop.setProperty("url", getUri());
       prop.setProperty("branch", getBranch());
       prop.store(output, new Date().toString());
-    } catch (IOException e) {
-      e.printStackTrace();
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
+      if (in != null) {
+        try {
+          in.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
       if (output != null) {
         try {
           output.close();
@@ -90,8 +102,7 @@ public class VersionInfoWrite {
     if (versionList == null) {
       return "Not found";
     }
-    String version = versionList.item(0).getFirstChild().getNodeValue();
-    return version;
+    return versionList.item(0).getFirstChild().getNodeValue();
   }
 
   private String getUri() {
@@ -141,7 +152,7 @@ public class VersionInfoWrite {
     return branch;
   }
 
-  public List<String> execCmd(String cmd) {
+  private List<String> execCmd(String cmd) {
     String command = "/bin/sh -c " + cmd;
     List<String> list = new ArrayList<String>();
     try {

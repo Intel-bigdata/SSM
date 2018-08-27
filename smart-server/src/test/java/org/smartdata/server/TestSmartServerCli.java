@@ -67,6 +67,7 @@ public class TestSmartServerCli extends MiniClusterHarness {
       };
 
       SmartServer regServer = SmartServer.launchWith(args, conf);
+      Assert.assertNotNull(regServer);
       Thread.sleep(1000);
       regServer.shutdown();
 

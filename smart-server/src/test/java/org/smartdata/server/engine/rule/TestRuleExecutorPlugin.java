@@ -74,10 +74,10 @@ public class TestRuleExecutorPlugin extends MiniSmartClusterHarness {
   }
 
   private class TestPlugin implements RuleExecutorPlugin {
-    private volatile int numOnNewRuleExecutor = 0;
-    private volatile int numPreExecution = 0;
-    private volatile int numPreSubmitCmdlet = 0;
-    private volatile int numOnRuleExecutorExit = 0;
+    private int numOnNewRuleExecutor = 0;
+    private int numPreExecution = 0;
+    private int numPreSubmitCmdlet = 0;
+    private int numOnRuleExecutorExit = 0;
 
     public TestPlugin() {
     }
