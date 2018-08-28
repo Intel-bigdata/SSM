@@ -40,6 +40,7 @@ public class SmartCompressorStream {
 
   private OutputStream out;
   private InputStream in;
+  private final int maxLength;
 
   private long originPos = 0;
   private long compressedPos = 0;
@@ -59,6 +60,7 @@ public class SmartCompressorStream {
     int overHead = compressionCodec.compressionOverhead(bufferSize,
         compressionInfo.getCompressionImpl());
     // Add overhead to buffer
+    this.maxLength = bufferSize - overHead;
     // TODO this part is different from Hadoop, where MAXLEN = buff - overhead
     buffer = new byte[bufferSize + overHead];
     this.compressor = compressionCodec
