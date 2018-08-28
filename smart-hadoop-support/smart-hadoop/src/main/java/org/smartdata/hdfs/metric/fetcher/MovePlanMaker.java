@@ -149,7 +149,7 @@ public class MovePlanMaker {
     List<String> types =
         CompatibilityHelperLoader.getHelper().chooseStorageTypes(policy, status.getReplication());
 
-    final LocatedBlocks locatedBlocks = status.getBlockLocations();
+    final LocatedBlocks locatedBlocks = CompatibilityHelperLoader.getHelper().getLocatedBlocks(status);
     final boolean lastBlkComplete = locatedBlocks.isLastBlockComplete();
     List<LocatedBlock> lbs = locatedBlocks.getLocatedBlocks();
     for (int i = 0; i < lbs.size(); i++) {
