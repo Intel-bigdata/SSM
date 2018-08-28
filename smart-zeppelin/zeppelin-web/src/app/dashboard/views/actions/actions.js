@@ -124,7 +124,6 @@ angular.module('zeppelinWebApp')
       search($scope.path);
     };
 
-
     $scope.jumpToPage = function () {
       var index = document.getElementById('page').value;
       $scope.gotoPage(Number(index));
