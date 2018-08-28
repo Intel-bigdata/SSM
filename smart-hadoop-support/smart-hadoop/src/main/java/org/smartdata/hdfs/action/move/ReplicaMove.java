@@ -17,9 +17,9 @@
  */
 package org.smartdata.hdfs.action.move;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.ExtendedBlock;
-import org.apache.hadoop.hdfs.protocol.HdfsConstants;
 import org.apache.hadoop.hdfs.protocol.datatransfer.IOStreamPair;
 import org.apache.hadoop.hdfs.protocol.datatransfer.sasl.SaslDataTransferClient;
 import org.apache.hadoop.hdfs.protocol.proto.DataTransferProtos;
@@ -27,7 +27,6 @@ import org.apache.hadoop.hdfs.protocolPB.PBHelper;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.security.token.block.InvalidBlockTokenException;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
-import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.token.Token;
@@ -59,15 +58,17 @@ class ReplicaMove {
   private StorageGroup target;
   private StorageGroup source;
   private ReplicaMoveStatus status;
+  private Configuration conf;
 
-  public ReplicaMove(Block block, StorageGroup source, StorageGroup target,
-                     NameNodeConnector nnc, SaslDataTransferClient saslClient) {
+  public ReplicaMove(Block block, StorageGroup source, StorageGroup target, NameNodeConnector nnc,
+                     SaslDataTransferClient saslClient, Configuration conf) {
     this.nnc = nnc;
     this.saslClient = saslClient;
     this.block = block;
     this.target = target;
     this.source = source;
     this.status = new ReplicaMoveStatus();
+    this.conf = conf;
   }
 
   @Override
@@ -86,7 +87,7 @@ class ReplicaMove {
     try {
       sock.connect(
           NetUtils.createSocketAddr(target.getDatanodeInfo().getXferAddr()),
-          HdfsServerConstants.READ_TIMEOUT);
+          CompatibilityHelperLoader.getHelper().getReadTimeOutConstant());
 
       sock.setKeepAlive(true);
 
@@ -94,15 +95,16 @@ class ReplicaMove {
       InputStream unbufIn = sock.getInputStream();
       ExtendedBlock eb = new ExtendedBlock(nnc.getBlockpoolID(), block);
       final KeyManager km = nnc.getKeyManager();
-      Token<BlockTokenIdentifier> accessToken = km.getAccessToken(eb);
+      Token<BlockTokenIdentifier> accessToken =
+          CompatibilityHelperLoader.getHelper().getAccessToken(km, eb, target);
       IOStreamPair saslStreams = saslClient.socketSend(sock, unbufOut,
           unbufIn, km, accessToken, target.getDatanodeInfo());
       unbufOut = saslStreams.out;
       unbufIn = saslStreams.in;
       out = new DataOutputStream(new BufferedOutputStream(unbufOut,
-          HdfsConstants.IO_FILE_BUFFER_SIZE));
+          CompatibilityHelperLoader.getHelper().getIOFileBufferSize(conf)));
       in = new DataInputStream(new BufferedInputStream(unbufIn,
-          HdfsConstants.IO_FILE_BUFFER_SIZE));
+          CompatibilityHelperLoader.getHelper().getIOFileBufferSize(conf)));
 
       sendRequest(out, eb, accessToken);
       receiveResponse(in);
@@ -140,10 +142,10 @@ class ReplicaMove {
   /** Receive a block copy response from the input stream */
   private void receiveResponse(DataInputStream in) throws IOException {
     DataTransferProtos.BlockOpResponseProto response =
-        DataTransferProtos.BlockOpResponseProto.parseFrom(PBHelper.vintPrefixed(in));
+        DataTransferProtos.BlockOpResponseProto.parseFrom(CompatibilityHelperLoader.getHelper().getVintPrefixed(in));
     while (response.getStatus() == DataTransferProtos.Status.IN_PROGRESS) {
       // read intermediate responses
-      response = DataTransferProtos.BlockOpResponseProto.parseFrom(PBHelper.vintPrefixed(in));
+      response = DataTransferProtos.BlockOpResponseProto.parseFrom(CompatibilityHelperLoader.getHelper().getVintPrefixed(in));
     }
     String logInfo = "block move is failed";
     checkBlockOpStatus(response, logInfo);

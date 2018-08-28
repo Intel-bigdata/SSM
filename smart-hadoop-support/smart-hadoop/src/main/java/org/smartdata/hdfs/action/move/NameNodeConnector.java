@@ -82,12 +82,6 @@ public class NameNodeConnector implements Closeable {
     return blockpoolID;
   }
 
-  /** @return blocks with locations. */
-  public BlocksWithLocations getBlocks(DatanodeInfo datanode, long size)
-      throws IOException {
-    return namenode.getBlocks(datanode, size);
-  }
-
   /** @return live datanode storage reports. */
   public DatanodeStorageReport[] getLiveDatanodeStorageReport()
       throws IOException {
