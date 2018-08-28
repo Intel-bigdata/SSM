@@ -31,6 +31,7 @@ import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 
 /**
@@ -56,8 +57,6 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
@@ -73,9 +72,12 @@ public class ListFileAction extends HdfsAction {
       if (hdfsFileStatus.isDir()) {
         DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
         HdfsFileStatus[] fileList = listing.getPartialListing();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
           appendLog(
-              String.format("%s", fileList[i].getFullPath(new Path(src))));
+              String.format("%s %s %s %s %s %s %s", fileList[i].getPermission(), fileList[i].getReplication(),
+                  fileList[i].getOwner(), fileList[i].getGroup(), fileList[i].getLen(),
+                  formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
         }
       } else {
         appendLog(String.format("%s", src));
