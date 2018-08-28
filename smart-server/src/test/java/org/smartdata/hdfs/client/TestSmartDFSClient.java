@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Assert;
@@ -36,13 +37,6 @@ import java.util.Map;
 import java.util.Random;
 
 public class TestSmartDFSClient extends MiniSmartClusterHarness {
-
-  @Before
-  @Override
-  public void init() throws Exception {
-    super.init();
-    createSmallFiles();
-  }
 
   private void createSmallFiles() throws Exception {
     Path path = new Path("/test/small_files/");
@@ -73,7 +67,8 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void test() throws Exception {
+  public void testSmallFile() throws Exception {
+    createSmallFiles();
     waitTillSSMExitSafeMode();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     BlockLocation[] blockLocations = smartDFSClient.getBlockLocations(
@@ -89,6 +84,24 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_5"));
     smartDFSClient.delete("/test/small_files", true);
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
+  }
+
+  private void createCompressedFile() throws Exception {
+    // TODO add create files
+    Path path = new Path("/test/compress_files/");
+    dfs.mkdirs(path);
+    for (int i = 0; i < 3; i++) {
+      String fileName = "/test/compress_files/file_" + i;
+      DFSTestUtil.createFile(dfs, new Path(fileName),
+          1024 * 1024, (short) 1, 1);
+    }
+  }
+
+  @Test
+  public void testCompressedFile() throws Exception {
+    createCompressedFile();
+    waitTillSSMExitSafeMode();
+    // TODO add test cases
   }
 
   @After
