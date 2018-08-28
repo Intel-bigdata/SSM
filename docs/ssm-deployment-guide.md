@@ -1,18 +1,18 @@
-# SSM Deployment Guide with Hadoop (CDH5.10.1 or Apache Hadoop 2.7.3)
+# SSM Deployment Guide with Hadoop
 ----------------------------------------------------------------------------------
 ## Requirements:
 
-* Unix/Unix-like Operation System
-* JDK 1.7 for CDH5.10.1 or JDK 1.8 for Apache Hadoop 2.7.3
-* CDH 5.10.1 or Apache Hadoop 2.7.3
+* Unix/Unix-like OS
+* JDK 1.7 for CDH 5.10.1 or JDK 1.8 for Apache Hadoop 2.7.3/3.1.0
+* CDH 5.10.1 or Apache Hadoop 2.7.3/3.1.0
 * MySQL Community 5.7.18+
-* Maven 3.1.1+
+* Maven 3.1.1+ (merely for build use)
 
-## Why JDK 1.7 is preferred
+## Why JDK 1.7 is preferred for CDH 5.10.1
 
-  It is because by default CDH5.10.1 supports compile and run with JDK 1.7. If you
+  It is because by default CDH 5.10.1 supports compile and run with JDK 1.7. If you
   want to use JDK1.8, please turn to Cloudera web site for how to support JDK1.8
-  in CDH5.10.1.
+  in CDH 5.10.1.
   For SSM, JDK 1.7 and 1.8 are both supported.
 
 
@@ -24,7 +24,7 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 ##  **Build SSM**
 
-###   For CDH5.10.1
+###   For CDH 5.10.1
   
   	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
    
@@ -32,6 +32,9 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
   	
 	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
 
+###   For Hadoop 3.1.0
+
+	`mvn clean package -Pdist,web,hadoop-3.1 -DskipTests`
 
 A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
 More detailed information, please refer to BUILDING.txt file.
@@ -190,7 +193,9 @@ After finishing the SSM configuration, we can start to deploy the SSM package wi
 # Deploy SSM
 ---------------------------------------------------------------------------------
 
-SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode. To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), you can enter into ${SMART_HOME} directory and type "./bin/install.sh". You can use --config <config-dir> to specify where SSM's config directory is. ${SMART_HOME}/conf is the default config directory if the config option is not used.
+SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, then standalone service mode is enough. If better performance is desired, we recommend to deploy one agent on each Datanode.
+
+To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), please execute command `./bin/install.sh` in ${SMART_HOME}. You can use --config <config-dir> to specify where SSM's config directory is. ${SMART_HOME}/conf is the default config directory if the config option is not used.
    
    ## Standalone SSM Service
 
@@ -251,12 +256,12 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
 # Hadoop Configuration
 ----------------------------------------------------------------------------------
-After install CDH5.10.1 or Apache Hadoop 2.7.3, please do the following configurations for integrating SSM.
+Please do the following configurations for integrating SSM with CDH 5.10.1, Apache Hadoop 2.7.3 or Apache Hadoop 3.1.0.
 
 **Warning: This step may lead to `Hadoop not working issue` if it's not configured correctly. So, during testing, we don't recommend changing any configurations in Hadoop.** Actually, SSM can work with an existing Hadoop cluster without any configuration change in Hadoop. Although in that case SSM cannot collect access count or data temperature from Hadoop, you can still use SSM action to change access count or data temperature. For example, you can use `read -file XXX` to change access count or data temperature of file `XXX`.
 
 
-## Apache Hadoop 2.7.3
+## Apache Hadoop 2.7.3 or 3.1.0
 
 ### core-site.xml changes 
 
@@ -327,7 +332,7 @@ Copy the SSM jars to the default Hadoop class path
   2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
 
 
-## CDH5.10.1
+## CDH 5.10.1
 
 ### core-site.xml changes 
 
@@ -527,7 +532,7 @@ SSM choose to save cmdlet and action execution history in metastore for audit an
 ```
 SSM service restart is required after the configuration changes.
 
-## Batch Size of Namespace fetcher
+## Batch size of Namespace fetcher
 
 SSM will fetch/sync namespace from namenode when it is started. According to our tests, a large namespace may lead to long start up time. To avoid this, we add a parameter named `smart.namespace.fetcher.batch`, its default value is 500. You can change it if namespace is very large, e.g., 100M or more. A larger batch size will greatly speed up fetcher efficiency, and reduce start up time.
 ```xml
@@ -551,7 +556,7 @@ SSM supports concurrently fetching namespace. You can set a large value for each
         <description>Number of consumers in namespace fetcher</description>
     </property>
 ```
-##  Disable SSM Client
+##  Disable SSM SmartDFSClient
 
 For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
