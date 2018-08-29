@@ -32,7 +32,9 @@ import org.smartdata.action.annotation.ActionSignature;
 import java.io.IOException;
 import java.net.URI;
 import java.text.SimpleDateFormat;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * An action to list files in a directory.
@@ -40,16 +42,26 @@ import java.util.Map;
 @ActionSignature(
     actionId = "list",
     displayName = "list",
-    usage = HdfsAction.FILE_PATH + " $src"
+    usage = HdfsAction.FILE_PATH + " $src1 " + ListFileAction.RECURSIVELY + " $src2"
 )
 public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
   private String srcPath;
+  private boolean recursively = false;
+
+  // Options
+  public static final String RECURSIVELY = "-R";
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
-    this.srcPath = args.get(FILE_PATH);
+    if (args.containsKey(RECURSIVELY)) {
+      this.recursively = true;
+      this.srcPath = args.get(RECURSIVELY);
+    }
+    else {
+      this.srcPath = args.get(FILE_PATH);
+    }
   }
 
   @Override
@@ -57,6 +69,9 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
+    appendLog(
+        String.format("Action starts at %s : List %s %s", Utils.getFormatedCurrentTime(),
+            recursively? RECURSIVELY : "", srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
@@ -70,14 +85,24 @@ public class ListFileAction extends HdfsAction {
         return;
       }
       if (hdfsFileStatus.isDir()) {
+        Queue<HdfsFileStatus> dirQueue = new LinkedList<HdfsFileStatus>();
         DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
         HdfsFileStatus[] fileList = listing.getPartialListing();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
+          if (fileList[i].isDir()) {
+            dirQueue.offer(fileList[i]);
+          }
           appendLog(
-              String.format("%s %s %s %s %s %s %s", fileList[i].getPermission(), fileList[i].getReplication(),
+              String.format("%s%s\t%s\t%s\t%s\t%s\t%s\t%s\n", fileList[i].isDir() ? 'd' : '-',
+                  fileList[i].getPermission(), fileList[i].getReplication(),
                   fileList[i].getOwner(), fileList[i].getGroup(), fileList[i].getLen(),
                   formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
+        }
+        if (recursively) {
+          while (!dirQueue.isEmpty()) {
+            listDirectory(dirQueue.poll().getFullPath(new Path(src)).toString());
+          }
         }
       } else {
         appendLog(String.format("%s", src));
