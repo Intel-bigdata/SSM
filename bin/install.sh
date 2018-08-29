@@ -106,7 +106,16 @@ do
         continue
    else
       #Before install on a host, delete ssm home directory if there exists
-      ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
+      if [[ "$host" != "localhost" ]];then
+         ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
+      else
+         SSM_UP_HOME=${SSM_HOME%/*}/
+         if [[ "$SSM_UP_HOME" != "${INSTALL_PATH}" ]];then
+            rm -rf ${INSTALL_PATH}${SSM_NAME}
+         else
+            continue
+         fi
+      fi
       flag=`ssh $host "if [ -d $INSTALL_PATH ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
          echo installing SSM to $host...
