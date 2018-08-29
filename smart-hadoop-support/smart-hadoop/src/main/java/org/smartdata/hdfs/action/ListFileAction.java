@@ -69,9 +69,6 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : List %s %s", Utils.getFormatedCurrentTime(),
-            recursively? RECURSIVELY : "", srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
