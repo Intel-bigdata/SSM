@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionType;
@@ -90,8 +91,12 @@ public class MoveFileAction extends AbstractMoveFileAction {
 
     int numFailed = move();
     if (numFailed == 0) {
-      dfsClient.setStoragePolicy(fileName, storagePolicy);
-      appendLog("All the " + totalReplicas + " replicas moved successfully.");
+      appendLog("All scheduled " + totalReplicas + " replicas moved successfully.");
+      if (movePlan.isBeingWritten() || recheckModification()) {
+        appendResult("UpdateStoragePolicy=false");
+        appendLog("NOTE: File may be changed during executing this action. "
+            + "Will move the corresponding blocks later.");
+      }
     } else {
       String res = numFailed + " of " + totalReplicas + " replicas movement failed.";
       appendLog(res);
@@ -104,6 +109,26 @@ public class MoveFileAction extends AbstractMoveFileAction {
     int maxRetries = movePlan.getPropertyValueInt(FileMovePlan.MAX_NUM_RETRIES, 10);
     MoverExecutor executor = new MoverExecutor(status, getContext().getConf(), maxRetries, maxMoves);
     return executor.executeMove(movePlan, getResultOs(), getLogOs());
+  }
+
+  private boolean recheckModification() {
+    try {
+      HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
+      if (fileStatus == null) {
+        return true;
+      }
+
+      boolean closed = dfsClient.isFileClosed(fileName);
+      if (!closed
+          || (movePlan.getFileId() != 0 && fileStatus.getFileId() != movePlan.getFileId())
+          || fileStatus.getLen() != movePlan.getFileLength()
+          || fileStatus.getModificationTime() != movePlan.getModificationTime()) {
+        return true;
+      }
+      return false;
+    } catch (Exception e) {
+      return true; // check again for this case
+    }
   }
 
   @Override

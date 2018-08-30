@@ -1149,7 +1149,11 @@ public class CmdletManager extends AbstractService {
       }
       String path = args.get(AbstractMoveFileAction.FILE_PATH);
       try {
-        metaStore.updateFileStoragePolicy(path, policy);
+        String result = info.getResult();
+        result = result == null ? "" : result;
+        if (!result.contains("UpdateStoragePolicy=false")) {
+          metaStore.updateFileStoragePolicy(path, policy);
+        }
       } catch (MetaStoreException e) {
         LOG.error("Failed to update storage policy {} for file {}", policy, path, e);
       }
