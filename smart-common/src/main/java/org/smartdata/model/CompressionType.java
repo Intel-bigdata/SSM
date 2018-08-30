@@ -18,27 +18,27 @@
 package org.smartdata.model;
 
 /**
- * Compression/Codec enum
+ * Compression/Codec enum.
  */
 public enum CompressionType {
   /**
-   * uncompressed/raw data
+   * uncompressed/raw data.
    */
   raw(0),
-  /***
-   * snappy
+  /**
+   * snappy.
    */
   snappy(1),
   /**
-   * Lz4
+   * Lz4.
    */
   Lz4(2),
   /**
-   * Bzip2, splitable
+   * Bzip2, splitable.
    */
   Bzip2(3),
   /**
-   * Zlib
+   * Zlib.
    */
   Zlib(4);
 
@@ -52,6 +52,11 @@ public enum CompressionType {
     return value;
   }
 
+  /**
+   * Return CompressionType from a given value (int).
+   * @param value (int)
+   * @return CompressionType of this value
+   */
   public static CompressionType fromValue(int value) {
     for (CompressionType t : values()) {
       if (t.getValue() == value) {
@@ -61,6 +66,11 @@ public enum CompressionType {
     return null;
   }
 
+  /**
+   * Return CompressionType from a given String.
+   * @param name String of a codec
+   * @return CompressionType of this String
+   */
   public static CompressionType fromName(String name) {
     for (CompressionType t : values()) {
       if (t.toString().equalsIgnoreCase(name)) {
