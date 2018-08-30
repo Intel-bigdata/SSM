@@ -36,11 +36,17 @@ public class FileMovePlan {
 
   // info of the file
   private String fileName;
+  private long fileId;
   private boolean isDir;
+  private boolean beingWritten;
+  private long modificationTime;
   private long fileLength;
   private long fileLengthToMove; // length to move in file level
   private long sizeToMove;  // total bytes to move
   private int blocksToMove; // number of file blocks
+
+  private String currStoragePolicy;
+  private String destStoragePolicy;
 
   // info of source datanode
   private List<String> sourceUuids;
@@ -196,5 +202,45 @@ public class FileMovePlan {
 
   public void setDir(boolean dir) {
     isDir = dir;
+  }
+
+  public boolean isBeingWritten() {
+    return beingWritten;
+  }
+
+  public void setBeingWritten(boolean beingWritten) {
+    this.beingWritten = beingWritten;
+  }
+
+  public long getModificationTime() {
+    return modificationTime;
+  }
+
+  public void setModificationTime(long modificationTime) {
+    this.modificationTime = modificationTime;
+  }
+
+  public String getCurrStoragePolicy() {
+    return currStoragePolicy;
+  }
+
+  public void setCurrStoragePolicy(String currStoragePolicy) {
+    this.currStoragePolicy = currStoragePolicy;
+  }
+
+  public String getDestStoragePolicy() {
+    return destStoragePolicy;
+  }
+
+  public void setDestStoragePolicy(String destStoragePolicy) {
+    this.destStoragePolicy = destStoragePolicy;
+  }
+
+  public long getFileId() {
+    return fileId;
+  }
+
+  public void setFileId(long fileId) {
+    this.fileId = fileId;
   }
 }

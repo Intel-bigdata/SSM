@@ -20,8 +20,6 @@ package org.smartdata.hdfs.scheduler;
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.server.protocol.DatanodeStorageReport;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -39,7 +37,6 @@ import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
 import java.net.URI;
-import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
