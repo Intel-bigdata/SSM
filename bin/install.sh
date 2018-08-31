@@ -99,7 +99,7 @@ if [[ $INSTALL_PATH != */ ]];then
     INSTALL_PATH=${INSTALL_PATH}/
 fi
 
-TARGET=",,,,,,"
+TARGET=""
 FLAG=0
 ipOrHost=0
 for TARGET in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
@@ -114,7 +114,7 @@ do
         fi
    done
    if [[ $FLAG == "1" ]];then
-   break
+        break
    fi
 done
 
