@@ -168,7 +168,9 @@ angular.module('zeppelinWebApp')
 
     $(document).keyup(function(event) {
         if (event.keyCode == 27) {
+          $scope.searching = false;
           getActions();
+          document.getElementById("search").value = "";
         }
     });
 
@@ -179,7 +181,7 @@ angular.module('zeppelinWebApp')
       else {
         __search__($scope.path);
       }
-    },60000);
+    },2000);
 
     $scope.$on('$destroy',function(){
       $interval.cancel(timer);
