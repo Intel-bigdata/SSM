@@ -104,7 +104,7 @@ public class ListFileAction extends HdfsAction {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
           float len = fileList[i].getLen();
-          String fileLen = fileLen = Long.toString(hdfsFileStatus.getLen());
+          String fileLen = fileLen = Long.toString(fileList[i].getLen());
           if (human) {
             if (fileList[i].getLen() > 1048576) {
               len /= 1048576.0;
@@ -120,7 +120,7 @@ public class ListFileAction extends HdfsAction {
             }
           }
           appendLog(
-              String.format("%s%s %5d %s\t%s\t%10s %s %s", fileList[i].isDir() ? 'd' : '-',
+              String.format("%s%s %5d %s\t%s\t%13s %s %s", fileList[i].isDir() ? 'd' : '-',
                   fileList[i].getPermission(), fileList[i].getReplication(),
                   fileList[i].getOwner(), fileList[i].getGroup(), fileLen,
                   formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
@@ -147,7 +147,7 @@ public class ListFileAction extends HdfsAction {
         }
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         appendLog(
-            String.format("%s%s %5d %s\t%s\t%10s %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
+            String.format("%s%s %5d %s\t%s\t%13s %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
                 hdfsFileStatus.getPermission(),
                 hdfsFileStatus.getReplication(),
                 hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(), fileLen,
