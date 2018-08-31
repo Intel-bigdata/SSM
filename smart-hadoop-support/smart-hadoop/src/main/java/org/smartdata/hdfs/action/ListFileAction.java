@@ -42,17 +42,20 @@ import java.util.Queue;
 @ActionSignature(
     actionId = "list",
     displayName = "list",
-    usage = HdfsAction.FILE_PATH + " $src1 " + ListFileAction.RECURSIVELY + " $src2" + ListFileAction.DUMP + " $src3"
+    usage = HdfsAction.FILE_PATH + " $src1" + ListFileAction.RECURSIVELY + " $src2" + ListFileAction.DUMP + " $src3"
+        + ListFileAction.HUMAN + " $src4"
 )
 public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
   private String srcPath;
   private boolean recursively = false;
   private boolean dump = false;
+  private boolean human = false;
 
   // Options
   public static final String RECURSIVELY = "-R";
   public static final String DUMP = "-d";
+  public static final String HUMAN = "-h";
 
   @Override
   public void init(Map<String, String> args) {
@@ -67,6 +70,11 @@ public class ListFileAction extends HdfsAction {
       if (this.srcPath == null)
         this.srcPath = args.get(DUMP);
     }
+    if (args.containsKey(HUMAN)) {
+      this.human = true;
+      if (this.srcPath == null)
+        this.srcPath = args.get(HUMAN);
+    }
     if (this.srcPath == null)
       this.srcPath = args.get(FILE_PATH);
   }
@@ -76,9 +84,8 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-//    appendLog(
-//        String.format("Action starts at %s : List %s %s", Utils.getFormatedCurrentTime(),
-//            recursively? RECURSIVELY : "", srcPath));
+    appendLog(
+        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
@@ -96,22 +103,54 @@ public class ListFileAction extends HdfsAction {
         HdfsFileStatus[] fileList = listing.getPartialListing();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
+          float len = fileList[i].getLen();
+          String fileLen = fileLen = Long.toString(hdfsFileStatus.getLen());
+          if (human) {
+            if (fileList[i].getLen() > 1048576) {
+              len /= 1048576.0;
+              fileLen = Float.toString(len);
+              fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
+              fileLen += " M";
+            }
+            else if (fileList[i].getLen() > 1024) {
+              len /= 1024.0;
+              fileLen = Float.toString(len);
+              fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
+              fileLen += " K";
+            }
+          }
           appendLog(
-              String.format("%s%s %5d %s\t%s\t%10d %s %s", fileList[i].isDir() ? 'd' : '-',
+              String.format("%s%s %5d %s\t%s\t%10s %s %s", fileList[i].isDir() ? 'd' : '-',
                   fileList[i].getPermission(), fileList[i].getReplication(),
-                  fileList[i].getOwner(), fileList[i].getGroup(), fileList[i].getLen(),
+                  fileList[i].getOwner(), fileList[i].getGroup(), fileLen,
                   formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
           if (recursively && fileList[i].isDir()) {
             listDirectory(fileList[i].getFullPath(new Path(src)).toString());
           }
         }
       } else {
+        float len = hdfsFileStatus.getLen();
+        String fileLen = fileLen = Long.toString(hdfsFileStatus.getLen());
+        if (human) {
+          if (hdfsFileStatus.getLen() > 1048576) {
+            len /= 1048576.0;
+            fileLen = Float.toString(len);
+            fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
+            fileLen += " M";
+          }
+          else if (hdfsFileStatus.getLen() > 1024) {
+            len /= 1024.0;
+            fileLen = Float.toString(len);
+            fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
+            fileLen += " K";
+          }
+        }
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         appendLog(
-            String.format("%s%s %5d %s\t%s\t%10d %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
+            String.format("%s%s %5d %s\t%s\t%10s %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
                 hdfsFileStatus.getPermission(),
                 hdfsFileStatus.getReplication(),
-                hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(), hdfsFileStatus.getLen(),
+                hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(), fileLen,
                 formatter.format(hdfsFileStatus.getModificationTime()), hdfsFileStatus.getFullPath(new Path(src))));
       }
     } else {
