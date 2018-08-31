@@ -98,7 +98,7 @@ public class ListFileAction extends HdfsAction {
         for (int i = 0; i < fileList.length; i++) {
           appendLog(
               String.format("%s%s %5d %s\t%s\t%10d %s %s", fileList[i].isDir() ? 'd' : '-',
-                  fileList[i].getPermission(), fileList[i].getReplication() != 0 ? fileList[i].getReplication() : '-',
+                  fileList[i].getPermission(), fileList[i].getReplication(),
                   fileList[i].getOwner(), fileList[i].getGroup(), fileList[i].getLen(),
                   formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
           if (recursively && fileList[i].isDir()) {
@@ -110,7 +110,7 @@ public class ListFileAction extends HdfsAction {
         appendLog(
             String.format("%s%s %5d %s\t%s\t%10d %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
                 hdfsFileStatus.getPermission(),
-                hdfsFileStatus.getReplication() != 0 ? hdfsFileStatus.getReplication() : "-",
+                hdfsFileStatus.getReplication(),
                 hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(), hdfsFileStatus.getLen(),
                 formatter.format(hdfsFileStatus.getModificationTime()), hdfsFileStatus.getFullPath(new Path(src))));
       }
