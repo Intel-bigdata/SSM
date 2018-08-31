@@ -285,7 +285,11 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     } catch (IOException e) {
       Assert.assertTrue(e.getMessage().contains("Compressed"));
     }
-
+    try {
+      smartDFSClient.truncate(fileName, 100);
+    } catch (IOException e) {
+      Assert.assertTrue(e.getMessage().contains("Compressed"));
+    }
   }
 
   private void waitTillActionDone(long cmdId) throws Exception {

@@ -185,12 +185,27 @@ public class SmartFileSystem extends DistributedFileSystem {
   }
 
   @Override
+  public boolean truncate(Path f, final long newLength) throws IOException {
+    return smartDFSClient.truncate(getPathName(f), newLength);
+  }
+
+  @Override
   public FileStatus getFileStatus(Path f) throws IOException {
     FileStatus oldStatus = super.getFileStatus(f);
     if (oldStatus != null && oldStatus.getLen() == 0) {
       FileState fileState = smartDFSClient.getFileState(getPathName(f));
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
+        return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
+            oldStatus.getBlockSize(), oldStatus.getModificationTime(),
+            oldStatus.getAccessTime(), oldStatus.getPermission(),
+            oldStatus.getOwner(), oldStatus.getGroup(),
+            oldStatus.isSymlink() ? oldStatus.getSymlink() : null, oldStatus.getPath());
+      }
+    } else {
+      FileState fileState = smartDFSClient.getFileState(getPathName(f));
+      if (fileState instanceof CompressionFileState) {
+        long len = ((CompressionFileState) fileState).getOriginalLength();
         return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
             oldStatus.getBlockSize(), oldStatus.getModificationTime(),
             oldStatus.getAccessTime(), oldStatus.getPermission(),

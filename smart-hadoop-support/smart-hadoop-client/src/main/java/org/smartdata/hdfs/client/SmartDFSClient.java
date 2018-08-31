@@ -274,6 +274,15 @@ public class SmartDFSClient extends DFSClient {
   }
 
   @Override
+  public boolean truncate(String src, long newLength) throws IOException {
+    FileState fileState = getFileState(src);
+    if (fileState instanceof CompressionFileState) {
+      throw new IOException(getExceptionMsg("Append", "Compressed File"));
+    }
+    return super.truncate(src, newLength);
+  }
+
+  @Override
   public HdfsDataOutputStream append(final String src, final int buffersize,
       EnumSet<CreateFlag> flag, final Progressable progress,
       final FileSystem.Statistics statistics,
