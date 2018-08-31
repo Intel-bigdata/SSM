@@ -42,26 +42,33 @@ import java.util.Queue;
 @ActionSignature(
     actionId = "list",
     displayName = "list",
-    usage = HdfsAction.FILE_PATH + " $src1 " + ListFileAction.RECURSIVELY + " $src2"
+    usage = HdfsAction.FILE_PATH + " $src1 " + ListFileAction.RECURSIVELY + " $src2" + ListFileAction.DUMP + " $src3"
 )
 public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
   private String srcPath;
   private boolean recursively = false;
+  private boolean dump = false;
 
   // Options
   public static final String RECURSIVELY = "-R";
+  public static final String DUMP = "-d";
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
     if (args.containsKey(RECURSIVELY)) {
       this.recursively = true;
-      this.srcPath = args.get(RECURSIVELY);
+      if (this.srcPath == null)
+        this.srcPath = args.get(RECURSIVELY);
     }
-    else {
+    if (args.containsKey(DUMP)) {
+      this.dump = true;
+      if (this.srcPath == null)
+        this.srcPath = args.get(DUMP);
+    }
+    if (this.srcPath == null)
       this.srcPath = args.get(FILE_PATH);
-    }
   }
 
   @Override
@@ -69,6 +76,9 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
+//    appendLog(
+//        String.format("Action starts at %s : List %s %s", Utils.getFormatedCurrentTime(),
+//            recursively? RECURSIVELY : "", srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
@@ -81,28 +91,27 @@ public class ListFileAction extends HdfsAction {
         appendLog("File not found!");
         return;
       }
-      if (hdfsFileStatus.isDir()) {
-        Queue<HdfsFileStatus> dirQueue = new LinkedList<HdfsFileStatus>();
+      if (hdfsFileStatus.isDir() && !dump) {
         DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
         HdfsFileStatus[] fileList = listing.getPartialListing();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
-          if (fileList[i].isDir()) {
-            dirQueue.offer(fileList[i]);
-          }
           appendLog(
-              String.format("%s%s\t%s\t%s\t%s\t%s\t%s\t%s\n", fileList[i].isDir() ? 'd' : '-',
+              String.format("%s%s\t%s\t%s\t%s\t%s\t%s\t%s", fileList[i].isDir() ? 'd' : '-',
                   fileList[i].getPermission(), fileList[i].getReplication(),
                   fileList[i].getOwner(), fileList[i].getGroup(), fileList[i].getLen(),
                   formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
-        }
-        if (recursively) {
-          while (!dirQueue.isEmpty()) {
-            listDirectory(dirQueue.poll().getFullPath(new Path(src)).toString());
+          if (recursively && fileList[i].isDir()) {
+            listDirectory(fileList[i].getFullPath(new Path(src)).toString());
           }
         }
       } else {
-        appendLog(String.format("%s", src));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        appendLog(
+            String.format("%s%s\t%s\t%s\t%s\t%s\t%s\t%s", hdfsFileStatus.isDir() ? 'd' : '-',
+                hdfsFileStatus.getPermission(), hdfsFileStatus.getReplication(),
+                hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(), hdfsFileStatus.getLen(),
+                formatter.format(hdfsFileStatus.getModificationTime()), hdfsFileStatus.getFullPath(new Path(src))));
       }
     } else {
       //list file in remote Directory
