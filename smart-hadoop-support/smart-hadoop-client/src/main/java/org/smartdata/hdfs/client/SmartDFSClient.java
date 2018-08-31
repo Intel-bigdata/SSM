@@ -263,6 +263,12 @@ public class SmartDFSClient extends DFSClient {
         out.close();
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        out.close();
+        throw new IOException(getExceptionMsg("Append", "Compressed File"));
+      }
     }
     return out;
   }
@@ -280,6 +286,12 @@ public class SmartDFSClient extends DFSClient {
         out.close();
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        out.close();
+        throw new IOException(getExceptionMsg("Append", "Compressed File"));
+      }
     }
     return out;
   }
@@ -291,6 +303,18 @@ public class SmartDFSClient extends DFSClient {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
+        return new HdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
+            oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
+            oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
+            oldStatus.isSymlink() ? oldStatus.getSymlinkInBytes() : null,
+            oldStatus.isEmptyLocalName() ? new byte[0] : oldStatus.getLocalNameInBytes(),
+            oldStatus.getFileId(), oldStatus.getChildrenNum(),
+            oldStatus.getFileEncryptionInfo(), oldStatus.getStoragePolicy());
+      }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        long len = ((CompressionFileState) fileState).getOriginalLength();
         return new HdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
             oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
             oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
@@ -438,6 +462,8 @@ public class SmartDFSClient extends DFSClient {
         FileState fileState = getFileState(src);
         if (fileState instanceof CompactFileState) {
           throw new IOException(getExceptionMsg("Concat", "SSM Small File"));
+        } else if (fileState instanceof CompressionFileState) {
+          throw new IOException(getExceptionMsg("Append", "Compressed File"));
         }
       }
       throw e;

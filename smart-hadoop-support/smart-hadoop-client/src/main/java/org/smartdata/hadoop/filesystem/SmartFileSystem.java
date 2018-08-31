@@ -151,7 +151,10 @@ public class SmartFileSystem extends DistributedFileSystem {
       if (fileState instanceof CompactFileState) {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
-      } else if (fileState instanceof CompressionFileState) {
+      }
+    } else {
+      FileState fileState = smartDFSClient.getFileState(getPathName(f));
+      if (fileState instanceof CompressionFileState) {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "Compressed File"));
       }
@@ -170,7 +173,10 @@ public class SmartFileSystem extends DistributedFileSystem {
       if (fileState instanceof CompactFileState) {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
-      } else if (fileState instanceof CompressionFileState) {
+      }
+    } else {
+      FileState fileState = smartDFSClient.getFileState(getPathName(f));
+      if (fileState instanceof CompressionFileState) {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "Compressed File"));
       }

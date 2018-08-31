@@ -21,11 +21,9 @@ import com.google.gson.Gson;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.server.MiniSmartClusterHarness;
@@ -51,7 +49,7 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
       out.write(buf, 0, (int) fileLen);
       out.close();
     }
-
+    // Compact small files
     SmallFileCompactAction smallFileCompactAction = new SmallFileCompactAction();
     smallFileCompactAction.setDfsClient(dfsClient);
     smallFileCompactAction.setContext(smartContext);
@@ -68,8 +66,8 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
 
   @Test
   public void testSmallFile() throws Exception {
-    createSmallFiles();
     waitTillSSMExitSafeMode();
+    createSmallFiles();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     BlockLocation[] blockLocations = smartDFSClient.getBlockLocations(
         "/test/small_files/file_0", 0, 30);
@@ -84,24 +82,6 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_5"));
     smartDFSClient.delete("/test/small_files", true);
     Assert.assertTrue(!dfsClient.exists("/test/small_files/file_1"));
-  }
-
-  private void createCompressedFile() throws Exception {
-    // TODO add create files
-    Path path = new Path("/test/compress_files/");
-    dfs.mkdirs(path);
-    for (int i = 0; i < 3; i++) {
-      String fileName = "/test/compress_files/file_" + i;
-      DFSTestUtil.createFile(dfs, new Path(fileName),
-          1024 * 1024, (short) 1, 1);
-    }
-  }
-
-  @Test
-  public void testCompressedFile() throws Exception {
-    createCompressedFile();
-    waitTillSSMExitSafeMode();
-    // TODO add test cases
   }
 
   @After

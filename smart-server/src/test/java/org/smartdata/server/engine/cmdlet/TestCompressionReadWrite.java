@@ -18,11 +18,14 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.fs.BlockLocation;
+import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.DFSTestUtil;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.util.NativeCodeLoader;
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,9 +40,11 @@ import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Random;
 
 public class TestCompressionReadWrite extends MiniSmartClusterHarness {
@@ -223,6 +228,64 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     Assert.assertEquals(stat1.getPath(), stat4.getPath());
     Assert.assertEquals(stat1.getBlockSize(), stat4.getBlockSize());
     Assert.assertEquals(stat1.getLen(), stat4.getLen());
+  }
+
+  @Test
+  public void testRename() throws Exception {
+    // Create raw file
+    Path path = new Path("/test/compress_files/");
+    dfs.mkdirs(path);
+    int rawLength = 1024 * 1024 * 8;
+    String fileName = "/test/compress_files/file_0";
+    DFSTestUtil.createFile(dfs, new Path(fileName),
+        rawLength, (short) 1, 1);
+    int bufSize = 1024 * 1024;
+    waitTillSSMExitSafeMode();
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    // Compress files
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+    waitTillActionDone(cmdId);
+    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
+    smartDFSClient.rename("/test/compress_files/file_0",
+        "/test/compress_files/file_4");
+    Assert.assertTrue(smartDFSClient.exists("/test/compress_files/file_4"));
+    HdfsFileStatus fileStatus =
+        smartDFSClient.getFileInfo("/test/compress_files/file_4");
+    Assert.assertEquals(rawLength, fileStatus.getLen());
+  }
+
+  @Test
+  public void testUnsupportedMethod() throws Exception {
+    // Concat, truncate and append are not supported
+    // Create raw file
+    Path path = new Path("/test/compress_files/");
+    dfs.mkdirs(path);
+    int rawLength = 1024 * 1024 * 8;
+    String fileName = "/test/compress_files/file_0";
+    DFSTestUtil.createFile(dfs, new Path(fileName),
+        rawLength, (short) 1, 1);
+    int bufSize = 1024 * 1024;
+    waitTillSSMExitSafeMode();
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    // Compress files
+    long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
+        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+    waitTillActionDone(cmdId);
+    SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
+    // Test unsupported methods on compressed file
+    try {
+      smartDFSClient.append(fileName, DEFAULT_BLOCK_SIZE,
+          EnumSet.of(CreateFlag.APPEND), null, null);
+    } catch (IOException e) {
+      Assert.assertTrue(e.getMessage().contains("Compressed"));
+    }
+    try {
+      smartDFSClient.concat(fileName + "target", new String[]{fileName});
+    } catch (IOException e) {
+      Assert.assertTrue(e.getMessage().contains("Compressed"));
+    }
+
   }
 
   private void waitTillActionDone(long cmdId) throws Exception {
