@@ -62,20 +62,20 @@ public class ListFileAction extends HdfsAction {
     super.init(args);
     if (args.containsKey(RECURSIVELY)) {
       this.recursively = true;
-      if (this.srcPath == null)
+      if (this.srcPath == null || this.srcPath == "")
         this.srcPath = args.get(RECURSIVELY);
     }
     if (args.containsKey(DUMP)) {
       this.dump = true;
-      if (this.srcPath == null)
+      if (this.srcPath == null || this.srcPath == "")
         this.srcPath = args.get(DUMP);
     }
     if (args.containsKey(HUMAN)) {
       this.human = true;
-      if (this.srcPath == null)
+      if (this.srcPath == null || this.srcPath == "")
         this.srcPath = args.get(HUMAN);
     }
-    if (this.srcPath == null)
+    if (this.srcPath == null || this.srcPath == "")
       this.srcPath = args.get(FILE_PATH);
   }
 
@@ -84,8 +84,8 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-    appendLog(
-        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
+//    appendLog(
+//        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
     //list the file in directionary
     listDirectory(srcPath);
   }
