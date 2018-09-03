@@ -27,6 +27,7 @@ import org.smartdata.rule.exceptions.RuleParserException;
 import org.smartdata.rule.objects.Property;
 import org.smartdata.rule.objects.PropertyRealParas;
 import org.smartdata.rule.objects.SmartObject;
+import org.smartdata.rule.parser.SmartRuleParser.TimeintvalexprContext;
 import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
@@ -119,8 +120,15 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
   @Override
   public TreeNode visitTriCycle(SmartRuleParser.TriCycleContext ctx) {
     timeBasedScheduleInfo = new TimeBasedScheduleInfo();
-    TreeNode tr = visit(ctx.timeintvalexpr());
-    timeBasedScheduleInfo.setEvery(getLongConstFromTreeNode(tr));
+    List<TimeintvalexprContext> timeExprs = ctx.timeintvalexpr();
+    long[] everys = new long[timeExprs.size() + ((timeExprs.size() + 1) % 2)];
+    for (int i = 0; i < timeExprs.size(); i++) {
+      everys[i] = getLongConstFromTreeNode(visit(timeExprs.get(i)));
+    }
+    if (timeExprs.size() % 2 == 0) {
+      everys[everys.length - 1] = 5000;
+    }
+    timeBasedScheduleInfo.setEvery(everys);
     if (ctx.duringexpr() != null) {
       visit(ctx.duringexpr());
     } else {
@@ -640,7 +648,8 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
         intval = Math.max(intval, minTimeInverval / 20);
       }
       timeBasedScheduleInfo =
-          new TimeBasedScheduleInfo(getTimeNow(), TimeBasedScheduleInfo.FOR_EVER, intval);
+          new TimeBasedScheduleInfo(getTimeNow(),
+              TimeBasedScheduleInfo.FOR_EVER, new long[] {intval});
     }
   }
 
