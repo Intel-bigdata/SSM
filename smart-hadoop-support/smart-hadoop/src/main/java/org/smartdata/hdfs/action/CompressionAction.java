@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.SmartCompressorStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import org.smartdata.SmartConstants;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
-import org.smartdata.hdfs.SmartCompressorStream;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
 

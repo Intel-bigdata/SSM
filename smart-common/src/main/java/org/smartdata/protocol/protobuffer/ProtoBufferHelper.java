@@ -193,6 +193,7 @@ public class ProtoBufferHelper {
     FileState fileState = null;
     String path = proto.getPath();
     FileState.FileType type = FileState.FileType.fromValue(proto.getType());
+    FileState.FileStage stage = FileState.FileStage.fromValue(proto.getStage());
     /// Unusable temporarily
     // FileState.FileStage stage = FileState.FileStage.fromValue(proto.getStage());
     if (type == null) {

@@ -200,5 +200,11 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>org.smartdata</groupId>
+            <artifactId>smart-inputstream</artifactId>
+            <version>1.5.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 </project>

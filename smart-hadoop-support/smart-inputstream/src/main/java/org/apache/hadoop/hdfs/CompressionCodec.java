@@ -15,9 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs;
+package org.apache.hadoop.hdfs;
 
-import io.netty.handler.codec.compression.ZlibCodecFactory;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.apache.hadoop.io.compress.bzip2.Bzip2Compressor;
@@ -33,14 +32,13 @@ import org.apache.hadoop.io.compress.zlib.ZlibFactory;
 import org.apache.hadoop.util.NativeCodeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConf;
 
 /**
  * This class decide which compressor type for SmartCompressorStream 
  */
 public class CompressionCodec {
-  static final Logger LOG = LoggerFactory.getLogger(SmartAction.class);
+  static final Logger LOG = LoggerFactory.getLogger(CompressionCodec.class);
   private String hadoopnativePath;
   SmartConf conf = new SmartConf();
 

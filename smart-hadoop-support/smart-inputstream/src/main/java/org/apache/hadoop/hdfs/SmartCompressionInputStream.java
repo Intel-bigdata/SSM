@@ -22,7 +22,6 @@ import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.io.ByteBufferPool;
 import org.apache.hadoop.io.compress.Decompressor;
-import org.smartdata.hdfs.CompressionCodec;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.CompressionTrunk;
 import org.smartdata.model.FileState;

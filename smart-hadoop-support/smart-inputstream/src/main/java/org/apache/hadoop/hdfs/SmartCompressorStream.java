@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs;
+package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
