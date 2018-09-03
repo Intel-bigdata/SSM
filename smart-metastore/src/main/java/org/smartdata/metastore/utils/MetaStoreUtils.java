@@ -281,12 +281,13 @@ public class MetaStoreUtils {
               + "  cid INTEGER NOT NULL,\n"
               + "  action_name varchar(4096) NOT NULL,\n"
               + "  args text NOT NULL,\n"
-              + "  result text NOT NULL,\n"
-              + "  log text NOT NULL,\n"
+              + "  result mediumtext NOT NULL,\n"
+              + "  log longtext NOT NULL,\n"
               + "  successful tinyint(4) NOT NULL,\n"
               + "  create_time bigint(20) NOT NULL,\n"
               + "  finished tinyint(4) NOT NULL,\n"
               + "  finish_time bigint(20) NOT NULL,\n"
+              + "  exec_host varchar(255),\n"
               + "  progress float NOT NULL\n"
               + ") ;",
           "CREATE TABLE file_diff (\n"
@@ -543,6 +544,28 @@ public class MetaStoreUtils {
       }
     }
     return null;
+  }
+
+  /**
+   * Retrieve table column names.
+   *
+   * @param conn
+   * @param tableName
+   * @return
+   * @throws MetaStoreException
+   */
+  public static List<String> getTableColumns(Connection conn, String tableName)
+    throws MetaStoreException {
+    List<String> ret = new ArrayList<>();
+    try {
+      ResultSet res = conn.getMetaData().getColumns(null, null, tableName, null);
+      while (res.next()) {
+        ret.add(res.getString("COLUMN_NAME"));
+      }
+      return ret;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   /**

@@ -18,6 +18,8 @@
 package org.smartdata.metastore.dao;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.model.ActionInfo;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +30,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,14 +41,28 @@ import java.util.Map;
 public class ActionDao {
 
   private static final String TABLE_NAME = "action";
+  private static final String RUNNING_TIME = "running_time";
   private DataSource dataSource;
+  private final List<String> tableColumns;
 
-  public void setDataSource(DataSource dataSource) {
+  public ActionDao(DataSource dataSource) throws MetaStoreException {
     this.dataSource = dataSource;
-  }
-
-  public ActionDao(DataSource dataSource) {
-    this.dataSource = dataSource;
+    Connection conn = null;
+    try {
+      conn = dataSource.getConnection();
+      tableColumns = MetaStoreUtils.getTableColumns(conn, "action");
+    } catch (SQLException e) {
+      throw new MetaStoreException(e);
+    } finally {
+      if (conn != null) {
+        try {
+          conn.close();
+        } catch (Exception e) {
+          // ignore
+        }
+      }
+    }
+    tableColumns.add(RUNNING_TIME);
   }
 
   public List<ActionInfo> getAll() {
@@ -154,10 +171,20 @@ public class ActionDao {
     String sql = "SELECT * FROM " + TABLE_NAME + " ORDER BY ";
 
     for (int i = 0; i < orderBy.size(); i++) {
-      if (orderBy.get(i).equals("aid")) {
+      String ob = orderBy.get(i);
+      if (!tableColumns.contains(ob)) {
+        continue;
+      }
+
+      if (ob.equals("aid")) {
         ifHasAid = true;
       }
-      sql = sql + orderBy.get(i);
+
+      if (ob.equals(RUNNING_TIME)) {
+        sql = sql + "(finish_time - create_time)";
+      } else {
+        sql = sql + ob;
+      }
       if (isDesc.size() > i) {
         if (isDesc.get(i)) {
           sql = sql + " desc ";
@@ -193,6 +220,7 @@ public class ActionDao {
         + "OR cid LIKE '%" + path + "%' ESCAPE '/' "
         + "OR args LIKE '%" + path + "%' ESCAPE '/' "
         + "OR result LIKE '%" + path + "%' ESCAPE '/' "
+        + "OR exec_host LIKE '%" + path + "%' ESCAPE '/' "
         + "OR progress LIKE '%" + path + "%' ESCAPE '/' "
         + "OR log LIKE '%" + path + "%' ESCAPE '/' "
         + "OR action_name LIKE '%" + path + "%' ESCAPE '/')";
@@ -205,10 +233,21 @@ public class ActionDao {
       sql += " ORDER BY ";
 
       for (int i = 0; i < orderBy.size(); i++) {
-        if (orderBy.get(i).equals("aid")) {
+        String ob = orderBy.get(i);
+        if (!tableColumns.contains(ob)) {
+          continue;
+        }
+
+        if (ob.equals("aid")) {
           ifHasAid = true;
         }
-        sql = sql + orderBy.get(i);
+
+        if (ob.equals(RUNNING_TIME)) {
+          sql = sql + "(finish_time - create_time)";
+        } else {
+          sql = sql + ob;
+        }
+
         if (isDesc.size() > i) {
           if (isDesc.get(i)) {
             sql = sql + " desc ";
@@ -309,8 +348,9 @@ public class ActionDao {
         + "create_time, "
         + "finished, "
         + "finish_time, "
+        + "exec_host, "
         + "progress)"
-        + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        + " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     return jdbcTemplate.batchUpdate(sql,
       new BatchPreparedStatementSetter() {
         public void setValues(PreparedStatement ps,
@@ -325,7 +365,8 @@ public class ActionDao {
           ps.setLong(8, actionInfos[i].getCreateTime());
           ps.setBoolean(9, actionInfos[i].isFinished());
           ps.setLong(10, actionInfos[i].getFinishTime());
-          ps.setFloat(11, actionInfos[i].getProgress());
+          ps.setString(11, actionInfos[i].getExecHost());
+          ps.setFloat(12, actionInfos[i].getProgress());
         }
         public int getBatchSize() {
           return actionInfos.length;
@@ -349,6 +390,7 @@ public class ActionDao {
         + "create_time = ?, "
         + "finished = ?, "
         + "finish_time = ?, "
+        + "exec_host = ?, "
         + "progress = ? "
         + "WHERE aid = ?";
     return jdbcTemplate.batchUpdate(sql,
@@ -361,8 +403,9 @@ public class ActionDao {
           ps.setLong(4, actionInfos[i].getCreateTime());
           ps.setBoolean(5, actionInfos[i].isFinished());
           ps.setLong(6, actionInfos[i].getFinishTime());
-          ps.setFloat(7, actionInfos[i].getProgress());
-          ps.setLong(8, actionInfos[i].getActionId());
+          ps.setString(7, actionInfos[i].getExecHost());
+          ps.setFloat(8, actionInfos[i].getProgress());
+          ps.setLong(9, actionInfos[i].getActionId());
         }
 
         public int getBatchSize() {
@@ -395,6 +438,7 @@ public class ActionDao {
     parameters.put("create_time", actionInfo.getCreateTime());
     parameters.put("finished", actionInfo.isFinished());
     parameters.put("finish_time", actionInfo.getFinishTime());
+    parameters.put("exec_host", actionInfo.getExecHost());
     parameters.put("progress", actionInfo.getProgress());
     return parameters;
   }
@@ -416,6 +460,7 @@ public class ActionDao {
       actionInfo.setCreateTime(resultSet.getLong("create_time"));
       actionInfo.setFinished(resultSet.getBoolean("finished"));
       actionInfo.setFinishTime(resultSet.getLong("finish_time"));
+      actionInfo.setExecHost(resultSet.getString("exec_host"));
       actionInfo.setProgress(resultSet.getFloat("progress"));
       return actionInfo;
     }

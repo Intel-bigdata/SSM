@@ -320,6 +320,10 @@ public class RuleExecutor implements Runnable {
       exitSchedule();
     }
 
+    if (!tr.getTbScheduleInfo().isExecutable(startCheckTime)) {
+      return;
+    }
+
     List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
 
     long rid = ctx.getRuleId();
@@ -363,7 +367,7 @@ public class RuleExecutor implements Runnable {
 
         if (befExit) {
           LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to time passed");
-          ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+          ruleManager.updateRuleInfo(rid, RuleState.FINISHED, startCheckTime, 0, 0);
           exitSchedule();
         }
       }
@@ -381,7 +385,7 @@ public class RuleExecutor implements Runnable {
         }
         numCmdSubmitted = submitCmdlets(info, files);
       }
-      ruleManager.updateRuleInfo(rid, null, System.currentTimeMillis(), 1, numCmdSubmitted);
+      ruleManager.updateRuleInfo(rid, null, startCheckTime, 1, numCmdSubmitted);
 
       long endProcessTime = System.currentTimeMillis();
       if (endProcessTime - startCheckTime > 2000 || LOG.isDebugEnabled()) {
@@ -400,13 +404,13 @@ public class RuleExecutor implements Runnable {
       }
 
       if (scheduleInfo.isOneShot()) {
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, startCheckTime, 0, 0);
         exitSchedule();
       }
 
-      if (endProcessTime + scheduleInfo.getEvery() > scheduleInfo.getEndTime()) {
+      if (endProcessTime + scheduleInfo.getBaseEvery() > scheduleInfo.getEndTime()) {
         LOG.info("Rule " + ctx.getRuleId() + " exit rule executor due to finished");
-        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, System.currentTimeMillis(), 0, 0);
+        ruleManager.updateRuleInfo(rid, RuleState.FINISHED, startCheckTime, 0, 0);
         exitSchedule();
       }
 

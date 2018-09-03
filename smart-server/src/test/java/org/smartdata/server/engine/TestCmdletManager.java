@@ -165,9 +165,11 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     long cmdletId = 10;
     long actionId = 101;
     MetaStore metaStore = mock(MetaStore.class);
+    Assert.assertNotNull(metaStore);
     when(metaStore.getMaxCmdletId()).thenReturn(cmdletId);
     when(metaStore.getMaxActionId()).thenReturn(actionId);
     CmdletDispatcher dispatcher = mock(CmdletDispatcher.class);
+    Assert.assertNotNull(dispatcher);
     when(dispatcher.canDispatchMore()).thenReturn(true);
     ServerContext serverContext = new ServerContext(new SmartConf(), metaStore);
     CmdletManager cmdletManager = new CmdletManager(serverContext);
@@ -182,7 +184,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Thread.sleep(500);
 
     long startTime = System.currentTimeMillis();
-    ActionStatus actionStatus = new ActionStatus(actionId, startTime, null);
+    ActionStatus actionStatus = new ActionStatus(cmdletId, true, actionId, startTime, null);
     StatusReport statusReport = new StatusReport(Arrays.asList(actionStatus));
     cmdletManager.updateStatus(statusReport);
     ActionInfo actionInfo = cmdletManager.getActionInfo(actionId);
@@ -190,7 +192,8 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertNotNull(actionInfo);
 
     long finishTime = System.currentTimeMillis();
-    actionStatus = new ActionStatus(actionId, null, startTime, finishTime, null, true);
+    actionStatus = new ActionStatus(cmdletId, true, actionId, null, startTime,
+        finishTime, null, true);
     statusReport = new StatusReport(Arrays.asList(actionStatus));
     cmdletManager.updateStatus(statusReport);
     Assert.assertTrue(actionInfo.isFinished());

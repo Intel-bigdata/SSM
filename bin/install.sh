@@ -21,6 +21,7 @@ SSM_HOME=${BIN_HOME%/*}
 SSM_NAME=${SSM_HOME##*/}
 CONF_DIR=$SSM_HOME/conf
 INSTALL_PATH=''
+HOSTNAME=`hostname`
 
 cd $SSM_HOME/../;
 
@@ -94,8 +95,28 @@ fi
 echo installing...
 
 if [[ $INSTALL_PATH != */ ]];then
+    INSTALL_PATH=$(echo $INSTALL_PATH | tr -d  " ")
     INSTALL_PATH=${INSTALL_PATH}/
 fi
+
+TARGET=""
+FLAG=0
+ipOrHost=0
+for TARGET in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
+do
+   TARGET=$(echo $TARGET | tr -d  " ")
+   for ipOrHost in `echo $(hostname -A;hostname -I) | sed 's/ /\n/g';echo "localhost";echo "$HOSTNAME";echo "127.0.1.1";echo "127.0.0.1"`
+   do
+        ipOrHost=$(echo $ipOrHost | tr -d  " ")
+        if [[ "$TARGET" == "$ipOrHost" ]];then
+            FLAG=1
+            break
+        fi
+   done
+   if [[ $FLAG == "1" ]];then
+        break
+   fi
+done
 
 tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
@@ -106,7 +127,16 @@ do
         continue
    else
       #Before install on a host, delete ssm home directory if there exists
-      ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
+      if [[ "$host" != "$TARGET" ]];then
+         ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
+      else
+         SSM_UP_HOME=${SSM_HOME%/*}/
+         if [[ "$SSM_UP_HOME" != "${INSTALL_PATH}" ]];then
+            if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi
+         else
+            continue
+         fi
+      fi
       flag=`ssh $host "if [ -d $INSTALL_PATH ];then echo 1; else echo 0; fi"`
       if [ $flag = 1 ];then
          echo installing SSM to $host...

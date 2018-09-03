@@ -69,6 +69,7 @@ public class TestSmartServerReConfig {
       serverConf.set(SmartConfKeys.SMART_METASTORE_DB_URL_KEY, dbUrl);
       // rpcServer start in SmartServer
       ssm = SmartServer.launchWith(serverConf);
+      Assert.assertNotNull(ssm);
 
       Thread.sleep(2000);
       Assert.assertTrue(ssm.getSSMServiceState() == SmartServiceState.DISABLED);
@@ -96,7 +97,6 @@ public class TestSmartServerReConfig {
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DEFAULT_BLOCK_SIZE);
     conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DEFAULT_BLOCK_SIZE);
     conf.setLong(DFSConfigKeys.DFS_HEARTBEAT_INTERVAL_KEY, 1L);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_REPLICATION_INTERVAL_KEY, 1L);
     conf.setLong(DFSConfigKeys.DFS_BALANCER_MOVEDWINWIDTH_KEY, 2000L);
   }
 }

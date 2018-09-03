@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 
@@ -73,7 +74,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
             .replication(3)
             .build();
     HdfsFileStatus status1 =
-        new HdfsFileStatus(
+        CompatibilityHelperLoader.getHelper().createHdfsFileStatus(
             0,
             false,
             1,
@@ -191,7 +192,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     metaStore.insertBackUpInfo(backUpInfo);
 
     HdfsFileStatus status1 =
-        new HdfsFileStatus(
+        CompatibilityHelperLoader.getHelper().createHdfsFileStatus(
             0,
             false,
             2,
@@ -308,7 +309,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
   }
 
   private HdfsFileStatus doGetDummyStatus(String file, long fid, boolean isdir) {
-    return new HdfsFileStatus(
+    return CompatibilityHelperLoader.getHelper().createHdfsFileStatus(
         0,
         isdir,
         1,

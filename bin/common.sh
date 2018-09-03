@@ -267,8 +267,12 @@ function smart_stop_daemon() {
 
 function reorder_lib() {
   local ajar="lib/jersey-core-1.9.jar"
+  local bjar="lib/jsr311-api-1.1.1.jar"
   if [ -f "${SMART_HOME}/${ajar}" ]; then
     SMART_CLASSPATH="${SMART_HOME}/${ajar}:${SMART_CLASSPATH}"
+  fi
+  if [ -f "${SMART_HOME}/${bjar}" ]; then
+    SMART_CLASSPATH="${SMART_HOME}/${bjar}:${SMART_CLASSPATH}"
   fi
 }
 
@@ -289,6 +293,9 @@ function init_command() {
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
       SMART_PID_FILE=/tmp/SmartServer.pid
       ALLOW_DAEMON_OPT=true
+      if [ $SSM_DEBUG_ENABLED == "true" ]; then
+        JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
+      fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
       JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}

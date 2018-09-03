@@ -32,6 +32,8 @@ public class ActionInfo {
   private String result;
   private String log;
 
+  // For action set flexibility
+  private String execHost;
   private boolean successful;
   private long createTime;
   private boolean finished;
@@ -40,6 +42,8 @@ public class ActionInfo {
   private float progress;
 
   public ActionInfo() {
+    this.result = "";
+    this.log = "";
   }
 
   public ActionInfo(long actionId, long cmdletId, String actionName,
@@ -52,6 +56,7 @@ public class ActionInfo {
     this.args = args;
     this.result = result;
     this.log = log;
+    this.execHost = "";
     this.successful = successful;
     this.createTime = createTime;
     this.finished = finished;
@@ -111,12 +116,24 @@ public class ActionInfo {
     this.result = result;
   }
 
+  public void appendResult(String result) {
+    this.result += result;
+  }
+
   public String getLog() {
     return log;
   }
 
   public void setLog(String log) {
     this.log = log;
+  }
+
+  public void appendLog(String log) {
+    this.log += log;
+  }
+
+  public void appendLogLine(String logLine) {
+    this.log += logLine + "\n";
   }
 
   public boolean isSuccessful() {
@@ -157,6 +174,14 @@ public class ActionInfo {
 
   public void setProgress(float progress) {
     this.progress = progress;
+  }
+
+  public String getExecHost() {
+    return execHost;
+  }
+
+  public void setExecHost(String execHost) {
+    this.execHost = execHost;
   }
 
   @Override

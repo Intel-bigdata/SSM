@@ -31,7 +31,7 @@ object
 
 trigger
     : AT timepointexpr                      #triTimePoint
-    | EVERY timeintvalexpr duringexpr?      #triCycle
+    | EVERY timeintvalexpr ('/' timeintvalexpr ('/' timeintvalexpr)? )? duringexpr?      #triCycle
     | ON fileEvent duringexpr?              #triFileEvent
     | ONCE                                  #triOnce
     ;

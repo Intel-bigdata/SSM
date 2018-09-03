@@ -62,6 +62,7 @@ public class MovePlanMaker {
   private final AtomicInteger retryCount;
 
   private final Map<String, BlockStoragePolicy> mapStoragePolicies;
+  private final Map<Byte, String> mapPolicyIdToName;
   private final MovePlanStatistics statistics;
   private FileMovePlan schedulePlan;
 
@@ -72,6 +73,7 @@ public class MovePlanMaker {
     this.networkTopology = cluster;
     this.retryCount = new AtomicInteger(1);
     this.mapStoragePolicies = new HashMap<>();
+    this.mapPolicyIdToName = new HashMap<>();
     initStoragePolicies();
     this.statistics = statistics;
   }
@@ -81,6 +83,7 @@ public class MovePlanMaker {
 
     for (BlockStoragePolicy policy : policies) {
       mapStoragePolicies.put(policy.getName(), policy);
+      mapPolicyIdToName.put(policy.getId(), policy.getName());
     }
   }
 
@@ -109,6 +112,7 @@ public class MovePlanMaker {
     schedulePlan = new FileMovePlan();
     String filePath = targetPath.toUri().getPath();
     schedulePlan.setFileName(filePath);
+    schedulePlan.setDestStoragePolicy(destPolicy);
 
     HdfsFileStatus status = dfs.getFileInfo(filePath);
     if (status == null) {
@@ -117,6 +121,16 @@ public class MovePlanMaker {
     if (status.isDir()) {
       schedulePlan.setDir(true);
       return schedulePlan;
+    }
+
+    byte currSpId = status.getStoragePolicy();
+    String currSpName = mapPolicyIdToName.get(currSpId);
+    schedulePlan.setCurrStoragePolicy(currSpName);
+    if (currSpName == null || !currSpName.equals(destPolicy)) {
+      try {
+        dfs.setStoragePolicy(filePath, destPolicy);
+      } catch (IOException e) {
+      }
     }
 
     DirectoryListing files = dfs.listPaths(filePath, HdfsFileStatus.EMPTY_NAME, true);
@@ -131,6 +145,8 @@ public class MovePlanMaker {
     if (status.isDir()) {
       throw new IOException("Unexpected '" + filePath + "' directory located status error.");
     }
+    schedulePlan.setFileId(status.getFileId());
+    schedulePlan.setModificationTime(status.getModificationTime());
     schedulePlan.setDir(false);
     schedulePlan.setFileLength(status.getLen());
     processFile(targetPath.toUri().getPath(), (HdfsLocatedFileStatus) status, destPolicy);
@@ -146,11 +162,12 @@ public class MovePlanMaker {
       LOG.warn("Failed to get the storage policy of file " + fullPath);
       return;
     }
-    List<String> types =
-        CompatibilityHelperLoader.getHelper().chooseStorageTypes(policy, status.getReplication());
+    List<String> types = CompatibilityHelperLoader.getHelper()
+        .chooseStorageTypes(policy, status.getReplication());
 
-    final LocatedBlocks locatedBlocks = status.getBlockLocations();
+    final LocatedBlocks locatedBlocks = CompatibilityHelperLoader.getHelper().getLocatedBlocks(status);
     final boolean lastBlkComplete = locatedBlocks.isLastBlockComplete();
+    schedulePlan.setBeingWritten(!lastBlkComplete);
     List<LocatedBlock> lbs = locatedBlocks.getLocatedBlocks();
     for (int i = 0; i < lbs.size(); i++) {
       if (i == lbs.size() - 1 && !lastBlkComplete) {

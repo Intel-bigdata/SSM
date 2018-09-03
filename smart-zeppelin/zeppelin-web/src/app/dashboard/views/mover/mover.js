@@ -50,7 +50,7 @@ angular.module('zeppelinWebApp')
             allFiles: mover.baseProgress,
             progress: {
               current: mover.progress,
-              max: 1
+              max: mover.state
             },
             status: mover.state,
             active: {

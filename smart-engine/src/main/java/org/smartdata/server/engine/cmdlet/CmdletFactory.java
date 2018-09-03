@@ -56,17 +56,23 @@ public class CmdletFactory {
 
   public Cmdlet createCmdlet(LaunchCmdlet launchCmdlet) throws ActionException {
     List<SmartAction> actions = new ArrayList<>();
+    int idx = 0;
     for (LaunchAction action : launchCmdlet.getLaunchActions()) {
-      actions.add(createAction(action));
+      idx++;
+      actions.add(createAction(launchCmdlet.getCmdletId(),
+          idx == launchCmdlet.getLaunchActions().size(), action));
     }
     Cmdlet cmdlet = new Cmdlet(actions);
     cmdlet.setId(launchCmdlet.getCmdletId());
     return cmdlet;
   }
 
-  public SmartAction createAction(LaunchAction launchAction) throws ActionException {
+  public SmartAction createAction(long cmdletId, boolean isLastAction, LaunchAction launchAction)
+      throws ActionException {
     SmartAction smartAction = ActionRegistry.createAction(launchAction.getActionType());
     smartAction.setContext(smartContext);
+    smartAction.setCmdletId(cmdletId);
+    smartAction.setLastAction(isLastAction);
     smartAction.init(launchAction.getArgs());
     smartAction.setActionId(launchAction.getActionId());
     if (smartAction instanceof HdfsAction) {

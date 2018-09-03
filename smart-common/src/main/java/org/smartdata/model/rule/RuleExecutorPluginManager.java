@@ -44,7 +44,7 @@ public class RuleExecutorPluginManager {
     }
   }
 
-  public static List<RuleExecutorPlugin> getPlugins() {
+  public static synchronized List<RuleExecutorPlugin> getPlugins() {
     List<RuleExecutorPlugin> copy = new ArrayList<>();
     copy.addAll(plugins);
     return copy;

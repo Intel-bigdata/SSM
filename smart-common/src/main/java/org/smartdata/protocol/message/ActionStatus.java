@@ -20,6 +20,8 @@ package org.smartdata.protocol.message;
 import java.io.Serializable;
 
 public class ActionStatus implements Serializable {
+  private long cmdletId;
+  private boolean lastAction;
   private long actionId;
   private float percentage;
   private String result;
@@ -29,8 +31,10 @@ public class ActionStatus implements Serializable {
   private Throwable throwable;
   private boolean finished;
 
-  public ActionStatus(long actionId, float percentage, String result, String log,
-                      long startTime, long finishTime, Throwable t, boolean finished) {
+  public ActionStatus(long cmdletId, boolean lastAction, long actionId, float percentage,
+      String result, String log, long startTime, long finishTime, Throwable t, boolean finished) {
+    this.cmdletId = cmdletId;
+    this.lastAction = lastAction;
     this.actionId = actionId;
     this.percentage = percentage;
     this.result = result;
@@ -41,8 +45,10 @@ public class ActionStatus implements Serializable {
     this.finished = finished;
   }
 
-  public ActionStatus(long actionId, String log, long startTime,
-                      long finishTime, Throwable t, boolean finished) {
+  public ActionStatus(long cmdletId, boolean lastAction, long actionId, String log,
+      long startTime, long finishTime, Throwable t, boolean finished) {
+    this.cmdletId = cmdletId;
+    this.lastAction = lastAction;
     this.actionId = actionId;
     this.log = log;
     this.startTime = startTime;
@@ -51,15 +57,36 @@ public class ActionStatus implements Serializable {
     this.finished = finished;
   }
 
-  public ActionStatus(long actionId, long finishTime) {
+  public ActionStatus(long cmdletId, boolean lastAction, long actionId, long finishTime) {
+    this.cmdletId = cmdletId;
+    this.lastAction = lastAction;
     this.actionId = actionId;
     this.finishTime = finishTime;
   }
 
-  public ActionStatus(long actionId, long startTime, Throwable t) {
+  public ActionStatus(long cmdletId, boolean lastAction, long actionId,
+      long startTime, Throwable t) {
+    this.cmdletId = cmdletId;
+    this.lastAction = lastAction;
     this.actionId = actionId;
     this.startTime = startTime;
     this.throwable = t;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
+
+  public boolean isLastAction() {
+    return lastAction;
+  }
+
+  public void setLastAction(boolean lastAction) {
+    this.lastAction = lastAction;
   }
 
   public long getActionId() {

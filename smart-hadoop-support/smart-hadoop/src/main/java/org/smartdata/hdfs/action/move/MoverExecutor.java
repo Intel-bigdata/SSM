@@ -104,7 +104,8 @@ public class MoverExecutor {
       throw new RuntimeException("File path is a directory.");
     }
 
-    if (fileStatus.getLen() < plan.getFileLength()) {
+    if ((plan.getFileId() != 0 && fileStatus.getFileId() != plan.getFileId())
+        || fileStatus.getLen() < plan.getFileLength()) {
       throw new RuntimeException("File has been changed after this action generated.");
     }
 
@@ -229,7 +230,7 @@ public class MoverExecutor {
           .newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
       StorageGroup target = new StorageGroup(targetDatanode, targetStorageTypes.get(planIndex));
       // generate single move
-      ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient);
+      ReplicaMove replicaMove = new ReplicaMove(block, source, target, nnc, saslClient, conf);
       allMoves.add(replicaMove);
     }
   }

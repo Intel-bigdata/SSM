@@ -126,7 +126,7 @@ public class AgentMaster {
   public String launchCmdlet(LaunchCmdlet launch) {
     try {
       AgentId agentId = (AgentId) askMaster(launch);
-      return String.valueOf(agentId.getId());
+      return agentId.getId();
     } catch (Exception e) {
       LOG.error("Failed to launch Cmdlet {} due to {}", launch, e.getMessage());
       return null;
@@ -211,7 +211,6 @@ public class AgentMaster {
 
   static class MasterActor extends UntypedActor {
     private final Map<Long, ActorRef> dispatches = new HashMap<>();
-    private int nextAgentId = 0;
     private AgentManager agentManager;
 
     public MasterActor(CmdletManager statusUpdater, AgentManager agentManager) {
@@ -238,9 +237,7 @@ public class AgentMaster {
 
     private boolean handleAgentMessage(Object message) {
       if (message instanceof RegisterNewAgent) {
-        AgentId id = new AgentId(nextAgentId);
-        nextAgentId++;
-        getSelf().forward(new RegisterAgent(id), getContext());
+        getSelf().forward(new RegisterAgent(((RegisterNewAgent) message).getId()), getContext());
         return true;
       } else if (message instanceof RegisterAgent) {
         RegisterAgent register = (RegisterAgent) message;

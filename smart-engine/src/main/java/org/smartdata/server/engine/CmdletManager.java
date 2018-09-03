@@ -548,8 +548,7 @@ public class CmdletManager extends AbstractService {
         try {
           scheduleResult = s.onSchedule(actionInfo, launchAction);
         } catch (Throwable t) {
-          actionInfo.setLog((actionInfo.getLog() == null ? "" : actionInfo.getLog())
-              + "\nOnSchedule exception: " + t);
+          actionInfo.appendLogLine("\nOnSchedule exception: " + t);
           scheduleResult = ScheduleResult.FAIL;
         }
         if (scheduleResult != ScheduleResult.SUCCESS) {
@@ -753,6 +752,7 @@ public class CmdletManager extends AbstractService {
         actionInfo.setFinished(true);
         actionInfo.setCreateTime(cmdletInfo.getStateChangedTime());
         actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
+        actionInfo.setExecHost(ActiveServerInfo.getInstance().getHost());
       }
     }
   }
@@ -980,6 +980,21 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  public void updateCmdletExecHost(long cmdletId, String host) throws IOException {
+    CmdletInfo cmdlet = getCmdletInfo(cmdletId);
+    if (cmdlet == null) {
+      return;
+    }
+
+    ActionInfo action;
+    for (long id : cmdlet.getAids()) {
+      action = getActionInfo(id);
+      if (action != null) {
+        action.setExecHost(host);
+      }
+    }
+  }
+
   /**
    * Delete all cmdlets related with rid.
    * @param rid
@@ -1102,8 +1117,9 @@ public class CmdletManager extends AbstractService {
     int index = aids.indexOf(actionId);
     if (!actionInfo.isSuccessful()) {
       for (int i = index + 1; i < aids.size(); i++) {
-        ActionStatus actionStatus = new ActionStatus(aids.get(i), ACTION_SKIP_LOG,
-          actionInfo.getFinishTime(), actionInfo.getFinishTime(), new Throwable(), true);
+        ActionStatus actionStatus = new ActionStatus(cmdletId, i == aids.size() - 1,
+            aids.get(i), ACTION_SKIP_LOG, actionInfo.getFinishTime(),
+            actionInfo.getFinishTime(), new Throwable(), true);
         onActionStatusUpdate(actionStatus);
       }
       CmdletStatus cmdletStatus =
@@ -1133,7 +1149,11 @@ public class CmdletManager extends AbstractService {
       }
       String path = args.get(AbstractMoveFileAction.FILE_PATH);
       try {
-        metaStore.updateFileStoragePolicy(path, policy);
+        String result = info.getResult();
+        result = result == null ? "" : result;
+        if (!result.contains("UpdateStoragePolicy=false")) {
+          metaStore.updateFileStoragePolicy(path, policy);
+        }
       } catch (MetaStoreException e) {
         LOG.error("Failed to update storage policy {} for file {}", policy, path, e);
       }
@@ -1248,8 +1268,9 @@ public class CmdletManager extends AbstractService {
                   startTime = cmdletInfo.getGenerateTime();
                 }
                 long finishTime = System.currentTimeMillis();
-                ActionStatus actionStatus = new ActionStatus(actionInfo.getActionId(),
-                  TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
+                ActionStatus actionStatus = new ActionStatus(
+                    cid, id == cmdletInfo.getAids().get(cmdletInfo.getAids().size() - 1),
+                    id, TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
                 onActionStatusUpdate(actionStatus);
               }
             }

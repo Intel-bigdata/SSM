@@ -24,13 +24,13 @@ public class MasterToAgent {
   public static class AgentId implements scala.Serializable {
 
     private static final long serialVersionUID = -4032231012646281770L;
-    private final int id;
+    private final String id;
 
-    public AgentId(int id) {
+    public AgentId(String id) {
       this.id = id;
     }
 
-    public int getId() {
+    public String getId() {
       return id;
     }
 
@@ -45,12 +45,12 @@ public class MasterToAgent {
 
       AgentId agentId = (AgentId) o;
 
-      return id == agentId.id;
+      return id.equals(agentId.id);
     }
 
     @Override
     public int hashCode() {
-      return id;
+      return id.hashCode();
     }
 
     @Override

@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -300,14 +299,13 @@ public class RuleManager extends AbstractService {
         TranslateResult tr = ruleExecutor.getTranslateResult();
         TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
         long lastCheckTime = rule.getLastCheckTime();
-        long every = si.getEvery();
+        long every = si.getBaseEvery();
+        every = every == 0 ? 5000 : every;
         long now = System.currentTimeMillis();
-        if ((now - lastCheckTime) > every) {
-          int delay = new Random().nextInt(5000);
-          si.setStartTime(now + delay);
-        } else {
-          long delay = every - (now - lastCheckTime);
-          si.setStartTime(now + delay);
+        long delay = every - ((now - lastCheckTime) % every);
+        si.setStartTime(now + delay);
+        if (rule.getLastCheckTime() != 0) {
+          si.setFirstCheckTime(rule.getLastCheckTime());
         }
         boolean sub = submitRuleToScheduler(ruleExecutor);
         numLaunched += sub ? 1 : 0;

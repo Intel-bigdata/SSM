@@ -1,0 +1,16 @@
+.progress-bar-grey {
+  background-image: -webkit-linear-gradient(top, #a5a3a8 0%, #616063 100%);
+  background-image:      -o-linear-gradient(top, #a5a3a8 0%, #616063 100%);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#a5a3a8), to(#449d44));
+  background-image:         linear-gradient(to bottom, #a5a3a8 0%, #616063 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffa5a3a8', endColorstr='#ff616063', GradientType=0);
+  background-repeat: repeat-x;
+}
+.progress-bar-yellow {
+  background-image: -webkit-linear-gradient(top, #f9ff8e 0%, #f2ff0f 100%);
+  background-image:      -o-linear-gradient(top, #f9ff8e 0%, #f2ff0f 100%);
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#f9ff8e), to(#449d44));
+  background-image:         linear-gradient(to bottom, #f9ff8e 0%, #f2ff0f 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fff9ff8e', endColorstr='#fff2ff0f', GradientType=0);
+  background-repeat: repeat-x;
+}

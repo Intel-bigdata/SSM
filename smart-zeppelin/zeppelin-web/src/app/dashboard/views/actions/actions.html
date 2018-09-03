@@ -16,26 +16,61 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
+<style type="text/css">
+  table{ table-layout: fixed;}
 
+  .bk {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .tooltiptext {
+    visibility: hidden;
+    color: #fff;
+    position:fixed;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    opacity: 0;
+    transition: opacity 1s;
+  }
+
+  .bk:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .aid{ width: 6px;}
+  .action_name{ width: 150px;}
+  .create_time{ width: 50px;}
+  .finish_time{ width: 50px;}
+  .running_time{ width: 50px;}
+  .host{ width: 100px;}
+  .status{ width: 30px;}
+  .progress1{ width: 50px;}
+  .actions{ width: 15px;}
+</style>
 
 <!-- The form -->
 <div align="right">
   <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
   <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
 </div>
-<div class="col-md-12" >
+<div class="col-md-12" onmousemove="getPosition(event)">
   <br/>
   <table class="table table-bordered">
     <thead ng-show="totalNumber > 0">
     <tr>
-      <th ng-click="defindOrderBy('aid')">ID</th>
-      <th ng-click="defindOrderBy('action_name')">Name</th>
-      <th ng-click="defindOrderBy('create_time')">Create Time</th>
-      <th ng-click="defindOrderBy('finish_time')">Finish Time</th>
-      <th>Running Time</th>
-      <th ng-click="defindOrderBy('successful')">Status</th>
-      <th>Progress</th>
-      <th>Actions</th>
+      <th ng-click="defindOrderBy('aid')" class="aid">ID</th>
+      <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
+      <th ng-click="defindOrderBy('exec_host')" class="host">Host</th>
+      <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
+      <th ng-click="defindOrderBy('finish_time')" class="finish_time">Finish Time</th>
+      <th ng-click="defindOrderBy('running_time')" class="running_time">Running Time</th>
+      <th ng-click="defindOrderBy('successful')" class="status">Status</th>
+      <th ng-click="defindOrderBy('progress')" class="progress1">Progress</th>
+      <th class="actions">Actions</th>
     </tr>
     </thead>
     <thead ng-if="totalNumber < 1">
@@ -53,7 +88,8 @@ under the License.
     <tbody>
     <tr ng-repeat="action in actions">
       <td>{{action.actionId}}</td>
-      <td>{{action.actionName}}</td>
+      <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 74" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
+      <td class="bk">{{action.execHost}}</td>
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
       <td>{{action.finished ? action.runTime : "-"}}ms</td>
@@ -102,3 +138,19 @@ under the License.
   </div>
 </div>
 
+<script>
+function getPosition(e) {
+  var x = e.clientX,
+      y = e.clientY;
+  var tips = document.getElementsByClassName("tooltiptext");
+
+  for (i=0 ; i<tips.length; i++) {
+    setPosition(tips[i], x, y);
+  }
+}
+
+function setPosition(ele, x, y) {
+  ele.style.top = (y + 20) + 'px';
+  ele.style.left = (x + 20) + 'px';
+}
+</script>
