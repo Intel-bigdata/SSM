@@ -58,7 +58,7 @@ public class RuleRestApi {
       logger.info("Adding rule: " + ruleText);
       t = smartEngine.getRuleManager().submitRule(ruleText, RuleState.DISABLED);
     } catch (Exception e) {
-      logger.error("Exception in RuleRestApi while adding rule ", e);
+      logger.error("Exception in RuleRestApi while adding rule: ", e.getMessage());
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }

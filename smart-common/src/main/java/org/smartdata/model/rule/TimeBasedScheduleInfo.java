@@ -21,16 +21,19 @@ public class TimeBasedScheduleInfo {
   public static final long FOR_EVER = Long.MAX_VALUE;
   private long startTime;
   private long endTime;
-  private long every;
+  private long[] every;
   private long subScheduleTime;
 
+  private long firstCheckTime;
+
   public TimeBasedScheduleInfo() {
+    every = new long[1];
   }
 
-  public TimeBasedScheduleInfo(long startTime, long endTime, long every) {
+  public TimeBasedScheduleInfo(long startTime, long endTime, long[] every) {
     this.startTime = startTime;
     this.endTime = endTime;
-    this.every = every;
+    this.every = every.clone();
   }
 
   public void setStartTime(long startTime) {
@@ -41,8 +44,8 @@ public class TimeBasedScheduleInfo {
     this.endTime = endTime;
   }
 
-  public void setEvery(long every) {
-    this.every = every;
+  public void setEvery(long[] every) {
+    this.every = every.clone();
   }
 
   public long getStartTime() {
@@ -53,16 +56,28 @@ public class TimeBasedScheduleInfo {
     return endTime;
   }
 
-  public long getEvery() {
+  public long[] getEvery() {
     return every;
   }
 
+  public long getMininalEvery() {
+    if (every.length == 1) {
+      return every[0];
+    } else {
+      return every[0] > every[2] ? every[2] : every[0];
+    }
+  }
+
+  public long getBaseEvery() {
+    return every[0];
+  }
+
   public boolean isOnce() {
-    return startTime == endTime && startTime == 0 && every == 0;
+    return startTime == endTime && startTime == 0 && every[0] == 0;
   }
 
   public boolean isOneShot() {
-    return startTime == endTime && every == 0;
+    return startTime == endTime && every[0] == 0;
   }
 
   public void setSubScheduleTime(long subScheduleTime) {
@@ -71,5 +86,17 @@ public class TimeBasedScheduleInfo {
 
   public long getSubScheduleTime() {
     return subScheduleTime;
+  }
+
+  public long getFirstCheckTime() {
+    return firstCheckTime;
+  }
+
+  public void setFirstCheckTime(long firstCheckTime) {
+    this.firstCheckTime = firstCheckTime;
+  }
+
+  public boolean isExecutable(long now) {
+    return every.length <= 1 || every[0] == 0 || (now - firstCheckTime) % every[0] < every[1] + 50;
   }
 }
