@@ -41,18 +41,19 @@ under the License.
     opacity: 1;
   }
 
-  .aid{ width: 6px;}
-  .action_name{ width: 150px;}
-  .create_time{ width: 50px;}
-  .finish_time{ width: 50px;}
-  .running_time{ width: 50px;}
-  .host{ width: 100px;}
-  .status{ width: 30px;}
-  .progress1{ width: 50px;}
-  .actions{ width: 15px;}
+  .aid{ width: 30%;}
+  .action_name{ width: 450px;}
+  .create_time{ width: 150px;}
+  .finish_time{ width: 150px;}
+  .running_time{ width: 150px;}
+  .host{ width: 70%;}
+  .status{ width: 90px;}
+  .progress1{ width: 150px;}
+  .actions{ width: 60px;}
 </style>
 
 <!-- The form -->
+<p id="testp"></p>
 <div align="right">
   <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
   <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
@@ -62,7 +63,7 @@ under the License.
   <table class="table table-bordered">
     <thead ng-show="totalNumber > 0">
     <tr>
-      <th ng-click="defindOrderBy('aid')" class="aid">ID</th>
+      <th id="idCol" ng-click="defindOrderBy('aid')" class="aid">ID</th>
       <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
       <th ng-click="defindOrderBy('exec_host')" class="host">Host</th>
       <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
@@ -87,12 +88,12 @@ under the License.
     </thead>
     <tbody>
     <tr ng-repeat="action in actions">
-      <td>{{action.actionId}}</td>
-      <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 74" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
+      <td class="bk">{{action.actionId}}</td>
+      <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 58" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
       <td class="bk">{{action.execHost}}</td>
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
-      <td>{{action.finished ? action.runTime : "-"}}ms</td>
+      <td>{{action.finished ? action.runTime : "-"}}{{action.finished ? "ms" : ""}}</td>
       <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
       <td>
         <div style="width: 100%"><span class="small pull-left"></span>
