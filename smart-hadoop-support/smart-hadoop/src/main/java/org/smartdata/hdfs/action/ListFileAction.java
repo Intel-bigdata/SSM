@@ -31,6 +31,7 @@ import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.net.URI;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.LinkedList;
 import java.util.Map;
@@ -84,10 +85,21 @@ public class ListFileAction extends HdfsAction {
     if (srcPath == null) {
       throw new IllegalArgumentException("File parameter is missing.");
     }
-//    appendLog(
-//        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
+    appendLog(
+        String.format("Action starts at %s : List %s", Utils.getFormatedCurrentTime(), srcPath));
     //list the file in directionary
     listDirectory(srcPath);
+  }
+
+  private static String readableFileSize(long size) {
+    if(size <= 0)
+      return "0";
+    final String[] units = new String[] { "", "K", "M", "G", "T" };
+    int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+    if (digitGroups == 0) {
+      return Long.toString(size);
+    }
+    return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
   }
 
   private void listDirectory(String src) throws IOException {
@@ -103,54 +115,24 @@ public class ListFileAction extends HdfsAction {
         HdfsFileStatus[] fileList = listing.getPartialListing();
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
-          float len = fileList[i].getLen();
-          String fileLen = fileLen = Long.toString(fileList[i].getLen());
-          if (human) {
-            if (fileList[i].getLen() > 1048576) {
-              len /= 1048576.0;
-              fileLen = Float.toString(len);
-              fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
-              fileLen += " M";
-            }
-            else if (fileList[i].getLen() > 1024) {
-              len /= 1024.0;
-              fileLen = Float.toString(len);
-              fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
-              fileLen += " K";
-            }
-          }
           appendLog(
               String.format("%s%s %5d %s\t%s\t%13s %s %s", fileList[i].isDir() ? 'd' : '-',
                   fileList[i].getPermission(), fileList[i].getReplication(),
-                  fileList[i].getOwner(), fileList[i].getGroup(), fileLen,
+                  fileList[i].getOwner(), fileList[i].getGroup(),
+                  human ? readableFileSize(fileList[i].getLen()) : fileList[i].getLen(),
                   formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
           if (recursively && fileList[i].isDir()) {
             listDirectory(fileList[i].getFullPath(new Path(src)).toString());
           }
         }
       } else {
-        float len = hdfsFileStatus.getLen();
-        String fileLen = fileLen = Long.toString(hdfsFileStatus.getLen());
-        if (human) {
-          if (hdfsFileStatus.getLen() > 1048576) {
-            len /= 1048576.0;
-            fileLen = Float.toString(len);
-            fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
-            fileLen += " M";
-          }
-          else if (hdfsFileStatus.getLen() > 1024) {
-            len /= 1024.0;
-            fileLen = Float.toString(len);
-            fileLen = fileLen.substring(0, fileLen.indexOf(".") + 2);
-            fileLen += " K";
-          }
-        }
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         appendLog(
             String.format("%s%s %5d %s\t%s\t%13s %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
                 hdfsFileStatus.getPermission(),
                 hdfsFileStatus.getReplication(),
-                hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(), fileLen,
+                hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(),
+                human ? readableFileSize(hdfsFileStatus.getLen()) : hdfsFileStatus.getLen(),
                 formatter.format(hdfsFileStatus.getModificationTime()), hdfsFileStatus.getFullPath(new Path(src))));
       }
     } else {
