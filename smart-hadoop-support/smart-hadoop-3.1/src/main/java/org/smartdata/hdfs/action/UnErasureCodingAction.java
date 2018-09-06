@@ -17,24 +17,33 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ErasureCodeConstants;
 import org.smartdata.action.ActionException;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
 
 import java.util.Map;
 
+@ActionSignature(
+    actionId = "unec",
+    displayName = "unec",
+    usage = HdfsAction.FILE_PATH + " $src " + ErasureCodingBase.BUF_SIZE + " $bufSize"
+)
 public class UnErasureCodingAction extends ErasureCodingBase {
   private static final String ecPolicyName = ErasureCodeConstants.REPLICATION_POLICY_NAME;
   private SmartConf conf;
 
   @Override
   public void init(Map<String, String> args) {
+    super.init(args);
     this.conf = getContext().getConf();
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(DEST)) {
+    if (args.containsKey(TMP_PATH)) {
       // dest path is under /system/ssm/ec_tmp/file_name_timestamp, the file name is srcName_millisecond
-      this.destPath = args.get(DEST);
+      this.tmpPath = args.get(TMP_PATH);
     }
     if (args.containsKey(BUF_SIZE)) {
       this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
@@ -44,14 +53,21 @@ public class UnErasureCodingAction extends ErasureCodingBase {
 
   @Override
   protected void execute() throws Exception {
+    // keep attribute consistent
+    //
+    this.setDfsClient(HadoopUtil.getDFSClient(
+        HadoopUtil.getNameNodeUri(conf), conf));
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
     if (fileStatus == null) {
       throw new ActionException("File doesn't exist!");
     }
     ValidateEcPolicy(ecPolicyName);
-    if (fileStatus.getErasureCodingPolicy().getName().equals(ecPolicyName)) {
-      this.progress = 1.0F;
-      return;
+    ErasureCodingPolicy srcEcPolicy = fileStatus.getErasureCodingPolicy();
+    if (srcEcPolicy != null) {
+      if (srcEcPolicy.getName().equals(ecPolicyName)) {
+        this.progress = 1.0F;
+        return;
+      }
     }
     if (fileStatus.isDir()) {
       dfsClient.setErasureCodingPolicy(srcPath, ecPolicyName);
@@ -59,7 +75,7 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       return;
     }
     convert(conf, ecPolicyName);
-    dfsClient.rename(destPath, srcPath, null);
+    dfsClient.rename(tmpPath, srcPath, null);
   }
 
   @Override

@@ -18,36 +18,43 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyInfo;
-import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyState;
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
 
-import java.util.HashMap;
 import java.util.Map;
 
+@ActionSignature(
+    actionId = "ec",
+    displayName = "ec",
+    usage = HdfsAction.FILE_PATH + " $src " + ErasureCodingAction.EC_POLICY_NAME + " $policy" +
+        ErasureCodingBase.BUF_SIZE + " $bufSize"
+)
 public class ErasureCodingAction extends ErasureCodingBase {
   private static final Logger LOG =
       LoggerFactory.getLogger(ErasureCodingAction.class);
   public static final String EC_POLICY_NAME = "-policy";
 
-  private String ecPolicyName;
   private SmartConf conf;
+  private String ecPolicyName;
 
   @Override
   public void init(Map<String, String> args) {
+    super.init(args);
+    this.conf = getContext().getConf();
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(DEST)) {
+    if (args.containsKey(TMP_PATH)) {
       // It's a temp file kept for converting a file to another with other ec policy
-      this.destPath = args.get(DEST);
+      this.tmpPath = args.get(TMP_PATH);
     }
     if (args.containsKey(EC_POLICY_NAME)) {
       this.ecPolicyName = args.get(EC_POLICY_NAME);
     } else {
-      this.conf = getContext().getConf();
       String defaultEcPolicy = conf.getTrimmed(DFSConfigKeys.DFS_NAMENODE_EC_SYSTEM_DEFAULT_POLICY,
           DFSConfigKeys.DFS_NAMENODE_EC_SYSTEM_DEFAULT_POLICY_DEFAULT);
       this.ecPolicyName = defaultEcPolicy;
@@ -60,22 +67,30 @@ public class ErasureCodingAction extends ErasureCodingBase {
 
   @Override
   protected void execute() throws Exception {
+    this.setDfsClient(HadoopUtil.getDFSClient(
+        HadoopUtil.getNameNodeUri(conf), conf));
+    // keep attribute consistent
+    //
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
     if (fileStatus == null) {
       throw new ActionException("File doesn't exist!");
     }
     ValidateEcPolicy(ecPolicyName);
-    if (fileStatus.getErasureCodingPolicy().getName().equals(ecPolicyName)) {
-      this.progress = 1.0F;
-      return;
+    ErasureCodingPolicy srcEcPolicy = fileStatus.getErasureCodingPolicy();
+    // if the current ecPolicy is already the target one, no need to convert
+    if (srcEcPolicy != null){
+      if (srcEcPolicy.getName().equals(ecPolicyName)) {
+        this.progress = 1.0F;
+        return;
+      }
     }
     if (fileStatus.isDir()) {
       dfsClient.setErasureCodingPolicy(srcPath, ecPolicyName);
-      progress = 1.0F;
+      this.progress = 1.0F;
       return;
     }
     convert(conf, ecPolicyName);
-    dfsClient.rename(destPath, srcPath, null);
+    dfsClient.rename(tmpPath, srcPath, null);
   }
 
   @Override

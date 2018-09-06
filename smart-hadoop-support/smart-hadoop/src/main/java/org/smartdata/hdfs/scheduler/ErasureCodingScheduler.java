@@ -17,13 +17,13 @@
  */
 package org.smartdata.hdfs.scheduler;
 
-//import org.smartdata.hdfs.action.ErasureCodingAction;
 import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.hdfs.action.HdfsAction;
+import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -31,14 +31,20 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final Logger LOG = LoggerFactory.getLogger(ErasureCodingScheduler.class);
-  private static final List<String> ACTIONS = Arrays.asList("ec", "unec", "checkec");
-  // The arguments which can be set by user
-  public static Set<String> arguments = new HashSet<>();
+  private String ecActionID;
+  private String unecActionID;
+  private String checkecActionID;
+  private String listecActionID;
+  private List<String> actions;
   public static final String EC_DIR = "/system/ssm/ec_tmp";
+  public static final String TMP = "-tmp";
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
@@ -47,70 +53,90 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
+
+    if (isECSupported()) {
+      ecActionID = ErasureCodingAction.class.getAnnotation(ActionSignature.class).actionId();
+      unecActionID = UnErasureCodingAction.class.getAnnotation(ActionSignature.class).displayName();
+      checkecActionID = CheckErasureCodingPolicy.class.getAnnotation(ActionSignature.class).displayName();
+      listecActionID = ListErasureCodingPolicy.class.getAnnotation(ActionSignature.class).displayName();
+      actions = Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
+    }
   }
   public List<String> getSupportedActions() {
-    return ACTIONS;
+    return actions;
   }
 
   public void init() throws IOException {
     fileLock = new HashSet<>();
-//    arguments.addAll(Arrays.asList(HdfsAction.FILE_PATH, ErasureCodingAction.EC_POLICY_NAME,
-//        ErasureCodingAction.BUF_SIZE));
   }
 
+  @Override
   public void start() throws IOException {
 
   }
 
+  @Override
   public void stop() throws IOException {
 
   }
 
   @Override
   public boolean onSubmit(ActionInfo actionInfo) throws IOException {
-    if (actionInfo.getArgs().get(HdfsAction.FILE_PATH) == null) {
-      throw new IOException("No src path is given!");
-    }
-    String[] parts = VersionInfo.getVersion().split("\\.");
-    if (Integer.parseInt(parts[0]) == 2) {
+    if (!isECSupported()) {
       throw new IOException(actionInfo.getActionName() +
           " is not supported on " + VersionInfo.getVersion());
     }
-//    if (!arguments.containsAll(actionInfo.getArgs().keySet())) {
-//      LOG.warn("Invalid arguments:" +
-//          actionInfo.getArgs().keySet().removeAll(arguments));
-//    }
+    if (!actionInfo.getActionName().equals(listecActionID)) {
+      if (actionInfo.getArgs().get(HdfsAction.FILE_PATH) == null) {
+        throw new IOException("No src path is given!");
+      }
+    }
     return true;
+  }
+
+  public static boolean isECSupported () {
+    String[] parts = VersionInfo.getVersion().split("\\.");
+    return Integer.parseInt(parts[0]) == 3;
   }
 
   @Override
   public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
-    if (!ACTIONS.contains(action.getActionType())) {
+    if (!actions.contains(action.getActionType())) {
       return ScheduleResult.SUCCESS;
     }
+
+    if (actionInfo.getActionName().equals(listecActionID)) {
+      return ScheduleResult.SUCCESS;
+    }
+
     String srcPath = action.getArgs().get(HdfsAction.FILE_PATH);
     if (srcPath == null) {
       actionInfo.appendLog("No file is given in this action!");
       return ScheduleResult.FAIL;
     }
+
+    if (actionInfo.getActionName().equals(checkecActionID)) {
+      return ScheduleResult.SUCCESS;
+    }
+
     if (fileLock.contains(srcPath)) {
       return ScheduleResult.FAIL;
     }
     try {
       if (!metaStore.getFile(srcPath).isdir()) {
-        actionInfo.getArgs().put("-dest", createDest(actionInfo));
+        // For ec or unec, add tmp argument
+        action.getArgs().put(TMP, createTmpPath(action));
       }
     } catch (MetaStoreException ex) {
       LOG.error("Error occurred for getting file info", ex);
     }
-
     fileLock.add(srcPath);
     return ScheduleResult.SUCCESS;
   }
 
-  private String createDest(ActionInfo actionInfo) {
+  private String createTmpPath(LaunchAction action) {
     // need update to DB
-    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String fileName;
     int index = path.lastIndexOf("/");
     if (index == path.length() - 1) {
@@ -121,18 +147,15 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     }
     // The dest tmp file is under EC_DIR and
     // named by fileName, aidxxx and current time in millisecond with "_" separated
-    String dest = EC_DIR + "/" + fileName + "_" + "aid" + actionInfo.getActionId() +
+    String dest = EC_DIR + "/" + fileName + "_" + "aid" + action.getActionId() +
         "_" + System.currentTimeMillis();
     return dest;
   }
 
-  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
-  }
-
-  public void onPreDispatch(LaunchAction action) {
-  }
-
   public void onActionFinished(ActionInfo actionInfo) {
-    fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+    if (actionInfo.getActionName().equals(ecActionID) ||
+        actionInfo.getActionName().equals(unecActionID)) {
+      fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+    }
   }
 }

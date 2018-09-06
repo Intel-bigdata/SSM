@@ -17,10 +17,8 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.apache.hadoop.util.VersionInfo;
 import org.smartdata.action.AbstractActionFactory;
-
-import java.io.IOException;
+import org.smartdata.hdfs.scheduler.ErasureCodingScheduler;
 
 /**
  * Built-in smart actions for HDFS system.
@@ -40,7 +38,6 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(WriteFileAction.class);
     addAction(CheckStorageAction.class);
     addAction(SetXAttrAction.class);
-//    addAction("stripec", StripErasureCodeFileAction.class);
 //    addAction("blockec", BlockErasureCodeFileAction.class);
     addAction(CopyFileAction.class);
     addAction(DeleteFileAction.class);
@@ -60,11 +57,9 @@ public class HdfsActionFactory extends AbstractActionFactory {
 //    addAction("diskbalance", DiskBalanceAction.class);
 //    addAction("clusterbalance", ClusterBalanceAction.class);
 //    addAction("setstoragepolicy", SetStoragePolicyAction.class);
-    String[] parts = VersionInfo.getVersion().split("\\.");
-    if (Integer.parseInt(parts[0]) == 3) {
+    if (ErasureCodingScheduler.isECSupported()) {
       addAction(ListErasureCodingPolicy.class);
       addAction(CheckErasureCodingPolicy.class);
-      addAction(ErasureCodingBase.class);
       addAction(ErasureCodingAction.class);
       addAction(UnErasureCodingAction.class);
     }

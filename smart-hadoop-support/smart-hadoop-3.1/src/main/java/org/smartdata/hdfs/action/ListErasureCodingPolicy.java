@@ -17,15 +17,38 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyInfo;
+import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
+@ActionSignature(
+    actionId = "listec",
+    displayName = "listec",
+    usage = "No args"
+)
 public class ListErasureCodingPolicy extends HdfsAction {
+  private SmartConf conf;
+
   @Override
   public void init(Map<String, String> args) {
+    super.init(args);
+    this.conf = getContext().getConf();
   }
 
   @Override
   public void execute() throws Exception {
-    appendResult(dfsClient.getErasureCodingPolicies().toString());
+    this.setDfsClient(HadoopUtil.getDFSClient(
+        HadoopUtil.getNameNodeUri(conf), conf));
+    List<String> policyInfos = new ArrayList<>();
+    for (ErasureCodingPolicyInfo policyInfo : dfsClient.getErasureCodingPolicies()) {
+      policyInfos.add("{" + policyInfo.toString() + "}");
+    }
+    appendResult(StringUtils.join(policyInfos, ","));
   }
 }

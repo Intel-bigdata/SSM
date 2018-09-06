@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSOutputStream;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyInfo;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyState;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
@@ -36,20 +37,26 @@ import java.util.Map;
 abstract public class ErasureCodingBase extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   protected String srcPath;
-  protected String destPath;
+  protected String tmpPath;
   protected int bufferSize = 1024 * 1024;
   protected float progress;
-  public static final String DEST = "-dest";
+  public static final String TMP_PATH = "-tmp";
 
   protected void convert(SmartConf conf, String ecPolicyName) throws ActionException {
+    HdfsDataOutputStream outputStream = null;
+    DFSInputStream in = null;
+    DFSOutputStream out = null;
     try {
+      // append the file to acquire the lock to avoid modifying, no real appending occurs.
+      outputStream =
+          dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
-      DFSInputStream in = dfsClient.open(srcPath, bufferSize, true);
+      in = dfsClient.open(srcPath, bufferSize, true);
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
+      // use the same FsPermission as srcPath
       FsPermission permission = fileStatus.getPermission();
-      DFSOutputStream out =
-          dfsClient.create(destPath, permission, EnumSet.of(CreateFlag.CREATE, CreateFlag.OVERWRITE, CreateFlag.SHOULD_REPLICATE),
-              false, (short) 1, blockSize, null, bufferSize, null, null, ecPolicyName);
+      out = dfsClient.create(tmpPath, permission, EnumSet.of(CreateFlag.CREATE), true,
+          (short) 1, blockSize, null, bufferSize, null, null, ecPolicyName);
       long bytesRemaining = fileStatus.getLen();
       byte[] buf = new byte[bufferSize];
       while (bytesRemaining > 0L) {
@@ -64,8 +71,22 @@ abstract public class ErasureCodingBase extends HdfsAction {
         bytesRemaining -= (long) bytesRead;
         this.progress = (float) (fileStatus.getLen() - bytesRemaining) / fileStatus.getLen();
       }
-    } catch (IOException ex) {
+    } catch (Exception ex) {
       throw new ActionException(ex);
+    } finally {
+      try {
+        if (in != null) {
+          in.close();
+        }
+        if (out != null) {
+          out.close();
+        }
+        if (outputStream != null) {
+          outputStream.close();
+        }
+      } catch (IOException ex) {
+        throw new ActionException(ex);
+      }
     }
   }
 
@@ -75,10 +96,10 @@ abstract public class ErasureCodingBase extends HdfsAction {
       ecPolicyNameToState.put(info.getPolicy().getName(), info.getState());
     }
     if (!ecPolicyNameToState.keySet().contains(ecPolicyName)) {
-      throw new ActionException("The given EC policy is not supported!");
+      throw new ActionException("The EC policy " + ecPolicyName + " is not supported!");
     } else if (ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.DISABLED
         || ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.REMOVED) {
-      throw new ActionException("The given EC policy is not enabled!");
+      throw new ActionException("The EC policy " + ecPolicyName + " is not enabled!");
     }
   }
 }
