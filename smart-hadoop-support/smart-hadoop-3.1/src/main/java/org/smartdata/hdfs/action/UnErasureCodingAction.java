@@ -19,6 +19,7 @@ package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.SystemErasureCodingPolicies;
 import org.apache.hadoop.io.erasurecode.ErasureCodeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,8 @@ import java.util.Map;
 public class UnErasureCodingAction extends ErasureCodingBase {
   private static final Logger LOG =
       LoggerFactory.getLogger(UnErasureCodingAction.class);
-  private static final String ecPolicyName = ErasureCodeConstants.REPLICATION_POLICY_NAME;
+  private static final String ecPolicyName =
+      SystemErasureCodingPolicies.getReplicationPolicy().getName();
   private SmartConf conf;
 
   @Override
@@ -64,13 +66,11 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     if (fileStatus == null) {
       throw new ActionException("File doesn't exist!");
     }
-    ValidateEcPolicy(ecPolicyName);
     ErasureCodingPolicy srcEcPolicy = fileStatus.getErasureCodingPolicy();
-    if (srcEcPolicy != null) {
-      if (srcEcPolicy.getName().equals(ecPolicyName)) {
-        this.progress = 1.0F;
-        return;
-      }
+    // if ecPolicy is null, it means replication.
+    if (srcEcPolicy == null) {
+      this.progress = 1.0F;
+      return;
     }
     if (fileStatus.isDir()) {
       dfsClient.setErasureCodingPolicy(srcPath, ecPolicyName);

@@ -19,6 +19,8 @@ package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyInfo;
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyState;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @ActionSignature(
@@ -90,6 +93,19 @@ public class ErasureCodingAction extends ErasureCodingBase {
       return;
     }
     convert(conf, ecPolicyName);
+  }
+
+  public void ValidateEcPolicy(String ecPolicyName) throws Exception {
+    Map<String, ErasureCodingPolicyState> ecPolicyNameToState = new HashMap<>();
+    for (ErasureCodingPolicyInfo info : dfsClient.getErasureCodingPolicies()) {
+      ecPolicyNameToState.put(info.getPolicy().getName(), info.getState());
+    }
+    if (!ecPolicyNameToState.keySet().contains(ecPolicyName)) {
+      throw new ActionException("The EC policy " + ecPolicyName + " is not supported!");
+    } else if (ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.DISABLED
+        || ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.REMOVED) {
+      throw new ActionException("The EC policy " + ecPolicyName + " is not enabled!");
+    }
   }
 
   @Override
