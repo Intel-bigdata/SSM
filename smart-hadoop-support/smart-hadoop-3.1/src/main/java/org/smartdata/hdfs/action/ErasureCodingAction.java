@@ -48,9 +48,13 @@ public class ErasureCodingAction extends ErasureCodingBase {
     super.init(args);
     this.conf = getContext().getConf();
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(TMP_PATH)) {
-      // It's a temp file kept for converting a file to another with other ec policy
-      this.tmpPath = args.get(TMP_PATH);
+    if (args.containsKey(EC_TMP)) {
+      // this is a temp file kept for converting a file to another with other ec policy.
+      this.ecTmpPath = args.get(EC_TMP);
+    }
+    if (args.containsKey(ORIGIN_TMP)) {
+      // this is a temp file which origin file is named to.
+      this.originTmpPath = args.get(ORIGIN_TMP);
     }
     if (args.containsKey(EC_POLICY_NAME)) {
       this.ecPolicyName = args.get(EC_POLICY_NAME);
@@ -90,7 +94,17 @@ public class ErasureCodingAction extends ErasureCodingBase {
       return;
     }
     convert(conf, ecPolicyName);
-    dfsClient.rename(tmpPath, srcPath, null);
+    dfsClient.rename(srcPath, originTmpPath, null);
+    dfsClient.rename(ecTmpPath, srcPath, null);
+    if (!isEquivalence(originTmpPath, srcPath)) {
+      // keep the original file to the original path if not equivalent
+      dfsClient.delete(srcPath, false);
+      dfsClient.rename(originTmpPath, srcPath, null);
+      LOG.warn("The original file is modified during the conversion.");
+      throw new ActionException("The original file is modified during the conversion.");
+    } else {
+      dfsClient.delete(originTmpPath, false);
+    }
   }
 
   @Override

@@ -52,10 +52,12 @@ public class TestUnErasureCodingAction extends MiniClusterHarness {
     String srcPath = "/ec/ecfile";
     // create test file with default ecPolicy
     createTestFile(srcPath);
-    String destPath = "/ssm/ec_tmp/tmp_file";
+    String ecTmpPath = "/ssm/ec_tmp/tmp_file";
+    String originTmpPath = "/ssm/origin_tmp/tmp_file";
     Map<String, String> args = new HashMap<>();
     args.put(HdfsAction.FILE_PATH, srcPath);
-    args.put(ErasureCodingBase.TMP_PATH, destPath);
+    args.put(ErasureCodingBase.EC_TMP, ecTmpPath);
+    args.put(ErasureCodingBase.ORIGIN_TMP, originTmpPath);
     unecAction.init(args);
     Assert.assertTrue(unecAction.getExpectedAfterRun());
     Assert.assertEquals(dfsClient.getErasureCodingPolicy(srcPath),

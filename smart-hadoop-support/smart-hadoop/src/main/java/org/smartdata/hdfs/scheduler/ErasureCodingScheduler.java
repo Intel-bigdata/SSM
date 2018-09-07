@@ -43,8 +43,10 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   private String checkecActionID;
   private String listecActionID;
   private List<String> actions;
-  public static final String EC_DIR = "/system/ssm/ec_tmp";
-  public static final String TMP = "-tmp";
+  public static final String EC_DIR = "/system/ssm/ec_tmp/";
+  public static final String ORIGIN_DIR = "/system/ssm/origin_tmp/";
+  public static final String EC_TMP = "-ecTmp";
+  public static final String ORIGIN_TMP = "-originTmp";
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
@@ -125,7 +127,9 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     try {
       if (!metaStore.getFile(srcPath).isdir()) {
         // For ec or unec, add tmp argument
-        action.getArgs().put(TMP, createTmpPath(action));
+        String tmpName = createTmpName(action);
+        action.getArgs().put(EC_TMP, EC_DIR + tmpName);
+        actionInfo.getArgs().put(ORIGIN_TMP, ORIGIN_DIR + tmpName);
       }
     } catch (MetaStoreException ex) {
       LOG.error("Error occurred for getting file info", ex);
@@ -134,7 +138,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
-  private String createTmpPath(LaunchAction action) {
+  private String createTmpName(LaunchAction action) {
     // need update to DB
     String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String fileName;
@@ -147,9 +151,9 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     }
     // The dest tmp file is under EC_DIR and
     // named by fileName, aidxxx and current time in millisecond with "_" separated
-    String dest = EC_DIR + "/" + fileName + "_" + "aid" + action.getActionId() +
+    String tmpName = fileName + "_" + "aid" + action.getActionId() +
         "_" + System.currentTimeMillis();
-    return dest;
+    return tmpName;
   }
 
   public void onActionFinished(ActionInfo actionInfo) {

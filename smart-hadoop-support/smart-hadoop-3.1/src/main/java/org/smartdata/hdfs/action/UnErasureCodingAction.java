@@ -20,6 +20,8 @@ package org.smartdata.hdfs.action;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.erasurecode.ErasureCodeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
@@ -33,6 +35,8 @@ import java.util.Map;
     usage = HdfsAction.FILE_PATH + " $src " + ErasureCodingBase.BUF_SIZE + " $bufSize"
 )
 public class UnErasureCodingAction extends ErasureCodingBase {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(UnErasureCodingAction.class);
   private static final String ecPolicyName = ErasureCodeConstants.REPLICATION_POLICY_NAME;
   private SmartConf conf;
 
@@ -41,9 +45,11 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     super.init(args);
     this.conf = getContext().getConf();
     this.srcPath = args.get(FILE_PATH);
-    if (args.containsKey(TMP_PATH)) {
-      // dest path is under /system/ssm/ec_tmp/file_name_timestamp, the file name is srcName_millisecond
-      this.tmpPath = args.get(TMP_PATH);
+    if (args.containsKey(EC_TMP)) {
+      this.ecTmpPath = args.get(EC_TMP);
+    }
+    if (args.containsKey(ORIGIN_TMP)) {
+      this.originTmpPath = args.get(ORIGIN_TMP);
     }
     if (args.containsKey(BUF_SIZE)) {
       this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
@@ -75,7 +81,16 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       return;
     }
     convert(conf, ecPolicyName);
-    dfsClient.rename(tmpPath, srcPath, null);
+    dfsClient.rename(srcPath, originTmpPath, null);
+    dfsClient.rename(ecTmpPath, srcPath, null);
+    if (!isEquivalence(originTmpPath, srcPath)) {
+      dfsClient.delete(srcPath, false);
+      dfsClient.rename(originTmpPath, srcPath, null);
+      LOG.warn("The original file is modified during the conversion.");
+      throw new ActionException("The original file is modified during the conversion.");
+    } else {
+      dfsClient.delete(originTmpPath, false);
+    }
   }
 
   @Override

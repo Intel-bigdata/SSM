@@ -37,10 +37,13 @@ import java.util.Map;
 abstract public class ErasureCodingBase extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   protected String srcPath;
-  protected String tmpPath;
+  protected String ecTmpPath;
+  protected String originTmpPath;
   protected int bufferSize = 1024 * 1024;
   protected float progress;
-  public static final String TMP_PATH = "-tmp";
+  // The values for -ecTmp & -originTmp are assigned by ErasureCodingScheduler.
+  public static final String EC_TMP = "-ecTmp";
+  public static final String ORIGIN_TMP = "-originTmp";
 
   protected void convert(SmartConf conf, String ecPolicyName) throws ActionException {
     HdfsDataOutputStream outputStream = null;
@@ -55,7 +58,7 @@ abstract public class ErasureCodingBase extends HdfsAction {
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
       // use the same FsPermission as srcPath
       FsPermission permission = fileStatus.getPermission();
-      out = dfsClient.create(tmpPath, permission, EnumSet.of(CreateFlag.CREATE), true,
+      out = dfsClient.create(ecTmpPath, permission, EnumSet.of(CreateFlag.CREATE), true,
           (short) 1, blockSize, null, bufferSize, null, null, ecPolicyName);
       long bytesRemaining = fileStatus.getLen();
       byte[] buf = new byte[bufferSize];
@@ -101,5 +104,10 @@ abstract public class ErasureCodingBase extends HdfsAction {
         || ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.REMOVED) {
       throw new ActionException("The EC policy " + ecPolicyName + " is not enabled!");
     }
+  }
+
+  public boolean isEquivalence(String path1, String path2) throws IOException {
+    // to ensure that there is no modification for original file
+    return dfsClient.getFileInfo(path1).getLen() == dfsClient.getFileInfo(path2).getLen();
   }
 }
