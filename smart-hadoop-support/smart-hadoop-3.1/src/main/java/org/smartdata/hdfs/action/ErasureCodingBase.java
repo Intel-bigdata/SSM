@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
@@ -38,7 +39,6 @@ abstract public class ErasureCodingBase extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   protected String srcPath;
   protected String ecTmpPath;
-  protected String originTmpPath;
   protected int bufferSize = 1024 * 1024;
   protected float progress;
   // The values for -ecTmp & -originTmp are assigned by ErasureCodingScheduler.
@@ -74,6 +74,7 @@ abstract public class ErasureCodingBase extends HdfsAction {
         bytesRemaining -= (long) bytesRead;
         this.progress = (float) (fileStatus.getLen() - bytesRemaining) / fileStatus.getLen();
       }
+      dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
     } catch (Exception ex) {
       throw new ActionException(ex);
     } finally {

@@ -44,9 +44,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   private String listecActionID;
   private List<String> actions;
   public static final String EC_DIR = "/system/ssm/ec_tmp/";
-  public static final String ORIGIN_DIR = "/system/ssm/origin_tmp/";
   public static final String EC_TMP = "-ecTmp";
-  public static final String ORIGIN_TMP = "-originTmp";
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
@@ -126,10 +124,10 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     }
     try {
       if (!metaStore.getFile(srcPath).isdir()) {
-        // For ec or unec, add tmp argument
+        // For ec or unec, add ecTmp argument
         String tmpName = createTmpName(action);
         action.getArgs().put(EC_TMP, EC_DIR + tmpName);
-        actionInfo.getArgs().put(ORIGIN_TMP, ORIGIN_DIR + tmpName);
+        actionInfo.getArgs().put(EC_TMP, EC_DIR + tmpName);
       }
     } catch (MetaStoreException ex) {
       LOG.error("Error occurred for getting file info", ex);

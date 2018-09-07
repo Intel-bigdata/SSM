@@ -48,9 +48,6 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     if (args.containsKey(EC_TMP)) {
       this.ecTmpPath = args.get(EC_TMP);
     }
-    if (args.containsKey(ORIGIN_TMP)) {
-      this.originTmpPath = args.get(ORIGIN_TMP);
-    }
     if (args.containsKey(BUF_SIZE)) {
       this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
@@ -81,16 +78,6 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       return;
     }
     convert(conf, ecPolicyName);
-    dfsClient.rename(srcPath, originTmpPath, null);
-    dfsClient.rename(ecTmpPath, srcPath, null);
-    if (!isEquivalence(originTmpPath, srcPath)) {
-      dfsClient.delete(srcPath, false);
-      dfsClient.rename(originTmpPath, srcPath, null);
-      LOG.warn("The original file is modified during the conversion.");
-      throw new ActionException("The original file is modified during the conversion.");
-    } else {
-      dfsClient.delete(originTmpPath, false);
-    }
   }
 
   @Override
