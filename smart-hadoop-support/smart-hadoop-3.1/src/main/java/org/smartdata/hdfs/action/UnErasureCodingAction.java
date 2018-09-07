@@ -17,10 +17,10 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.SystemErasureCodingPolicies;
-import org.apache.hadoop.io.erasurecode.ErasureCodeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
@@ -78,6 +78,7 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       return;
     }
     convert(conf, ecPolicyName);
+    dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
   }
 
   @Override

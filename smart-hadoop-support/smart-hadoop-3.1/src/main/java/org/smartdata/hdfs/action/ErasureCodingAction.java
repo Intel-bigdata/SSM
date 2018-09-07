@@ -17,7 +17,10 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyInfo;
 import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyState;
@@ -29,6 +32,7 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -92,7 +96,20 @@ public class ErasureCodingAction extends ErasureCodingBase {
       this.progress = 1.0F;
       return;
     }
-    convert(conf, ecPolicyName);
+    HdfsDataOutputStream outputStream = null;
+    try {
+      // append the file to acquire the lock to avoid modifying, no real appending occurs.
+      outputStream =
+          dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
+      convert(conf, ecPolicyName);
+      dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
+    } catch (ActionException ex) {
+      throw new ActionException(ex);
+    } finally {
+      if (outputStream != null) {
+        outputStream.close();
+      }
+    }
   }
 
   public void ValidateEcPolicy(String ecPolicyName) throws Exception {

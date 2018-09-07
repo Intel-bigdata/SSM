@@ -18,12 +18,10 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.fs.CreateFlag;
-import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSOutputStream;
-import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
@@ -42,13 +40,9 @@ abstract public class ErasureCodingBase extends HdfsAction {
   public static final String ORIGIN_TMP = "-originTmp";
 
   protected void convert(SmartConf conf, String ecPolicyName) throws ActionException {
-    HdfsDataOutputStream outputStream = null;
     DFSInputStream in = null;
     DFSOutputStream out = null;
     try {
-      // append the file to acquire the lock to avoid modifying, no real appending occurs.
-      outputStream =
-          dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
       in = dfsClient.open(srcPath, bufferSize, true);
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
@@ -70,7 +64,6 @@ abstract public class ErasureCodingBase extends HdfsAction {
         bytesRemaining -= (long) bytesRead;
         this.progress = (float) (fileStatus.getLen() - bytesRemaining) / fileStatus.getLen();
       }
-      dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
     } catch (Exception ex) {
       throw new ActionException(ex);
     } finally {
@@ -80,9 +73,6 @@ abstract public class ErasureCodingBase extends HdfsAction {
         }
         if (out != null) {
           out.close();
-        }
-        if (outputStream != null) {
-          outputStream.close();
         }
       } catch (IOException ex) {
         throw new ActionException(ex);
