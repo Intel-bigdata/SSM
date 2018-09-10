@@ -85,7 +85,6 @@ public class ErasureCodingAction extends ErasureCodingBase {
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     // keep attribute consistent
-
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
     if (fileStatus == null) {
       throw new ActionException("File doesn't exist!");
@@ -146,11 +145,11 @@ public class ErasureCodingAction extends ErasureCodingBase {
     for (ErasureCodingPolicyInfo info : dfsClient.getErasureCodingPolicies()) {
       ecPolicyNameToState.put(info.getPolicy().getName(), info.getState());
     }
-    if (!ecPolicyNameToState.keySet().contains(ecPolicyName) || !ecPolicyName.equals(REPLICATION_POLICY_NAME)) {
+    if (!ecPolicyNameToState.keySet().contains(ecPolicyName) && !ecPolicyName.equals(REPLICATION_POLICY_NAME)) {
       throw new ActionException("The EC policy " + ecPolicyName + " is not supported!");
     } else if (ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.DISABLED
         || ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.REMOVED) {
-      throw new ActionException("The EC policy " + ecPolicyName + " is not enabled!");
+      throw new ActionException("The EC policy " + ecPolicyName + " is disabled or removed!");
     }
   }
 

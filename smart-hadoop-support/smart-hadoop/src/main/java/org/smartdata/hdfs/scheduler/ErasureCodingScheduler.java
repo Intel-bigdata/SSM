@@ -132,6 +132,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     } catch (MetaStoreException ex) {
       LOG.error("Error occurred for getting file info", ex);
     }
+    // lock the file only if ec or unec action is scheduled
     fileLock.add(srcPath);
     return ScheduleResult.SUCCESS;
   }
