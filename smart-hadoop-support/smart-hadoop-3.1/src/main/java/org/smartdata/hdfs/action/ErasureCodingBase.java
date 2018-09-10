@@ -25,6 +25,8 @@ import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSOutputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.SystemErasureCodingPolicies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
 
@@ -33,12 +35,14 @@ import java.util.EnumSet;
 import java.util.Map;
 
 abstract public class ErasureCodingBase extends HdfsAction {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ErasureCodingBase.class);
   public static final String BUF_SIZE = "-bufSize";
   protected String srcPath;
   protected String ecTmpPath;
   protected int bufferSize = 1024 * 1024;
   protected float progress;
-  // The values for -ecTmp & -originTmp are assigned by ErasureCodingScheduler.
+  // The value for -ecTmp is assigned by ErasureCodingScheduler.
   public static final String EC_TMP = "-ecTmp";
   public static final String REPLICATION_POLICY_NAME =
       SystemErasureCodingPolicies.getReplicationPolicy().getName();
@@ -47,7 +51,8 @@ abstract public class ErasureCodingBase extends HdfsAction {
     DFSInputStream in = null;
     DFSOutputStream out = null;
     try {
-      long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
+      long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY,
+          DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
       in = dfsClient.open(srcPath, bufferSize, true);
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
       // use the same FsPermission as srcPath
@@ -85,14 +90,19 @@ abstract public class ErasureCodingBase extends HdfsAction {
   }
 
   // set attributes for dest to keep them consistent with their counterpart of src
-  protected void setAttributes(String src, String dest) throws IOException {
-    HdfsFileStatus fileStatus = dfsClient.getFileInfo(src);
+  protected void setAttributes(String src, HdfsFileStatus fileStatus, String dest)
+      throws IOException {
     dfsClient.setOwner(dest, fileStatus.getOwner(), fileStatus.getGroup());
     dfsClient.setPermission(dest, fileStatus.getPermission());
     dfsClient.setStoragePolicy(dest, dfsClient.getStoragePolicy(src).getName());
     // check whether mtime is changed after rename
     dfsClient.setTimes(dest, fileStatus.getModificationTime(), fileStatus.getAccessTime());
-    dfsClient.setAcl(dest, dfsClient.getAclStatus(src).getEntries());
+    boolean aclsEnabled = getContext().getConf().getBoolean(
+        DFSConfigKeys.DFS_NAMENODE_ACLS_ENABLED_KEY,
+        DFSConfigKeys.DFS_NAMENODE_ACLS_ENABLED_DEFAULT);
+    if (aclsEnabled) {
+      dfsClient.setAcl(dest, dfsClient.getAclStatus(src).getEntries());
+    }
     for(Map.Entry<String, byte[]> entry : dfsClient.getXAttrs(src).entrySet()) {
       dfsClient.setXAttr(dest, entry.getKey(), entry.getValue(),
           EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));

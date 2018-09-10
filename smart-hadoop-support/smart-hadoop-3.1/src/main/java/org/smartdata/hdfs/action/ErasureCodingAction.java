@@ -32,7 +32,6 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -92,7 +91,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
     validateEcPolicy(ecPolicyName);
     ErasureCodingPolicy srcEcPolicy = fileStatus.getErasureCodingPolicy();
     // if the current ecPolicy is already the target one, no need to convert
-    if (srcEcPolicy != null){
+    if (srcEcPolicy != null) {
       if (srcEcPolicy.getName().equals(ecPolicyName)) {
         appendResult(MATCH_RESULT);
         this.progress = 1.0F;
@@ -115,13 +114,15 @@ public class ErasureCodingAction extends ErasureCodingBase {
     HdfsDataOutputStream outputStream = null;
     try {
       // a file only with replication policy can be appended.
-      if (srcEcPolicy.equals(REPLICATION_POLICY_NAME)) {
+      if (srcEcPolicy == null) {
         // append the file to acquire the lock to avoid modifying, no real appending occurs.
         outputStream =
             dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       }
       convert(conf, ecPolicyName);
-      setAttributes(srcPath, ecTmpPath);
+      // The append operation will change the modification accordingly,
+      // so we use the filestatus obtained before append to set ecTmp file's most attributes
+      setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
       appendResult(CONVERT_RESULT);
       if (srcEcPolicy == null) {

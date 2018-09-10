@@ -64,8 +64,6 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     final String CONVERT_RESULT =
         "The file is converted successfully with replication EC policy.";
 
-    // keep attribute consistent
-    //
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
@@ -87,11 +85,11 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     }
     try {
       convert(conf, ecPolicyName);
-      setAttributes(srcPath, ecTmpPath);
+      setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
       appendResult(CONVERT_RESULT);
-      appendResult(String.format("The previous EC policy is {}.", srcEcPolicy.getName()));
-      appendResult(String.format("The current EC policy is {}.", REPLICATION_POLICY_NAME));
+      appendResult(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
+      appendResult(String.format("The current EC policy is %s.", REPLICATION_POLICY_NAME));
     } catch (ActionException ex) {
       // delete tmp file
       throw new ActionException(ex);
