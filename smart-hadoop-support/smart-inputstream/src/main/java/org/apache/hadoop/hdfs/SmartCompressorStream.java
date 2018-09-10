@@ -18,7 +18,10 @@
 package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.io.compress.Compressor;
+import org.apache.hadoop.io.compress.bzip2.Bzip2Compressor;
+import org.apache.hadoop.io.compress.lz4.Lz4Compressor;
 import org.apache.hadoop.io.compress.snappy.SnappyCompressor;
+import org.apache.hadoop.io.compress.zlib.ZlibCompressor;
 import org.smartdata.model.CompressionFileState;
 
 import java.io.IOException;
@@ -66,8 +69,18 @@ public class SmartCompressorStream {
     this.compressor = compressionCodec
         .createCompressor(bufferSize + overHead,
             compressionInfo.getCompressionImpl());
-    if (compressor instanceof SnappyCompressor) {
+    checkCompressor();
+  }
+
+  private void checkCompressor() {
+    if (compressor instanceof ZlibCompressor) {
+      compressionInfo.setCompressionImpl("Zlib");
+    } else if (compressor instanceof SnappyCompressor) {
       compressionInfo.setCompressionImpl("snappy");
+    } else if (compressor instanceof Bzip2Compressor) {
+      compressionInfo.setCompressionImpl("Bzip2");
+    } else if (compressor instanceof Lz4Compressor) {
+      compressionInfo.setCompressionImpl("LZ4");
     }
   }
 
