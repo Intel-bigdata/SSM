@@ -23,6 +23,7 @@ import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSOutputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.SystemErasureCodingPolicies;
 import org.smartdata.action.ActionException;
 import org.smartdata.conf.SmartConf;
 
@@ -37,7 +38,8 @@ abstract public class ErasureCodingBase extends HdfsAction {
   protected float progress;
   // The values for -ecTmp & -originTmp are assigned by ErasureCodingScheduler.
   public static final String EC_TMP = "-ecTmp";
-  public static final String ORIGIN_TMP = "-originTmp";
+  public static final String REPLICATION_POLICY_NAME =
+      SystemErasureCodingPolicies.getReplicationPolicy().getName();
 
   protected void convert(SmartConf conf, String ecPolicyName) throws ActionException {
     DFSInputStream in = null;

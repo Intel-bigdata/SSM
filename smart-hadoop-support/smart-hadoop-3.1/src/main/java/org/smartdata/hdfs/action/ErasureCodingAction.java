@@ -74,6 +74,13 @@ public class ErasureCodingAction extends ErasureCodingBase {
 
   @Override
   protected void execute() throws Exception {
+    final String MATCH_RESULT =
+        "The current EC policy is matched with the target one.";
+    final String DIR_RESULT =
+        "The EC policy is set successfully for the given directory.";
+    final String CONVERT_RESULT =
+        "The file is converted successfully with the given or default ec policy.";
+    
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     // keep attribute consistent
@@ -87,6 +94,14 @@ public class ErasureCodingAction extends ErasureCodingBase {
     // if the current ecPolicy is already the target one, no need to convert
     if (srcEcPolicy != null){
       if (srcEcPolicy.getName().equals(ecPolicyName)) {
+        appendResult(MATCH_RESULT);
+        this.progress = 1.0F;
+        return;
+      }
+    } else {
+      // if ecPolicy is null, it means replication.
+      if (ecPolicyName.equals(REPLICATION_POLICY_NAME)) {
+        appendResult(MATCH_RESULT);
         this.progress = 1.0F;
         return;
       }
@@ -94,16 +109,28 @@ public class ErasureCodingAction extends ErasureCodingBase {
     if (fileStatus.isDir()) {
       dfsClient.setErasureCodingPolicy(srcPath, ecPolicyName);
       this.progress = 1.0F;
+      appendResult(DIR_RESULT);
       return;
     }
     HdfsDataOutputStream outputStream = null;
     try {
-      // append the file to acquire the lock to avoid modifying, no real appending occurs.
-      outputStream =
-          dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
+      // a file only with replication policy can be appended.
+      if (srcEcPolicy.equals(REPLICATION_POLICY_NAME)) {
+        // append the file to acquire the lock to avoid modifying, no real appending occurs.
+        outputStream =
+            dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
+      }
       convert(conf, ecPolicyName);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
+      appendResult(CONVERT_RESULT);
+      if (srcEcPolicy == null) {
+        appendResult("The previous EC policy is replication.");
+      } else {
+        appendResult(String.format("The previous EC policy is {}.", srcEcPolicy.getName()));
+      }
+      appendResult(String.format("The current EC policy is {}.", ecPolicyName));
     } catch (ActionException ex) {
+      // delete tmp file
       throw new ActionException(ex);
     } finally {
       if (outputStream != null) {
@@ -117,7 +144,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
     for (ErasureCodingPolicyInfo info : dfsClient.getErasureCodingPolicies()) {
       ecPolicyNameToState.put(info.getPolicy().getName(), info.getState());
     }
-    if (!ecPolicyNameToState.keySet().contains(ecPolicyName)) {
+    if (!ecPolicyNameToState.keySet().contains(ecPolicyName) || !ecPolicyName.equals(REPLICATION_POLICY_NAME)) {
       throw new ActionException("The EC policy " + ecPolicyName + " is not supported!");
     } else if (ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.DISABLED
         || ecPolicyNameToState.get(ecPolicyName) == ErasureCodingPolicyState.REMOVED) {

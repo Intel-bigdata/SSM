@@ -17,42 +17,55 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.DFSConfigKeys;
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.Test;
-import org.smartdata.hdfs.MiniClusterHarness;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestErasureCodingAction extends MiniClusterHarness {
-
-  public void createTestFile(String srcPath) throws IOException {
-    FSDataOutputStream out = dfs.create(new Path(srcPath));
-    for (int i = 0; i < 60; i++) {
-      out.writeByte(1);
-    }
-    out.close();
-  }
+public class TestErasureCodingAction extends TestErasureCodingActionBase {
 
   @Test
-  public void testExecute()  throws Exception {
+  public void testEcActionForFile()  throws Exception {
+    String srcPath = "/ec/test_file";
+    createTestFile(srcPath, 1000);
+    // the file is stored in replication
+    assertEquals(null, dfsClient.getErasureCodingPolicy(srcPath));
+
     ErasureCodingAction ecAction = new ErasureCodingAction();
-    String srcPath = "/ec/unecfile";
-    createTestFile(srcPath);
     String ecTmpPath = "/ssm/ec_tmp/tmp_file";
-    String originTmpPath = "/ssm/origin_tmp/tmp_file";
     Map<String, String> args = new HashMap<>();
     args.put(HdfsAction.FILE_PATH, srcPath);
     args.put(ErasureCodingBase.EC_TMP, ecTmpPath);
-    args.put(ErasureCodingBase.ORIGIN_TMP, originTmpPath);
+    args.put(ErasureCodingAction.EC_POLICY_NAME, ecPolicy.getName());
     ecAction.init(args);
-    Assert.assertTrue(ecAction.getExpectedAfterRun());
-    Assert.assertEquals(dfsClient.getErasureCodingPolicy(srcPath),
-        DFSConfigKeys.DFS_NAMENODE_EC_SYSTEM_DEFAULT_POLICY_DEFAULT);
+    ecAction.execute();
+    assertTrue(ecAction.getExpectedAfterRun());
+    // the file is stored in ec with default policy
+    assertEquals(dfsClient.getErasureCodingPolicy(srcPath), ecPolicy);
+    // compare attribute
+  }
+
+  @Test
+  public void testEcActionForDir()  throws Exception {
+    String srcDirPath = "/test_dir/";
+    dfs.mkdirs(new Path(srcDirPath));
+    assertEquals(null, dfsClient.getErasureCodingPolicy(srcDirPath));
+
+    ErasureCodingAction ecAction = new ErasureCodingAction();
+    Map<String, String> args = new HashMap<>();
+    args.put(HdfsAction.FILE_PATH, srcDirPath);
+    args.put(ErasureCodingAction.EC_POLICY_NAME, ecPolicy.getName());
+    ecAction.init(args);
+    ecAction.execute();
+    assertTrue(ecAction.getExpectedAfterRun());
+    assertEquals(dfsClient.getErasureCodingPolicy(srcDirPath), ecPolicy);
+
+    String srcFilePath = "/test_dir/test_file";
+    createTestFile(srcFilePath, 1000);
+    // The newly created file should has the same EC policy as parent directory.
+    assertEquals(dfsClient.getErasureCodingPolicy(srcFilePath), ecPolicy);
     // compare attribute
   }
 }

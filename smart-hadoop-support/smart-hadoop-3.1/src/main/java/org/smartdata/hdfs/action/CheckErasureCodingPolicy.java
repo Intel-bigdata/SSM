@@ -31,7 +31,7 @@ import java.util.Map;
 )
 public class CheckErasureCodingPolicy extends HdfsAction {
   public static final String RESULT_OF_NULL_EC_POLICY =
-      "No EC policy is attached!";
+      "The EC policy is replication.";
   private SmartConf conf;
   private String srcPath;
 
