@@ -45,7 +45,6 @@ public class TestUnErasureCodingAction extends TestErasureCodingActionBase {
     unecAction.execute();
     assertTrue(unecAction.getExpectedAfterRun());
     assertNull(dfsClient.getErasureCodingPolicy(srcPath));
-    // compare attribute
   }
 
   @Test

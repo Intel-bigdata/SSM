@@ -18,6 +18,7 @@
 package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.DFSInputStream;
@@ -29,6 +30,7 @@ import org.smartdata.conf.SmartConf;
 
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.Map;
 
 abstract public class ErasureCodingBase extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
@@ -79,6 +81,21 @@ abstract public class ErasureCodingBase extends HdfsAction {
       } catch (IOException ex) {
         throw new ActionException(ex);
       }
+    }
+  }
+
+  // set attributes for dest to keep them consistent with their counterpart of src
+  protected void setAttributes(String src, String dest) throws IOException {
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(src);
+    dfsClient.setOwner(dest, fileStatus.getOwner(), fileStatus.getGroup());
+    dfsClient.setPermission(dest, fileStatus.getPermission());
+    dfsClient.setStoragePolicy(dest, dfsClient.getStoragePolicy(src).getName());
+    // check whether mtime is changed after rename
+    dfsClient.setTimes(dest, fileStatus.getModificationTime(), fileStatus.getAccessTime());
+    dfsClient.setAcl(dest, dfsClient.getAclStatus(src).getEntries());
+    for(Map.Entry<String, byte[]> entry : dfsClient.getXAttrs(src).entrySet()) {
+      dfsClient.setXAttr(dest, entry.getKey(), entry.getValue(),
+          EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
     }
   }
 }

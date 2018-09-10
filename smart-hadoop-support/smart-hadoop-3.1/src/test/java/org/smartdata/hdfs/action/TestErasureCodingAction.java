@@ -44,7 +44,6 @@ public class TestErasureCodingAction extends TestErasureCodingActionBase {
     assertTrue(ecAction.getExpectedAfterRun());
     // the file is stored in ec with default policy
     assertEquals(dfsClient.getErasureCodingPolicy(srcPath), ecPolicy);
-    // compare attribute
   }
 
   @Test
@@ -66,6 +65,5 @@ public class TestErasureCodingAction extends TestErasureCodingActionBase {
     createTestFile(srcFilePath, 1000);
     // The newly created file should has the same EC policy as parent directory.
     assertEquals(dfsClient.getErasureCodingPolicy(srcFilePath), ecPolicy);
-    // compare attribute
   }
 }

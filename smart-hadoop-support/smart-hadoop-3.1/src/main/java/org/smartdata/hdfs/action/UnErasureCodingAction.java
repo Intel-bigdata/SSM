@@ -87,6 +87,7 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     }
     try {
       convert(conf, ecPolicyName);
+      setAttributes(srcPath, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
       appendResult(CONVERT_RESULT);
       appendResult(String.format("The previous EC policy is {}.", srcEcPolicy.getName()));

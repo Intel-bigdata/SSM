@@ -32,6 +32,7 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,16 +81,16 @@ public class ErasureCodingAction extends ErasureCodingBase {
         "The EC policy is set successfully for the given directory.";
     final String CONVERT_RESULT =
         "The file is converted successfully with the given or default ec policy.";
-    
+
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     // keep attribute consistent
-    //
+
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
     if (fileStatus == null) {
       throw new ActionException("File doesn't exist!");
     }
-    ValidateEcPolicy(ecPolicyName);
+    validateEcPolicy(ecPolicyName);
     ErasureCodingPolicy srcEcPolicy = fileStatus.getErasureCodingPolicy();
     // if the current ecPolicy is already the target one, no need to convert
     if (srcEcPolicy != null){
@@ -121,6 +122,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
             dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       }
       convert(conf, ecPolicyName);
+      setAttributes(srcPath, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
       appendResult(CONVERT_RESULT);
       if (srcEcPolicy == null) {
@@ -139,7 +141,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
     }
   }
 
-  public void ValidateEcPolicy(String ecPolicyName) throws Exception {
+  public void validateEcPolicy(String ecPolicyName) throws Exception {
     Map<String, ErasureCodingPolicyState> ecPolicyNameToState = new HashMap<>();
     for (ErasureCodingPolicyInfo info : dfsClient.getErasureCodingPolicies()) {
       ecPolicyNameToState.put(info.getPolicy().getName(), info.getState());
