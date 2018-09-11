@@ -47,6 +47,7 @@ import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReport;
+import org.smartdata.server.cluster.NodeCmdletMetrics;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
@@ -55,6 +56,7 @@ import org.smartdata.utils.StringUtil;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -451,6 +453,14 @@ public class CmdletManager extends AbstractService {
       return true;
     }
     return false;
+  }
+
+  public int getNumPendingScheduleCmdlets() {
+    return pendingCmdlet.size() + schedulingCmdlet.size();
+  }
+
+  public Collection<NodeCmdletMetrics> getAllNodeCmdletMetrics() {
+    return dispatcher.getNodeCmdletMetrics();
   }
 
   private int scheduleCmdlet() throws IOException {

@@ -30,13 +30,16 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.CmdletStatus;
-import org.smartdata.server.cluster.NodeInfo;
+import org.smartdata.server.cluster.ActiveServerNodeCmdletMetrics;
+import org.smartdata.server.cluster.NodeCmdletMetrics;
+import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.NodeMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +76,7 @@ public class CmdletDispatcher {
   private AtomicInteger index = new AtomicInteger(0);
 
   private Map<String, AtomicInteger> regNodes = new HashMap<>();
-  private Map<String, NodeInfo> regNodeInfos = new HashMap<>();
+  private Map<String, NodeCmdletMetrics> regNodeInfos = new HashMap<>();
 
   private List<List<String>> cmdExecSrvNodeIds = new ArrayList<>();
   private String[] completeOn = new String[ExecutorType.values().length];
@@ -353,8 +356,12 @@ public class CmdletDispatcher {
         return false;
       }
 
-      NodeInfo nodeInfo = regNodeInfos.get(nodeId);
-      String host = nodeInfo == null ? "" : nodeInfo.getHost();
+      NodeCmdletMetrics metrics = regNodeInfos.get(nodeId);
+      String host = "";
+      if (metrics != null) {
+        host = metrics.getNodeInfo().getHost();
+        metrics.incCmdletsInExecution();
+      }
       updateCmdActionStatus(cmdlet, host);
       dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
@@ -418,6 +425,12 @@ public class CmdletDispatcher {
         if (regNodes.get(cmdlet.getNodeId()) != null) {
           regNodes.get(cmdlet.getNodeId()).incrementAndGet();
         }
+
+        NodeCmdletMetrics metrics = regNodeInfos.get(cmdlet.getNodeId());
+        if (metrics != null) {
+          metrics.finishCmdlet();
+        }
+
         ExecutorType t = dispatchedToSrvs.remove(cmdletId);
         updateSlotsLeft(t.ordinal(), 1);
         completeOn[t.ordinal()] = cmdlet.getNodeId();
@@ -438,7 +451,16 @@ public class CmdletDispatcher {
           return;
         } else {
           regNodes.put(nodeId, new AtomicInteger(defaultSlots));
-          regNodeInfos.put(nodeId, msg.getNodeInfo());
+          NodeCmdletMetrics metrics;
+          if (msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
+            metrics = new ActiveServerNodeCmdletMetrics();
+          } else {
+            metrics = new NodeCmdletMetrics();
+          }
+          metrics.setNumExecutors(defaultSlots);
+          metrics.setRegistTime(System.currentTimeMillis());
+          metrics.setNodeInfo(msg.getNodeInfo());
+          regNodeInfos.put(nodeId, metrics);
           cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
         }
       } else {
@@ -486,7 +508,24 @@ public class CmdletDispatcher {
     return cmdExecSrvTotalInsts * defaultSlots;
   }
 
+  public Collection<NodeCmdletMetrics> getNodeCmdletMetrics() {
+    ActiveServerNodeCmdletMetrics metrics = (ActiveServerNodeCmdletMetrics) regNodeInfos.get(
+        ActiveServerInfo.getInstance().getId());
+    if (metrics != null) {
+      metrics.setNumPendingSchedule(cmdletManager.getNumPendingScheduleCmdlets());
+      metrics.setNumPendingDispatch(pendingCmdlets.size());
+    }
+    return regNodeInfos.values();
+  }
+
   public void start() {
+    if (disableLocalExec) {
+      ActiveServerNodeCmdletMetrics metrics = new ActiveServerNodeCmdletMetrics();
+      metrics.setNumExecutors(defaultSlots);
+      metrics.setRegistTime(System.currentTimeMillis());
+      metrics.setNodeInfo(ActiveServerInfo.getInstance());
+      regNodeInfos.put(ActiveServerInfo.getInstance().getId(), metrics);
+    }
     CmdletDispatcherHelper.getInst().register(this);
     int idx = 0;
     for (DispatchTask task : dispatchTasks) {
