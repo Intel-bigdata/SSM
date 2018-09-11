@@ -38,11 +38,12 @@ import java.util.Set;
 
 public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final Logger LOG = LoggerFactory.getLogger(ErasureCodingScheduler.class);
-  private String ecActionID;
-  private String unecActionID;
-  private String checkecActionID;
-  private String listecActionID;
-  private List<String> actions;
+  public static final String ecActionID = "ec";
+  public static final String unecActionID = "unec";
+  public static final String checkecActionID = "checkec";
+  public static final String listecActionID = "listec";
+  public static final List<String> actions =
+      Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
   public static final String EC_DIR = "/system/ssm/ec_tmp/";
   public static final String EC_TMP = "-ecTmp";
   private Set<String> fileLock;
@@ -53,14 +54,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
-
-    if (isECSupported()) {
-      ecActionID = ErasureCodingAction.class.getAnnotation(ActionSignature.class).actionId();
-      unecActionID = UnErasureCodingAction.class.getAnnotation(ActionSignature.class).displayName();
-      checkecActionID = CheckErasureCodingPolicy.class.getAnnotation(ActionSignature.class).displayName();
-      listecActionID = ListErasureCodingPolicy.class.getAnnotation(ActionSignature.class).displayName();
-      actions = Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
-    }
   }
   public List<String> getSupportedActions() {
     return actions;
