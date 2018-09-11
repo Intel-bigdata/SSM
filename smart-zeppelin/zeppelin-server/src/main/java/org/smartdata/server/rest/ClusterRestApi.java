@@ -176,6 +176,19 @@ public class ClusterRestApi {
     }
   }
 
+  @GET
+  @Path("/primary/ssmnodescmdletmetrics")
+  public Response ssmNodesCmdletMetrics() {
+    try {
+      return new JsonResponse<>(Response.Status.OK,
+          smartEngine.getCmdletManager().getAllNodeCmdletMetrics()).build();
+    } catch (Exception e) {
+      logger.error("Exception in ClusterRestApi while listing metrics related with cmdlets", e);
+      return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
+          e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
+    }
+  }
+
 //  @GET
 //  @Path("/alluxio/{clusterName}")
 //  public void alluxio() {
