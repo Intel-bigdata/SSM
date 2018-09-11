@@ -234,6 +234,12 @@ public class InotifyEventApplier {
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
+    // The dest path which the src is renamed to should be checked in file table
+    // to avoid duplicated record for one same path.
+    FileInfo destInfo = metaStore.getFile(dest);
+    if (destInfo != null) {
+      metaStore.deleteFileByPath(dest);
+    }
     if (info == null) {
       if (status != null) {
         info = HadoopUtil.convertFileStatus(status, dest);
