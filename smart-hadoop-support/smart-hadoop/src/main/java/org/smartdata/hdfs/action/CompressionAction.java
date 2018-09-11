@@ -19,6 +19,7 @@ package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.SmartCompressorStream;
@@ -29,6 +30,7 @@ import org.smartdata.SmartConstants;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
 
@@ -60,12 +62,14 @@ public class CompressionAction extends HdfsAction {
 
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
-  private static List<String> compressionImplList = Arrays.asList(new String[]{
-    "Lz4","Bzip2","Zlib","snappy"});
+  private static List<String> compressionImplList = Arrays.asList("Lz4","Bzip2","Zlib","snappy");
 
   private String filePath;
+  private Configuration conf;
+
   private int bufferSize = 1024 * 1024;
-  private String compressionImpl = "Zlib";
+  private int maxSplit;
+  private String compressionImpl;
   private int UserDefinedbuffersize;
   private int Calculatedbuffersize;
   private String xAttrName = null;
@@ -76,7 +80,15 @@ public class CompressionAction extends HdfsAction {
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
+    this.conf = getContext().getConf();
+    this.compressionImpl = conf.get(
+        SmartConfKeys.SMART_COMPRESSION_IMPL,
+        SmartConfKeys.SMART_COMPRESSION_IMPL_DEFAULT);
+    this.maxSplit = conf.getInt(
+        SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT,
+        SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT_DEFAULT);
     this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
+
     this.filePath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE)) {
       this.UserDefinedbuffersize = Integer.valueOf(args.get(BUF_SIZE));
@@ -111,8 +123,8 @@ public class CompressionAction extends HdfsAction {
       short replication = srcFile.getReplication();
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();
-      //The capacity of originalPos and compressedPos is 5000 in database
-      this.Calculatedbuffersize = (int) fileSize / 5000;
+      //The capacity of originalPos and compressedPos is maxSplit (3000) in database
+      this.Calculatedbuffersize = (int) fileSize / maxSplit;
 
       //Determine the actual buffersize
       if (UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize) {

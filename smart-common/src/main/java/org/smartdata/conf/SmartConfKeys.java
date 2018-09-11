@@ -207,7 +207,9 @@ public class SmartConfKeys {
 
   // Compression
   public static final String SMART_COMPRESSION_IMPL = "smart.compression.impl";
-  public static final String SMART_COMPRESSION_IMPL_DEFAULT = "snappy";
+  public static final String SMART_COMPRESSION_IMPL_DEFAULT = "Zlib";
   public static final String SMART_COMPRESSION_BUFFER_SIZE = "smart.compression.buffer.size";
   public static final int SMART_COMPRESSION_BUFFER_SIZE_DEFAULT = 262144;
+  public static final String SMART_COMPRESSION_MAX_SPLIT = "smart.compression.max.split";
+  public static final int SMART_COMPRESSION_MAX_SPLIT_DEFAULT = 1000;
 }
