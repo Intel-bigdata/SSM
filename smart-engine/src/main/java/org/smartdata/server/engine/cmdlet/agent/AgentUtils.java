@@ -47,7 +47,7 @@ public class AgentUtils {
   }
 
   public static String getHostPort(ActorRef ref) {
-    return ref.path().address().hostPort();
+    return ref.path().address().hostPort().replaceFirst("^.*@", "");
   }
 
   public static Cancellable repeatActionUntil(ActorSystem system,

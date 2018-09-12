@@ -76,14 +76,15 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   private void initChannels() {
     for (Member worker : HazelcastUtil.getWorkerMembers(instance)) {
       ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
-      this.masterToWorkers.put(worker.getUuid(), topic);
+      this.masterToWorkers.put(getMemberNodeId(worker), topic);
     }
   }
 
   public List<StandbyServerInfo> getStandbyServers() {
     List<StandbyServerInfo> infos = new ArrayList<>();
     for (Member worker : HazelcastUtil.getWorkerMembers(instance)) {
-      infos.add(new StandbyServerInfo(worker.getUuid(), worker.getAddress().toString()));
+      infos.add(new StandbyServerInfo(getMemberNodeId(worker),
+          worker.getAddress().getHost() + ":" + worker.getAddress().getPort()));
     }
     return infos;
   }
@@ -102,7 +103,12 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   }
 
   private NodeInfo memberToNodeInfo(Member member) {
-    return new StandbyServerInfo(member.getUuid(), member.getAddress().toString());
+    return new StandbyServerInfo(getMemberNodeId(member),
+        member.getAddress().getHost() + ":" + member.getAddress().getPort());
+  }
+
+  private String getMemberNodeId(Member member) {
+    return "StandbySSMServer@" + member.getAddress().getHost();
   }
 
   @Override
@@ -155,10 +161,11 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     @Override
     public void memberAdded(MembershipEvent membershipEvent) {
       Member worker = membershipEvent.getMember();
-      if (!masterToWorkers.containsKey(worker.getUuid())) {
+      String id = getMemberNodeId(worker);
+      if (!masterToWorkers.containsKey(id)) {
         ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
-        masterToWorkers.put(worker.getUuid(), topic);
-        members.put(worker.getUuid(), worker);
+        masterToWorkers.put(id, topic);
+        members.put(id, worker);
         EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(worker)));
       }
     }
@@ -166,9 +173,10 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     @Override
     public void memberRemoved(MembershipEvent membershipEvent) {
       Member member = membershipEvent.getMember();
-      if (masterToWorkers.containsKey(member.getUuid())) {
-        masterToWorkers.get(member.getUuid()).destroy();
-        members.remove(member.getUuid());
+      String id = getMemberNodeId(member);
+      if (masterToWorkers.containsKey(id)) {
+        masterToWorkers.get(id).destroy();
+        members.remove(id);
         EngineEventBus.post(new RemoveNodeMessage(memberToNodeInfo(member)));
       }
       //Todo: recover

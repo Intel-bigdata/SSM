@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(LocalCmdletExecutorService.class);
-  private static final String ACTIVE_SERVER_ID = "ActiveSSMServer";
+  private static final String ACTIVE_SERVER_ID = "ActiveSSMServer@";
   private SmartConf conf;
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
@@ -61,7 +61,8 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     this.executorService.scheduleAtFixedRate(
         statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 
-    ActiveServerInfo.setInstance(ACTIVE_SERVER_ID, getActiveServerAddress(), ExecutorType.LOCAL);
+    ActiveServerInfo.setInstance(ACTIVE_SERVER_ID + getActiveServerAddress(),
+        getActiveServerAddress());
     EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
 
