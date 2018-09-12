@@ -111,7 +111,8 @@ public class MetaDataAction extends HdfsAction {
             permission,
             ownerName,
             groupName,
-            (byte) 1);
+            (byte) 1,
+            (byte) 0);
 
     changeFileMetaData(srcPath, fileInfo);
   }

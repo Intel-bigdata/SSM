@@ -59,7 +59,7 @@ public class InotifyEventApplier {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
       List<String> gen = getSqlStatement(event);
-      if (gen != null && !gen.isEmpty()){
+      if (gen != null && !gen.isEmpty()) {
         for (String s : gen) {
           if (s != null && s.length() > 0) {
             statements.add(s);
@@ -341,6 +341,7 @@ public class InotifyEventApplier {
             "UPDATE file SET block_replication = %s WHERE path = '%s';",
             metadataUpdateEvent.getReplication(), metadataUpdateEvent.getPath());
       case XATTRS:
+        final String EC_POLICY = "hdfs.erasurecoding.policy";
         //Todo
         if (LOG.isDebugEnabled()) {
           String message = "\n";
@@ -348,6 +349,11 @@ public class InotifyEventApplier {
             message += xAttr.toString() + "\n";
           }
           LOG.debug(message);
+        }
+        for (XAttr xAttr : metadataUpdateEvent.getxAttrs()) {
+          if (xAttr.getName().equals(EC_POLICY)) {
+            return String.format("UPDATE ");
+          }
         }
         break;
       case ACLS:

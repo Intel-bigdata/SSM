@@ -254,6 +254,7 @@ public class HadoopUtil {
       .setOwner(status.getOwner())
       .setGroup(status.getGroup())
       .setStoragePolicy(status.getStoragePolicy())
+      .setErasureCodingPolicy(CompatibilityHelperLoader.getHelper().getErasureCodingPolicy(status))
       .build();
   }
 

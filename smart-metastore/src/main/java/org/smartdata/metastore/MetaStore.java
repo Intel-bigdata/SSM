@@ -686,7 +686,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add a mock fileInfo
         fileInfo = new FileInfo(filePath, 0L, 0L, false,
           (short) 0, 0L, 0L, 0L, (short) 0,
-          "root", "root", (byte) 0);
+          "root", "root", (byte) 0, (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
@@ -723,7 +723,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add a mock fileInfo
         fileInfo = new FileInfo(filePath, 0L, 0L, false,
           (short) 0, 0L, 0L, 0L, (short) 0,
-          "root", "root", (byte) 0);
+          "root", "root", (byte) 0, (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);

@@ -62,4 +62,9 @@ public class CompatibilityHelper2 {
         length, isdir, block_replication, blocksize, modification_time, access_time, permission,
         owner, group, symlink, path, fileId, childrenNum, feInfo, storagePolicy);
   }
+
+  public byte getErasureCodingPolicy(HdfsFileStatus fileStatus) {
+    // for HDFS2.x, the erasure policy is always replication whose id is 0 in HDFS.
+    return (byte) 0;
+  }
 }

@@ -88,4 +88,6 @@ public interface CompatibilityHelper {
       long length, boolean isdir, int block_replication, long blocksize, long modification_time,
       long access_time, FsPermission permission, String owner, String group, byte[] symlink, byte[] path,
       long fileId, int childrenNum, FileEncryptionInfo feInfo, byte storagePolicy);
+
+  byte getErasureCodingPolicy(HdfsFileStatus fileStatus);
 }

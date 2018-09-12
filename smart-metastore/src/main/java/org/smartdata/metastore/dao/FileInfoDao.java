@@ -173,6 +173,7 @@ public class FileInfoDao {
     parameters
         .put("owner_group", fileInfo.getGroup());
     parameters.put("permission", fileInfo.getPermission());
+    parameters.put("ec_policy_id", fileInfo.getErasureCodingPolicy());
     return parameters;
   }
 
@@ -191,7 +192,8 @@ public class FileInfoDao {
           resultSet.getShort("permission"),
           resultSet.getString("owner"),
           resultSet.getString("owner_group"),
-          resultSet.getByte("sid")
+          resultSet.getByte("sid"),
+          resultSet.getByte("ec_policy_id")
       );
       return fileInfo;
     }

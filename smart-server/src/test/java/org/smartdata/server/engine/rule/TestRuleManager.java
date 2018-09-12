@@ -303,7 +303,7 @@ public class TestRuleManager extends TestDaoUtil {
     long length = 100;
     long fid = 10000;
     FileInfo[] files = { new FileInfo("/tmp/testfile", fid,  length, false, (short) 3,
-        1024, now, now, (short) 1, null, null, (byte) 3) };
+        1024, now, now, (short) 1, null, null, (byte) 3, (byte) 0) };
 
     metaStore.insertFiles(files);
     long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);
