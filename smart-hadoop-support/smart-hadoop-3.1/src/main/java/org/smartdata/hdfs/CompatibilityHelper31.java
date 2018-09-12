@@ -217,4 +217,17 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
     }
     return fileStatus.getErasureCodingPolicy().getId();
   }
+
+  @Override
+  public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {
+    if (ecPolicyName.equals(SystemErasureCodingPolicies.getReplicationPolicy().getName())) {
+      return (byte) 0;
+    }
+    for (ErasureCodingPolicyInfo policyInfo : client.getErasureCodingPolicies()) {
+      if (policyInfo.getPolicy().getName().equals(ecPolicyName)) {
+        return policyInfo.getPolicy().getId();
+      }
+    }
+    return (byte) -1;
+  }
 }

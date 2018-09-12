@@ -21,8 +21,10 @@ import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
@@ -32,6 +34,8 @@ import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -350,9 +354,22 @@ public class InotifyEventApplier {
           }
           LOG.debug(message);
         }
+        // The following code should be executed merely on HDFS3.x.
         for (XAttr xAttr : metadataUpdateEvent.getxAttrs()) {
           if (xAttr.getName().equals(EC_POLICY)) {
-            return String.format("UPDATE ");
+            try {
+              String ecPolicyName = WritableUtils.readString(
+                  new DataInputStream(new ByteArrayInputStream(xAttr.getValue())));
+              byte ecPolicyId = CompatibilityHelperLoader.getHelper().
+                  getErasureCodingPolicyByName(client, ecPolicyName);
+              if (ecPolicyId == (byte) -1) {
+                LOG.error("Unrecognized EC policy for updating!");
+              }
+              return String.format("UPDATE file SET ec_policy_id = %s WHERE path = '%s'",
+                  ecPolicyId, metadataUpdateEvent.getPath());
+            } catch (IOException ex) {
+              LOG.error("Error occurred for updating ecPolicy!", ex);
+            }
           }
         }
         break;

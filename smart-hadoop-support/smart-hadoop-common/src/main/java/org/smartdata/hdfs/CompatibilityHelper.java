@@ -90,4 +90,6 @@ public interface CompatibilityHelper {
       long fileId, int childrenNum, FileEncryptionInfo feInfo, byte storagePolicy);
 
   byte getErasureCodingPolicy(HdfsFileStatus fileStatus);
+
+  byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
 }
