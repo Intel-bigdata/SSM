@@ -357,19 +357,15 @@ public class CmdletDispatcher {
       }
 
       NodeCmdletMetrics metrics = regNodeInfos.get(nodeId);
-      String host = "";
       if (metrics != null) {
-        host = metrics.getNodeInfo().getHost();
         metrics.incCmdletsInExecution();
       }
-      updateCmdActionStatus(cmdlet, host);
+      updateCmdActionStatus(cmdlet, nodeId);
       dispatchedToSrvs.put(cmdlet.getCmdletId(), selected.getExecutorType());
 
       if (logDispResult) {
-        LOG.info(
-            String.format(
-                "Dispatching cmdlet->[%s] to executor service %s : %s",
-                cmdlet.getCmdletId(), selected.getExecutorType(), host));
+        LOG.info(String.format("Dispatching cmdlet->[%s] to executor: %s",
+            cmdlet.getCmdletId(), nodeId));
       }
       return true;
     }

@@ -90,7 +90,7 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
-    RegisterNewAgent.getInstance(agentAddress + "-" + getDateString());
+    RegisterNewAgent.getInstance("SSMAgent@" + agentAddress.replaceAll(":.*$", ""));
 
     HadoopUtil.setSmartConfByHadoop(conf);
     agent.authentication(conf);
