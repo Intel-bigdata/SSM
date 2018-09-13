@@ -175,6 +175,7 @@ public class FileInfo {
         && accessTime == fileInfo.accessTime
         && permission == fileInfo.permission
         && storagePolicy == fileInfo.storagePolicy
+        && erasureCodingPolicy == fileInfo.erasureCodingPolicy
         && Objects.equals(path, fileInfo.path)
         && Objects.equals(owner, fileInfo.owner)
         && Objects.equals(group, fileInfo.group);
@@ -194,7 +195,8 @@ public class FileInfo {
         permission,
         owner,
         group,
-        storagePolicy);
+        storagePolicy,
+        erasureCodingPolicy);
   }
 
   public static Builder newBuilder() {
@@ -206,7 +208,7 @@ public class FileInfo {
     return String.format(
         "FileInfo{path=\'%s\', fileId=%s, length=%s, isdir=%s, blockReplication=%s, "
             + "blocksize=%s, modificationTime=%s, accessTime=%s, permission=%s, owner=\'%s\', "
-            + "group=\'%s\', storagePolicy=%s}",
+            + "group=\'%s\', storagePolicy=%s, erasureCodingPolicy=%s}",
         path,
         fileId,
         length,
@@ -218,7 +220,8 @@ public class FileInfo {
         permission,
         owner,
         group,
-        storagePolicy);
+        storagePolicy,
+        erasureCodingPolicy);
   }
 
   public static class Builder {
@@ -312,7 +315,7 @@ public class FileInfo {
       return String.format(
           "Builder{path=\'%s\', fileId=%s, length=%s, isdir=%s, blockReplication=%s, "
               + "blocksize=%s, modificationTime=%s, accessTime=%s, permission=%s, owner=\'%s\', "
-              + "group=\'%s\', storagePolicy=\'%s\'}",
+              + "group=\'%s\', storagePolicy=%s, erasureCodingPolicy=%s}",
           path,
           fileId,
           length,
@@ -324,7 +327,8 @@ public class FileInfo {
           permission,
           owner,
           group,
-          storagePolicy);
+          storagePolicy,
+          erasureCodingPolicy);
     }
   }
 }
