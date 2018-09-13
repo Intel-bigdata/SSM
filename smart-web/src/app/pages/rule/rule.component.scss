@@ -15,42 +15,7 @@
  * limitations under the License.
  */
 
-
-.card {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  position: relative;
-  margin-top: 40px;
-  background-color: #fff;
-  border-radius: 5px;
-}
-
-.card-header {
-  position: absolute;
-  text-align: center;
-  background-color: #007aff;
-  box-shadow: 0 7px 10px -5px #777;
-  color: #fff;
-  border-radius: 3px;
-  padding: 15px;
-  top: -23px;
-
-  i {
-    font-size: 24px;
-    width: 33px;
-    height: 33px;
-    line-height: 33px;
-    color: #fff;
-  }
-
-}
-
-.card-content {
-  position: relative;
-  margin-top: 10px;
-}
-
-.card-title {
-  padding-left: 80px;
+.rule-main {
+  height: 100%;
+  padding-top: 40px;
 }

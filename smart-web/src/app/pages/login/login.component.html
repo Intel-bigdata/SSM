@@ -21,20 +21,20 @@
   <div class="login-container">
     <div class="login-form">
       <div class="card-header">
-        <h4>Login</h4>
+        <h4>SSM Login</h4>
       </div>
-      <p class="tip">Or Be Classical</p>
+      <a class="tip" [routerLink]="['/']">Or Be Tourist</a>
       <div class="card-form">
         <div class="form-row">
-          <label>User:</label>
+          <label>User Name:</label>
           <mat-input-container>
-            <input type="text" matInput placeholder="Name"/>
+            <input type="text" [(ngModel)]="loginName" matInput placeholder="Login Name"/>
           </mat-input-container>
         </div>
         <div class="form-row">
-          <label>Name:</label>
+          <label>Password:</label>
           <mat-input-container>
-            <input type="password" matInput placeholder="Password"/>
+            <input type="password" [(ngModel)]="password" matInput placeholder="Password"/>
           </mat-input-container>
         </div>
       </div>

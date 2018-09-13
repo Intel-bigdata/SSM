@@ -17,7 +17,7 @@
 
 
 export const ROUTES = [
-    { path: '/app', title: 'Home', icon: 'account_balance', children: null },
+    { path: '/', title: 'Home', icon: 'account_balance', children: null },
     { path: 'rules', title: 'Rules', icon: 'short_text', children: null },
     { path: 'actions', title: 'Actions', icon: 'text_format', children: null },
     { path: '#component', id: 'component', title: 'Component', icon: 'apps', children: [

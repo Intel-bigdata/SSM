@@ -19,11 +19,17 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpModule } from '@angular/http';
+import { HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { MatButtonModule, MatRadioModule, MatInputModule, MatMenuModule,
-  MatCheckboxModule, MatIconModule } from '@angular/material';
+import {
+  MatButtonModule,
+  MatRadioModule,
+  MatInputModule,
+  MatMenuModule,
+  MatCheckboxModule,
+  MatIconModule
+} from '@angular/material';
 import { AceEditorModule } from'ng2-ace-editor';
 
 import { AppComponent } from './app.component';
@@ -51,7 +57,7 @@ import { RuleComponent } from './pages/rule/rule.component';
   imports: [
     BrowserModule,
     FormsModule,
-    HttpModule,
+    HttpClientModule,
     BrowserAnimationsModule,
     NoopAnimationsModule,
     MatButtonModule,

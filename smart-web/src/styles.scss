@@ -45,8 +45,6 @@ h2 {
   font-size: 2.6em;
 }
 
-1
-
 h3 {
   font-size: 1.825em;
 }
@@ -82,4 +80,40 @@ a:hover {
 .ace_gutter {
   border: none !important;
   background: none !important;
+}
+
+.ssm-table {
+  padding: 20px;
+  position: relative;
+  background-color: #fff;
+  border-radius: 5px;
+  height: 100%;
+
+  .ssm-table-header {
+    position: absolute;
+    text-align: center;
+    background-color: #007aff;
+    box-shadow: 0 7px 10px -5px #777;
+    color: #fff;
+    border-radius: 3px;
+    padding: 15px;
+    top: -23px;
+
+    i {
+      font-size: 24px;
+      width: 33px;
+      height: 33px;
+      line-height: 33px;
+      color: #fff;
+    }
+  }
+
+  .ssm-table-content {
+    position: relative;
+    margin-top: 10px;
+  }
+
+  .ssm-table-title {
+    padding-left: 80px;
+  }
 }

@@ -24,8 +24,8 @@ import { HomeComponent } from "./pages/home/home.component";
 import { RuleComponent } from "./pages/rule/rule.component";
 
 const routes: Routes = [
-  { path: '', component: LoginComponent },
-  { path: 'app', component:  RootComponent, children: [
+  { path: 'login', component: LoginComponent },
+  { path: '', component:  RootComponent, children: [
       { path: '', component: HomeComponent },
       { path: 'rules', component: RuleComponent }
   ]}
