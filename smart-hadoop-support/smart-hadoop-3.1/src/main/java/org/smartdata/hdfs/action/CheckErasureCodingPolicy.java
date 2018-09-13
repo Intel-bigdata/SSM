@@ -24,6 +24,9 @@ import org.smartdata.hdfs.HadoopUtil;
 
 import java.util.Map;
 
+/**
+ * An action to check the EC policy for a file or dir.
+ */
 @ActionSignature(
     actionId = "checkec",
     displayName = "checkec",

@@ -24,6 +24,9 @@ import org.smartdata.hdfs.HadoopUtil;
 
 import java.util.Map;
 
+/**
+ * An action to list the info for all EC policies in HDFS.
+ */
 @ActionSignature(
     actionId = "listec",
     displayName = "listec",

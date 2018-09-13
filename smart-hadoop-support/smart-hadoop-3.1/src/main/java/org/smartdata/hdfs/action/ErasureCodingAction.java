@@ -32,10 +32,15 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * An action to set an EC policy for a dir or convert a file to another one in an EC policy.
+ * Default values are used for arguments of policy & bufSize if their values are not given in this action.
+ */
 @ActionSignature(
     actionId = "ec",
     displayName = "ec",
@@ -59,14 +64,14 @@ public class ErasureCodingAction extends ErasureCodingBase {
       // this is a temp file kept for converting a file to another with other ec policy.
       this.ecTmpPath = args.get(EC_TMP);
     }
-    if (args.containsKey(EC_POLICY_NAME)) {
+    if (args.containsKey(EC_POLICY_NAME) && !args.get(EC_POLICY_NAME).isEmpty()) {
       this.ecPolicyName = args.get(EC_POLICY_NAME);
     } else {
       String defaultEcPolicy = conf.getTrimmed(DFSConfigKeys.DFS_NAMENODE_EC_SYSTEM_DEFAULT_POLICY,
           DFSConfigKeys.DFS_NAMENODE_EC_SYSTEM_DEFAULT_POLICY_DEFAULT);
       this.ecPolicyName = defaultEcPolicy;
     }
-    if (args.containsKey(BUF_SIZE)) {
+    if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
       this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
     this.progress = 0.0F;
@@ -120,8 +125,10 @@ public class ErasureCodingAction extends ErasureCodingBase {
             dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       }
       convert(conf, ecPolicyName);
-      // The append operation will change the modification accordingly,
-      // so we use the filestatus obtained before append to set ecTmp file's most attributes
+      /**
+       * The append operation will change the modification accordingly,
+       * so we use the filestatus obtained before append to set ecTmp file's most attributes
+       */
       setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
       appendResult(CONVERT_RESULT);
@@ -132,7 +139,13 @@ public class ErasureCodingAction extends ErasureCodingBase {
       }
       appendResult(String.format("The current EC policy is {}.", ecPolicyName));
     } catch (ActionException ex) {
-      // delete tmp file
+      try {
+        if (dfsClient.getFileInfo(ecTmpPath) != null) {
+          dfsClient.delete(ecTmpPath, false);
+        }
+      } catch (IOException e) {
+        LOG.error("Failed to delete tmp file created during the conversion!");
+      }
       throw new ActionException(ex);
     } finally {
       if (outputStream != null) {

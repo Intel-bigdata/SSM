@@ -21,7 +21,6 @@ import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
-import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
@@ -143,8 +142,10 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     } else {
       fileName = path.substring(index + 1, path.length());
     }
-    // The dest tmp file is under EC_DIR and
-    // named by fileName, aidxxx and current time in millisecond with "_" separated
+    /**
+     * The dest tmp file is under EC_DIR and
+     * named by fileName, aidxxx and current time in millisecond with "_" separated
+     */
     String tmpName = fileName + "_" + "aid" + action.getActionId() +
         "_" + System.currentTimeMillis();
     return tmpName;

@@ -34,6 +34,9 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Map;
 
+/**
+ * An abstract base class for ErasureCodingAction & UnErasureCodingAction.
+ */
 abstract public class ErasureCodingBase extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(ErasureCodingBase.class);
@@ -84,7 +87,7 @@ abstract public class ErasureCodingBase extends HdfsAction {
           out.close();
         }
       } catch (IOException ex) {
-        throw new ActionException(ex);
+        LOG.error("IOException occurred when closing DFSInputStream or DFSOutputStream!");
       }
     }
   }
@@ -95,7 +98,6 @@ abstract public class ErasureCodingBase extends HdfsAction {
     dfsClient.setOwner(dest, fileStatus.getOwner(), fileStatus.getGroup());
     dfsClient.setPermission(dest, fileStatus.getPermission());
     dfsClient.setStoragePolicy(dest, dfsClient.getStoragePolicy(src).getName());
-    // check whether mtime is changed after rename
     dfsClient.setTimes(dest, fileStatus.getModificationTime(), fileStatus.getAccessTime());
     boolean aclsEnabled = getContext().getConf().getBoolean(
         DFSConfigKeys.DFS_NAMENODE_ACLS_ENABLED_KEY,

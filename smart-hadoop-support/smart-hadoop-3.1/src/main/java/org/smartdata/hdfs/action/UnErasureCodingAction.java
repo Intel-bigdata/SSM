@@ -27,8 +27,13 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 
+import java.io.IOException;
 import java.util.Map;
 
+/**
+ * An action to set replication policy for a dir or convert a file to another one in replication policy.
+ * Default value is used for argument of bufSize if its value is not given in this action.
+ */
 @ActionSignature(
     actionId = "unec",
     displayName = "unec",
@@ -49,7 +54,7 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     if (args.containsKey(EC_TMP)) {
       this.ecTmpPath = args.get(EC_TMP);
     }
-    if (args.containsKey(BUF_SIZE)) {
+    if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
       this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
     }
     this.progress = 0.0F;
@@ -91,7 +96,13 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       appendResult(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
       appendResult(String.format("The current EC policy is %s.", REPLICATION_POLICY_NAME));
     } catch (ActionException ex) {
-      // delete tmp file
+      try {
+        if (dfsClient.getFileInfo(ecTmpPath) != null) {
+          dfsClient.delete(ecTmpPath, false);
+        }
+      } catch (IOException e) {
+        LOG.error("Failed to delete tmp file created during the conversion!");
+      }
       throw new ActionException(ex);
     }
   }
