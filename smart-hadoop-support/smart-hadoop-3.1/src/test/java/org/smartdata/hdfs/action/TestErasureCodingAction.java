@@ -27,7 +27,7 @@ import java.util.Map;
 public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
 
   @Test
-  public void testEcActionForFile()  throws Exception {
+  public void testEcActionForFile() throws Exception {
     String srcPath = "/ec/test_file";
     createTestFile(srcPath, 1000);
     // the file is stored in replication
@@ -48,7 +48,7 @@ public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
   }
 
   @Test
-  public void testEcActionForDir()  throws Exception {
+  public void testEcActionForDir() throws Exception {
     String srcDirPath = "/test_dir/";
     dfs.mkdirs(new Path(srcDirPath));
     assertEquals(null, dfsClient.getErasureCodingPolicy(srcDirPath));

@@ -54,6 +54,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     this.conf = context.getConf();
     this.metaStore = metaStore;
   }
+
   public List<String> getSupportedActions() {
     return actions;
   }
@@ -86,7 +87,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     return true;
   }
 
-  public static boolean isECSupported () {
+  public static boolean isECSupported() {
     String[] parts = VersionInfo.getVersion().split("\\.");
     return Integer.parseInt(parts[0]) == 3;
   }

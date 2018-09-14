@@ -27,7 +27,7 @@ import java.util.Map;
 public class TestUnErasureCodingAction extends TestErasureCodingMiniCluster {
 
   @Test
-  public void testUnEcActionForFile()  throws Exception {
+  public void testUnEcActionForFile() throws Exception {
     String testDir = "/test_dir";
     dfs.mkdirs(new Path(testDir));
     dfs.setErasureCodingPolicy(new Path(testDir), ecPolicy.getName());
@@ -49,7 +49,7 @@ public class TestUnErasureCodingAction extends TestErasureCodingMiniCluster {
   }
 
   @Test
-  public void testUnEcActionForDir()  throws Exception {
+  public void testUnEcActionForDir() throws Exception {
     String testDir = "/test_dir";
     dfs.mkdirs(new Path(testDir));
     dfs.setErasureCodingPolicy(new Path(testDir), ecPolicy.getName());

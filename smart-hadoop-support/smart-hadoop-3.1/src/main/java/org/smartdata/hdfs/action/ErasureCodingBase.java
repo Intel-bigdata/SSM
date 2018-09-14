@@ -106,7 +106,7 @@ abstract public class ErasureCodingBase extends HdfsAction {
       dfsClient.setAcl(dest, dfsClient.getAclStatus(src).getEntries());
     }
     //TODO: check ec related record to avoid paradox
-    for(Map.Entry<String, byte[]> entry : dfsClient.getXAttrs(src).entrySet()) {
+    for (Map.Entry<String, byte[]> entry : dfsClient.getXAttrs(src).entrySet()) {
       dfsClient.setXAttr(dest, entry.getKey(), entry.getValue(),
           EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
     }
