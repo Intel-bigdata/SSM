@@ -32,11 +32,12 @@ public class FileInfo {
   private String owner;
   private String group;
   private byte storagePolicy;
+  private byte erasureCodingPolicy;
 
   public FileInfo(String path, long fileId, long length, boolean isdir,
       short blockReplication, long blocksize, long modificationTime,
       long accessTime, short permission, String owner, String group,
-      byte storagePolicy) {
+      byte storagePolicy, byte erasureCodingPolicy) {
     this.path = path;
     this.fileId = fileId;
     this.length = length;
@@ -49,6 +50,7 @@ public class FileInfo {
     this.owner = owner;
     this.group = group;
     this.storagePolicy = storagePolicy;
+    this.erasureCodingPolicy = erasureCodingPolicy;
   }
 
   public String getPath() {
@@ -147,6 +149,14 @@ public class FileInfo {
     this.storagePolicy = storagePolicy;
   }
 
+  public byte getErasureCodingPolicy() {
+    return erasureCodingPolicy;
+  }
+
+  public void setErasureCodingPolicy(byte erasureCodingPolicy) {
+    this.erasureCodingPolicy = erasureCodingPolicy;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -165,6 +175,7 @@ public class FileInfo {
         && accessTime == fileInfo.accessTime
         && permission == fileInfo.permission
         && storagePolicy == fileInfo.storagePolicy
+        && erasureCodingPolicy == fileInfo.erasureCodingPolicy
         && Objects.equals(path, fileInfo.path)
         && Objects.equals(owner, fileInfo.owner)
         && Objects.equals(group, fileInfo.group);
@@ -184,7 +195,8 @@ public class FileInfo {
         permission,
         owner,
         group,
-        storagePolicy);
+        storagePolicy,
+        erasureCodingPolicy);
   }
 
   public static Builder newBuilder() {
@@ -196,7 +208,7 @@ public class FileInfo {
     return String.format(
         "FileInfo{path=\'%s\', fileId=%s, length=%s, isdir=%s, blockReplication=%s, "
             + "blocksize=%s, modificationTime=%s, accessTime=%s, permission=%s, owner=\'%s\', "
-            + "group=\'%s\', storagePolicy=%s}",
+            + "group=\'%s\', storagePolicy=%s, erasureCodingPolicy=%s}",
         path,
         fileId,
         length,
@@ -208,7 +220,8 @@ public class FileInfo {
         permission,
         owner,
         group,
-        storagePolicy);
+        storagePolicy,
+        erasureCodingPolicy);
   }
 
   public static class Builder {
@@ -224,6 +237,7 @@ public class FileInfo {
     private String owner;
     private String group;
     private byte storagePolicy;
+    private byte erasureCodingPolicy;
 
     public Builder setPath(String path) {
       this.path = path;
@@ -285,10 +299,15 @@ public class FileInfo {
       return this;
     }
 
+    public Builder setErasureCodingPolicy(byte erasureCodingPolicy) {
+        this.erasureCodingPolicy = erasureCodingPolicy;
+      return this;
+    }
+
     public FileInfo build() {
       return new FileInfo(path, fileId, length, isdir, blockReplication,
           blocksize, modificationTime, accessTime, permission, owner,
-          group, storagePolicy);
+          group, storagePolicy, erasureCodingPolicy);
     }
 
     @Override
@@ -296,7 +315,7 @@ public class FileInfo {
       return String.format(
           "Builder{path=\'%s\', fileId=%s, length=%s, isdir=%s, blockReplication=%s, "
               + "blocksize=%s, modificationTime=%s, accessTime=%s, permission=%s, owner=\'%s\', "
-              + "group=\'%s\', storagePolicy=\'%s\'}",
+              + "group=\'%s\', storagePolicy=%s, erasureCodingPolicy=%s}",
           path,
           fileId,
           length,
@@ -308,7 +327,8 @@ public class FileInfo {
           permission,
           owner,
           group,
-          storagePolicy);
+          storagePolicy,
+          erasureCodingPolicy);
     }
   }
 }

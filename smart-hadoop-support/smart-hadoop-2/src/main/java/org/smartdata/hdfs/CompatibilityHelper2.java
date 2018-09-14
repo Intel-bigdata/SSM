@@ -20,6 +20,7 @@ package org.smartdata.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocolPB.PBHelper;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
@@ -61,5 +62,14 @@ public class CompatibilityHelper2 {
     return new HdfsFileStatus(
         length, isdir, block_replication, blocksize, modification_time, access_time, permission,
         owner, group, symlink, path, fileId, childrenNum, feInfo, storagePolicy);
+  }
+
+  public byte getErasureCodingPolicy(HdfsFileStatus fileStatus) {
+    // for HDFS2.x, the erasure policy is always replication whose id is 0 in HDFS.
+    return (byte) 0;
+  }
+
+  public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {
+    return (byte) 0;
   }
 }
