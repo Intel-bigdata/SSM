@@ -6,83 +6,57 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.smartdata.versioninfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
 public class VersionInfoRead {
-
   Properties prop = new Properties();
 
-  protected VersionInfoRead(String component) {
+  public static final Logger LOG =
+      LoggerFactory.getLogger(VersionInfoRead.class);
+
+  public VersionInfoRead(String component) {
     InputStream in = null;
     String s = component + "-versionInfo.properties";
     try {
       in = Thread.currentThread().getContextClassLoader().getResourceAsStream(s);
       prop.load(in);
     } catch (Exception e) {
-      System.out.println(e);
+      LOG.error("" + e);
     } finally {
       try {
         in.close();
       } catch (IOException e) {
-        e.printStackTrace();
+        LOG.error(e.getLocalizedMessage());
       }
     }
   }
 
-  private static VersionInfoRead info = new VersionInfoRead("common");
-
-  protected String getVersion() {
-    return info.prop.getProperty("version", "Unknown");
+  public Properties getProperties() {
+    return prop;
   }
 
-  protected String getRevision() {
-    return info.prop.getProperty("revision", "Unknown");
-  }
-
-  protected String getTime() {
-    return info.prop.getProperty("date", "Unknown");
-  }
-
-  protected String getUser() {
-    return info.prop.getProperty("user", "Unknown");
-  }
-
-  protected String getUrl() {
-    return info.prop.getProperty("url", "Unknown");
-  }
-
-  protected String getBranch() {
-    return info.prop.getProperty("branch", "Unknown");
-  }
-
-  protected String getHadoopVersion() {
-    return info.prop.getProperty("hadoopVersion", "Unknown");
-  }
-
-  public void printInfo() {
-    System.out.println("SSM " + getVersion());
-    System.out.println("Subversion " + getUrl());
-    System.out.println("Last commit " + getRevision() + " on branch " + getBranch());
-    System.out.println("Compiled by " + getUser() + " on " + getTime());
-    System.out.println("Compiled for hadoop " + getHadoopVersion());
-  }
-
-  public static void main(String[] args) {
-    VersionInfoRead t = new VersionInfoRead("common");
-    t.printInfo();
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    for (String p : prop.stringPropertyNames()) {
+      sb.append(p).append("=").append(prop.getProperty(p)).append("\n");
+    }
+    return sb.toString();
   }
 }

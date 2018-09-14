@@ -33,6 +33,7 @@ import org.smartdata.hdfs.metric.fetcher.CachedListFetcher;
 import org.smartdata.hdfs.metric.fetcher.DataNodeInfoFetcher;
 import org.smartdata.hdfs.metric.fetcher.InotifyEventFetcher;
 import org.smartdata.hdfs.metric.fetcher.StorageInfoSampler;
+import org.smartdata.hdfs.ruleplugin.CheckErasureCodingRulePlugin;
 import org.smartdata.hdfs.ruleplugin.CheckSsdRulePlugin;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.StatesUpdateService;
@@ -126,6 +127,7 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     this.dataNodeInfoFetcher.start();
     this.storageInfoSampler.start();
     RulePluginManager.addPlugin(new CheckSsdRulePlugin(metaStore));
+    RulePluginManager.addPlugin(new CheckErasureCodingRulePlugin(metaStore));
     LOG.info("Started. ");
   }
 
