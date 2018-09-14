@@ -24,7 +24,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestErasureCodingAction extends TestErasureCodingActionBase {
+public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
 
   @Test
   public void testEcActionForFile()  throws Exception {
@@ -34,13 +34,14 @@ public class TestErasureCodingAction extends TestErasureCodingActionBase {
     assertEquals(null, dfsClient.getErasureCodingPolicy(srcPath));
 
     ErasureCodingAction ecAction = new ErasureCodingAction();
+    ecAction.setContext(smartContext);
     String ecTmpPath = "/ssm/ec_tmp/tmp_file";
     Map<String, String> args = new HashMap<>();
     args.put(HdfsAction.FILE_PATH, srcPath);
     args.put(ErasureCodingBase.EC_TMP, ecTmpPath);
     args.put(ErasureCodingAction.EC_POLICY_NAME, ecPolicy.getName());
     ecAction.init(args);
-    ecAction.execute();
+    ecAction.run();
     assertTrue(ecAction.getExpectedAfterRun());
     // the file is stored in ec with default policy
     assertEquals(dfsClient.getErasureCodingPolicy(srcPath), ecPolicy);
@@ -53,11 +54,12 @@ public class TestErasureCodingAction extends TestErasureCodingActionBase {
     assertEquals(null, dfsClient.getErasureCodingPolicy(srcDirPath));
 
     ErasureCodingAction ecAction = new ErasureCodingAction();
+    ecAction.setContext(smartContext);
     Map<String, String> args = new HashMap<>();
     args.put(HdfsAction.FILE_PATH, srcDirPath);
     args.put(ErasureCodingAction.EC_POLICY_NAME, ecPolicy.getName());
     ecAction.init(args);
-    ecAction.execute();
+    ecAction.run();
     assertTrue(ecAction.getExpectedAfterRun());
     assertEquals(dfsClient.getErasureCodingPolicy(srcDirPath), ecPolicy);
 

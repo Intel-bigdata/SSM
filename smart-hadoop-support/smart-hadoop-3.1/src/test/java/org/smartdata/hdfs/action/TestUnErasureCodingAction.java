@@ -24,10 +24,10 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestUnErasureCodingAction extends TestErasureCodingActionBase {
+public class TestUnErasureCodingAction extends TestErasureCodingMiniCluster {
 
   @Test
-  public void testExecute()  throws Exception {
+  public void testUnEcActionForFile()  throws Exception {
     String testDir = "/test_dir";
     dfs.mkdirs(new Path(testDir));
     dfs.setErasureCodingPolicy(new Path(testDir), ecPolicy.getName());
@@ -36,29 +36,31 @@ public class TestUnErasureCodingAction extends TestErasureCodingActionBase {
     createTestFile(srcPath, 1000);
     assertEquals(dfsClient.getErasureCodingPolicy(srcPath), ecPolicy);
 
-    UnErasureCodingAction unecAction = new UnErasureCodingAction();
+    UnErasureCodingAction unEcAction = new UnErasureCodingAction();
+    unEcAction.setContext(smartContext);
     String ecTmpPath = "/ssm/ec_tmp/tmp_file";
     Map<String, String> args = new HashMap<>();
     args.put(HdfsAction.FILE_PATH, srcPath);
     args.put(ErasureCodingBase.EC_TMP, ecTmpPath);
-    unecAction.init(args);
-    unecAction.execute();
-    assertTrue(unecAction.getExpectedAfterRun());
+    unEcAction.init(args);
+    unEcAction.run();
+    assertTrue(unEcAction.getExpectedAfterRun());
     assertNull(dfsClient.getErasureCodingPolicy(srcPath));
   }
 
   @Test
-  public void testEcActionForDir()  throws Exception {
+  public void testUnEcActionForDir()  throws Exception {
     String testDir = "/test_dir";
     dfs.mkdirs(new Path(testDir));
     dfs.setErasureCodingPolicy(new Path(testDir), ecPolicy.getName());
     assertEquals(dfsClient.getErasureCodingPolicy(testDir), ecPolicy);
 
-    UnErasureCodingAction unecAction = new UnErasureCodingAction();
+    UnErasureCodingAction unEcAction = new UnErasureCodingAction();
+    unEcAction.setContext(smartContext);
     Map<String, String> args = new HashMap<>();
     args.put(HdfsAction.FILE_PATH, testDir);
-    unecAction.init(args);
-    unecAction.execute();
+    unEcAction.init(args);
+    unEcAction.run();
     assertNull(dfs.getErasureCodingPolicy(new Path(testDir)));
 
     // create test file, its EC policy is expected to be replication

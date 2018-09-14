@@ -149,7 +149,11 @@ public class ErasureCodingAction extends ErasureCodingBase {
       throw new ActionException(ex);
     } finally {
       if (outputStream != null) {
-        outputStream.close();
+        try {
+          outputStream.close();
+        } catch (IOException ex) {
+          // IOException may be reported for missing blocks.
+        }
       }
     }
   }
