@@ -17,12 +17,25 @@
  */
 package org.smartdata.hdfs.action;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.action.AbstractActionFactory;
+import org.smartdata.action.SmartAction;
+import org.smartdata.hdfs.scheduler.ErasureCodingScheduler;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Built-in smart actions for HDFS system.
  */
 public class HdfsActionFactory extends AbstractActionFactory {
+  private static final Logger LOG = LoggerFactory.getLogger(HdfsActionFactory.class);
+  public static final List<String> HDFS3_ACTION_CLASSES = Arrays.asList(
+      "org.smartdata.hdfs.action.ListErasureCodingPolicy",
+      "org.smartdata.hdfs.action.CheckErasureCodingPolicy",
+      "org.smartdata.hdfs.action.ErasureCodingAction",
+      "org.smartdata.hdfs.action.UnErasureCodingAction");
 
   static {
     addAction(AllSsdFileAction.class);
@@ -37,7 +50,6 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(WriteFileAction.class);
     addAction(CheckStorageAction.class);
     addAction(SetXAttrAction.class);
-//    addAction("stripec", StripErasureCodeFileAction.class);
 //    addAction("blockec", BlockErasureCodeFileAction.class);
     addAction(CopyFileAction.class);
     addAction(DeleteFileAction.class);
@@ -57,5 +69,18 @@ public class HdfsActionFactory extends AbstractActionFactory {
 //    addAction("diskbalance", DiskBalanceAction.class);
 //    addAction("clusterbalance", ClusterBalanceAction.class);
 //    addAction("setstoragepolicy", SetStoragePolicyAction.class);
+    if (ErasureCodingScheduler.isECSupported()) {
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      if (loader == null) {
+        loader = ClassLoader.getSystemClassLoader();
+      }
+      try {
+        for (String classString : HDFS3_ACTION_CLASSES) {
+          addAction((Class<SmartAction>) loader.loadClass(classString));
+        }
+      } catch (ClassNotFoundException ex) {
+        LOG.error("Class not found!", ex);
+      }
+    }
   }
 }

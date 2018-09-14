@@ -109,6 +109,7 @@ public class TestTableAggregator extends DBTest {
               (short) 1,
               "root",
               "admin",
+              (byte) 0,
               (byte) 0));
     }
     metaStore.insertFiles(statusInternals.toArray(new FileInfo[0]));

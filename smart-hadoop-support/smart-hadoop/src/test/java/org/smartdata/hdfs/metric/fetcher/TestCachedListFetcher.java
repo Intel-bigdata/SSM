@@ -105,10 +105,11 @@ public class TestCachedListFetcher extends TestDaoUtil {
     String group = "admin";
     long fileId = fid;
     byte storagePolicy = 0;
+    byte erasureCodingPolicy = 0;
     fid++;
     return new FileInfo(pathString, fileId, length,
         isDir, (short)blockReplication, blockSize, modTime, accessTime,
-        (short) 1, owner, group, storagePolicy);
+        (short) 1, owner, group, storagePolicy, erasureCodingPolicy);
   }
 
   @Test

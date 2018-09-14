@@ -17,16 +17,36 @@
  */
 package org.smartdata.hdfs.action;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicyInfo;
+import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
+
+import java.util.Map;
 
 /**
- * An action to do strip level erasure code a file. Only for Hadoop 3.x.
+ * An action to list the info for all EC policies in HDFS.
  */
-public class StripErasureCodeFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(StripErasureCodeFileAction.class);
+@ActionSignature(
+    actionId = "listec",
+    displayName = "listec",
+    usage = "No args"
+)
+public class ListErasureCodingPolicy extends HdfsAction {
+  private SmartConf conf;
 
   @Override
-  protected void execute() throws Exception {
+  public void init(Map<String, String> args) {
+    super.init(args);
+    this.conf = getContext().getConf();
+  }
+
+  @Override
+  public void execute() throws Exception {
+    this.setDfsClient(HadoopUtil.getDFSClient(
+        HadoopUtil.getNameNodeUri(conf), conf));
+    for (ErasureCodingPolicyInfo policyInfo : dfsClient.getErasureCodingPolicies()) {
+      appendResult("{" + policyInfo.toString() + "}");
+    }
   }
 }

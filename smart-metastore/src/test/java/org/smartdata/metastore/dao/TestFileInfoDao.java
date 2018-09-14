@@ -57,15 +57,16 @@ public class TestFileInfoDao extends TestDaoUtil {
     String group = "admin";
     long fileId = 312321L;
     byte storagePolicy = 0;
-    FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication,
-        blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
+    byte erasureCodingPolicy = 0;
+    FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication, blockSize,
+        modTime, accessTime, permission, owner, group, storagePolicy, erasureCodingPolicy);
     fileInfoDao.insert(fileInfo);
     FileInfo file1 = fileInfoDao.getByPath("/testFile");
     Assert.assertTrue(fileInfo.equals(file1));
     FileInfo file2 = fileInfoDao.getById(fileId);
     Assert.assertTrue(fileInfo.equals(file2));
-    FileInfo fileInfo1 = new FileInfo(path, fileId + 1, length, isDir, blockReplication,
-        blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
+    FileInfo fileInfo1 = new FileInfo(path, fileId + 1, length, isDir, blockReplication, blockSize,
+        modTime, accessTime, permission, owner, group, storagePolicy, erasureCodingPolicy);
     fileInfoDao.insert(fileInfo1);
     List<FileInfo> fileInfos = fileInfoDao.getFilesByPrefix("/testaaFile");
     Assert.assertTrue(fileInfos.size() == 0);
@@ -93,12 +94,13 @@ public class TestFileInfoDao extends TestDaoUtil {
     String group = "admin";
     long fileId = 312321L;
     byte storagePolicy = 0;
+    byte erasureCodingPolicy = 0;
     Map<Integer, String> mapOwnerIdName = new HashMap<>();
     mapOwnerIdName.put(1, "root");
     Map<Integer, String> mapGroupIdName = new HashMap<>();
     mapGroupIdName.put(1, "admin");
-    FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication,
-        blockSize, modTime, accessTime, permission, owner, group, storagePolicy);
+    FileInfo fileInfo = new FileInfo(path, fileId, length, isDir, blockReplication, blockSize,
+        modTime, accessTime, permission, owner, group, storagePolicy, erasureCodingPolicy);
     fileInfoDao.insert(fileInfo);
     fileInfoDao.update(path, 10);
     FileInfo file = fileInfoDao.getById(fileId);

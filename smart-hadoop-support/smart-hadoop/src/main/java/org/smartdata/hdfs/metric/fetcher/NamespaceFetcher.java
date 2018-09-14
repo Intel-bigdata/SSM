@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
@@ -307,7 +308,8 @@ public class NamespaceFetcher {
           status.getPermission().toShort(),
           status.getOwner(),
           status.getGroup(),
-          status.getStoragePolicy());
+          status.getStoragePolicy(),
+          CompatibilityHelperLoader.getHelper().getErasureCodingPolicy(status));
       return fileInfo;
     }
   }
