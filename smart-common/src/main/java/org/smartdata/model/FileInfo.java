@@ -301,7 +301,7 @@ public class FileInfo {
 
     public Builder setErasureCodingPolicy(byte erasureCodingPolicy) {
         this.erasureCodingPolicy = erasureCodingPolicy;
-      return this;
+        return this;
     }
 
     public FileInfo build() {
