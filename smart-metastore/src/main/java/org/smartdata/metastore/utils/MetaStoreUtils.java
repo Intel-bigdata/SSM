@@ -177,12 +177,8 @@ public class MetaStoreUtils {
           "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
           "CREATE INDEX cached_file_path_idx ON cached_file (path);",
           "CREATE TABLE ec_policy (\n"
-              + "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-              + "  name varchar(255) DEFAULT NULL,\n"
-              + "  cell_size int(11) DEFAULT NULL,\n"
-              + "  data_unit_num int(11) DEFAULT NULL,\n"
-              + "  parity_unit_num int(11) DEFAULT NULL,\n"
-              + "  codec_name varchar(64) DEFAULT NULL\n"
+              + "  id tinyint(1) NOT NULL PRIMARY KEY,\n"
+              + "  policy_name varchar(255) NOT NULL\n"
               + ") ;",
           "CREATE TABLE file (\n"
               + "  path varchar(1000) NOT NULL,\n"
@@ -197,7 +193,7 @@ public class MetaStoreUtils {
               + "  owner varchar(255) DEFAULT NULL,\n"
               + "  owner_group varchar(255) DEFAULT NULL,\n"
               + "  permission smallint(6) DEFAULT NULL,\n"
-              + "  ec_policy_id smallint(6) DEFAULT NULL\n"
+              + "  ec_policy_id tinyint(1) DEFAULT NULL\n"
               + ") ;",
           "CREATE INDEX file_fid_idx ON file (fid);",
           "CREATE INDEX file_path_idx ON file (path);",

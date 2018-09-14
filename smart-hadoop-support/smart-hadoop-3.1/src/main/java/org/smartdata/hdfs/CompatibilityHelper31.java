@@ -37,9 +37,7 @@ import org.smartdata.hdfs.action.move.StorageGroup;
 
 import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
+import java.util.*;
 
 public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
@@ -229,5 +227,20 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       }
     }
     return (byte) -1;
+  }
+
+  @Override
+  public Map<Byte, String> getErasueCodingPolicies(DFSClient dfsClient) throws IOException {
+    Map<Byte, String> policies = new HashMap<>();
+    /**
+     * The replication policy is excluded by the get method of client,
+     * but it should also be put. Its id is always 0.
+     */
+    policies.put((byte) 0, SystemErasureCodingPolicies.getReplicationPolicy().getName());
+    for (ErasureCodingPolicyInfo policyInfo : dfsClient.getErasureCodingPolicies()) {
+      ErasureCodingPolicy policy = policyInfo.getPolicy();
+      policies.put(policy.getId(), policy.getName());
+    }
+    return policies;
   }
 }
