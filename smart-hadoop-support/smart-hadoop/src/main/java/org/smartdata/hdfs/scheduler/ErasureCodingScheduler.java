@@ -111,6 +111,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.SUCCESS;
     }
 
+    // check file lock merely for ec & unec action
     if (fileLock.contains(srcPath)) {
       return ScheduleResult.FAIL;
     }
@@ -132,7 +133,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   private String createTmpName(LaunchAction action) {
-    // need update to DB
     String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String fileName;
     int index = path.lastIndexOf("/");
@@ -151,6 +151,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     return tmpName;
   }
 
+  @Override
   public void onActionFinished(ActionInfo actionInfo) {
     if (actionInfo.getActionName().equals(ecActionID) ||
         actionInfo.getActionName().equals(unecActionID)) {
