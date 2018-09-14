@@ -16,8 +16,9 @@
  */
 
 
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit, ViewChild, ElementRef} from '@angular/core';
 import {FormControl, Validators} from '@angular/forms';
+import { SwalComponent } from '@toverux/ngx-sweetalert2';
 
 @Component({
   selector: 'app-login',
@@ -26,6 +27,8 @@ import {FormControl, Validators} from '@angular/forms';
 })
 export class LoginComponent implements OnInit {
 
+  @ViewChild('nameInput') nameInput: ElementRef;
+  @ViewChild('deleteSwal') private deleteSwal: SwalComponent;
   loginName: string = "";
   password: string = "";
 
@@ -34,9 +37,16 @@ export class LoginComponent implements OnInit {
   ]);
 
   ngOnInit() {
+
   }
 
-  loginBtn() {
+  login(): void {
+    if (this.loginName === "" || this.password === "") {
+      this.deleteSwal.show();
+      return;
+    }
+
     console.log(this.loginName + this.password);
+
   }
 }

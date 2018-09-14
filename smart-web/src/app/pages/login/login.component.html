@@ -28,19 +28,24 @@
         <div class="form-row">
           <label>User Name:</label>
           <mat-input-container>
-            <input type="text" [(ngModel)]="loginName" matInput placeholder="Login Name"/>
+            <input type="text" #nameInput [(ngModel)]="loginName" matInput placeholder="Login Name"/>
           </mat-input-container>
         </div>
         <div class="form-row">
           <label>Password:</label>
           <mat-input-container>
-            <input type="password" [(ngModel)]="password" matInput placeholder="Password"/>
+            <input type="password" id="password" [(ngModel)]="password" matInput placeholder="Password"/>
           </mat-input-container>
         </div>
       </div>
       <div class="card-footer">
-        <button mat-button (click)="loginBtn()">LET'S GO</button>
+        <button mat-button (click)="login()">LET'S GO</button>
       </div>
+      <swal
+        #deleteSwal
+        title = "The username and password that you entered don't match."
+        type="error">
+      </swal>
     </div>
   </div>
 </main>

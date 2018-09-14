@@ -37,7 +37,7 @@
   position: relative;
   padding: 20px;
   display: inline-block;
-  margin-top: 120px;
+  margin-top: 20vh;
   top: -90px;
   animation-name: card;
   animation-duration: 600ms;
@@ -104,5 +104,13 @@
 
   button {
     color: #007aff;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .form-row {
+    label {
+      display: none;
+    }
   }
 }

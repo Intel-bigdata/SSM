@@ -31,6 +31,7 @@ import {
   MatIconModule
 } from '@angular/material';
 import { AceEditorModule } from'ng2-ace-editor';
+import { SweetAlert2Module } from '@toverux/ngx-sweetalert2';
 
 import { AppComponent } from './app.component';
 import { routing } from "./app.routers";
@@ -67,7 +68,8 @@ import { RuleComponent } from './pages/rule/rule.component';
     MatCheckboxModule,
     MatIconModule,
     AceEditorModule,
-    routing
+    routing,
+    SweetAlert2Module.forRoot()
   ],
   providers: [],
   bootstrap: [AppComponent]

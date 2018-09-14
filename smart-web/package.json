@@ -1,6 +1,6 @@
 {
   "name": "smart-web",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rimraf dist && rimraf .tmp",
@@ -24,11 +24,13 @@
     "@angular/platform-browser": "^5.2.6",
     "@angular/platform-browser-dynamic": "^5.2.6",
     "@angular/router": "^5.2.6",
+    "@toverux/ngx-sweetalert2": "^4.0.0",
     "classlist.js": "^1.1.20150312",
     "core-js": "^2.4.1",
     "material-design-icons": "^3.0.1",
     "ng2-ace-editor": "^0.3.8",
     "rxjs": "^5.5.6",
+    "sweetalert2": "^7.26.28",
     "web-animations-js": "^2.3.1",
     "zone.js": "^0.8.19"
   },
