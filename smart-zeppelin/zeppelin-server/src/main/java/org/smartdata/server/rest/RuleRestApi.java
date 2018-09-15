@@ -70,7 +70,7 @@ public class RuleRestApi {
   public Response deleteRule(@PathParam("ruleId") String ruleId) {
     try {
       Long longNumber = Long.parseLong(ruleId);
-      smartEngine.getRuleManager().deleteRule(longNumber, false);
+      smartEngine.getRuleManager().deleteRule(longNumber, true);
       return new JsonResponse<>(Response.Status.OK).build();
     } catch (Exception e) {
       logger.error("Exception in RuleRestApi while deleting rule ", e);
