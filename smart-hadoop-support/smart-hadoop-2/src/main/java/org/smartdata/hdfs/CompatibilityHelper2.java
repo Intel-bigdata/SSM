@@ -32,6 +32,7 @@ import org.smartdata.hdfs.action.move.StorageGroup;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 public class CompatibilityHelper2 {
   public int getReadTimeOutConstant() {
@@ -71,5 +72,9 @@ public class CompatibilityHelper2 {
 
   public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {
     return (byte) 0;
+  }
+
+  public Map<Byte, String> getErasueCodingPolicies(DFSClient dfsClient) throws IOException {
+    return null;
   }
 }

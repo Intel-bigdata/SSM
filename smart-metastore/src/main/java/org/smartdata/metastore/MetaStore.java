@@ -32,6 +32,7 @@ import org.smartdata.metastore.dao.ClusterInfoDao;
 import org.smartdata.metastore.dao.CmdletDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
+import org.smartdata.metastore.dao.ErasureCodingPolicyDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.FileStateDao;
@@ -58,6 +59,7 @@ import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.DetailedRuleInfo;
+import org.smartdata.model.ErasureCodingPolicyInfo;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
@@ -120,6 +122,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private FileStateDao fileStateDao;
   private GeneralDao generalDao;
   private SmallFileDao smallFileDao;
+  private ErasureCodingPolicyDao ecDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -145,6 +148,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     fileStateDao = new FileStateDao(pool.getDataSource());
     generalDao = new GeneralDao(pool.getDataSource());
     smallFileDao = new SmallFileDao(pool.getDataSource());
+    ecDao = new ErasureCodingPolicyDao(pool.getDataSource());
   }
 
   private void initDbInfo() throws MetaStoreException {
@@ -372,6 +376,22 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void deleteAllFileInfo() throws MetaStoreException {
     try {
       fileInfoDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void deleteAllEcPolicies() throws MetaStoreException {
+    try {
+      ecDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertEcPolicies(List<ErasureCodingPolicyInfo> ecInfos) throws MetaStoreException {
+    try {
+      ecDao.insert(ecInfos);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
