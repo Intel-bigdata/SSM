@@ -34,6 +34,7 @@ import org.smartdata.hdfs.action.move.StorageGroup;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 public interface CompatibilityHelper {
   String[] getStorageTypes(LocatedBlock lb);
@@ -92,4 +93,6 @@ public interface CompatibilityHelper {
   byte getErasureCodingPolicy(HdfsFileStatus fileStatus);
 
   byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
+
+  Map<Byte, String> getErasueCodingPolicies(DFSClient client) throws IOException;
 }
