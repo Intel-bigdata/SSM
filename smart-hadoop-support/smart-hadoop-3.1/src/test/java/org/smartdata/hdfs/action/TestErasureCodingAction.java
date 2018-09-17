@@ -19,6 +19,8 @@ package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.fs.Path;
 import static org.junit.Assert.*;
+
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -30,8 +32,10 @@ public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
   public void testEcActionForFile() throws Exception {
     String srcPath = "/ec/test_file";
     createTestFile(srcPath, 1000);
-    // the file is stored in replication
-    assertEquals(null, dfsClient.getErasureCodingPolicy(srcPath));
+    dfsClient.setStoragePolicy(srcPath, "COLD");
+    HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(srcPath);
+    // The file is expected to be stored in replication.
+    assertEquals(null, srcFileStatus.getErasureCodingPolicy());
 
     ErasureCodingAction ecAction = new ErasureCodingAction();
     ecAction.setContext(smartContext);
@@ -43,8 +47,20 @@ public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
     ecAction.init(args);
     ecAction.run();
     assertTrue(ecAction.getExpectedAfterRun());
-    // the file is stored in ec with default policy
-    assertEquals(dfsClient.getErasureCodingPolicy(srcPath), ecPolicy);
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
+    // The file is expected to be stored in EC with default policy.
+    assertEquals(ecPolicy, fileStatus.getErasureCodingPolicy());
+    // Examine the consistency of file attributes.
+    assertEquals(srcFileStatus.getLen(), fileStatus.getLen());
+    assertEquals(srcFileStatus.getModificationTime(), fileStatus.getModificationTime());
+    assertEquals(srcFileStatus.getAccessTime(), fileStatus.getAccessTime());
+    assertEquals(srcFileStatus.getOwner(), fileStatus.getOwner());
+    assertEquals(srcFileStatus.getGroup(), fileStatus.getGroup());
+    assertEquals(srcFileStatus.getPermission(), fileStatus.getPermission());
+    // UNDEF storage policy makes the converted file's storage type uncertain, so it is excluded.
+    if (srcFileStatus.getStoragePolicy() != 0) {
+      assertEquals(srcFileStatus.getStoragePolicy(), fileStatus.getStoragePolicy());
+    }
   }
 
   @Test

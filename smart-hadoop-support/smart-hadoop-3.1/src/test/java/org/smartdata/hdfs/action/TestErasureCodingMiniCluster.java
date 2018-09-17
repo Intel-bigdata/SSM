@@ -26,7 +26,9 @@ import org.junit.Before;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.hdfs.MiniClusterHarness;
+import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 
 import java.io.IOException;
 
@@ -42,15 +44,15 @@ public class TestErasureCodingMiniCluster {
   @Before
   public void init() throws Exception {
     SmartConf conf = new SmartConf();
-//    super.initConf(conf);
     conf.setLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY, BLOCK_SIZE);
-    conf.setLong(DFSConfigKeys.DFS_NAMENODE_MIN_BLOCK_SIZE_KEY, DFSConfigKeys.DFS_NAMENODE_MIN_BLOCK_SIZE_DEFAULT);
-    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY, DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_DEFAULT);
+    conf.setLong(DFSConfigKeys.DFS_NAMENODE_MIN_BLOCK_SIZE_KEY,
+        DFSConfigKeys.DFS_NAMENODE_MIN_BLOCK_SIZE_DEFAULT);
+    conf.setInt(DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_KEY,
+        DFSConfigKeys.DFS_BYTES_PER_CHECKSUM_DEFAULT);
     // use ErasureCodeConstants.XOR_2_1_SCHEMA
     ecPolicy = SystemErasureCodingPolicies.getPolicies().get(3);
-    cluster = new MiniDFSCluster.Builder(conf).
-        numDataNodes(ecPolicy.getNumDataUnits() + ecPolicy.getNumParityUnits()).
-        build();
+    cluster = MiniClusterFactory.get().
+        createWithStorages(ecPolicy.getNumDataUnits() + ecPolicy.getNumParityUnits(), conf);
     // Add namenode URL to smartContext
     conf.set(SmartConfKeys.SMART_DFS_NAMENODE_RPCSERVER_KEY,
         "hdfs://" + cluster.getNameNode().getNameNodeAddressHostPortString());

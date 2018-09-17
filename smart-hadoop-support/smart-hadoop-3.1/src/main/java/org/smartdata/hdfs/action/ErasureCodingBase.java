@@ -62,6 +62,11 @@ abstract public class ErasureCodingBase extends HdfsAction {
       FsPermission permission = fileStatus.getPermission();
       out = dfsClient.create(ecTmpPath, permission, EnumSet.of(CreateFlag.CREATE), true,
           (short) 1, blockSize, null, bufferSize, null, null, ecPolicyName);
+      // Keep storage policy according with original file except UNDEF storage policy
+      String storagePolicyName = dfsClient.getStoragePolicy(srcPath).getName();
+      if (!storagePolicyName.equals("UNDEF")) {
+        dfsClient.setStoragePolicy(ecTmpPath, storagePolicyName);
+      }
       long bytesRemaining = fileStatus.getLen();
       byte[] buf = new byte[bufferSize];
       while (bytesRemaining > 0L) {

@@ -126,8 +126,8 @@ public class ErasureCodingAction extends ErasureCodingBase {
       }
       convert(conf, ecPolicyName);
       /**
-       * The append operation will change the modification accordingly,
-       * so we use the filestatus obtained before append to set ecTmp file's most attributes
+       * The append operation will change the modification time accordingly,
+       * so we use the FileStatus obtained before append to set ecTmp file's most attributes
        */
       setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);

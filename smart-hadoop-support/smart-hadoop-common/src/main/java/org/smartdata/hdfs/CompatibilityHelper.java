@@ -94,5 +94,5 @@ public interface CompatibilityHelper {
 
   byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
 
-  Map<Byte, String> getErasueCodingPolicies(DFSClient client) throws IOException;
+  Map<Byte, String> getErasureCodingPolicies(DFSClient client) throws IOException;
 }
