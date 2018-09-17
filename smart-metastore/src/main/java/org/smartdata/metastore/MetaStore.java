@@ -397,6 +397,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<ErasureCodingPolicyInfo> getAllEcPolicies() throws MetaStoreException {
+    try {
+      return ecDao.getAllEcPolicies();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteFileByPath(String path) throws MetaStoreException {
     try {
       fileInfoDao.deleteByPath(path);

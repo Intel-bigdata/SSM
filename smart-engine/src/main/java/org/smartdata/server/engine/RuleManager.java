@@ -34,6 +34,7 @@ import org.smartdata.model.rule.TimeBasedScheduleInfo;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
+import org.smartdata.server.engine.rule.ErasureCodingPlugin;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.FileCopy2S3Plugin;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
@@ -79,9 +80,12 @@ public class RuleManager extends AbstractService {
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
 
-    RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
-    RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
-    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context, cmdletManager));
+    if (serverContext.getServiceMode() == ServiceMode.HDFS) {
+      RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
+      RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
+      RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context, cmdletManager));
+      RuleExecutorPluginManager.addPlugin(new ErasureCodingPlugin(context));
+    }
   }
 
   /**
