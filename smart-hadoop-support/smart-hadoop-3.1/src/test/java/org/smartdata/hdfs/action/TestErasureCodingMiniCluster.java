@@ -27,8 +27,6 @@ import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.MiniClusterFactory;
-import org.smartdata.hdfs.MiniClusterHarness;
-import org.smartdata.hdfs.MiniClusterWithStoragesHarness;
 
 import java.io.IOException;
 
