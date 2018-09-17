@@ -120,7 +120,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
     try {
       // a file only with replication policy can be appended.
       if (srcEcPolicy == null) {
-        // append the file to acquire the lock to avoid modifying, no real appending occurs.
+        // append the file to acquire the lock to avoid modifying, real appending wouldn't occur.
         outputStream =
             dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       }
@@ -135,9 +135,9 @@ public class ErasureCodingAction extends ErasureCodingBase {
       if (srcEcPolicy == null) {
         appendResult("The previous EC policy is replication.");
       } else {
-        appendResult(String.format("The previous EC policy is {}.", srcEcPolicy.getName()));
+        appendResult(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
       }
-      appendResult(String.format("The current EC policy is {}.", ecPolicyName));
+      appendResult(String.format("The current EC policy is %s.", ecPolicyName));
     } catch (ActionException ex) {
       try {
         if (dfsClient.getFileInfo(ecTmpPath) != null) {
