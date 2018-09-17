@@ -234,7 +234,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   }
 
   @Override
-  public Map<Byte, String> getErasueCodingPolicies(DFSClient dfsClient) throws IOException {
+  public Map<Byte, String> getErasureCodingPolicies(DFSClient dfsClient) throws IOException {
     Map<Byte, String> policies = new HashMap<>();
     /**
      * The replication policy is excluded by the get method of client,

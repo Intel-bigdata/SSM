@@ -108,7 +108,7 @@ public class NamespaceFetcher {
     try {
       metaStore.deleteAllEcPolicies();
       Map<Byte, String> idToPolicyName =
-          CompatibilityHelperLoader.getHelper().getErasueCodingPolicies(client);
+          CompatibilityHelperLoader.getHelper().getErasureCodingPolicies(client);
       if (idToPolicyName != null) {
         ArrayList<ErasureCodingPolicyInfo> ecInfos = new ArrayList<>();
         for (Byte id : idToPolicyName.keySet()) {
