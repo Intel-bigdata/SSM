@@ -19,6 +19,8 @@ package org.smartdata.hdfs.action;
 
 import org.apache.hadoop.fs.Path;
 import static org.junit.Assert.*;
+
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -31,9 +33,11 @@ public class TestUnErasureCodingAction extends TestErasureCodingMiniCluster {
     String testDir = "/test_dir";
     dfs.mkdirs(new Path(testDir));
     dfs.setErasureCodingPolicy(new Path(testDir), ecPolicy.getName());
-    // create test file, its EC policy should be consistent with parent dir, i.e., ecPolicy
+    // create test file, its EC policy should be consistent with parent dir, i.e., ecPolicy.
     String srcPath = testDir + "/ec_file";
     createTestFile(srcPath, 1000);
+    dfsClient.setStoragePolicy(srcPath, "COLD");
+    HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(srcPath);
     assertEquals(dfsClient.getErasureCodingPolicy(srcPath), ecPolicy);
 
     UnErasureCodingAction unEcAction = new UnErasureCodingAction();
@@ -45,7 +49,19 @@ public class TestUnErasureCodingAction extends TestErasureCodingMiniCluster {
     unEcAction.init(args);
     unEcAction.run();
     assertTrue(unEcAction.getExpectedAfterRun());
-    assertNull(dfsClient.getErasureCodingPolicy(srcPath));
+    HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
+    assertNull(fileStatus.getErasureCodingPolicy());
+    // Examine the consistency of file attributes.
+    assertEquals(srcFileStatus.getLen(), fileStatus.getLen());
+    assertEquals(srcFileStatus.getModificationTime(), fileStatus.getModificationTime());
+    assertEquals(srcFileStatus.getAccessTime(), fileStatus.getAccessTime());
+    assertEquals(srcFileStatus.getOwner(), fileStatus.getOwner());
+    assertEquals(srcFileStatus.getGroup(), fileStatus.getGroup());
+    assertEquals(srcFileStatus.getPermission(), fileStatus.getPermission());
+    // UNDEF storage policy makes the converted file's storage type uncertain, so it is excluded.
+    if (srcFileStatus.getStoragePolicy() != 0) {
+      assertEquals(srcFileStatus.getStoragePolicy(), fileStatus.getStoragePolicy());
+    }
   }
 
   @Test
@@ -63,7 +79,7 @@ public class TestUnErasureCodingAction extends TestErasureCodingMiniCluster {
     unEcAction.run();
     assertNull(dfs.getErasureCodingPolicy(new Path(testDir)));
 
-    // create test file, its EC policy is expected to be replication
+    // Create test file, its EC policy is expected to be replication.
     String srcPath = testDir + "/ec_file";
     createTestFile(srcPath, 1000);
     assertNull(dfs.getErasureCodingPolicy(new Path(srcPath)));

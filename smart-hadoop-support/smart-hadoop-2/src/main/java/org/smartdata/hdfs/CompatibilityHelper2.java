@@ -74,7 +74,7 @@ public class CompatibilityHelper2 {
     return (byte) 0;
   }
 
-  public Map<Byte, String> getErasueCodingPolicies(DFSClient dfsClient) throws IOException {
+  public Map<Byte, String> getErasureCodingPolicies(DFSClient dfsClient) throws IOException {
     return null;
   }
 }

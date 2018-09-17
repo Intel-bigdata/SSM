@@ -102,7 +102,7 @@ public class ErasureCodingPlugin implements RuleExecutorPlugin {
         return;
       }
       Map<Byte, String> idToPolicyName =
-          CompatibilityHelperLoader.getHelper().getErasueCodingPolicies(client);
+          CompatibilityHelperLoader.getHelper().getErasureCodingPolicies(client);
       if (idToPolicyName != null) {
         ecInfos.clear();
         for (Byte id : idToPolicyName.keySet()) {
