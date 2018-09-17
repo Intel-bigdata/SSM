@@ -80,7 +80,7 @@ public class CmdletRestApi {
       return new JsonResponse<>(Response.Status.CREATED, smartEngine.getCmdletManager()
               .submitCmdlet(args)).build();
     } catch (Exception e) {
-      logger.error("Exception in ActionRestApi while adding cmdlet", e);
+      logger.error("Exception in ActionRestApi while adding cmdlet: " + e.getLocalizedMessage());
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
               e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }

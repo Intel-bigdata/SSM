@@ -105,6 +105,10 @@ public class FileObject extends SmartObject {
     PROPERTIES.put("isDir",
         new Property("isDir", ValueType.BOOLEAN,
             null, "file", "is_dir", false));
+    PROPERTIES.put("ecPolicy",
+        new Property("ecPolicy", ValueType.STRING,
+            null, "file", null, false,
+            "(SELECT policy_name FROM ec_policy WHERE id = file.ec_policy_id)"));
   }
 
   public FileObject() {

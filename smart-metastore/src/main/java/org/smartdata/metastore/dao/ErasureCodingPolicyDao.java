@@ -53,7 +53,7 @@ public class ErasureCodingPolicyDao {
         new Object[]{policyName}, new EcPolicyRowMapper());
   }
 
-  public List<ErasureCodingPolicyInfo> getAllEcPolicies() throws MetaStoreException {
+  public List<ErasureCodingPolicyInfo> getAllEcPolicies() {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     return jdbcTemplate.query("SELECT * FROM " + TABLE_NAME, new EcPolicyRowMapper());
   }
