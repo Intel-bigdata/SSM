@@ -145,6 +145,7 @@ public class CompressionAction extends HdfsAction {
       compressionFileState.setCompressedLength(destFile.getLen());
       compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
     }
+    compressionFileState.setBufferSize(bufferSize);
     if (compressionFileInfo.needReplace()) {
       // Add to temp path
       dfsClient.setXAttr(compressionFileInfo.getTempPath(),

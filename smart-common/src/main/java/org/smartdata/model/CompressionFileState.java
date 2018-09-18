@@ -93,6 +93,10 @@ public class CompressionFileState extends FileState implements Serializable {
     return bufferSize;
   }
 
+  public void setBufferSize(int bufferSize) {
+    this.bufferSize = bufferSize;
+  }
+
   public long getOriginalLength() {
     return originalLength;
   }

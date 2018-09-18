@@ -71,12 +71,12 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     // initDB();
-    int arraySize = 1024 * 1024 * 8;
+    int arraySize = 1024 * 1024 * 80;
     String fileName = "/ssm/compression/file1";
     byte[] bytes = prepareFile(fileName, arraySize);
     MetaStore metaStore = ssm.getMetaStore();
 
-    int bufSize = 1024 * 1024;
+    int bufSize = 1024 * 1024 * 10;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
         + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
