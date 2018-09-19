@@ -123,9 +123,11 @@ public class CompressionAction extends HdfsAction {
       short replication = srcFile.getReplication();
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();
+      appendLog("File length: " + fileSize);
       //The capacity of originalPos and compressedPos is maxSplit (3000) in database
-      this.Calculatedbuffersize = (int) fileSize / maxSplit;
-
+      this.Calculatedbuffersize = (int) (fileSize / maxSplit);
+      appendLog("Calculatedbuffersize: " + Calculatedbuffersize);
+      appendLog("MaxSplit: " + maxSplit);
       //Determine the actual buffersize
       if (UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize) {
         if (bufferSize <= Calculatedbuffersize) {
@@ -146,6 +148,9 @@ public class CompressionAction extends HdfsAction {
       compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
+    String compressionInfoJson = new Gson().toJson(compressionFileInfo);
+    appendResult(compressionInfoJson);
+    LOG.warn(compressionInfoJson);
     if (compressionFileInfo.needReplace()) {
       // Add to temp path
       dfsClient.setXAttr(compressionFileInfo.getTempPath(),
@@ -157,9 +162,6 @@ public class CompressionAction extends HdfsAction {
           xAttrName, SerializationUtils.serialize(compressionFileState),
           EnumSet.of(XAttrSetFlag.CREATE));
     }
-    String compressionInfoJson = new Gson().toJson(compressionFileInfo);
-    appendResult(compressionInfoJson);
-    LOG.warn(compressionInfoJson);
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {
