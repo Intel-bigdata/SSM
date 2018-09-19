@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,9 +16,11 @@
  */
 
 
-import {Component, OnInit, ViewChild, ElementRef} from '@angular/core';
-import {FormControl, Validators} from '@angular/forms';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { SwalComponent } from '@toverux/ngx-sweetalert2';
+
+import { Router} from '@angular/router';
+import { UserService } from '../../services/user/user.service';
 
 @Component({
   selector: 'app-login',
@@ -28,21 +30,22 @@ import { SwalComponent } from '@toverux/ngx-sweetalert2';
 export class LoginComponent implements OnInit {
 
   @ViewChild('nameInput') nameInput: ElementRef;
-  @ViewChild('deleteSwal') private deleteSwal: SwalComponent;
+  @ViewChild('loginErrorSwal') private loginErrorSwal: SwalComponent;
   loginName: string = "";
   password: string = "";
 
-  loginFormControl = new FormControl('', [
-    Validators.required
-  ]);
+  constructor( private userService: UserService, private router: Router ) { }
 
-  ngOnInit() {
-
+  ngOnInit(): void {
+    if (this.userService.checkLogged()) {
+      // Redirect to app when user has logged.
+      this.router.navigateByUrl('/');
+    }
   }
 
   login(): void {
     if (this.loginName === "" || this.password === "") {
-      this.deleteSwal.show();
+      this.loginErrorSwal.show();
       return;
     }
 

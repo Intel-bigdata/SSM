@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,22 +28,22 @@ import {
   MatInputModule,
   MatMenuModule,
   MatCheckboxModule,
-  MatIconModule
-} from '@angular/material';
+  MatIconModule } from '@angular/material';
 import { AceEditorModule } from'ng2-ace-editor';
+import { routing } from "./app.routers";
 import { SweetAlert2Module } from '@toverux/ngx-sweetalert2';
 
 import { AppComponent } from './app.component';
-import { routing } from "./app.routers";
+import { SidebarComponent } from './components/sidebar/sidebar.component';
+import { NavbarComponent } from './components/navbar/navbar.component';
 
-import { SidebarComponent } from "./components/sidebar/sidebar.component";
-import { NavbarComponent } from "./components/navbar/navbar.component";
-
-import { RootComponent } from "./pages/root/root.component";
+import { RootComponent } from './pages/root/root.component';
 import { LoginComponent } from './pages/login/login.component';
 import { HomeComponent } from './pages/home/home.component';
 import { RuleComponent } from './pages/rule/rule.component';
 
+import { CookieService } from 'ngx-cookie-service';
+import { UserService } from './services/user/user.service';
 
 @NgModule({
   declarations: [
@@ -71,7 +71,10 @@ import { RuleComponent } from './pages/rule/rule.component';
     routing,
     SweetAlert2Module.forRoot()
   ],
-  providers: [],
+  providers: [
+    CookieService,
+    UserService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

@@ -16,11 +16,29 @@
  */
 
 
-// The file contents for the current environment will overwrite these during build.
-// The build system defaults to the dev environment which uses `environment.ts`, but if you do
-// `ng build --env=prod` then `environment.prod.ts` will be used instead.
-// The list of which env maps to which file can be found in `.angular-cli.json`.
+import { Injectable } from '@angular/core';
+import { CookieService } from 'ngx-cookie-service';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-export const environment = {
-  production: false
+const httpOptions = {
+  headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
 };
+
+@Injectable()
+export class UserService {
+
+  constructor(
+    private http: HttpClient,
+    private cookieService: CookieService ) { }
+
+  /**
+   * get the login status of user
+   */
+  checkLogged(): boolean {
+    return this.cookieService.check('JSESSIONID');
+  }
+
+  userLogin(): void {
+
+  }
+}
