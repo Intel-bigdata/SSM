@@ -35,7 +35,11 @@ public class HdfsActionFactory extends AbstractActionFactory {
       "org.smartdata.hdfs.action.ListErasureCodingPolicy",
       "org.smartdata.hdfs.action.CheckErasureCodingPolicy",
       "org.smartdata.hdfs.action.ErasureCodingAction",
-      "org.smartdata.hdfs.action.UnErasureCodingAction");
+      "org.smartdata.hdfs.action.UnErasureCodingAction",
+      "org.smartdata.hdfs.action.AddErasureCodingPolicy",
+      "org.smartdata.hdfs.action.RemoveErasureCodingPolicy",
+      "org.smartdata.hdfs.action.EnableErasureCodingPolicy",
+      "org.smartdata.hdfs.action.DisableErasureCodingPolicy");
 
   static {
     addAction(AllSsdFileAction.class);
