@@ -34,7 +34,7 @@
         <div class="form-row">
           <label>Password:</label>
           <mat-input-container>
-            <input type="password" id="password" [(ngModel)]="password" matInput placeholder="Password"/>
+            <input type="password" id="password" [(ngModel)]="password" matInput placeholder="Password" (keyup.enter)="login()"/>
           </mat-input-container>
         </div>
       </div>

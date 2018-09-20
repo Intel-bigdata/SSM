@@ -16,24 +16,18 @@
  */
 
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CookieService } from 'ngx-cookie-service';
+import { TestBed, inject } from '@angular/core/testing';
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './root.component.html',
-  styleUrls: ['./root.component.scss']
-})
-export class RootComponent implements OnInit, OnDestroy {
-  public id: number;
-  public backgroundColor: string;
-  constructor(private cookieService: CookieService) {
-  }
+import { HttpService } from './http.service';
 
-  ngOnInit() {
-    console.log(this.cookieService.check('JSESSIONID'));
-  }
+describe('HttpService', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [HttpService]
+    });
+  });
 
-  ngOnDestroy() {
-  }
-}
+  it('should be created', inject([HttpService], (service: HttpService) => {
+    expect(service).toBeTruthy();
+  }));
+});

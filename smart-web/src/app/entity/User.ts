@@ -16,24 +16,20 @@
  */
 
 
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CookieService } from 'ngx-cookie-service';
+export class User {
+  principal: string;
+  roles: string[];
+  ticket: string;
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './root.component.html',
-  styleUrls: ['./root.component.scss']
-})
-export class RootComponent implements OnInit, OnDestroy {
-  public id: number;
-  public backgroundColor: string;
-  constructor(private cookieService: CookieService) {
-  }
-
-  ngOnInit() {
-    console.log(this.cookieService.check('JSESSIONID'));
-  }
-
-  ngOnDestroy() {
+  /**
+   * constructor of User.
+   * @param principal - a `string` of user principal
+   * @param roles - a `string[]` of user roles
+   * @param ticket - a `string` of user token
+   */
+  constructor(principal: string, roles: string[], ticket: string) {
+    this.principal = principal;
+    this.roles = [...roles];
+    this.ticket = ticket;
   }
 }

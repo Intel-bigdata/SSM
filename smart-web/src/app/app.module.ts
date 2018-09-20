@@ -44,6 +44,8 @@ import { RuleComponent } from './pages/rule/rule.component';
 
 import { CookieService } from 'ngx-cookie-service';
 import { UserService } from './services/user/user.service';
+import { HttpService } from './services/http/http.service';
+import { BaseUrlService } from './services/baseUrl/baseUrl.service';
 
 @NgModule({
   declarations: [
@@ -73,6 +75,8 @@ import { UserService } from './services/user/user.service';
   ],
   providers: [
     CookieService,
+    BaseUrlService,
+    HttpService,
     UserService
   ],
   bootstrap: [AppComponent]

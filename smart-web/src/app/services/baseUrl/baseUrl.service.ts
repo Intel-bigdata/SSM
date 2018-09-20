@@ -24,7 +24,19 @@ export class BaseUrlService {
 
   constructor() { }
 
+  /**
+   *  get smart storage api root
+   *  @return a `string` of smart api root
+   */
   getRestApiRoot(): string {
     return environment.production ? '/smart/api/' : 'http://localhost:7045/smart/api/'
+  };
+
+  /**
+   * get user api root in zeppelin api
+   * @return a `string` of user api root
+   */
+  getUserApiRoot(): string {
+    return environment.production ? '/api/' : 'http://localhost:7045/api/'
   };
 }

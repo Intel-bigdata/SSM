@@ -37,6 +37,7 @@ export class LoginComponent implements OnInit {
   constructor( private userService: UserService, private router: Router ) { }
 
   ngOnInit(): void {
+    console.log(this.userService.checkLogged());
     if (this.userService.checkLogged()) {
       // Redirect to app when user has logged.
       this.router.navigateByUrl('/');
@@ -48,8 +49,15 @@ export class LoginComponent implements OnInit {
       this.loginErrorSwal.show();
       return;
     }
-
-    console.log(this.loginName + this.password);
-
+    this.userService.userLogin(this.loginName, this.password)
+      .subscribe(
+        () => {
+          this.router.navigateByUrl('/');
+        },
+        err => {
+          console.log(err);
+          this.loginErrorSwal.show();
+        }
+      );
   }
 }

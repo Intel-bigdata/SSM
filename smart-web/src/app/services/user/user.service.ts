@@ -18,27 +18,63 @@
 
 import { Injectable } from '@angular/core';
 import { CookieService } from 'ngx-cookie-service';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpService } from '../http/http.service';
 
-const httpOptions = {
-  headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
-};
+import { User } from '../../entity/User';
+
+import { Observable } from 'rxjs';
+import { tap } from "rxjs/operators";
+
 
 @Injectable()
 export class UserService {
 
+  user: User = undefined;
+
   constructor(
-    private http: HttpClient,
+    private httpService: HttpService,
     private cookieService: CookieService ) { }
 
   /**
-   * get the login status of user
+   * get the login status of user.
+   * @return a `boolean` of login status.
    */
   checkLogged(): boolean {
-    return this.cookieService.check('JSESSIONID');
+    if (this.cookieService.check('SSM_TICKET')) {
+      const userTicket = JSON.parse(this.cookieService.get('SSM_TICKET'));
+      this.setUser(userTicket.principal, userTicket.ticket);
+    }
+    return this.user !== undefined;
   }
 
-  userLogin(): void {
+  /**
+   * POST: user login.
+   * @param userName - a `string` of user name
+   * @param password - a `string` of user password
+   */
+  userLogin(userName: string, password: string): Observable<any> {
+    return this.httpService.userLogin(userName, password).pipe(
+      tap(res => {
+        console.log('user tap');
+        if (res.status === "OK") {
+          const userTicket = {
+            principal: res.body.principal,
+            ticket: res.body.ticket
+          };
+          this.setUser(userTicket.principal, userTicket.ticket);
+          this.cookieService.set('SSM_TICKET', JSON.stringify(userTicket));
+        }
+      })
+    );
+  }
 
+  /**
+   * set user info
+   * @param principal - a `string` of user principal
+   * @param ticket - a `string` of user ticket
+   */
+  setUser(principal: string, ticket: string): void {
+    //TODO add roles.
+    this.user = new User(principal, [], ticket);
   }
 }
