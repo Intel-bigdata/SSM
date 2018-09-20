@@ -138,6 +138,8 @@ public class SmartConfKeys {
   public static final long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
   public static final String SMART_ACTION_COPY_THROTTLE_MB_KEY = "smart.action.copy.throttle.mb";
   public static final long SMART_ACTION_COPY_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
+  public static final String SMART_ACTION_EC_THROTTLE_MB_KEY = "smart.action.ec.throttle.mb";
+  public static final long SMART_ACTION_EC_THROTTLE_MB_DEFAULT = 0L;
   public static final String SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY =
     "smart.action.local.execution.disabled";
   public static final boolean SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT = false;

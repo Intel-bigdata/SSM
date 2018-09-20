@@ -17,11 +17,13 @@
  */
 package org.smartdata.hdfs.scheduler;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -48,11 +50,18 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
+  private long throttleInMb;
+  private RateLimiter rateLimiter;
 
   public ErasureCodingScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
+    this.throttleInMb = conf.getLong(
+        SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_KEY, SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_DEFAULT);
+    if (this.throttleInMb > 0) {
+      this.rateLimiter = RateLimiter.create(throttleInMb);
+    }
   }
 
   public List<String> getSupportedActions() {
@@ -117,6 +126,12 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.FAIL;
     }
     try {
+      if (isLimitedByThrottle(srcPath)) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Failed to schedule {} due to limitation of throttle!", actionInfo);
+        }
+        return ScheduleResult.RETRY;
+      }
       if (!metaStore.getFile(srcPath).isdir()) {
         // For ec or unec, add ecTmp argument
         String tmpName = createTmpName(action);
@@ -158,5 +173,13 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
         actionInfo.getActionName().equals(unecActionID)) {
       fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
     }
+  }
+
+  public boolean isLimitedByThrottle(String srcPath) throws MetaStoreException {
+    if (this.rateLimiter == null) {
+      return false;
+    }
+    int fileLengthInMb = (int) metaStore.getFile(srcPath).getLength() >> 20;
+    return rateLimiter.tryAcquire(fileLengthInMb);
   }
 }
