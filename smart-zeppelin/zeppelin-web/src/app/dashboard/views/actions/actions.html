@@ -96,7 +96,7 @@ under the License.
       </tbody>
     </table>
   </div>
-  
+
   <div class="a">
     <table width="450px" class="a table-bordered">
       <thead ng-show="totalNumber > 0">
@@ -111,7 +111,7 @@ under the License.
       </tbody>
     </table>
   </div>
-  
+
   <div width="825px">
     <table width="825px" class="a table-bordered">
       <thead ng-show="totalNumber > 0">
@@ -193,13 +193,5 @@ function getPosition(e) {
 function setPosition(ele, x, y) {
   ele.style.top = (y + 20) + 'px';
   ele.style.left = (x + 20) + 'px';
-}
-
-function setWidth(e) {
-  var id = document.getElementsByClassName("idCol");
-
-  for (i=0 ; i<tips.length; i++) {
-    setPosition(tips[i], x, y);
-  }
 }
 </script>
