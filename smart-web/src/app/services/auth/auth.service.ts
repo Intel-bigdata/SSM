@@ -16,49 +16,37 @@
  */
 
 
-.login-button {
-  position: relative;
-  padding: 10px 50px;
+import { Injectable } from '@angular/core';
+import { Router, CanActivate, CanActivateChild } from '@angular/router';
+import { UserService } from '../user/user.service';
 
-  &:before {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: inline-block;
-    border: 2px solid;
-    border-right-color: transparent;
-    border-bottom-color: transparent;
-    width: 50%;
-    height: 70%;
-    content: "";
-    transition: all 0.5s ease;
+@Injectable()
+export class AuthService implements CanActivate, CanActivateChild {
+
+  constructor(
+    private router: Router,
+    private userService: UserService
+  ) { }
+
+  /** sub router active able.
+   * @return a `boolean` of router active able
+   */
+  canActivate(): boolean {
+    if (!this.userService.checkLogged()) {
+      this.router.navigateByUrl('login');
+      return false;
+    }
+    return true;
   }
 
-  &:after {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    display: inline-block;
-    border: 2px solid;
-    border-left-color: transparent;
-    border-top-color: transparent;
-    width: 50%;
-    height: 70%;
-    content: "";
-    transition: all 0.5s ease;
-  }
-
-  &:hover {
-    color: #555555;
-
-    &:before {
-      width: 100%;
-      height: 100%;
+  /** child router active able.
+   * @return a `boolean` of child active able
+   */
+  canActivateChild(): boolean {
+    if (!this.userService.checkLogged()) {
+      this.router.navigateByUrl('login');
+      return false;
     }
-
-    &:after {
-      width: 100%;
-      height: 100%;
-    }
+    return true;
   }
 }

@@ -44,6 +44,7 @@ import { RuleComponent } from './pages/rule/rule.component';
 
 import { CookieService } from 'ngx-cookie-service';
 import { UserService } from './services/user/user.service';
+import { AuthService } from './services/auth/auth.service';
 import { HttpService } from './services/http/http.service';
 import { BaseUrlService } from './services/baseUrl/baseUrl.service';
 
@@ -75,9 +76,10 @@ import { BaseUrlService } from './services/baseUrl/baseUrl.service';
   ],
   providers: [
     CookieService,
-    BaseUrlService,
+    UserService,
+    AuthService,
     HttpService,
-    UserService
+    BaseUrlService
   ],
   bootstrap: [AppComponent]
 })

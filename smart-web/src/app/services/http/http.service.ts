@@ -34,8 +34,8 @@ export class HttpService {
 
   /**
    * POST: user login.
-   * @param userName - name of user
-   * @param password - password of user
+   * @param userName - a `string` of user name
+   * @param password - a `string` of user password
    */
   userLogin(userName: string, password: string): Observable<any> {
     const httpOptions = {
@@ -60,7 +60,7 @@ export class HttpService {
       console.error(operation, error); // log to console instead
 
       // Let the app keep running by returning an empty result.
-      // return setting result or http error text
+      // return setting result or http error text.
       return of( result ? result : error.error as T);
     };
   }

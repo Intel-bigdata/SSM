@@ -17,6 +17,7 @@
 
 
 import { Injectable } from '@angular/core';
+
 import { CookieService } from 'ngx-cookie-service';
 import { HttpService } from '../http/http.service';
 
@@ -24,7 +25,6 @@ import { User } from '../../entity/User';
 
 import { Observable } from 'rxjs';
 import { tap } from "rxjs/operators";
-
 
 @Injectable()
 export class UserService {
@@ -55,7 +55,6 @@ export class UserService {
   userLogin(userName: string, password: string): Observable<any> {
     return this.httpService.userLogin(userName, password).pipe(
       tap(res => {
-        console.log('user tap');
         if (res.status === "OK") {
           const userTicket = {
             principal: res.body.principal,

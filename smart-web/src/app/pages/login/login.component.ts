@@ -44,6 +44,7 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  /** login event */
   login(): void {
     if (this.loginName === "" || this.password === "") {
       this.loginErrorSwal.show();

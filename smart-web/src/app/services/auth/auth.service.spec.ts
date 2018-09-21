@@ -16,20 +16,18 @@
  */
 
 
-import { RouterModule, Routes } from '@angular/router';
-import { AuthService } from './services/auth/auth.service';
+import { TestBed, inject } from '@angular/core/testing';
 
-import { RootComponent } from "./pages/root/root.component";
-import { LoginComponent } from "./pages/login/login.component";
-import { HomeComponent } from "./pages/home/home.component";
-import { RuleComponent } from "./pages/rule/rule.component";
+import { AuthService } from './auth.service';
 
-const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: '', component:  RootComponent, children: [
-      { path: '', component: HomeComponent },
-      { path: 'rules', component: RuleComponent, canActivate: [AuthService] }
-  ]}
-];
+describe('AuthService', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [AuthService]
+    });
+  });
 
-export const routing = RouterModule.forRoot(routes);
+  it('should be created', inject([AuthService], (service: AuthService) => {
+    expect(service).toBeTruthy();
+  }));
+});
