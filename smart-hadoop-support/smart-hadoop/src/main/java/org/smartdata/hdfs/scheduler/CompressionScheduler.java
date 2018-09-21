@@ -91,7 +91,7 @@ public class CompressionScheduler extends ActionSchedulerService {
         && fileState.getFileStage().equals(FileState.FileStage.DONE)) {
       return true;
     }
-    LOG.warn("File " + path + " doesn't support compression action. "
+    LOG.debug("File " + path + " doesn't support compression action. "
         + "Type: " + fileState.getFileType() + "; Stage: " + fileState.getFileStage());
     return false;
   }

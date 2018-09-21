@@ -148,6 +148,7 @@ public class CompressionAction extends HdfsAction {
       compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
+    appendLog("Final compression bufferSize = " + bufferSize);
     String compressionInfoJson = new Gson().toJson(compressionFileInfo);
     appendResult(compressionInfoJson);
     LOG.warn(compressionInfoJson);
