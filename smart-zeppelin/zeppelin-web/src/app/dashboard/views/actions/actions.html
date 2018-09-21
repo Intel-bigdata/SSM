@@ -54,7 +54,7 @@ under the License.
 
 <!-- The form -->
 <div align="right">
-  <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
+  <input id="search" type="text" float="left" placeholder="Search..." name="search"\>
   <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
 </div>
 <div class="col-md-12" onmousemove="getPosition(event)">
@@ -120,10 +120,14 @@ under the License.
     {{totalNumber}}
   </div>
   <div class="btn-group" role="group" style="float: right;">
+    <input id="page" type="text" float="left" placeholder="page..." name="page"\>
+    <button id="pageBtn" type="submit" value="Submit" ng-click="jumpToPage()">Go</button>
+  </div>
+  <div class="btn-group" role="group" style="float: right;">
     <button type="button" class="btn btn-default" ng-click="gotoPage(1)">First</button>
     <button type="button" class="btn btn-default" ng-show="currentPage > 1"
             ng-click="gotoPage(currentPage - 1)">&laquo;</button>
-    <button type="button" class="btn btn-default" disabled>{{currentPage}}</button>
+    <button type="button" class="btn btn-default">{{currentPage}}</button>
     <button type="button" class="btn btn-default"
             ng-repeat="i in [1, 2, 3, 4, 5]"
             ng-show="currentPage + i <= totalPage" ng-click="gotoPage(currentPage + i)">
