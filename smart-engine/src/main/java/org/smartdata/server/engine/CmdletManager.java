@@ -172,7 +172,7 @@ public class CmdletManager extends AbstractService {
       numCmdletsFinished.addAndGet(metaStore.getNumCmdletsInTerminiatedStates());
 
       schedulerServices = AbstractServiceFactory.createActionSchedulerServices(
-        getContext().getConf(), getContext(), metaStore, false);
+        getContext().getConf(), (ServerContext) getContext(), metaStore, false);
 
       for (ActionSchedulerService s : schedulerServices) {
         s.init();
