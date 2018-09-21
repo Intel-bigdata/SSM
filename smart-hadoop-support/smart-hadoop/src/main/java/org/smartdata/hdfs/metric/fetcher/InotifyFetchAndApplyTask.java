@@ -56,7 +56,7 @@ public class InotifyFetchAndApplyTask implements Runnable {
         lastId.getAndSet(eventBatch.getTxid());
         metaStore.updateAndInsertIfNotExist(
             new SystemInfo(
-                SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID, String.valueOf(lastId.get())));
+                SmartConstants.SMART_HDFS_LAST_INOTIFY_TXID, String.valueOf(lastId.get())));
         eventBatch = inotifyEventInputStream.poll();
       }
     } catch (Throwable t) {

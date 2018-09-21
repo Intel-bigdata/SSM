@@ -32,7 +32,6 @@ import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.smartdata.SmartConstants;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.MiniClusterFactory;
@@ -189,13 +188,13 @@ public abstract class TestInotifyFetcher extends TestDaoUtil {
 //      Assert.assertTrue(events.get(21).getEventType() == Event.EventType.TRUNCATE);
       fetcher.stop();
 
-      Assert.assertTrue(metaStore.containSystemInfo(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID));
+      Assert.assertTrue(metaStore.containSystemInfo(SmartConstants.SMART_HDFS_LAST_INOTIFY_TXID));
       Assert.assertTrue(
           InotifyEventFetcher.canContinueFromLastTxid(
               client,
               Long.parseLong(
                   metaStore
-                      .getSystemInfoByProperty(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID)
+                      .getSystemInfoByProperty(SmartConstants.SMART_HDFS_LAST_INOTIFY_TXID)
                       .getValue())));
     } finally {
       cluster.shutdown();
