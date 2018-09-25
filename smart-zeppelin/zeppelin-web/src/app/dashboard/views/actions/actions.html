@@ -17,10 +17,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 <style type="text/css">
-  div.a {
-    float: left;
-  }
-  table.a {
+  table {
     table-layout: fixed;
   }
 
@@ -46,30 +43,15 @@ under the License.
     opacity: 1;
   }
 
-  table td:nth-child(1) {
-    white-space: nowrap;
-  }
-
-  th{
-    height: 40px;
-  }
-
-  td{
-    height: 40px;
-  }
-
-  .aid{
-    width: 1px;
-    white-space: nowrap;
-  }
-  .action_name{ width: 450px;}
-  .create_time{ width: 175px;}
-  .finish_time{ width: 175px;}
-  .running_time{ width: 175px;}
-  .host{ width: 100%;}
-  .status{ width: 90px;}
-  .progress1{ width: 150px;}
-  .actions{ width: 60px;}
+  .aid{ width: 6px;}
+  .action_name{ width: 150px;}
+  .create_time{ width: 50px;}   }
+  .finish_time{ width: 50px;}
+  .running_time{ width: 50px;}
+  .host{ width: 100px;}
+  .status{ width: 30px;}
+  .progress1{ width: 50px;}
+  .actions{ width: 15px;}
 </style>
 
 <!-- The form -->
@@ -140,10 +122,6 @@ under the License.
     {{totalNumber}}
   </div>
   <div class="btn-group" role="group" style="float: right;">
-    <input id="page" type="text" float="left" placeholder="page..." name="page"\>
-    <button id="pageBtn" type="submit" value="Submit" ng-click="jumpToPage()">Go</button>
-  </div>
-  <div class="btn-group" role="group" style="float: right;">
     <button type="button" class="btn btn-default" ng-click="gotoPage(1)">First</button>
     <button type="button" class="btn btn-default" ng-show="currentPage > 1"
             ng-click="gotoPage(currentPage - 1)">&laquo;</button>
@@ -177,5 +155,4 @@ function setPosition(ele, x, y) {
   ele.style.top = (y + 20) + 'px';
   ele.style.left = (x + 20) + 'px';
 }
-
 </script>
