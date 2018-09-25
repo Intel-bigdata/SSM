@@ -84,7 +84,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
     final String DIR_RESULT =
         "The EC policy is set successfully for the given directory.";
     final String CONVERT_RESULT =
-        "The file is converted successfully with the given or default ec policy.";
+        "The file is converted successfully with the given or default EC policy.";
 
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));

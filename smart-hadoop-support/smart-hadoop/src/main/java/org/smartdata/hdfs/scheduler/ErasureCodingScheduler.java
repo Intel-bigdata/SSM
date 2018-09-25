@@ -121,23 +121,25 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.SUCCESS;
     }
 
-    // check file lock merely for ec & unec action
-    if (fileLock.contains(srcPath)) {
-      return ScheduleResult.FAIL;
-    }
     try {
+      if (metaStore.getFile(srcPath).isdir()) {
+        return ScheduleResult.SUCCESS;
+      }
+      // The below code is just for ec or unec action with file as argument, not directory
+      // check file lock merely for ec & unec action
+      if (fileLock.contains(srcPath)) {
+        return ScheduleResult.FAIL;
+      }
       if (isLimitedByThrottle(srcPath)) {
         if (LOG.isDebugEnabled()) {
           LOG.debug("Failed to schedule {} due to limitation of throttle!", actionInfo);
         }
         return ScheduleResult.RETRY;
       }
-      if (!metaStore.getFile(srcPath).isdir()) {
-        // For ec or unec, add ecTmp argument
-        String tmpName = createTmpName(action);
-        action.getArgs().put(EC_TMP, EC_DIR + tmpName);
-        actionInfo.getArgs().put(EC_TMP, EC_DIR + tmpName);
-      }
+      // For ec or unec, add ecTmp argument
+      String tmpName = createTmpName(action);
+      action.getArgs().put(EC_TMP, EC_DIR + tmpName);
+      actionInfo.getArgs().put(EC_TMP, EC_DIR + tmpName);
     } catch (MetaStoreException ex) {
       LOG.error("Error occurred for getting file info", ex);
       actionInfo.appendLog(ex.getMessage());
@@ -180,6 +182,9 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return false;
     }
     int fileLengthInMb = (int) metaStore.getFile(srcPath).getLength() >> 20;
-    return rateLimiter.tryAcquire(fileLengthInMb);
+    if (fileLengthInMb > 0) {
+      return !rateLimiter.tryAcquire(fileLengthInMb);
+    }
+    return false;
   }
 }
