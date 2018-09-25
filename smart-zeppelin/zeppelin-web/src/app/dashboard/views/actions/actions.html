@@ -79,77 +79,60 @@ under the License.
 </div>
 <div class="col-md-12" onmousemove="getPosition(event)">
   <br/>
+  <table class="table table-bordered">
+    <thead ng-show="totalNumber > 0">
+    <tr>
+      <th ng-click="defindOrderBy('aid')" class="aid">ID</th>
+      <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
+      <th ng-click="defindOrderBy('exec_host')" class="host">Host</th>
+      <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
+      <th ng-click="defindOrderBy('finish_time')" class="finish_time">Finish Time</th>
+      <th ng-click="defindOrderBy('running_time')" class="running_time">Running Time</th>
+      <th ng-click="defindOrderBy('successful')" class="status">Status</th>
+      <th ng-click="defindOrderBy('progress')" class="progress1">Progress</th>
+      <th class="actions">Actions</th>
+    </tr>
+    </thead>
+    <thead ng-if="totalNumber < 1">
+    <tr>
+      <th colspan="3" class="text-center active">
+        <div class="table-no-data" style="width: 100%;">
+          <h2 class="glyphicon glyphicon-bullhorn"></h2>
+          <h4>No action is running</h4>
 
-  <div class="a" width="550px">
-    <table class="table-bordered" width="450px">
-      <thead ng-show="totalNumber > 0">
-      <tr>
-        <th id="idCol" ng-click="defindOrderBy('aid')" class="aid">ID</th>
-        <th ng-click="defindOrderBy('exec_host')" class="host">Host</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr ng-repeat="action in actions">
-        <td class="bk" style="white-space:nowrap">{{action.actionId}}</td>
-        <td class="bk host">{{action.execHost}}</td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="a">
-    <table width="450px" class="a table-bordered">
-      <thead ng-show="totalNumber > 0">
-      <tr>
-        <th ng-click="defindOrderBy('action_name')" class="action_name">Name</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr ng-repeat="action in actions">
-        <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 58" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div width="825px">
-    <table width="825px" class="a table-bordered">
-      <thead ng-show="totalNumber > 0">
-      <tr>
-        <th ng-click="defindOrderBy('create_time')" class="create_time">Create Time</th>
-        <th ng-click="defindOrderBy('finish_time')" class="finish_time">Finish Time</th>
-        <th ng-click="defindOrderBy('running_time')" class="running_time">Running Time</th>
-        <th ng-click="defindOrderBy('successful')" class="status">Status</th>
-        <th ng-click="defindOrderBy('progress')" class="progress1">Progress</th>
-        <th class="actions">Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr ng-repeat="action in actions">
-        <td>{{action.createTime}}</td>
-        <td>{{action.finishTime}}</td>
-        <td>{{action.finished ? action.runTime : "-"}}{{action.finished ? "ms" : ""}}</td>
-        <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
-        <td>
-          <div style="width: 100%"><span class="small pull-left"></span>
-            <span class="small pull-right" ng-bind="action.progress + '%'"></span>
-          </div>
-          <div style="clear: both; height: 1px"></div>
-          <div style="width: 100%" class="progress progress-tiny">
-            <div ng-style="{'width': action.progress + '%'}"
-                 class="progress-bar progress-bar-{{action.progressColor}}"></div>
-          </div>
-        </td>
-        <td>
-          <a type="button" class="btn btn-default btn-xs btn-info"
-             href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
-            <span class="glyphicon glyphicon-info-sign"></span>
-          </a>
-        </td>
-      </tr>
-      </tbody>
-    </table>
-  </div>
+          <p>Please submit a action first.</p>
+        </div>
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="action in actions">
+      <td>{{action.actionId}}</td>
+      <td class="bk">{{action.actionName}}<span ng-if="action.actionName.length > 74" class="tooltiptext bg-primary">{{action.actionName}}</span></td>
+      <td class="bk">{{action.execHost}}</td>
+      <td>{{action.createTime}}</td>
+      <td>{{action.finishTime}}</td>
+      <td>{{action.finished ? action.runTime : "-"}}{{action.finished ? "ms" : ""}}</td>
+      <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
+      <td>
+        <div style="width: 100%"><span class="small pull-left"></span>
+          <span class="small pull-right" ng-bind="action.progress + '%'"></span>
+        </div>
+        <div style="clear: both; height: 1px"></div>
+        <div style="width: 100%" class="progress progress-tiny">
+          <div ng-style="{'width': action.progress + '%'}"
+               class="progress-bar progress-bar-{{action.progressColor}}"></div>
+        </div>
+      </td>
+      <td>
+        <a type="button" class="btn btn-default btn-xs btn-info"
+           href="#/actions/action/{{action.actionId}}" ng-attr-bs-tooltip="tooltip">
+          <span class="glyphicon glyphicon-info-sign"></span>
+        </a>
+      </td>
+    </tr>
+    </tbody>
+  </table>
 </div>
 <div class="col-md-12" ng-show="totalNumber > 0">
   <div class="page-list" style="float: left;">
@@ -194,4 +177,5 @@ function setPosition(ele, x, y) {
   ele.style.top = (y + 20) + 'px';
   ele.style.left = (x + 20) + 'px';
 }
+
 </script>
