@@ -23,7 +23,6 @@ under the License.
     <thead ng-show="nodes.length > 0">
     <tr>
       <th>Id</th>
-      <th>Port</th>
       <th>Regist Time</th>
       <th>Number of Executors</th>
       <th>Cmdlets Executed</th>
@@ -44,8 +43,7 @@ under the License.
     </thead>
     <tbody>
     <tr ng-repeat="node in nodes">
-      <td>{{node.nodeInfo.id}} | Pending Schedule: {{node.numPendingSchedule}} | Pending Dispatch: {{node.numPendingDispatch}}</td>
-      <td>{{node.nodeInfo.port}}</td>
+      <td>{{node.nodeInfo.id}} (Pending Schedule: {{node.numPendingSchedule}}  Pending Dispatch: {{node.numPendingDispatch}})</td>
       <td>{{node.registTime}}</td>
       <td>{{node.numExecutors}}</td>
       <td>{{node.cmdletsExecuted}}</td>
