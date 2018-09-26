@@ -190,6 +190,18 @@ angular.module('zeppelinWebApp')
 
     };
 
+    $scope.jumpToPage = function () {
+      var index = document.getElementById('page').value;
+      if (index > $scope.totalPage) {
+        index = $scope.totalPage;
+      }
+      else if (index < 1 || isNaN(index)) {
+        index = 1;
+      }
+      document.getElementById('page').value = index;
+      $scope.gotoPage(Number(index));
+    };
+
     $scope.gotoPage = function (index) {
       if (!$scope.searching) {
         $scope.currentPage = index;
