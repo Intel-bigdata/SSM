@@ -124,6 +124,18 @@ angular.module('zeppelinWebApp')
       search($scope.path);
     };
 
+    $scope.jumpToPage = function () {
+      var index = document.getElementById('page').value;
+      if (index > $scope.totalPage) {
+        index = $scope.totalPage;
+      }
+      else if (index < 1 || isNaN(index)) {
+        index = 1;
+      }
+      document.getElementById('page').value = index;
+      $scope.gotoPage(Number(index));
+    };
+
     $scope.gotoPage = function (index) {
       if (!$scope.searching) {
         $scope.currentPage = index;
@@ -168,7 +180,9 @@ angular.module('zeppelinWebApp')
 
     $(document).keyup(function(event) {
         if (event.keyCode == 27) {
+          $scope.searching = false;
           getActions();
+          document.getElementById("search").value = "";
         }
     });
 
@@ -179,7 +193,7 @@ angular.module('zeppelinWebApp')
       else {
         __search__($scope.path);
       }
-    },60000);
+    },2000);
 
     $scope.$on('$destroy',function(){
       $interval.cancel(timer);

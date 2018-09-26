@@ -31,7 +31,11 @@ import org.smartdata.action.annotation.ActionSignature;
 
 import java.io.IOException;
 import java.net.URI;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * An action to list files in a directory.
@@ -39,16 +43,41 @@ import java.util.Map;
 @ActionSignature(
     actionId = "list",
     displayName = "list",
-    usage = HdfsAction.FILE_PATH + " $src"
+    usage = HdfsAction.FILE_PATH + " $src1" + ListFileAction.RECURSIVELY + " $src2" + ListFileAction.DUMP + " $src3"
+        + ListFileAction.HUMAN + " $src4"
 )
 public class ListFileAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(ListFileAction.class);
   private String srcPath;
+  private boolean recursively = false;
+  private boolean dump = false;
+  private boolean human = false;
+
+  // Options
+  public static final String RECURSIVELY = "-R";
+  public static final String DUMP = "-d";
+  public static final String HUMAN = "-h";
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
-    this.srcPath = args.get(FILE_PATH);
+    if (args.containsKey(RECURSIVELY)) {
+      this.recursively = true;
+      if (this.srcPath == null || this.srcPath == "")
+        this.srcPath = args.get(RECURSIVELY);
+    }
+    if (args.containsKey(DUMP)) {
+      this.dump = true;
+      if (this.srcPath == null || this.srcPath == "")
+        this.srcPath = args.get(DUMP);
+    }
+    if (args.containsKey(HUMAN)) {
+      this.human = true;
+      if (this.srcPath == null || this.srcPath == "")
+        this.srcPath = args.get(HUMAN);
+    }
+    if (this.srcPath == null || this.srcPath == "")
+      this.srcPath = args.get(FILE_PATH);
   }
 
   @Override
@@ -62,6 +91,17 @@ public class ListFileAction extends HdfsAction {
     listDirectory(srcPath);
   }
 
+  private static String readableFileSize(long size) {
+    if(size <= 0)
+      return "0";
+    final String[] units = new String[] { "", "K", "M", "G", "T" };
+    int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+    if (digitGroups == 0) {
+      return Long.toString(size);
+    }
+    return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+  }
+
   private void listDirectory(String src) throws IOException {
     if (!src.startsWith("hdfs")) {
       //list file in local Dir
@@ -70,15 +110,30 @@ public class ListFileAction extends HdfsAction {
         appendLog("File not found!");
         return;
       }
-      if (hdfsFileStatus.isDir()) {
+      if (hdfsFileStatus.isDir() && !dump) {
         DirectoryListing listing = dfsClient.listPaths(src, HdfsFileStatus.EMPTY_NAME);
         HdfsFileStatus[] fileList = listing.getPartialListing();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         for (int i = 0; i < fileList.length; i++) {
           appendLog(
-              String.format("%s", fileList[i].getFullPath(new Path(src))));
+              String.format("%s%s %5d %s\t%s\t%13s %s %s", fileList[i].isDir() ? 'd' : '-',
+                  fileList[i].getPermission(), fileList[i].getReplication(),
+                  fileList[i].getOwner(), fileList[i].getGroup(),
+                  human ? readableFileSize(fileList[i].getLen()) : fileList[i].getLen(),
+                  formatter.format(fileList[i].getModificationTime()), fileList[i].getFullPath(new Path(src))));
+          if (recursively && fileList[i].isDir()) {
+            listDirectory(fileList[i].getFullPath(new Path(src)).toString());
+          }
         }
       } else {
-        appendLog(String.format("%s", src));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        appendLog(
+            String.format("%s%s %5d %s\t%s\t%13s %s %s", hdfsFileStatus.isDir() ? 'd' : '-',
+                hdfsFileStatus.getPermission(),
+                hdfsFileStatus.getReplication(),
+                hdfsFileStatus.getOwner(), hdfsFileStatus.getGroup(),
+                human ? readableFileSize(hdfsFileStatus.getLen()) : hdfsFileStatus.getLen(),
+                formatter.format(hdfsFileStatus.getModificationTime()), hdfsFileStatus.getFullPath(new Path(src))));
       }
     } else {
       //list file in remote Directory

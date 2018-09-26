@@ -53,10 +53,12 @@ under the License.
 </style>
 
 <!-- The form -->
-<div align="right">
-  <input id="search" type="text" float="left" placeholder="Search.." name="search"\>
-  <button id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
-</div>
+<form class="form-inline" role="group" style="float: right;">
+  <div class="form-group mx-sm-3 mb-2" align="right">
+    <input class="form-control" id="search" type="text" float="right" placeholder="Search..." name="search"\>
+  </div>
+  <button class="btn btn-primary mb-2" id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
+</form>
 <div class="col-md-12" onmousemove="getPosition(event)">
   <br/>
   <table class="table table-bordered">
@@ -92,7 +94,7 @@ under the License.
       <td class="bk">{{action.execHost}}</td>
       <td>{{action.createTime}}</td>
       <td>{{action.finishTime}}</td>
-      <td>{{action.finished ? action.runTime : "-"}}ms</td>
+      <td>{{action.finished ? action.runTime : "-"}}{{action.finished ? "ms" : ""}}</td>
       <td>{{action.finished ? action.successful ? "Successful" : "Failed" : "-"}}</td>
       <td>
         <div style="width: 100%"><span class="small pull-left"></span>
@@ -120,10 +122,18 @@ under the License.
     {{totalNumber}}
   </div>
   <div class="btn-group" role="group" style="float: right;">
+    <form class="form-inline">
+      <div class="form-group mx-sm-2 mb-1" align="right">
+        <input size="6" class="form-control" id="page" type="text" float="left" placeholder="page..." name="page"\>
+      </div>
+      <button class="btn btn-primary mb-1" id="pageBtn" type="submit" value="Submit" ng-click="jumpToPage()">Go</button>
+    </form>
+  </div>
+  <div class="btn-group" role="group" style="float: right;">
     <button type="button" class="btn btn-default" ng-click="gotoPage(1)">First</button>
     <button type="button" class="btn btn-default" ng-show="currentPage > 1"
             ng-click="gotoPage(currentPage - 1)">&laquo;</button>
-    <button type="button" class="btn btn-default" disabled>{{currentPage}}</button>
+    <button type="button" class="btn btn-default">{{currentPage}}</button>
     <button type="button" class="btn btn-default"
             ng-repeat="i in [1, 2, 3, 4, 5]"
             ng-show="currentPage + i <= totalPage" ng-click="gotoPage(currentPage + i)">
