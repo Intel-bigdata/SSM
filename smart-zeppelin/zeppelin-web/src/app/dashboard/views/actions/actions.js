@@ -241,12 +241,13 @@ angular.module('zeppelinWebApp')
     });
 
     var timer = $interval(function(){
-      if (!$scope.searching) {
-        getActions();
-      }
-      else {
-        __search__($scope.path);
-      }
+        checkCookie();
+//      if (!$scope.searching) {
+//        getActions();
+//      }
+//      else {
+//        __search__($scope.path);
+//      }
     },2000);
 
     $scope.$on('$destroy',function(){
