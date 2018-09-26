@@ -28,6 +28,10 @@ angular.module('zeppelinWebApp')
         $stb.indicator().key('state').canSort('state.condition+"_"+submitTime').styleClass('td-no-padding').done(),
         $stb.text('Rule ID').key('id').canSort().done(),
         $stb.text('Mover Rule').key(['moverRule']).done(),
+        $stb.datetime('Submission Time').key('submitTime').canSort().done(),
+        $stb.datetime('Last Check Time').key('lastCheckTime').canSort().done(),
+        $stb.text('Checked Number').key('numChecked').done(),
+        $stb.text('Cmdlets Generated').key('numCmdsGen').done(),
         $stb.text('Moving Files').key('movingFiles').done(),
         $stb.text('All Files').key('allFiles').done(),
         $stb.progressbar('Progress').key('progress').sortBy('progress.usage').styleClass('col-md-1').done(),
@@ -46,8 +50,12 @@ angular.module('zeppelinWebApp')
             state: {tooltip: mover.state, condition: mover.isRunning ? 'good' : '', shape: 'stripe'},
             //user: rule.user,
             moverRule: mover.ruleText,
+            lastCheckTime: mover.lastCheckTime,
+            submitTime: mover.submitTime,
             movingFiles: mover.runningProgress,
             allFiles: mover.baseProgress,
+            numChecked: mover.numChecked,
+            numCmdsGen: mover.numCmdsGen,
             progress: {
               current: mover.progress,
               max: mover.state
