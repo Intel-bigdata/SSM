@@ -134,6 +134,12 @@
   </property>
 
   <property>
+    <name>smart.action.ec.throttle.mb</name>
+    <value>0</value>
+    <description>The throughput limit (MB) for SSM EC overall</description>
+  </property>
+
+  <property>
     <name>smart.action.local.execution.disabled</name>
     <value>false</value>
     <description>Actions will not be executed on SSM server if true.</description>
