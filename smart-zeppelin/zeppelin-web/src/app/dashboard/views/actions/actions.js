@@ -124,6 +124,72 @@ angular.module('zeppelinWebApp')
       search($scope.path);
     };
 
+    $scope.jumpToPage = function () {
+      var index = document.getElementById('page').value;
+      $scope.gotoPage(Number(index));
+    };
+
+    function __search__ (text) {
+      if (!$scope.searching) {
+        $scope.currentSearchPage = 1;
+      }
+      $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/search/'
+        + text + '/' + $scope.currentSearchPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc)
+        .then(function(response) {
+        var actionData = angular.fromJson(response.data);
+        $scope.totalNumber = actionData.body.totalNumOfActions;
+        $scope.actions = actionData.body.actions;
+        angular.forEach($scope.actions, function (data,index) {
+          data.runTime = data.finishTime - data.createTime;
+          data.createTime = data.createTime === 0 ? "-" :
+            $filter('date')(data.createTime,'yyyy-MM-dd HH:mm:ss');
+          data.finishTime = data.finished ? data.finishTime === 0 ? "-" :
+            $filter('date')(data.finishTime,'yyyy-MM-dd HH:mm:ss') : '-';
+          data.progress = Math.round(data.progress * 100);
+          data.progressColor = data.finished ? data.successful ? 'success' : 'danger' : 'warning';
+        });
+        $scope.totalPage = Math.ceil($scope.totalNumber / $scope.pageNumber);
+      }, function(errorResponse) {
+          $scope.totalNumber = 0;
+      });
+    };
+
+    function search(text) {
+      if (text == "") {
+        $scope.searching = false;
+        getActions();
+      }
+      else {
+        __search__(text);
+        $scope.searching = true;
+      }
+    };
+
+    $scope.getContent = function () {
+      var tmp = document.getElementById('search').value;
+      var res = "";
+      for (var i = 0; i < tmp.length; i++) {
+        if (tmp.charAt(i) == '%') {
+          res += "%25";
+        }
+        else if (tmp.charAt(i) == '/'){
+          res += "%2F";
+        }
+        else if (tmp.charAt(i) == '?'){
+          res += "%3F";
+        }
+        else if (tmp.charAt(i) == '@'){
+          res += "%40";
+        }
+        else {
+          res += tmp.charAt(i);
+        }
+      }
+      $scope.path = res;
+      search($scope.path);
+
+    };
+
     $scope.gotoPage = function (index) {
       if (!$scope.searching) {
         $scope.currentPage = index;
@@ -168,7 +234,9 @@ angular.module('zeppelinWebApp')
 
     $(document).keyup(function(event) {
         if (event.keyCode == 27) {
+          $scope.searching = false;
           getActions();
+          document.getElementById("search").value = "";
         }
     });
 
@@ -179,7 +247,7 @@ angular.module('zeppelinWebApp')
       else {
         __search__($scope.path);
       }
-    },60000);
+    },2000);
 
     $scope.$on('$destroy',function(){
       $interval.cancel(timer);
