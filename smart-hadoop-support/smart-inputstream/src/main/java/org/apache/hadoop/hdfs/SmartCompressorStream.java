@@ -57,16 +57,17 @@ public class SmartCompressorStream {
     this.compressionInfo = compressionInfo;
     this.compressionCodec = new CompressionCodec();
 
+    // This bufferSize is equal to chunk size
     this.bufferSize = bufferSize;
     // Compression overHead, e.g., Snappy's overHead is buffSize/6 + 32
 
     int overHead = compressionCodec.compressionOverhead(bufferSize,
         compressionInfo.getCompressionImpl());
-    // Add overhead to buffer
-    this.maxLength = bufferSize - overHead;
-    buffer = new byte[bufferSize - overHead];
+    // Add overhead to buffer, such that actual buff is larger than bufferSize
+    this.maxLength = bufferSize;
+    buffer = new byte[bufferSize + overHead];
     this.compressor = compressionCodec
-        .createCompressor(bufferSize - overHead,
+        .createCompressor(bufferSize + overHead,
             compressionInfo.getCompressionImpl());
     checkCompressor();
   }
@@ -142,7 +143,7 @@ public class SmartCompressorStream {
 
   protected void compress() throws IOException {
     // TODO when compressed result is larger than raw
-    int len = compressor.compress(buffer, 0, buffer.length);
+    int len = compressor.compress(buffer, 0, bufferSize);
     if (len > 0) {
       // Write out the compressed chunk
       rawWriteInt(len);
