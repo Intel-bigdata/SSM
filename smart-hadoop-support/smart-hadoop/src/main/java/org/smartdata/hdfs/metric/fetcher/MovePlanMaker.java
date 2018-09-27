@@ -87,18 +87,6 @@ public class MovePlanMaker {
     }
   }
 
-  private DBlock newDBlock(LocatedBlock lb, List<MLocation> locations) {
-    Block blk = lb.getBlock().getLocalBlock();
-    DBlock db = new DBlock(blk);
-    for(MLocation ml : locations) {
-      StorageGroup source = storages.getSource(ml);
-      if (source != null) {
-        db.addLocation(source);
-      }
-    }
-    return db;
-  }
-
   public synchronized void updateClusterInfo(StorageMap storages, NetworkTopology cluster) {
     this.storages = storages;
     this.networkTopology = cluster;
@@ -175,6 +163,11 @@ public class MovePlanMaker {
         continue;
       }
       LocatedBlock lb = lbs.get(i);
+      List<String> typesForEcBlock = CompatibilityHelperLoader.getHelper().
+          getStorageTypeForEcBlock(lb, policy, status.getStoragePolicy());
+      if (typesForEcBlock != null) {
+        types = typesForEcBlock;
+      }
       final StorageTypeDiff diff =
           new StorageTypeDiff(types, CompatibilityHelperLoader.getHelper().getStorageTypes(lb));
       int remainingReplications = diff.removeOverlap(true);
@@ -185,15 +178,16 @@ public class MovePlanMaker {
       statistics.increaseTotalSize(toMove);
       statistics.increaseTotalBlocks(remainingReplications);
       if (remainingReplications != 0) {
-        scheduleMoveBlock(diff, lb);
+        scheduleMoveBlock(diff, lb, status);
       }
     }
   }
 
-  boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb) {
+  boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
     final List<MLocation> locations = MLocation.toLocations(lb);
     Collections.shuffle(locations);
-    final DBlock db = newDBlock(lb, locations);
+    final DBlock db =
+        CompatibilityHelperLoader.getHelper().newDBlock(lb, locations, storages, status);
     boolean needMove = false;
 
     for (int i = 0; i < diff.existing.size(); i++) {

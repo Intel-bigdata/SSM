@@ -27,11 +27,15 @@ import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
+import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.StorageGroup;
+import org.smartdata.hdfs.action.move.StorageMap;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 public class CompatibilityHelper2 {
@@ -76,5 +80,22 @@ public class CompatibilityHelper2 {
 
   public Map<Byte, String> getErasureCodingPolicies(DFSClient dfsClient) throws IOException {
     return null;
+  }
+
+  public List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId) {
+    return null;
+  }
+
+  public DBlock newDBlock(
+      LocatedBlock lb, List<MLocation> locations, StorageMap storages, HdfsFileStatus status) {
+    Block blk = lb.getBlock().getLocalBlock();
+    DBlock db = new DBlock(blk);
+    for (MLocation ml : locations) {
+      StorageGroup source = storages.getSource(ml);
+      if (source != null) {
+        db.addLocation(source);
+      }
+    }
+    return db;
   }
 }

@@ -30,10 +30,15 @@ import org.apache.hadoop.hdfs.protocolPB.PBHelperClient;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
+import org.apache.hadoop.hdfs.server.namenode.ErasureCodingPolicyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
+import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.StorageGroup;
+import org.smartdata.hdfs.action.move.StorageMap;
+import org.smartdata.hdfs.action.move.DBlockStriped;
 
 import java.io.*;
 import java.net.URI;
@@ -47,7 +52,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public String[] getStorageTypes(LocatedBlock lb) {
     List<String> types = new ArrayList<>();
-    for(StorageType type : lb.getStorageTypes()) {
+    for (StorageType type : lb.getStorageTypes()) {
       types.add(type.toString());
     }
     return types.toArray(new String[types.size()]);
@@ -68,7 +73,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public String[] getMovableTypes() {
     List<String> types = new ArrayList<>();
-    for(StorageType type : StorageType.getMovableTypes()) {
+    for (StorageType type : StorageType.getMovableTypes()) {
       types.add(type.toString());
     }
     return types.toArray(new String[types.size()]);
@@ -82,7 +87,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public List<String> chooseStorageTypes(BlockStoragePolicy policy, short replication) {
     List<String> types = new ArrayList<>();
-    for(StorageType type : policy.chooseStorageTypes(replication)) {
+    for (StorageType type : policy.chooseStorageTypes(replication)) {
       types.add(type.toString());
     }
     return types;
@@ -96,7 +101,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public DatanodeInfo newDatanodeInfo(String ipAddress, int xferPort) {
     DatanodeID datanodeID = new DatanodeID(ipAddress, null, null,
-    xferPort, 0, 0, 0);
+        xferPort, 0, 0, 0);
     DatanodeDescriptor datanodeDescriptor = new DatanodeDescriptor(datanodeID);
     return datanodeDescriptor;
   }
@@ -246,5 +251,46 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       policies.put(policy.getId(), policy.getName());
     }
     return policies;
+  }
+
+
+  @Override
+  public List<String> getStorageTypeForEcBlock(
+      LocatedBlock lb, BlockStoragePolicy policy, byte policyId) {
+    if (lb.isStriped()) {
+      //TODO: verify the current storage policy (policyID) or the target one
+      //TODO: output log for unsupported storage policy for EC block
+      if (ErasureCodingPolicyManager
+          .checkStoragePolicySuitableForECStripedMode(policyId)) {
+        return chooseStorageTypes(policy, (short) lb.getLocations().length);
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public DBlock newDBlock(
+      LocatedBlock lb, List<MLocation> locations, StorageMap storages, HdfsFileStatus status) {
+    Block blk = lb.getBlock().getLocalBlock();
+    ErasureCodingPolicy ecPolicy = status.getErasureCodingPolicy();
+    DBlock db;
+    if (lb.isStriped()) {
+      LocatedStripedBlock lsb = (LocatedStripedBlock) lb;
+      byte[] indices = new byte[lsb.getBlockIndices().length];
+      for (int i = 0; i < indices.length; i++) {
+        indices[i] = (byte) lsb.getBlockIndices()[i];
+      }
+      db = (DBlock) new DBlockStriped(blk, indices, (short) ecPolicy.getNumDataUnits(),
+          ecPolicy.getCellSize());
+    } else {
+      db = new DBlock(blk);
+    }
+    for (MLocation ml : locations) {
+      StorageGroup source = storages.getSource(ml);
+      if (source != null) {
+        db.addLocation(source);
+      }
+    }
+    return db;
   }
 }

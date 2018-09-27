@@ -26,11 +26,15 @@ import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.balancer.Dispatcher;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
+import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.StorageGroup;
+import org.smartdata.hdfs.action.move.StorageMap;
 
 import java.io.*;
 import java.util.List;
@@ -95,4 +99,8 @@ public interface CompatibilityHelper {
   byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
 
   Map<Byte, String> getErasureCodingPolicies(DFSClient client) throws IOException;
+
+  List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId);
+
+  DBlock newDBlock(LocatedBlock lb, List<MLocation> locations, StorageMap storages, HdfsFileStatus status);
 }
