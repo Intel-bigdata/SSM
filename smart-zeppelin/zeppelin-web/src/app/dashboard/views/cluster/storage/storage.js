@@ -68,7 +68,7 @@ function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval) {
   var initAreaChart = function() {
     var targetEl = angular.element('#' + $scope.storageType);
     //generate area chart.
-    targetEl.height(300);
+    targetEl.height(150);
     if (!builtInViz) {
       builtInViz = new AreachartVisualization(targetEl, config);
       angular.element(window).resize(function () {
