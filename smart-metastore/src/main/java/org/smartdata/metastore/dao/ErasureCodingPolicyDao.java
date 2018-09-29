@@ -60,6 +60,7 @@ public class ErasureCodingPolicyDao {
 
   public void insert(ErasureCodingPolicyInfo ecPolicy) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
+    simpleJdbcInsert.setTableName(TABLE_NAME);
     simpleJdbcInsert.execute(toMap(ecPolicy));
   }
 
