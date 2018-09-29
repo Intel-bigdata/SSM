@@ -98,4 +98,12 @@ public class CompatibilityHelper2 {
     }
     return db;
   }
+
+  public boolean isLocatedStripedBlock(LocatedBlock lb) {
+    return false;
+  }
+
+  public DBlock getDBlock(DBlock block, StorageGroup source) {
+    return block;
+  }
 }

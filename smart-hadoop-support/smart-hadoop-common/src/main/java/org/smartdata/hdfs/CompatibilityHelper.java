@@ -103,4 +103,8 @@ public interface CompatibilityHelper {
   List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId);
 
   DBlock newDBlock(LocatedBlock lb, List<MLocation> locations, StorageMap storages, HdfsFileStatus status);
+
+  boolean isLocatedStripedBlock(LocatedBlock lb);
+
+  DBlock getDBlock(DBlock block, StorageGroup source);
 }

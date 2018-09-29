@@ -28,6 +28,7 @@ import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
 import org.apache.hadoop.hdfs.protocol.proto.InotifyProtos;
 import org.apache.hadoop.hdfs.protocolPB.PBHelperClient;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
+import org.apache.hadoop.hdfs.server.balancer.Dispatcher;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.namenode.ErasureCodingPolicyManager;
@@ -292,5 +293,18 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       }
     }
     return db;
+  }
+
+  @Override
+  public boolean isLocatedStripedBlock(LocatedBlock lb) {
+    return lb instanceof LocatedStripedBlock;
+  }
+
+  @Override
+  public DBlock getDBlock(DBlock block, StorageGroup source) {
+    if (block instanceof DBlockStriped) {
+      return ((DBlockStriped) block).getInternalBlock(source);
+    }
+    return block;
   }
 }

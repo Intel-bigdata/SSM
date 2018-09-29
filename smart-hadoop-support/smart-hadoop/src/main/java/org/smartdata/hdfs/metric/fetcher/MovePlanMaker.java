@@ -185,7 +185,9 @@ public class MovePlanMaker {
 
   boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
     final List<MLocation> locations = MLocation.toLocations(lb);
-    Collections.shuffle(locations);
+    if (!CompatibilityHelperLoader.getHelper().isLocatedStripedBlock(lb)) {
+      Collections.shuffle(locations);
+    }
     final DBlock db =
         CompatibilityHelperLoader.getHelper().newDBlock(lb, locations, storages, status);
     boolean needMove = false;

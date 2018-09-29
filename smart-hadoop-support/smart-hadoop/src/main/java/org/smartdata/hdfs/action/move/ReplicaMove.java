@@ -64,7 +64,8 @@ class ReplicaMove {
                      SaslDataTransferClient saslClient, Configuration conf) {
     this.nnc = nnc;
     this.saslClient = saslClient;
-    this.block = block;
+    this.block =
+        CompatibilityHelperLoader.getHelper().getDBlock(new DBlock(block), source).getBlock();
     this.target = target;
     this.source = source;
     this.status = new ReplicaMoveStatus();
