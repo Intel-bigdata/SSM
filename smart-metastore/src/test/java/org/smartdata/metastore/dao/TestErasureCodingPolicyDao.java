@@ -59,9 +59,9 @@ public class TestErasureCodingPolicyDao extends TestDaoUtil {
 
   @Test
   public void testInsert() throws Exception {
-    ErasureCodingPolicyInfo erasureCodingPolicyInfo = new ErasureCodingPolicyInfo((byte) 2, "info1");
+    ErasureCodingPolicyInfo erasureCodingPolicyInfo = new ErasureCodingPolicyInfo((byte) 2, "PolicyInfo1");
     erasureCodingPolicyDao.insert(erasureCodingPolicyInfo);
-    Assert.assertTrue(erasureCodingPolicyDao.getEcPolicyByName("info1").equals(erasureCodingPolicyInfo));
+    Assert.assertTrue(erasureCodingPolicyDao.getEcPolicyByName("PolicyInfo1").equals(erasureCodingPolicyInfo));
     Assert.assertTrue(erasureCodingPolicyDao.getEcPolicyById((byte) 2).equals(erasureCodingPolicyInfo));
   }
 
@@ -69,8 +69,8 @@ public class TestErasureCodingPolicyDao extends TestDaoUtil {
   public void testInsertAll() throws Exception {
     erasureCodingPolicyDao.deleteAll();
     List<ErasureCodingPolicyInfo> list = new ArrayList<>();
-    list.add(new ErasureCodingPolicyInfo((byte) 1, "info1"));
-    list.add(new ErasureCodingPolicyInfo((byte) 3, "info3"));
+    list.add(new ErasureCodingPolicyInfo((byte) 1, "PolicyInfo1"));
+    list.add(new ErasureCodingPolicyInfo((byte) 3, "PolicyInfo3"));
     erasureCodingPolicyDao.insert(list);
     List<ErasureCodingPolicyInfo> getList = erasureCodingPolicyDao.getAllEcPolicies();
     Assert.assertTrue(getList.get(0).equals(list.get(0)) && getList.get(1).equals(list.get(1)));
