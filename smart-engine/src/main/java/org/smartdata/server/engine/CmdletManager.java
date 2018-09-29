@@ -522,8 +522,14 @@ public class CmdletManager extends AbstractService {
                 cmdlet.updateState(CmdletState.CANCELLED);
                 CmdletStatus cmdletStatus = new CmdletStatus(
                     cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
-                // Mark all actions as finished and successful
-                cmdletFinishedInternal(cmdlet);
+                // Mark all actions as finished
+                cmdletFinishedInternal(cmdlet, false);
+                onCmdletStatusUpdate(cmdletStatus);
+              } else if (result == ScheduleResult.SUCCESS_NO_EXECUTION) {
+                cmdlet.updateState(CmdletState.DONE);
+                cmdletFinishedInternal(cmdlet, true);
+                CmdletStatus cmdletStatus = new CmdletStatus(
+                    cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
                 onCmdletStatusUpdate(cmdletStatus);
               }
             } catch (Throwable t) {
@@ -544,36 +550,55 @@ public class CmdletManager extends AbstractService {
     ActionInfo actionInfo;
     LaunchAction launchAction;
     List<ActionScheduler> actSchedulers;
-    ScheduleResult scheduleResult = ScheduleResult.SUCCESS;
+    boolean skipped = false;
+    ScheduleResult scheduleResult = ScheduleResult.SUCCESS_NO_EXECUTION;
+    ScheduleResult resultTmp;
     for (idx = 0; idx < actIds.size(); idx++) {
       actionInfo = idToActions.get(actIds.get(idx));
       launchAction = launchCmdlet.getLaunchActions().get(idx);
       actSchedulers = schedulers.get(actionInfo.getActionName());
       if (actSchedulers == null || actSchedulers.size() == 0) {
+        skipped = true;
         continue;
       }
 
       for (schIdx = 0; schIdx < actSchedulers.size(); schIdx++) {
         ActionScheduler s = actSchedulers.get(schIdx);
         try {
-          scheduleResult = s.onSchedule(actionInfo, launchAction);
+          resultTmp = s.onSchedule(actionInfo, launchAction);
         } catch (Throwable t) {
           actionInfo.appendLogLine("\nOnSchedule exception: " + t);
-          scheduleResult = ScheduleResult.FAIL;
+          resultTmp = ScheduleResult.FAIL;
         }
-        if (scheduleResult != ScheduleResult.SUCCESS) {
+
+        if (resultTmp != ScheduleResult.SUCCESS
+            && resultTmp != ScheduleResult.SUCCESS_NO_EXECUTION) {
+          scheduleResult = resultTmp;
+        } else {
+          if (scheduleResult == ScheduleResult.SUCCESS_NO_EXECUTION) {
+            scheduleResult = resultTmp;
+          }
+        }
+
+        if (scheduleResult != ScheduleResult.SUCCESS
+            && scheduleResult != ScheduleResult.SUCCESS_NO_EXECUTION) {
           break;
         }
       }
 
-      if (scheduleResult != ScheduleResult.SUCCESS) {
+      if (scheduleResult != ScheduleResult.SUCCESS
+          && scheduleResult != ScheduleResult.SUCCESS_NO_EXECUTION) {
         break;
       }
     }
 
-    if (scheduleResult == ScheduleResult.SUCCESS) {
+    if (scheduleResult == ScheduleResult.SUCCESS
+        || scheduleResult == ScheduleResult.SUCCESS_NO_EXECUTION) {
       idx--;
       schIdx--;
+      if (skipped) {
+        scheduleResult = ScheduleResult.SUCCESS;
+      }
     }
     postscheduleCmdletActions(actIds, scheduleResult, idx, schIdx);
     return scheduleResult;
@@ -751,7 +776,7 @@ public class CmdletManager extends AbstractService {
     flushCmdletInfo(cmdletInfo);
   }
 
-  private void cmdletFinishedInternal(CmdletInfo cmdletInfo) throws IOException {
+  private void cmdletFinishedInternal(CmdletInfo cmdletInfo, boolean success) throws IOException {
     numCmdletsFinished.incrementAndGet();
     ActionInfo actionInfo;
     for (Long aid : cmdletInfo.getAids()) {
@@ -762,7 +787,8 @@ public class CmdletManager extends AbstractService {
         actionInfo.setFinished(true);
         actionInfo.setCreateTime(cmdletInfo.getStateChangedTime());
         actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
-        actionInfo.setExecHost(ActiveServerInfo.getInstance().getHost());
+        actionInfo.setExecHost(ActiveServerInfo.getInstance().getId());
+        actionInfo.setSuccessful(success);
       }
     }
   }
