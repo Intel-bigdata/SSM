@@ -60,12 +60,12 @@ class ReplicaMove {
   private ReplicaMoveStatus status;
   private Configuration conf;
 
-  public ReplicaMove(Block block, StorageGroup source, StorageGroup target, NameNodeConnector nnc,
+  public ReplicaMove(DBlock block, StorageGroup source, StorageGroup target, NameNodeConnector nnc,
                      SaslDataTransferClient saslClient, Configuration conf) {
     this.nnc = nnc;
     this.saslClient = saslClient;
     this.block =
-        CompatibilityHelperLoader.getHelper().getDBlock(new DBlock(block), source).getBlock();
+        CompatibilityHelperLoader.getHelper().getDBlock(block, source).getBlock();
     this.target = target;
     this.source = source;
     this.status = new ReplicaMoveStatus();

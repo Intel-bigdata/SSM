@@ -189,7 +189,13 @@ public class MovePlanMaker {
       Collections.shuffle(locations);
     }
     final DBlock db =
-        CompatibilityHelperLoader.getHelper().newDBlock(lb, locations, storages, status);
+        CompatibilityHelperLoader.getHelper().newDBlock(lb, status);
+    for (MLocation ml : locations) {
+      StorageGroup source = storages.getSource(ml);
+      if (source != null) {
+        db.addLocation(source);
+      }
+    }
     boolean needMove = false;
 
     for (int i = 0; i < diff.existing.size(); i++) {

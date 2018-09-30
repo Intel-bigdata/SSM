@@ -64,7 +64,7 @@ public class MoverExecutor {
   private ExecutorService moveExecutor;
   private List<ReplicaMove> allMoves;
 
-  private Map<Long, Block> sourceBlockMap;
+  private Map<Long, DBlock> sourceBlockMap;
   private Map<String, DatanodeInfo> sourceDatanodeMap;
   private MoverStatus status;
   private List<LocatedBlock> locatedBlocks;
@@ -221,7 +221,7 @@ public class MoverExecutor {
 
     for (int planIndex = 0; planIndex < blockIds.size(); planIndex ++) {
       // build block
-      Block block = sourceBlockMap.get(blockIds.get(planIndex));
+      DBlock block = sourceBlockMap.get(blockIds.get(planIndex));
       // build source
       DatanodeInfo sourceDatanode = sourceDatanodeMap.get(sourceUuids.get(planIndex));
       StorageGroup source = new StorageGroup(sourceDatanode, sourceStorageTypes.get(planIndex));
@@ -239,7 +239,8 @@ public class MoverExecutor {
     sourceBlockMap = new HashMap<>();
     sourceDatanodeMap = new HashMap<>();
     for (LocatedBlock locatedBlock : locatedBlocks) {
-      sourceBlockMap.put(locatedBlock.getBlock().getBlockId(), locatedBlock.getBlock().getLocalBlock());
+      DBlock block = CompatibilityHelperLoader.getHelper().newDBlock(locatedBlock, dfsClient.getFileInfo(fileName));
+      sourceBlockMap.put(block.getBlock().getBlockId(), block);
       for (DatanodeInfo datanodeInfo : locatedBlock.getLocations()) {
         sourceDatanodeMap.put(datanodeInfo.getDatanodeUuid(), datanodeInfo);
       }

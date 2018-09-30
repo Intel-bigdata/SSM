@@ -86,16 +86,9 @@ public class CompatibilityHelper2 {
     return null;
   }
 
-  public DBlock newDBlock(
-      LocatedBlock lb, List<MLocation> locations, StorageMap storages, HdfsFileStatus status) {
+  public DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status) {
     Block blk = lb.getBlock().getLocalBlock();
     DBlock db = new DBlock(blk);
-    for (MLocation ml : locations) {
-      StorageGroup source = storages.getSource(ml);
-      if (source != null) {
-        db.addLocation(source);
-      }
-    }
     return db;
   }
 

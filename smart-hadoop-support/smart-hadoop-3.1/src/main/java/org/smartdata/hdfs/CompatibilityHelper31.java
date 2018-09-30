@@ -270,8 +270,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   }
 
   @Override
-  public DBlock newDBlock(
-      LocatedBlock lb, List<MLocation> locations, StorageMap storages, HdfsFileStatus status) {
+  public DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status) {
     Block blk = lb.getBlock().getLocalBlock();
     ErasureCodingPolicy ecPolicy = status.getErasureCodingPolicy();
     DBlock db;
@@ -285,12 +284,6 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
           ecPolicy.getCellSize());
     } else {
       db = new DBlock(blk);
-    }
-    for (MLocation ml : locations) {
-      StorageGroup source = storages.getSource(ml);
-      if (source != null) {
-        db.addLocation(source);
-      }
     }
     return db;
   }
