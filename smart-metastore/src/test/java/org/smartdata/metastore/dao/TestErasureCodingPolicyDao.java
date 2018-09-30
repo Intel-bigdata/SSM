@@ -48,37 +48,36 @@ import java.util.List;
 
 public class TestErasureCodingPolicyDao extends TestDaoUtil {
 
-  private ErasureCodingPolicyDao erasureCodingPolicyDao;
+  private ErasureCodingPolicyDao ecPolicyDao;
 
   @Before
   public void initErasureCodingPolicyDao() throws Exception {
     initDao();
-    erasureCodingPolicyDao = new ErasureCodingPolicyDao(druidPool.getDataSource());
+    ecPolicyDao = new ErasureCodingPolicyDao(druidPool.getDataSource());
   }
-
 
   @Test
   public void testInsert() throws Exception {
-    ErasureCodingPolicyInfo erasureCodingPolicyInfo = new ErasureCodingPolicyInfo((byte) 2, "PolicyInfo1");
-    erasureCodingPolicyDao.insert(erasureCodingPolicyInfo);
-    Assert.assertTrue(erasureCodingPolicyDao.getEcPolicyByName("PolicyInfo1").equals(erasureCodingPolicyInfo));
-    Assert.assertTrue(erasureCodingPolicyDao.getEcPolicyById((byte) 2).equals(erasureCodingPolicyInfo));
+    ErasureCodingPolicyInfo ecPolicyInfo = new ErasureCodingPolicyInfo((byte) 2, "PolicyInfo1");
+    ecPolicyDao.insert(ecPolicyInfo);
+    Assert.assertTrue(ecPolicyDao.getEcPolicyByName("PolicyInfo1").equals(ecPolicyInfo));
+    Assert.assertTrue(ecPolicyDao.getEcPolicyById((byte) 2).equals(ecPolicyInfo));
   }
 
   @Test
   public void testInsertAll() throws Exception {
-    erasureCodingPolicyDao.deleteAll();
+    ecPolicyDao.deleteAll();
     List<ErasureCodingPolicyInfo> list = new ArrayList<>();
     list.add(new ErasureCodingPolicyInfo((byte) 1, "PolicyInfo1"));
     list.add(new ErasureCodingPolicyInfo((byte) 3, "PolicyInfo3"));
-    erasureCodingPolicyDao.insert(list);
-    List<ErasureCodingPolicyInfo> getList = erasureCodingPolicyDao.getAllEcPolicies();
+    ecPolicyDao.insert(list);
+    List<ErasureCodingPolicyInfo> getList = ecPolicyDao.getAllEcPolicies();
     Assert.assertTrue(getList.get(0).equals(list.get(0)) && getList.get(1).equals(list.get(1)));
   }
 
   @After
   public void closeErasureCodingPolicyDao() throws Exception {
     closeDao();
-    erasureCodingPolicyDao = null;
+    ecPolicyDao = null;
   }
 }

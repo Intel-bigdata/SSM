@@ -31,9 +31,11 @@ import org.smartdata.hdfs.metric.fetcher.DatanodeStorageReportProcTask;
 import org.smartdata.hdfs.metric.fetcher.MovePlanMaker;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.FileMovePlan;
 import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.net.URI;
@@ -110,7 +112,8 @@ public class MoverScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     if (!actions.contains(action.getActionType())) {
       return ScheduleResult.SUCCESS;
     }
@@ -172,7 +175,8 @@ public class MoverScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
     // check args
     if (actionInfo.getArgs() == null) {
       throw new IOException("No arguments for the action");

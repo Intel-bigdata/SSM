@@ -18,16 +18,16 @@
 package org.smartdata.server.engine.cmdlet.agent;
 
 import org.smartdata.AgentService;
+import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.protocol.message.LaunchCmdlet;
+import org.smartdata.protocol.message.StopCmdlet;
 import org.smartdata.server.engine.cmdlet.CmdletExecutor;
 import org.smartdata.server.engine.cmdlet.CmdletFactory;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
-import org.smartdata.server.engine.cmdlet.message.StopCmdlet;
 
 import java.io.IOException;
 
 public class AgentCmdletService extends AgentService {
-  public static final String NAME = "AgentCmdletService";
   private CmdletExecutor executor;
   private CmdletFactory factory;
 
@@ -65,7 +65,7 @@ public class AgentCmdletService extends AgentService {
 
   @Override
   public String getServiceName() {
-    return NAME;
+    return SmartConstants.AGENT_CMDLET_SERVICE_NAME;
   }
 
   public CmdletExecutor getCmdletExecutor() {

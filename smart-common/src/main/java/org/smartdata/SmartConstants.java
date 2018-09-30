@@ -52,4 +52,6 @@ public class SmartConstants {
   public static final String SMART_SERVER_ID_FILE = "/system/ssm.id";
 
   public static final String SMART_FILE_STATE_XATTR_NAME = "user.ssmFileState";
+
+  public static final String AGENT_CMDLET_SERVICE_NAME = "AgentCmdletService";
 }

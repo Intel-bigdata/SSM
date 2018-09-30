@@ -34,6 +34,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.*;
 import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.net.URI;
@@ -136,7 +137,8 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     if (!actionInfo.getActionName().equals("sync")) {
       return ScheduleResult.FAIL;
     }
@@ -258,7 +260,8 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
     // check args
     if (actionInfo.getArgs() == null) {
       throw new IOException("No arguments for the action");
@@ -275,7 +278,7 @@ public class CopyScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void onActionFinished(ActionInfo actionInfo) {
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     // Remove lock
     FileDiff fileDiff = null;
     if (actionInfo.isFinished()) {

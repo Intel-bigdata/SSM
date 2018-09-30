@@ -31,8 +31,8 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.protocol.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusReporter;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

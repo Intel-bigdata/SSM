@@ -18,7 +18,9 @@
 package org.smartdata.model.action;
 
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,19 +32,27 @@ public interface ActionScheduler {
   /**
    * Called when new action submitted to CmdletManager.
    *
+   * @param cmdletInfo info about the cmdlet which the action belongs to
    * @param actionInfo
+   * @param actionIndex index of the action in cmdlet,
    * @return acceptable if true, or discard
    * @throws IOException
    */
-  boolean onSubmit(ActionInfo actionInfo) throws IOException;
+  boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException;
 
   /**
    * Trying to schedule an action for Dispatch.
+   *
+   * @param cmdletInfo
    * @param actionInfo
+   * @param cmdlet
    * @param action
+   * @param actionIndex
    * @return
    */
-  ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action);
+  ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex);
 
   /**
    * Called after and an Cmdlet get scheduled.
@@ -50,19 +60,20 @@ public interface ActionScheduler {
    * @param actionInfo
    * @param result
    */
-  void postSchedule(ActionInfo actionInfo, ScheduleResult result);
+  void postSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex,
+      ScheduleResult result);
 
   /**
    *  Called just before dispatch for execution.
    *
    * @param action
    */
-  void onPreDispatch(LaunchAction action);
+  void onPreDispatch(LaunchCmdlet cmdlet, LaunchAction action, int actionIndex);
 
   /**
    *  Called when action finished execution.
    *
    * @param actionInfo
    */
-  void onActionFinished(ActionInfo actionInfo);
+  void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex);
 }
