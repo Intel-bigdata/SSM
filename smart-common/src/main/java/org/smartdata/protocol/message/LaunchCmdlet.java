@@ -15,15 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.message;
+package org.smartdata.protocol.message;
 
 import org.smartdata.AgentService;
+import org.smartdata.SmartConstants;
+import org.smartdata.model.CmdletDispatchPolicy;
 import org.smartdata.model.LaunchAction;
-import org.smartdata.server.engine.cmdlet.CmdletDispatchPolicy;
-import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 
 import java.util.List;
 
+/**
+ * Command send out by Active SSM server to SSM Agents, Standby servers or itself for execution.
+ *
+ */
 public class LaunchCmdlet implements AgentService.Message {
   private long cmdletId;
   private List<LaunchAction> launchActions;
@@ -53,7 +57,7 @@ public class LaunchCmdlet implements AgentService.Message {
 
   @Override
   public String getServiceName() {
-    return AgentCmdletService.NAME;
+    return SmartConstants.AGENT_CMDLET_SERVICE_NAME;
   }
 
   public CmdletDispatchPolicy getDispPolicy() {

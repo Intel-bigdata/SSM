@@ -45,12 +45,12 @@ import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.cluster.NodeCmdletMetrics;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
@@ -254,13 +254,17 @@ public class CmdletManager extends AbstractService {
   private void checkActionsOnSubmit(CmdletInfo cmdletInfo,
       List<ActionInfo> actionInfos) throws IOException {
     for (ActionInfo actionInfo : actionInfos) {
+      cmdletInfo.addAction(actionInfo.getActionId());
+    }
+    int actionIndex = 0;
+    for (ActionInfo actionInfo : actionInfos) {
       for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
-        if (!p.onSubmit(actionInfo)) {
+        if (!p.onSubmit(cmdletInfo, actionInfo, actionIndex)) {
           throw new IOException(
             String.format("Action rejected by scheduler", actionInfo));
         }
       }
-      cmdletInfo.addAction(actionInfo.getActionId());
+      actionIndex++;
     }
   }
 
@@ -565,7 +569,7 @@ public class CmdletManager extends AbstractService {
       for (schIdx = 0; schIdx < actSchedulers.size(); schIdx++) {
         ActionScheduler s = actSchedulers.get(schIdx);
         try {
-          resultTmp = s.onSchedule(actionInfo, launchAction);
+          resultTmp = s.onSchedule(info, actionInfo, launchCmdlet, launchAction, idx);
         } catch (Throwable t) {
           actionInfo.appendLogLine("\nOnSchedule exception: " + t);
           resultTmp = ScheduleResult.FAIL;
@@ -600,11 +604,12 @@ public class CmdletManager extends AbstractService {
         scheduleResult = ScheduleResult.SUCCESS;
       }
     }
-    postscheduleCmdletActions(actIds, scheduleResult, idx, schIdx);
+    postscheduleCmdletActions(info, actIds, scheduleResult, idx, schIdx);
     return scheduleResult;
   }
 
-  private void postscheduleCmdletActions(List<Long> actions, ScheduleResult result,
+  private void postscheduleCmdletActions(CmdletInfo cmdletInfo,
+      List<Long> actions, ScheduleResult result,
       int lastAction, int lastScheduler) {
     List<ActionScheduler> actSchedulers;
     for (int aidx = lastAction; aidx >= 0; aidx--) {
@@ -619,7 +624,7 @@ public class CmdletManager extends AbstractService {
 
       for (int sidx = lastScheduler; sidx >= 0; sidx--) {
         try {
-          actSchedulers.get(sidx).postSchedule(info, result);
+          actSchedulers.get(sidx).postSchedule(cmdletInfo, info, sidx, result);
         } catch (Throwable t) {
           info.setLog((info.getLog() == null ? "" : info.getLog())
               + "\nPostSchedule exception: " + t);
@@ -1106,6 +1111,7 @@ public class CmdletManager extends AbstractService {
     long actionId = status.getActionId();
     if (idToActions.containsKey(actionId)) {
       ActionInfo actionInfo = idToActions.get(actionId);
+      CmdletInfo cmdletInfo = idToCmdlets.get(status.getCmdletId());
       synchronized (actionInfo) {
         if (!actionInfo.isFinished()) {
           actionInfo.setLog(status.getLog());
@@ -1113,8 +1119,7 @@ public class CmdletManager extends AbstractService {
           if (!status.isFinished()) {
             actionInfo.setProgress(status.getPercentage());
             if (actionInfo.getCreateTime() == 0) {
-              actionInfo.setCreateTime(
-                idToCmdlets.get(actionInfo.getCmdletId()).getGenerateTime());
+              actionInfo.setCreateTime(cmdletInfo.getGenerateTime());
             }
             actionInfo.setFinishTime(System.currentTimeMillis());
           } else {
@@ -1129,8 +1134,15 @@ public class CmdletManager extends AbstractService {
               actionInfo.setSuccessful(true);
               updateStorageIfNeeded(actionInfo);
             }
+            int actionIndex = 0;
+            for (long id : cmdletInfo.getAids()) {
+              if (id == actionId) {
+                break;
+              }
+              actionIndex++;
+            }
             for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
-              p.onActionFinished(actionInfo);
+              p.onActionFinished(cmdletInfo, actionInfo, actionIndex);
             }
           }
         }

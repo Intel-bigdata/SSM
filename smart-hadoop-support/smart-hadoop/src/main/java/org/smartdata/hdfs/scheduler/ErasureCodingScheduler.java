@@ -28,8 +28,10 @@ import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -83,7 +85,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
     if (!isECSupported()) {
       throw new IOException(actionInfo.getActionName() +
           " is not supported on " + VersionInfo.getVersion());
@@ -102,7 +105,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     if (!actions.contains(action.getActionType())) {
       return ScheduleResult.SUCCESS;
     }
@@ -170,7 +174,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void onActionFinished(ActionInfo actionInfo) {
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     if (actionInfo.getActionName().equals(ecActionID) ||
         actionInfo.getActionName().equals(unecActionID)) {
       fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));

@@ -15,15 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.model;
 
-
+/**
+ * The policy defines which type of executor service should be used
+ * to execute the given cmdlet.
+ *
+ */
 public enum CmdletDispatchPolicy {
-    ANY,
-    PREFER_AGENT,
-    PREFER_REMOTE_SSM,
-    PREFER_LOCAL;
-//    MUST_AGENT,
-//    MUST_REMOTE_SSM,
-//    MUST_LOCAL;
+  ANY,
+  // If not available then dispatch to other types
+  PREFER_AGENT,
+  PREFER_REMOTE_SSM,
+  PREFER_LOCAL;
+//  MUST_AGENT,
+//  MUST_REMOTE_SSM,
+//  MUST_LOCAL;
 }

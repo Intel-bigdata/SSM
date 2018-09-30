@@ -30,11 +30,11 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.CmdletStatus;
+import org.smartdata.protocol.message.LaunchCmdlet;
 import org.smartdata.server.cluster.ActiveServerNodeCmdletMetrics;
 import org.smartdata.server.cluster.NodeCmdletMetrics;
 import org.smartdata.server.engine.ActiveServerInfo;
 import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.server.engine.message.NodeMessage;
 
 import java.io.IOException;
@@ -407,10 +407,12 @@ public class CmdletDispatcher {
   }
 
   public void cmdletPreExecutionProcess(LaunchCmdlet cmdlet) {
+    int actionIndex = 0;
     for (LaunchAction action : cmdlet.getLaunchActions()) {
       for (ActionScheduler p : schedulers.get(action.getActionType())) {
-        p.onPreDispatch(action);
+        p.onPreDispatch(cmdlet, action, actionIndex);
       }
+      actionIndex++;
     }
   }
 

@@ -36,6 +36,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AgentService;
+import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
@@ -150,7 +151,7 @@ public class SmartAgent implements StatusReporter {
     Services.start();
 
     AgentCmdletService agentCmdletService =
-            (AgentCmdletService) Services.getService(AgentCmdletService.NAME);
+            (AgentCmdletService) Services.getService(SmartConstants.AGENT_CMDLET_SERVICE_NAME);
     cmdletExecutor = agentCmdletService.getCmdletExecutor();
 
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -271,7 +272,6 @@ public class SmartAgent implements StatusReporter {
     }
 
     private class WaitForRegisterAgent implements Procedure<Object> {
-
       private final Cancellable registerAgent;
 
       public WaitForRegisterAgent(Cancellable registerAgent) {
