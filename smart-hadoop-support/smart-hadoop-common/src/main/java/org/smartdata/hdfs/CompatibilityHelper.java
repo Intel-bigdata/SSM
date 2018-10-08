@@ -30,6 +30,7 @@ import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.StorageGroup;
 
 import java.io.*;
@@ -95,4 +96,12 @@ public interface CompatibilityHelper {
   byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
 
   Map<Byte, String> getErasureCodingPolicies(DFSClient client) throws IOException;
+
+  List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId);
+
+  DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status);
+
+  boolean isLocatedStripedBlock(LocatedBlock lb);
+
+  DBlock getDBlock(DBlock block, StorageGroup source);
 }
