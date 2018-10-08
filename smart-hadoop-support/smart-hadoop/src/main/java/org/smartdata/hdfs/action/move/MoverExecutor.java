@@ -225,6 +225,7 @@ public class MoverExecutor {
       // build source
       DatanodeInfo sourceDatanode = sourceDatanodeMap.get(sourceUuids.get(planIndex));
       StorageGroup source = new StorageGroup(sourceDatanode, sourceStorageTypes.get(planIndex));
+      block.addLocation(source);
       //build target
       DatanodeInfo targetDatanode = CompatibilityHelperLoader.getHelper()
           .newDatanodeInfo(targetIpAddrs.get(planIndex), targetXferPorts.get(planIndex));
