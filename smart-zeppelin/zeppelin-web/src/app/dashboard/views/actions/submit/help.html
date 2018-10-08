@@ -25,141 +25,186 @@ limitations under the License.
     </thead>
     <tbody>
     <tr>
+      <td>allec</td>
+      <td>-codec $codecName -dataNum $dataNum -parityNum $parityNum -cellSize $cellSize</td>
+      <td>Add an EC policy with the given parameters. The cellSize in byte should be divisible by 1024.</td>
+    </tr>
+    <tr>
       <td>allssd</td>
       <td>-file $file</td>
-      <td>Move $file to SSD storage</td>
+      <td>Move $file to SSD storage.</td>
     </tr>
     <tr>
       <td>alldisk</td>
       <td>-file $file</td>
-      <td>Move $file to disk storage</td>
+      <td>Move $file to disk storage.</td>
     </tr>
     <tr>
       <td>append</td>
       <td>-file $file [-length $length -bufSize $bufSize]</td>
-      <td>Append $file with $length length and $bufSize buffer size</td>
+      <td>Append $file with $length length and $bufSize buffer size.</td>
     </tr>
     <tr>
       <td>archive</td>
       <td>-file $file</td>
-      <td>Archive $file</td>
+      <td>Archive $file.</td>
     </tr>
     <tr>
       <td>cache</td>
       <td>-file $file</td>
-      <td>Cache $file to HDFS cache</td>
+      <td>Cache $file to HDFS cache.</td>
+    </tr>
+    <tr>
+      <td>checkec</td>
+      <td>-file $file</td>
+      <td>Show the EC policy of $file. The given $file can be a directory as well.</td>
     </tr>
     <tr>
       <td>checkstorage</td>
       <td>-file $file</td>
-      <td>Show the storage type of $file</td>
+      <td>Show the storage type of $file.</td>
     </tr>
     <tr>
       <td>compact</td>
       <td>-file [$file1,$file2,..] -containerFile $containerFile</td>
-      <td>compact $file1, $file2, etc. to $containerFile</td>
+      <td>compact $file1, $file2, etc. to $containerFile.</td>
     </tr>
     <tr>
       <td>concat</td>
       <td>-file $src -dest $dest</td>
       <td>Concatenate the files in $src which lists at least two files
-        separated by comma and $dest is the target file</td>
+        separated by comma and $dest is the target file.</td>
     </tr>
     <tr>
       <td>copy</td>
       <td>-file $src -dest $dest [-offset $offset] [-length $length] [-bufSize $size]</td>
-      <td>Copy the file in $src with $offset offset, $length length and $size buffer size</td>
+      <td>Copy the file in $src with $offset offset, $length length and $size buffer size.</td>
     </tr>
     <tr>
       <td>copy2s3</td>
       <td>copy2s3 -file $file -dest $s3_dest</td>
-      <td>Copy $file to $s3_dest which is on Amazon S3,$s3_dest is a url starts with s3a://</td>
+      <td>Copy $file to $s3_dest which is on Amazon S3,$s3_dest is a url starts with s3a://.</td>
     </tr>
     <tr>
       <td>delete</td>
       <td>-file $file</td>
-      <td>Delete $file</td>
+      <td>Delete $file.</td>
+    </tr>
+    <tr>
+      <td>disableec</td>
+      <td>-policy $policyName</td>
+      <td>Disable the given EC policy $policyName.</td>
+    </tr>
+    <tr>
+      <td>ec</td>
+      <td>-file $file [-policy $policyName -bufSize $bufSize]</td>
+      <td>Make the EC policy of $file become the given one or default one.
+        If option -policy is not given, SSM will use the default one configured in HDFS.
+        If option -bufSize is not given, SSM will use the default value in byte equivalent to 1MB.
+      </td>
     </tr>
     <tr>
       <td>echo</td>
       <td>-msg $message</td>
-      <td>Print $message</td>
+      <td>Print $message.</td>
+    </tr>
+    <tr>
+      <td>enableec</td>
+      <td>-policy $policyName</td>
+      <td>Enable the given EC policy $policyName.</td>
     </tr>
     <tr>
       <td>list</td>
       <td>-file $src</td>
-      <td>List all the files in $src</td>
+      <td>List all the files in $src.</td>
+    </tr>
+    <tr>
+      <td>listec</td>
+      <td>No option</td>
+      <td>List all EC policies.</td>
     </tr>
     <tr>
       <td>merge</td>
       <td>-file $src -dest $dest [-bufSize $size]</td>
       <td>Merge the files in $src which lists at least two files
-        separated by comma and $dest is the target file</td>
+        separated by comma and $dest is the target file.</td>
     </tr>
     <tr>
       <td>onedisk</td>
       <td>-file $file</td>
-      <td>Move one replica of $file to disk</td>
+      <td>Move one replica of $file to disk.</td>
     </tr>
     <tr>
       <td>onessd</td>
       <td>-file $file</td>
-      <td>Move one replica of $file to SSD</td>
+      <td>Move one replica of $file to SSD.</td>
     </tr>
     <tr>
       <td>ramdisk</td>
       <td>-file $file</td>
-      <td>Move $file to RAM_DISK</td>
+      <td>Move $file to RAM_DISK.</td>
     </tr>
     <tr>
       <td>read</td>
       <td>-file $file [-bufSize $size]</td>
-      <td>Read $file with $size buffer size</td>
+      <td>Read $file with $size buffer size.</td>
+    </tr>
+    <tr>
+      <td>removeec</td>
+      <td>-policy $policyName</td>
+      <td>Remove the given EC policy $policyName.</td>
     </tr>
     <tr>
       <td>rename</td>
       <td>-file $src -dest $dest</td>
-      <td>Rename $src to $dest</td>
+      <td>Rename $src to $dest.</td>
     </tr>
     <tr>
       <td>truncate</td>
       <td>-file $src -length $length</td>
-      <td>Truncate $src to $length size</td>
+      <td>Truncate $src to $length size.</td>
     </tr>
     <tr>
       <td>truncate0</td>
       <td>-file $src</td>
-      <td>Truncate $src to 0 size</td>
+      <td>Truncate $src to 0 size.</td>
     </tr>
     <tr>
       <td>uncache</td>
       <td>-file $file</td>
-      <td>Uncache $file from HDFS cache</td>
+      <td>Uncache $file from HDFS cache.</td>
     </tr>
     <tr>
       <td>uncompact</td>
       <td>-containerFile $containerFile</td>
-      <td>uncompact $containerFile to original files</td>
+      <td>uncompact $containerFile to original files.</td>
+    </tr>
+    <tr>
+      <td>unec</td>
+      <td>-file $file [-bufSize $bufSize]</td>
+      <td>Make the EC policy of $file become replication.
+        If option -bufSize is not given, SSM will use the default value in byte equivalent to 1MB.
+      </td>
     </tr>
     <tr>
       <td>write</td>
       <td>-file $file -length $length [-bufSize $size]</td>
-      <td>Write random data to $file with $size buffer size and $length length</td>
+      <td>Write random data to $file with $size buffer size and $length length.</td>
     </tr>
     <tr>
       <td>sleep</td>
       <td>-m $millisecond</td>
-      <td>Sleep $millisecond</td>
+      <td>Sleep $millisecond.</td>
     </tr>
     <tr>
       <td>sync</td>
       <td>-dest $dest</td>
-      <td>Sync file to $dest</td>
+      <td>Sync file to $dest.</td>
     </tr>
     <tr>
       <td>user defined actions</td>
       <td></td>
-      <td>Interface defined for user to implement their own actions </td>
+      <td>Interface defined for user to implement their own actions.</td>
     </tr>
     </tbody>
   </table>
