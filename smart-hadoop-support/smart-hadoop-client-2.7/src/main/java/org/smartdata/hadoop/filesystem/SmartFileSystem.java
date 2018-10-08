@@ -221,7 +221,16 @@ public class SmartFileSystem extends DistributedFileSystem {
           newStatus.add(status);
         }
       } else {
-        newStatus.add(status);
+        FileState fileState = smartDFSClient.getFileState(getPathName(status.getPath()));
+        if (fileState instanceof CompressionFileState) {
+          long len = ((CompressionFileState) fileState).getOriginalLength();
+          newStatus.add(new FileStatus(len, status.isDirectory(), status.getReplication(),
+              status.getBlockSize(), status.getModificationTime(), status.getAccessTime(),
+              status.getPermission(), status.getOwner(), status.getGroup(),
+              status.isSymlink() ? status.getSymlink() : null, status.getPath()));
+        } else {
+          newStatus.add(status);
+        }
       }
     }
     return newStatus.toArray(new FileStatus[oldStatus.length]);
@@ -295,6 +304,12 @@ public class SmartFileSystem extends DistributedFileSystem {
       Path target = getLinkTarget(f);
       FileState fileState = smartDFSClient.getFileState(getPathName(target));
       if (fileState instanceof CompactFileState) {
+        fileStatus = getFileStatus(target);
+      }
+    } else {
+      Path target = getLinkTarget(f);
+      FileState fileState = smartDFSClient.getFileState(getPathName(target));
+      if (fileState instanceof CompressionFileState) {
         fileStatus = getFileStatus(target);
       }
     }
