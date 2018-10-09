@@ -16,19 +16,48 @@
  */
 
 
-import { Component, OnInit } from '@angular/core';
+.ghost-button {
+  position: relative;
+  padding: 10px 50px;
 
-@Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
-})
-export class HomeComponent implements OnInit {
-  text: string;
-
-  constructor() { }
-
-  ngOnInit() {
+  &:before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: inline-block;
+    border: 2px solid;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    width: 40%;
+    height: 70%;
+    content: "";
+    transition: all 0.5s ease;
   }
 
+  &:after {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: inline-block;
+    border: 2px solid;
+    border-left-color: transparent;
+    border-top-color: transparent;
+    width: 40%;
+    height: 70%;
+    content: "";
+    transition: all 0.5s ease;
+  }
+
+  &:hover {
+
+    &:before {
+      width: 100%;
+      height: 100%;
+    }
+
+    &:after {
+      width: 100%;
+      height: 100%;
+    }
+  }
 }

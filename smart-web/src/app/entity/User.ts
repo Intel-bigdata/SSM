@@ -17,9 +17,9 @@
 
 
 export class User {
-  principal: string;
-  roles: string[];
-  ticket: string;
+  public principal: string;
+  public roles: string[];
+  public ticket: string;
 
   /**
    * constructor of User.

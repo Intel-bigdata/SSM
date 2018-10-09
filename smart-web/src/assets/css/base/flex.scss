@@ -16,19 +16,22 @@
  */
 
 
-import { Component, OnInit } from '@angular/core';
+.flex {
+  display: flex;
+}
 
-@Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
-})
-export class HomeComponent implements OnInit {
-  text: string;
+.flex-box {
+  flex: 1;
+}
 
-  constructor() { }
+.flex-vertical-center {
+  align-items: center;
+}
 
-  ngOnInit() {
-  }
+.flex-space-between {
+  align-content: space-between;
+}
 
+.flex-align-center {
+  align-content: center;
 }

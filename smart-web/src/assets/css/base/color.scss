@@ -16,19 +16,11 @@
  */
 
 
-import { Component, OnInit } from '@angular/core';
-
-@Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
-})
-export class HomeComponent implements OnInit {
-  text: string;
-
-  constructor() { }
-
-  ngOnInit() {
-  }
-
-}
+$brand-primary: darken(#428bca, 6.5%); // #337ab7
+$brand-success: #5cb85c;
+$brand-info:    #5bc0de;
+$brand-warning: #f0ad4e;
+$brand-danger:  #d9534f;
+$brand-white:   #eee;
+$brand-gray:    #777;
+$brand-dark:    #333;

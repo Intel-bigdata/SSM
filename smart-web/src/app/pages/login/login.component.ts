@@ -37,7 +37,6 @@ export class LoginComponent implements OnInit {
   constructor( private userService: UserService, private router: Router ) { }
 
   ngOnInit(): void {
-    console.log(this.userService.checkLogged());
     if (this.userService.checkLogged()) {
       // Redirect to app when user has logged.
       this.router.navigateByUrl('/');

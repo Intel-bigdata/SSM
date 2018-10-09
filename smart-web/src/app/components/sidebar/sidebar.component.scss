@@ -16,6 +16,14 @@
  */
 
 
+@import '../../../assets/css/base';
+
+.sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .logo {
   display: flex;
   align-content: center;
@@ -28,23 +36,15 @@
   }
 }
 
-.divider {
-  content: '';
-  position: relative;
-  height: 1px;
-  left: 15px;
-  width: calc(100% - 30px);
-  background-color: #eeeeee;
-}
-
 .sidebar-wrapper {
+  flex: 1;
   overflow-y: auto;
   padding-bottom: 30px;
   width: 260px;
 }
 
 .nav-container {
-  position: relative;
+
 }
 
 .nav {
@@ -73,7 +73,7 @@
     }
 
     b {
-      color: #eee; 
+      color: $brand-white;
     }
   }
 }
@@ -99,11 +99,16 @@
   }
 }
 
-.collapsed .caret {
-  position: absolute;
-  right: 21px;
-  top: 23px;
-  transform: rotate(0deg);
+.collapsed {
+  .caret {
+    position: absolute;
+    right: 21px;
+    top: 23px;
+    transform: rotate(0deg);
+  }
 }
 
-
+.sidebar-footer {
+  text-align: center;
+  margin-bottom: 25px;
+}

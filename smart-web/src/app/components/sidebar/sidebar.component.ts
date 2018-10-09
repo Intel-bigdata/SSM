@@ -18,31 +18,38 @@
 
 import {AfterViewInit, Component, OnInit, OnDestroy} from '@angular/core';
 import { ROUTES } from './sidebar-routes.config';
+import { UserService } from '../../services/user/user.service';
 
 @Component({
   selector: 'app-sidebar',
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss']
 })
-export class SidebarComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SidebarComponent {
   public color: string;
   public menuItems: object;
   public activeFontColor: string;
   public normalFontColor: string;
   public dividerBgColor: string;
-  constructor() {
+
+  constructor( private userService: UserService ) {
     this.menuItems = ROUTES;
     this.activeFontColor = 'rgba(0,0,0,.6)';
     this.normalFontColor = 'rgba(255,255,255,.8)';
     this.dividerBgColor = 'rgba(255, 255, 255, 0.5)';
   }
 
-  ngOnInit() {
+  /**
+   * get login status.
+   */
+  checkLogged(): boolean {
+    return this.userService.checkLogged();
   }
 
-  ngOnDestroy() {
-  }
-
-  ngAfterViewInit() {
+  /**
+   * user logout.
+   */
+  logout(): void {
+    this.userService.userLogout();
   }
 }

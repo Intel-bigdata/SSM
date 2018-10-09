@@ -21,14 +21,14 @@ import { BaseUrlService } from '../baseUrl/baseUrl.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Observable } from 'rxjs';
-import { catchError, tap } from "rxjs/operators";
+import { catchError } from "rxjs/operators";
 import { of } from 'rxjs/observable/of';
 
 @Injectable()
 export class HttpService {
 
   constructor(
-    private http: HttpClient,
+    private $http: HttpClient,
     private baseUrlService: BaseUrlService
   ) { }
 
@@ -36,6 +36,7 @@ export class HttpService {
    * POST: user login.
    * @param userName - a `string` of user name
    * @param password - a `string` of user password
+   * @return a `Observable` of login res
    */
   userLogin(userName: string, password: string): Observable<any> {
     const httpOptions = {
@@ -43,8 +44,19 @@ export class HttpService {
     };
     const loginUrl = `${ this.baseUrlService.getUserApiRoot() }login`;
     // format user name and password to form data.
-    let params: string = `userName=${ userName }&password=${ password }`;
-    return this.http.post(loginUrl, params, httpOptions);
+    const params: string = `userName=${ userName }&password=${ password }`;
+    return this.$http.post(loginUrl, params, httpOptions);
+  }
+
+  /**
+   * POST: user logout.
+   */
+  userLogout(): Observable<any> {
+    const logoutUrl = `${ this.baseUrlService.getUserApiRoot() }login/logout`;
+    return this.$http.post(logoutUrl, null, {})
+      .pipe(
+        catchError(this.handleError('user logout', 'success'))
+      );
   }
 
   /**

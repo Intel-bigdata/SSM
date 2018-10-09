@@ -15,14 +15,15 @@
   ~ limitations under the License.
   -->
 
+<main class="sidebar">
+  <div class="logo">
+    <mat-icon>video_label</mat-icon>
+    Smart Storage Manager
+  </div>
 
-<div class="logo">
-  <mat-icon>video_label</mat-icon>
-  Smart Storage Manager
-</div>
-<div class="divider"></div>
-<div class="sidebar-wrapper">
-  <div class="nav-container">
+  <div class="divider"></div>
+
+  <div class="sidebar-wrapper">
     <ul class="nav">
       <li *ngFor="let menuItem of menuItems" routerLinkActive #rla="routerLinkActive" [ngClass]="rla.isActive? (menuItem.children === null? 'active' : '') : ''" [routerLinkActiveOptions]="{exact: true}">
         <a [style.display]="menuItem.children === null? 'flex' : 'none'" [routerLink]="[menuItem.path]" [style.background-color]="rla.isActive? color : 'transparent'">
@@ -49,4 +50,11 @@
       </li>
     </ul>
   </div>
-</div>
+
+  <footer class="sidebar-footer">
+    <button *ngIf="checkLogged(); else logoutButton;" color="accent" mat-fab (click)="logout()">Exit</button>
+    <ng-template #logoutButton>
+      <a class="ghost-button info-color" [routerLink]="['/login']">Login</a>
+    </ng-template>
+  </footer>
+</main>

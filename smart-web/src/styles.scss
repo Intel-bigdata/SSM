@@ -14,11 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+
 @import '~@angular/material/prebuilt-themes/indigo-pink.css';
 @import '~material-design-icons/iconfont/material-icons.css';
+@import 'assets/css/base/color';
+@import './assets/css/ghost-button';
 
 * {
   box-sizing: border-box;
+}
+
+.primary-color {
+  color: $brand-primary;
+}
+
+.success-color {
+  color: $brand-success;
+}
+
+.info-color {
+  color: $brand-info;
+}
+
+.warning-color {
+  color: $brand-warning;
+}
+
+.danger-color {
+  color: $brand-danger;
+}
+
+.white-color {
+  color: $brand-white;
+}
+
+.gray-color {
+  color: $brand-gray;
+}
+
+.dark-color {
+  color: $brand-dark;
 }
 
 html, body {
@@ -64,13 +100,15 @@ h6 {
 }
 
 a {
-  color: #777;
+  color: $brand-white;
+  font-weight: 400;
+  display: inline-block;
   text-decoration: none;
-}
 
-a:hover {
-  color: #007aff;
-  text-decoration: none;
+  &:hover {
+    color: $brand-info;
+    text-decoration: none;
+  }
 }
 
 .app-main {
@@ -82,14 +120,14 @@ a:hover {
   background: none !important;
 }
 
-.ssm-table {
+.ssm-content {
   padding: 20px;
   position: relative;
   background-color: #fff;
   border-radius: 5px;
   height: 100%;
 
-  .ssm-table-header {
+  .ssm-content-header {
     position: absolute;
     text-align: center;
     background-color: #007aff;
@@ -108,12 +146,20 @@ a:hover {
     }
   }
 
-  .ssm-table-content {
+  .ssm-content-content {
     position: relative;
     margin-top: 10px;
   }
 
-  .ssm-table-title {
+  .ssm-content-title {
     padding-left: 80px;
   }
+}
+
+.divider {
+  content: '';
+  display: block;
+  height: 1px;
+  width: 100%;
+  background-color: $brand-white;
 }

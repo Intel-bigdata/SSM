@@ -24,20 +24,30 @@ import { HttpService } from '../http/http.service';
 import { User } from '../../entity/User';
 
 import { Observable } from 'rxjs';
-import { tap } from "rxjs/operators";
+import {catchError, tap} from "rxjs/operators";
 
 @Injectable()
 export class UserService {
 
-  user: User = undefined;
+  public user: User;
 
   constructor(
     private httpService: HttpService,
     private cookieService: CookieService ) { }
 
   /**
+   * set user info.
+   * @param principal - a `string` of user principal
+   * @param ticket - a `string` of user ticket
+   */
+  setUser(principal: string, ticket: string): void {
+    //TODO add roles.
+    this.user = new User(principal, [], ticket);
+  }
+
+  /**
    * get the login status of user.
-   * @return a `boolean` of login status.
+   * @return a `boolean` of login status
    */
   checkLogged(): boolean {
     if (this.cookieService.check('SSM_TICKET')) {
@@ -48,9 +58,10 @@ export class UserService {
   }
 
   /**
-   * POST: user login.
+   * user login.
    * @param userName - a `string` of user name
    * @param password - a `string` of user password
+   * @return a `Observable` of login res
    */
   userLogin(userName: string, password: string): Observable<any> {
     return this.httpService.userLogin(userName, password).pipe(
@@ -68,12 +79,14 @@ export class UserService {
   }
 
   /**
-   * set user info
-   * @param principal - a `string` of user principal
-   * @param ticket - a `string` of user ticket
+   * user logout.
    */
-  setUser(principal: string, ticket: string): void {
-    //TODO add roles.
-    this.user = new User(principal, [], ticket);
+  userLogout(): void {
+    this.user = undefined;
+    this.cookieService.delete('SSM_TICKET');
+    this.httpService.userLogout().subscribe( res => {
+        window.location.href = '/';
+      }
+    );
   }
 }
