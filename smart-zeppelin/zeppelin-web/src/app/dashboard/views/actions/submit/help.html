@@ -27,7 +27,10 @@ limitations under the License.
     <tr>
       <td>allec</td>
       <td>-codec $codecName -dataNum $dataNum -parityNum $parityNum -cellSize $cellSize</td>
-      <td>Add an EC policy with the given parameters. The cellSize in byte should be divisible by 1024.</td>
+      <td>
+        Add an EC policy with the given parameters. The cellSize in byte should be divisible by 1024.
+        SSM supports human-readable value for cellSize, e.g., 1KB, 1MB.
+      </td>
     </tr>
     <tr>
       <td>allssd</td>
@@ -101,6 +104,7 @@ limitations under the License.
       <td>Make the EC policy of $file become the given one or default one.
         If option -policy is not given, SSM will use the default one configured in HDFS.
         If option -bufSize is not given, SSM will use the default value in byte equivalent to 1MB.
+        SSM supports human-readable value for bufSize, e.g., 1KB, 1MB.
       </td>
     </tr>
     <tr>
@@ -184,6 +188,7 @@ limitations under the License.
       <td>-file $file [-bufSize $bufSize]</td>
       <td>Make the EC policy of $file become replication.
         If option -bufSize is not given, SSM will use the default value in byte equivalent to 1MB.
+        SSM supports human-readable value for bufSize, e.g., 1KB, 1MB.
       </td>
     </tr>
     <tr>
