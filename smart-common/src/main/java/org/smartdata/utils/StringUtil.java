@@ -28,12 +28,12 @@ import java.util.regex.Pattern;
 
 public class StringUtil {
   private static final String DIR_SEP = "/";
-  private static final String[] GLOBS = new String[] {
+  private static final String[] GLOBS = new String[]{
       "*", "?"
   };
 
   public static String join(CharSequence delimiter,
-      Iterable<? extends CharSequence> elements) {
+                            Iterable<? extends CharSequence> elements) {
     if (elements == null) {
       return null;
     }
@@ -216,5 +216,37 @@ public class StringUtil {
       throw new ParseException("Unexpected tail of string", chars.length);
     }
     return blocks;
+  }
+
+  public static long parseToByte(String size) {
+    String str = size.toUpperCase();
+    Long ret;
+    long times = 1;
+    Pattern p = Pattern.compile("[PTGMK]?B");
+    Matcher m = p.matcher(str);
+    String unit = "";
+    if (m.find()) {
+      unit = m.group();
+    }
+    str = str.substring(0, str.length() - unit.length());
+    switch (unit) {
+      case "PB":
+        times *= 1024L * 1024 * 1024 * 1024 * 1024;
+        break;
+      case "TB":
+        times *= 1024L * 1024 * 1024 * 1024;
+        break;
+      case "GB":
+        times *= 1024L * 1024 * 1024;
+        break;
+      case "MB":
+        times *= 1024L * 1024;
+        break;
+      case "KB":
+        times *= 1024L;
+        break;
+    }
+    ret = Long.parseLong(str);
+    return ret * times;
   }
 }

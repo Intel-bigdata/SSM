@@ -26,6 +26,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       this.ecTmpPath = args.get(EC_TMP);
     }
     if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
-      this.bufferSize = Integer.valueOf(args.get(BUF_SIZE));
+      this.bufferSize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
     }
     this.progress = 0.0F;
   }
