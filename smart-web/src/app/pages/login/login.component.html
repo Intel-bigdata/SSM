@@ -17,7 +17,6 @@
 
 
 <main class="login-page">
-  <h3 class="welcome-title">Smart Storage Management</h3>
   <div class="login-container">
     <div class="login-form">
       <div class="card-header">
@@ -27,15 +26,15 @@
       <div class="card-form">
         <div class="form-row">
           <label>User Name:</label>
-          <mat-input-container>
-            <input type="text" #nameInput [(ngModel)]="loginName" matInput placeholder="Login Name"/>
-          </mat-input-container>
+          <mat-form-field>
+            <input type="text" #nameInput [(ngModel)]="loginName" matInput placeholder="User Name"/>
+          </mat-form-field>
         </div>
         <div class="form-row">
           <label>Password:</label>
-          <mat-input-container>
+          <mat-form-field>
             <input type="password" id="password" [(ngModel)]="password" matInput placeholder="Password" (keyup.enter)="login()"/>
-          </mat-input-container>
+          </mat-form-field>
         </div>
       </div>
       <div class="card-footer">

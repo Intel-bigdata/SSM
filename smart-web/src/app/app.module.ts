@@ -28,7 +28,10 @@ import {
   MatInputModule,
   MatMenuModule,
   MatCheckboxModule,
-  MatIconModule } from '@angular/material';
+  MatIconModule,
+  MatPaginatorModule,
+  MatTableModule,
+  MatSortModule } from '@angular/material';
 import { AceEditorModule } from'ng2-ace-editor';
 import { routing } from "./app.routers";
 import { SweetAlert2Module } from '@toverux/ngx-sweetalert2';
@@ -70,6 +73,9 @@ import { BaseUrlService } from './services/baseUrl/baseUrl.service';
     MatMenuModule,
     MatCheckboxModule,
     MatIconModule,
+    MatPaginatorModule,
+    MatTableModule,
+    MatSortModule,
     AceEditorModule,
     routing,
     SweetAlert2Module.forRoot()

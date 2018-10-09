@@ -16,62 +16,46 @@
   -->
 
 
-<main class="rule-main">
-  <div class="ssm-content">
-    <div class="ssm-table-header">
-      <h4>Rules</h4>
-    </div>
-    <div class="ssm-table-content">
-      <div class="table-responsive">
-        <table class="table">
-          <thead class="text-primary">
-          <tr>
-            <th>First Name</th>
-            <th>Country</th>
-            <th>City</th>
-            <th>Salary</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td>Dakota Rice</td>
-            <td>Niger</td>
-            <td>Oud-Turnhout</td>
-            <td class="text-primary">$36,738</td>
-          </tr>
-          <tr>
-            <td>Minerva Hooper</td>
-            <td>Curaçao</td>
-            <td>Sinaai-Waas</td>
-            <td class="text-primary">$23,789</td>
-          </tr>
-          <tr>
-            <td>Sage Rodriguez</td>
-            <td>Netherlands</td>
-            <td>Baileux</td>
-            <td class="text-primary">$56,142</td>
-          </tr>
-          <tr>
-            <td>Philip Chaney</td>
-            <td>Korea, South</td>
-            <td>Overland Park</td>
-            <td class="text-primary">$38,735</td>
-          </tr>
-          <tr>
-            <td>Doris Greene</td>
-            <td>Malawi</td>
-            <td>Feldkirchen in Kärnten</td>
-            <td class="text-primary">$63,542</td>
-          </tr>
-          <tr>
-            <td>Mason Porter</td>
-            <td>Chile</td>
-            <td>Gloucester</td>
-            <td class="text-primary">$78,615</td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+<main class="ssm-page">
+  <header class="ssm-page-header">
+    <h4>Rules</h4>
+  </header>
+  <div class="ssm-page-content">
+    <mat-form-field>
+      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    </mat-form-field>
+
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+
+      <!-- Position Column -->
+      <ng-container matColumnDef="position">
+        <th mat-header-cell *matHeaderCellDef> No. </th>
+        <td mat-cell *matCellDef="let element"> {{element.position}} </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef> Name </th>
+        <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+      </ng-container>
+
+      <!-- Weight Column -->
+      <ng-container matColumnDef="weight">
+        <th mat-header-cell *matHeaderCellDef> Weight </th>
+        <td mat-cell *matCellDef="let element"> {{element.weight}} </td>
+      </ng-container>
+
+      <!-- Symbol Column -->
+      <ng-container matColumnDef="symbol">
+        <th mat-header-cell *matHeaderCellDef> Symbol </th>
+        <td mat-cell *matCellDef="let element"> {{element.symbol}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
   </div>
+  <footer>
+    <mat-paginator pageSize="20" showFirstLastButtons></mat-paginator>
+  </footer>
 </main>

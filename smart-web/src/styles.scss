@@ -20,6 +20,8 @@
 @import '~material-design-icons/iconfont/material-icons.css';
 @import 'assets/css/base/color';
 @import './assets/css/ghost-button';
+@import './assets/css/page';
+@import './assets/css/rewrite';
 
 * {
   box-sizing: border-box;
@@ -63,13 +65,13 @@ html, body {
 }
 
 body {
-  background: linear-gradient(-45deg, #66cdcc 0%, #336799 100%);
+  background: linear-gradient(-45deg, #66cdcc 0%, $brand-primary 100%);
   min-height: 100vh;
+  min-width: 900px;
 }
 
 h1, h2, h3, h4, h5, h6, p, a, b, button, label, small {
   font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, monospace;
-  font-weight: 300;
   margin: 0;
 }
 
@@ -115,51 +117,19 @@ a {
   padding: 15px;
 }
 
-.ace_gutter {
-  border: none !important;
-  background: none !important;
-}
-
-.ssm-content {
-  padding: 20px;
-  position: relative;
-  background-color: #fff;
-  border-radius: 5px;
-  height: 100%;
-
-  .ssm-content-header {
-    position: absolute;
-    text-align: center;
-    background-color: #007aff;
-    box-shadow: 0 7px 10px -5px #777;
-    color: #fff;
-    border-radius: 3px;
-    padding: 15px;
-    top: -23px;
-
-    i {
-      font-size: 24px;
-      width: 33px;
-      height: 33px;
-      line-height: 33px;
-      color: #fff;
-    }
-  }
-
-  .ssm-content-content {
-    position: relative;
-    margin-top: 10px;
-  }
-
-  .ssm-content-title {
-    padding-left: 80px;
-  }
-}
-
 .divider {
   content: '';
   display: block;
   height: 1px;
   width: 100%;
   background-color: $brand-white;
+}
+
+.ssm-table {
+  font-size: 10px;
+
+  thead {
+    color: $brand-primary;
+    font-size: 14px;
+  }
 }

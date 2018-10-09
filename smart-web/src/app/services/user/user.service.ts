@@ -85,7 +85,7 @@ export class UserService {
     this.user = undefined;
     this.cookieService.delete('SSM_TICKET');
     this.httpService.userLogout().subscribe( res => {
-        window.location.href = '/';
+        window.location.href = '/login';
       }
     );
   }
