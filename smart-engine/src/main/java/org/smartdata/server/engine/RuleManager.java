@@ -128,7 +128,7 @@ public class RuleManager extends AbstractService {
       throw new IOException("RuleText = " + rule, e);
     }
 
-    RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore);
+    RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore, serverContext.getConf());
     mapRules.put(ruleInfo.getId(), infoRepo);
     submitRuleToScheduler(infoRepo.launchExecutor(this));
 
@@ -150,7 +150,7 @@ public class RuleManager extends AbstractService {
   }
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx) throws IOException {
-    SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx);
+    SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx, serverContext.getConf());
     return parser.translate();
   }
 
@@ -270,7 +270,7 @@ public class RuleManager extends AbstractService {
       LOG.error("Can not load rules from database:\n" + e.getMessage());
     }
     for (RuleInfo rule : rules) {
-      mapRules.put(rule.getId(), new RuleInfoRepo(rule, metaStore));
+      mapRules.put(rule.getId(), new RuleInfoRepo(rule, metaStore, serverContext.getConf()));
     }
     LOG.info("Initialized. Totally " + rules.size() + " rules loaded from DataBase.");
     if (LOG.isDebugEnabled()) {

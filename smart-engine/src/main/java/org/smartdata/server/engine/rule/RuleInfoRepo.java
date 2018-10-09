@@ -17,6 +17,7 @@
  */
 package org.smartdata.server.engine.rule;
 
+import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.RuleInfo;
@@ -40,12 +41,14 @@ public class RuleInfoRepo {
   private RuleInfo ruleInfo = null;
   private RuleExecutor executor = null;
   private MetaStore metaStore = null;
+  private SmartConf conf = null;
 
   private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 
-  public RuleInfoRepo(RuleInfo ruleInfo, MetaStore metaStore) {
+  public RuleInfoRepo(RuleInfo ruleInfo, MetaStore metaStore, SmartConf conf) {
     this.ruleInfo = ruleInfo;
     this.metaStore = metaStore;
+    this.conf = conf;
   }
 
   public RuleInfo getRuleInfo() {
@@ -131,7 +134,7 @@ public class RuleInfoRepo {
       TranslationContext transCtx = new TranslationContext(ruleInfo.getId(),
           ruleInfo.getSubmitTime());
       TranslateResult tr = executor != null ? executor.getTranslateResult() :
-          new SmartRuleStringParser(ruleInfo.getRuleText(), transCtx).translate();
+          new SmartRuleStringParser(ruleInfo.getRuleText(), transCtx, conf).translate();
       List<RuleExecutorPlugin> plugins = RuleExecutorPluginManager.getPlugins();
       for (RuleExecutorPlugin plugin : plugins) {
         plugin.onNewRuleExecutor(ruleInfo, tr);

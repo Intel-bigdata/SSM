@@ -49,6 +49,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
   public static final String EC_DIR = "/system/ssm/ec_tmp/";
   public static final String EC_TMP = "-ecTmp";
+  public static final String EC_POLICY = "-policy";
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
@@ -126,6 +127,17 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     }
 
     try {
+      // use the default EC policy if ec action has not been given an EC policy
+      if (actionInfo.getActionName().equals(ecActionID)) {
+        String ecPolicy = actionInfo.getArgs().get(EC_POLICY);
+        if (ecPolicy == null || ecPolicy.isEmpty()) {
+          String defaultEcPolicy = conf.getTrimmed("dfs.namenode.ec.system.default.policy",
+              "RS-6-3-1024k");
+          actionInfo.getArgs().put(EC_POLICY, defaultEcPolicy);
+          action.getArgs().put(EC_POLICY, defaultEcPolicy);
+        }
+      }
+
       if (metaStore.getFile(srcPath).isdir()) {
         return ScheduleResult.SUCCESS;
       }
