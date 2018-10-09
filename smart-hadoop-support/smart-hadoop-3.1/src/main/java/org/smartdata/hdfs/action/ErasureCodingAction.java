@@ -152,7 +152,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
         try {
           outputStream.close();
         } catch (IOException ex) {
-          // IOException may be reported for missing blocks.
+          // IOException may be unnecessarily reported for missing blocks.
         }
       }
     }
