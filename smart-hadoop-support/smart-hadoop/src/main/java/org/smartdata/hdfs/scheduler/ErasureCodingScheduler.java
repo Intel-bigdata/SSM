@@ -17,17 +17,21 @@
  */
 package org.smartdata.hdfs.scheduler;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,14 +49,22 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
   public static final String EC_DIR = "/system/ssm/ec_tmp/";
   public static final String EC_TMP = "-ecTmp";
+  public static final String EC_POLICY = "-policy";
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
+  private long throttleInMb;
+  private RateLimiter rateLimiter;
 
   public ErasureCodingScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
+    this.throttleInMb = conf.getLong(
+        SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_KEY, SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_DEFAULT);
+    if (this.throttleInMb > 0) {
+      this.rateLimiter = RateLimiter.create(throttleInMb);
+    }
   }
 
   public List<String> getSupportedActions() {
@@ -74,7 +86,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
     if (!isECSupported()) {
       throw new IOException(actionInfo.getActionName() +
           " is not supported on " + VersionInfo.getVersion());
@@ -93,7 +106,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     if (!actions.contains(action.getActionType())) {
       return ScheduleResult.SUCCESS;
     }
@@ -112,17 +126,36 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.SUCCESS;
     }
 
-    // check file lock merely for ec & unec action
-    if (fileLock.contains(srcPath)) {
-      return ScheduleResult.FAIL;
-    }
     try {
-      if (!metaStore.getFile(srcPath).isdir()) {
-        // For ec or unec, add ecTmp argument
-        String tmpName = createTmpName(action);
-        action.getArgs().put(EC_TMP, EC_DIR + tmpName);
-        actionInfo.getArgs().put(EC_TMP, EC_DIR + tmpName);
+      // use the default EC policy if ec action has not been given an EC policy
+      if (actionInfo.getActionName().equals(ecActionID)) {
+        String ecPolicy = actionInfo.getArgs().get(EC_POLICY);
+        if (ecPolicy == null || ecPolicy.isEmpty()) {
+          String defaultEcPolicy = conf.getTrimmed("dfs.namenode.ec.system.default.policy",
+              "RS-6-3-1024k");
+          actionInfo.getArgs().put(EC_POLICY, defaultEcPolicy);
+          action.getArgs().put(EC_POLICY, defaultEcPolicy);
+        }
       }
+
+      if (metaStore.getFile(srcPath).isdir()) {
+        return ScheduleResult.SUCCESS;
+      }
+      // The below code is just for ec or unec action with file as argument, not directory
+      // check file lock merely for ec & unec action
+      if (fileLock.contains(srcPath)) {
+        return ScheduleResult.FAIL;
+      }
+      if (isLimitedByThrottle(srcPath)) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Failed to schedule {} due to limitation of throttle!", actionInfo);
+        }
+        return ScheduleResult.RETRY;
+      }
+      // For ec or unec, add ecTmp argument
+      String tmpName = createTmpName(action);
+      action.getArgs().put(EC_TMP, EC_DIR + tmpName);
+      actionInfo.getArgs().put(EC_TMP, EC_DIR + tmpName);
     } catch (MetaStoreException ex) {
       LOG.error("Error occurred for getting file info", ex);
       actionInfo.appendLog(ex.getMessage());
@@ -153,10 +186,21 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void onActionFinished(ActionInfo actionInfo) {
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     if (actionInfo.getActionName().equals(ecActionID) ||
         actionInfo.getActionName().equals(unecActionID)) {
       fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
     }
+  }
+
+  public boolean isLimitedByThrottle(String srcPath) throws MetaStoreException {
+    if (this.rateLimiter == null) {
+      return false;
+    }
+    int fileLengthInMb = (int) metaStore.getFile(srcPath).getLength() >> 20;
+    if (fileLengthInMb > 0) {
+      return !rateLimiter.tryAcquire(fileLengthInMb);
+    }
+    return false;
   }
 }

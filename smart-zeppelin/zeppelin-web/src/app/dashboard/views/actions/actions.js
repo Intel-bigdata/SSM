@@ -190,6 +190,18 @@ angular.module('zeppelinWebApp')
 
     };
 
+    $scope.jumpToPage = function () {
+      var index = document.getElementById('page').value;
+      if (index > $scope.totalPage) {
+        index = $scope.totalPage;
+      }
+      else if (index < 1 || isNaN(index)) {
+        index = 1;
+      }
+      document.getElementById('page').value = index;
+      $scope.gotoPage(Number(index));
+    };
+
     $scope.gotoPage = function (index) {
       if (!$scope.searching) {
         $scope.currentPage = index;
@@ -241,12 +253,13 @@ angular.module('zeppelinWebApp')
     });
 
     var timer = $interval(function(){
-      if (!$scope.searching) {
-        getActions();
-      }
-      else {
-        __search__($scope.path);
-      }
+        checkCookie();
+//      if (!$scope.searching) {
+//        getActions();
+//      }
+//      else {
+//        __search__($scope.path);
+//      }
     },2000);
 
     $scope.$on('$destroy',function(){

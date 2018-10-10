@@ -46,11 +46,11 @@ import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionStatus;
 import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
+import org.smartdata.protocol.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReport;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
-import org.smartdata.server.engine.cmdlet.message.LaunchCmdlet;
 import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
@@ -253,13 +253,17 @@ public class CmdletManager extends AbstractService {
   private void checkActionsOnSubmit(CmdletInfo cmdletInfo,
                                     List<ActionInfo> actionInfos) throws IOException {
     for (ActionInfo actionInfo : actionInfos) {
+      cmdletInfo.addAction(actionInfo.getActionId());
+    }
+    int actionIndex = 0;
+    for (ActionInfo actionInfo : actionInfos) {
       for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
-        if (!p.onSubmit(actionInfo)) {
+        if (!p.onSubmit(cmdletInfo, actionInfo, actionIndex)) {
           throw new IOException(
               String.format("Action rejected by scheduler", actionInfo));
         }
       }
-      cmdletInfo.addAction(actionInfo.getActionId());
+      actionIndex++;
     }
   }
 
@@ -531,8 +535,14 @@ public class CmdletManager extends AbstractService {
                 cmdlet.updateState(CmdletState.CANCELLED);
                 CmdletStatus cmdletStatus = new CmdletStatus(
                     cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
-                // Mark all actions as finished and successful
-                cmdletFinishedInternal(cmdlet);
+                // Mark all actions as finished
+                cmdletFinishedInternal(cmdlet, false);
+                onCmdletStatusUpdate(cmdletStatus);
+              } else if (result == ScheduleResult.SUCCESS_NO_EXECUTION) {
+                cmdlet.updateState(CmdletState.DONE);
+                cmdletFinishedInternal(cmdlet, true);
+                CmdletStatus cmdletStatus = new CmdletStatus(
+                    cmdlet.getCid(), cmdlet.getStateChangedTime(), cmdlet.getState());
                 onCmdletStatusUpdate(cmdletStatus);
               }
             } catch (Throwable t) {
@@ -553,43 +563,62 @@ public class CmdletManager extends AbstractService {
     ActionInfo actionInfo;
     LaunchAction launchAction;
     List<ActionScheduler> actSchedulers;
-    ScheduleResult scheduleResult = ScheduleResult.SUCCESS;
+    boolean skipped = false;
+    ScheduleResult scheduleResult = ScheduleResult.SUCCESS_NO_EXECUTION;
+    ScheduleResult resultTmp;
     for (idx = 0; idx < actIds.size(); idx++) {
       actionInfo = idToActions.get(actIds.get(idx));
       launchAction = launchCmdlet.getLaunchActions().get(idx);
       actSchedulers = schedulers.get(actionInfo.getActionName());
       if (actSchedulers == null || actSchedulers.size() == 0) {
+        skipped = true;
         continue;
       }
 
       for (schIdx = 0; schIdx < actSchedulers.size(); schIdx++) {
         ActionScheduler s = actSchedulers.get(schIdx);
         try {
-          scheduleResult = s.onSchedule(actionInfo, launchAction);
+          resultTmp = s.onSchedule(info, actionInfo, launchCmdlet, launchAction, idx);
         } catch (Throwable t) {
           actionInfo.appendLogLine("\nOnSchedule exception: " + t);
-          scheduleResult = ScheduleResult.FAIL;
+          resultTmp = ScheduleResult.FAIL;
         }
-        if (scheduleResult != ScheduleResult.SUCCESS) {
+
+        if (resultTmp != ScheduleResult.SUCCESS
+            && resultTmp != ScheduleResult.SUCCESS_NO_EXECUTION) {
+          scheduleResult = resultTmp;
+        } else {
+          if (scheduleResult == ScheduleResult.SUCCESS_NO_EXECUTION) {
+            scheduleResult = resultTmp;
+          }
+        }
+
+        if (scheduleResult != ScheduleResult.SUCCESS
+            && scheduleResult != ScheduleResult.SUCCESS_NO_EXECUTION) {
           break;
         }
       }
 
-      if (scheduleResult != ScheduleResult.SUCCESS) {
+      if (scheduleResult != ScheduleResult.SUCCESS
+          && scheduleResult != ScheduleResult.SUCCESS_NO_EXECUTION) {
         break;
       }
     }
 
-    if (scheduleResult == ScheduleResult.SUCCESS) {
+    if (scheduleResult == ScheduleResult.SUCCESS
+        || scheduleResult == ScheduleResult.SUCCESS_NO_EXECUTION) {
       idx--;
       schIdx--;
+      if (skipped) {
+        scheduleResult = ScheduleResult.SUCCESS;
+      }
     }
-    postscheduleCmdletActions(actIds, scheduleResult, idx, schIdx);
+    postscheduleCmdletActions(info, actIds, scheduleResult, idx, schIdx);
     return scheduleResult;
   }
-
-  private void postscheduleCmdletActions(List<Long> actions, ScheduleResult result,
-                                         int lastAction, int lastScheduler) {
+  private void postscheduleCmdletActions(CmdletInfo cmdletInfo,
+      List<Long> actions, ScheduleResult result,
+      int lastAction, int lastScheduler) {
     List<ActionScheduler> actSchedulers;
     for (int aidx = lastAction; aidx >= 0; aidx--) {
       ActionInfo info = idToActions.get(actions.get(aidx));
@@ -603,7 +632,7 @@ public class CmdletManager extends AbstractService {
 
       for (int sidx = lastScheduler; sidx >= 0; sidx--) {
         try {
-          actSchedulers.get(sidx).postSchedule(info, result);
+          actSchedulers.get(sidx).postSchedule(cmdletInfo, info, sidx, result);
         } catch (Throwable t) {
           info.setLog((info.getLog() == null ? "" : info.getLog())
               + "\nPostSchedule exception: " + t);
@@ -760,7 +789,7 @@ public class CmdletManager extends AbstractService {
     flushCmdletInfo(cmdletInfo);
   }
 
-  private void cmdletFinishedInternal(CmdletInfo cmdletInfo) throws IOException {
+  private void cmdletFinishedInternal(CmdletInfo cmdletInfo, boolean success) throws IOException {
     numCmdletsFinished.incrementAndGet();
     ActionInfo actionInfo;
     for (Long aid : cmdletInfo.getAids()) {
@@ -771,7 +800,8 @@ public class CmdletManager extends AbstractService {
         actionInfo.setFinished(true);
         actionInfo.setCreateTime(cmdletInfo.getStateChangedTime());
         actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
-        actionInfo.setExecHost(ActiveServerInfo.getInstance().getHost());
+        actionInfo.setExecHost(ActiveServerInfo.getInstance().getId());
+        actionInfo.setSuccessful(success);
       }
     }
   }
@@ -1089,6 +1119,7 @@ public class CmdletManager extends AbstractService {
     long actionId = status.getActionId();
     if (idToActions.containsKey(actionId)) {
       ActionInfo actionInfo = idToActions.get(actionId);
+      CmdletInfo cmdletInfo = idToCmdlets.get(status.getCmdletId());
       synchronized (actionInfo) {
         if (!actionInfo.isFinished()) {
           actionInfo.setLog(status.getLog());
@@ -1096,8 +1127,7 @@ public class CmdletManager extends AbstractService {
           if (!status.isFinished()) {
             actionInfo.setProgress(status.getPercentage());
             if (actionInfo.getCreateTime() == 0) {
-              actionInfo.setCreateTime(
-                  idToCmdlets.get(actionInfo.getCmdletId()).getGenerateTime());
+              actionInfo.setCreateTime(cmdletInfo.getGenerateTime());
             }
             actionInfo.setFinishTime(System.currentTimeMillis());
           } else {
@@ -1112,8 +1142,15 @@ public class CmdletManager extends AbstractService {
               actionInfo.setSuccessful(true);
               updateStorageIfNeeded(actionInfo);
             }
+            int actionIndex = 0;
+            for (long id : cmdletInfo.getAids()) {
+              if (id == actionId) {
+                break;
+              }
+              actionIndex++;
+            }
             for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
-              p.onActionFinished(actionInfo);
+              p.onActionFinished(cmdletInfo, actionInfo, actionIndex);
             }
           }
         }

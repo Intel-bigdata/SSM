@@ -24,6 +24,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.utils.StringUtil;
 
 import java.util.Map;
 
@@ -57,7 +58,7 @@ public class AddErasureCodingPolicy extends HdfsAction {
     this.codecName = args.get(CODEC_NAME);
     this.numDataUnits = Integer.parseInt(args.get(DATA_UNITS_NUM));
     this.numParityUnits = Integer.parseInt(args.get(PARITY_UNITS_NUM));
-    this.cellSize = Integer.parseInt(args.get(CELL_SIZE));
+    this.cellSize = (int) StringUtil.parseToByte(args.get(CELL_SIZE));
   }
 
   @Override

@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.message;
+package org.smartdata.protocol.message;
 
 import org.smartdata.AgentService;
-import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
+import org.smartdata.SmartConstants;
 
 public class StopCmdlet implements AgentService.Message {
   private long cmdletId;
@@ -37,6 +37,6 @@ public class StopCmdlet implements AgentService.Message {
 
   @Override
   public String getServiceName() {
-    return AgentCmdletService.NAME;
+    return SmartConstants.AGENT_CMDLET_SERVICE_NAME;
   }
 }
