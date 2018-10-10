@@ -21,7 +21,6 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import {
   MatButtonModule,
   MatRadioModule,
@@ -66,7 +65,6 @@ import { BaseUrlService } from './services/baseUrl/baseUrl.service';
     FormsModule,
     HttpClientModule,
     BrowserAnimationsModule,
-    NoopAnimationsModule,
     MatButtonModule,
     MatRadioModule,
     MatInputModule,
