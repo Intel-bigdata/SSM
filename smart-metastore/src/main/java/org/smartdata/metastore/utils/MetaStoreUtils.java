@@ -17,6 +17,7 @@
  */
 package org.smartdata.metastore.utils;
 
+import com.google.common.hash.Hashing;
 import com.mysql.jdbc.NonRegisteringDriver;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import org.smartdata.metastore.MetaStoreException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -155,7 +157,7 @@ public class MetaStoreUtils {
       tableList.add("DROP TABLE IF EXISTS " + table);
     }
     String deleteExistingTables[] = tableList.toArray(new String[tableList.size()]);
-
+    String password = Hashing.sha256().hashString("ssm@123", StandardCharsets.UTF_8).toString();
     String createEmptyTables[] =
         new String[] {
           "CREATE TABLE access_count_table (\n"
@@ -309,6 +311,11 @@ public class MetaStoreUtils {
               + "  property varchar(512) PRIMARY KEY,\n"
               + "  value varchar(4096) NOT NULL\n"
               + ");",
+          "CREATE TABLE user_info (\n"
+              + "  user_name varchar(20) PRIMARY KEY,\n"
+              + "  user_password varchar(20) NOT NULL\n"
+              + ");",
+          "INSERT INTO user_info VALUES('admin','" + password + "');",
           "CREATE TABLE cluster_info (\n"
               + "  cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
               + "  name varchar(512) NOT NULL UNIQUE,\n"

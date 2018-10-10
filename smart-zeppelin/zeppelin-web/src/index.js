@@ -59,6 +59,7 @@ import './components/browser-detect/browserDetect.service.js';
 import './components/saveAs/saveAs.service.js';
 import './components/searchService/search.service.js';
 import './components/login/login.controller.js';
+import './components/newPassword/newPassword.controller.js';
 import './components/elasticInputCtrl/elasticInput.controller.js';
 import './components/notevarshareService/notevarshare.service.js';
 import './components/helium/helium.service.js';
@@ -87,4 +88,3 @@ import './app/dashboard/views/mover/mover.js';
 import './app/dashboard/views/copy/copy.js';
 import './app/dashboard/views/mover/detail/moverActions.js';
 import './app/dashboard/views/copy/detail/copyActions.js';
-
