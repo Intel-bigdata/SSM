@@ -157,7 +157,7 @@ public class MetaStoreUtils {
       tableList.add("DROP TABLE IF EXISTS " + table);
     }
     String deleteExistingTables[] = tableList.toArray(new String[tableList.size()]);
-    String password = Hashing.sha256().hashString("ssm@123", StandardCharsets.UTF_8).toString();
+    String password = Hashing.sha512().hashString("ssm@123", StandardCharsets.UTF_8).toString();
     String createEmptyTables[] =
         new String[] {
           "CREATE TABLE access_count_table (\n"
