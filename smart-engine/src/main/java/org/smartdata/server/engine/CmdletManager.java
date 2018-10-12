@@ -40,6 +40,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.UserInfo;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionStatus;
@@ -300,6 +301,24 @@ public class CmdletManager extends AbstractService {
 
   public void registerExecutorService(CmdletExecutorService executorService) {
     dispatcher.registerExecutorService(executorService);
+  }
+
+  public void newPassword(
+      UserInfo userInfo) throws MetaStoreException {
+    try {
+      metaStore.newPassword(userInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean authentic (UserInfo userInfo) throws MetaStoreException {
+    try {
+      UserInfo origin = metaStore.getUserInfoByUserName(userInfo.getUserName());
+      return origin.equals(userInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
   }
 
   public long submitCmdlet(String cmdlet) throws IOException {

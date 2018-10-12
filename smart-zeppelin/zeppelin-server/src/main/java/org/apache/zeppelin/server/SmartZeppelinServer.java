@@ -81,7 +81,7 @@ public class SmartZeppelinServer {
   private static final String SMART_PATH_SPEC = "/smart/api/v1/*";
   private static final String ZEPPELIN_PATH_SPEC = "/api/*";
 
-  private SmartEngine engine;
+  private static SmartEngine engine;
   private SmartConf conf;
 
   public static Notebook notebook;
@@ -96,6 +96,12 @@ public class SmartZeppelinServer {
   private NotebookAuthorization notebookAuthorization;
   private Credentials credentials;
   private DependencyResolver depResolver;
+
+  public static SmartEngine getEngine() {
+    return engine;
+  }
+
+  public SmartZeppelinServer() {}
 
   public SmartZeppelinServer(SmartConf conf, SmartEngine engine) throws Exception {
     this.conf = conf;
