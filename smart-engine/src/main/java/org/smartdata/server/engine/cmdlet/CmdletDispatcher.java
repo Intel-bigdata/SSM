@@ -513,8 +513,11 @@ public class CmdletDispatcher {
     ActiveServerNodeCmdletMetrics metrics = (ActiveServerNodeCmdletMetrics) regNodeInfos.get(
         ActiveServerInfo.getInstance().getId());
     if (metrics != null) {
-      metrics.setNumPendingSchedule(cmdletManager.getNumPendingScheduleCmdlets());
       metrics.setNumPendingDispatch(pendingCmdlets.size());
+      metrics.setMaxPendingDispatch(getTotalSlotsLeft() + (int) (getTotalSlots() * 0.2));
+      metrics.setMaxInExecution(getTotalSlots());
+      metrics.setNumInExecution(getTotalSlots() - getTotalSlotsLeft());
+      cmdletManager.updateNodeCmdletMetrics(metrics);
     }
     return regNodeInfos.values();
   }
