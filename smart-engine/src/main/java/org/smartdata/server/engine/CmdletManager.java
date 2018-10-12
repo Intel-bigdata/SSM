@@ -1088,9 +1088,12 @@ public class CmdletManager extends AbstractService {
       return;
     }
     long cmdletId = status.getCmdletId();
-    if (idToCmdlets.containsKey(cmdletId)) {
-      CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+    CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+    if (cmdletInfo != null) {
       synchronized (cmdletInfo) {
+        if (CmdletState.isTerminalState(cmdletInfo.getState())) {
+          return;
+        }
         CmdletState state = status.getCurrentState();
         cmdletInfo.setState(state);
         cmdletInfo.setStateChangedTime(status.getStateUpdateTime());

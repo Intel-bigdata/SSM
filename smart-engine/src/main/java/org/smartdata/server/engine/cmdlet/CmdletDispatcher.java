@@ -420,6 +420,9 @@ public class CmdletDispatcher {
     synchronized (dispatchedToSrvs) {
       if (dispatchedToSrvs.containsKey(cmdletId)) {
         LaunchCmdlet cmdlet = idToLaunchCmdlet.get(cmdletId);
+        if (cmdlet == null) {
+          return;
+        }
         if (regNodes.get(cmdlet.getNodeId()) != null) {
           regNodes.get(cmdlet.getNodeId()).incrementAndGet();
         }
