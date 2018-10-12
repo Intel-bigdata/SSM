@@ -22,8 +22,14 @@ package org.smartdata.server.cluster;
  *
  */
 public class ActiveServerNodeCmdletMetrics extends NodeCmdletMetrics {
+  private int maxPendingSchedule;
   private int numPendingSchedule;
+
+  private int maxPendingDispatch;
   private int numPendingDispatch;
+
+  private int numInExecution;
+  private int maxInExecution;
 
   public int getNumPendingSchedule() {
     return numPendingSchedule;
@@ -39,5 +45,37 @@ public class ActiveServerNodeCmdletMetrics extends NodeCmdletMetrics {
 
   public void setNumPendingDispatch(int numPendingDispatch) {
     this.numPendingDispatch = numPendingDispatch;
+  }
+
+  public int getMaxPendingSchedule() {
+    return maxPendingSchedule;
+  }
+
+  public void setMaxPendingSchedule(int maxPendingSchedule) {
+    this.maxPendingSchedule = maxPendingSchedule;
+  }
+
+  public int getMaxPendingDispatch() {
+    return maxPendingDispatch;
+  }
+
+  public void setMaxPendingDispatch(int maxPendingDispatch) {
+    this.maxPendingDispatch = maxPendingDispatch;
+  }
+
+  public int getNumInExecution() {
+    return numInExecution;
+  }
+
+  public void setNumInExecution(int numInExecution) {
+    this.numInExecution = numInExecution;
+  }
+
+  public int getMaxInExecution() {
+    return maxInExecution;
+  }
+
+  public void setMaxInExecution(int maxInExecution) {
+    this.maxInExecution = maxInExecution;
   }
 }

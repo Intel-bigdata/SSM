@@ -48,6 +48,7 @@ import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.LaunchCmdlet;
 import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StatusReport;
+import org.smartdata.server.cluster.ActiveServerNodeCmdletMetrics;
 import org.smartdata.server.cluster.NodeCmdletMetrics;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
@@ -459,8 +460,13 @@ public class CmdletManager extends AbstractService {
     return false;
   }
 
-  public int getNumPendingScheduleCmdlets() {
+  private int getNumPendingScheduleCmdlets() {
     return pendingCmdlet.size() + schedulingCmdlet.size();
+  }
+
+  public void updateNodeCmdletMetrics(ActiveServerNodeCmdletMetrics metrics) {
+    metrics.setMaxPendingSchedule(maxNumPendingCmdlets);
+    metrics.setNumPendingSchedule(getNumPendingScheduleCmdlets());
   }
 
   public Collection<NodeCmdletMetrics> getAllNodeCmdletMetrics() {
