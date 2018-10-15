@@ -313,7 +313,7 @@ public class MetaStoreUtils {
               + ");",
           "CREATE TABLE user_info (\n"
               + "  user_name varchar(20) PRIMARY KEY,\n"
-              + "  user_password varchar(20) NOT NULL\n"
+              + "  user_password varchar(128) NOT NULL\n"
               + ");",
           "INSERT INTO user_info VALUES('admin','" + password + "');",
           "CREATE TABLE cluster_info (\n"
