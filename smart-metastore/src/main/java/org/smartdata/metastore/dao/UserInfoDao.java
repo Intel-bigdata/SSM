@@ -86,7 +86,7 @@ public class UserInfoDao {
   public int newPassword(UserInfo userInfo) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "UPDATE " + TABLE_NAME + " SET user_password = ? WHERE user_name = ?";
-    return jdbcTemplate.update(sql, Hashing.sha256().hashString(userInfo.getUserPassword(),
+    return jdbcTemplate.update(sql, Hashing.sha512().hashString(userInfo.getUserPassword(),
         StandardCharsets.UTF_8).toString(), userInfo.getUserName());
   }
 

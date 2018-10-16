@@ -78,7 +78,7 @@ public class LoginRestApi {
     }
     boolean flag = false;
     try {
-      password = Hashing.sha256().hashString(password, StandardCharsets.UTF_8).toString();
+      password = Hashing.sha512().hashString(password, StandardCharsets.UTF_8).toString();
       flag = engine.getCmdletManager().authentic(new UserInfo(userName, password));
     } catch (Exception e) {
       LOG.error("Exception in login: ", e);
