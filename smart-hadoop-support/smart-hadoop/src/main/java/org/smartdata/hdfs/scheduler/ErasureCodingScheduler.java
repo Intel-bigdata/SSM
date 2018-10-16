@@ -97,6 +97,13 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
         throw new IOException("No src path is given!");
       }
     }
+    // For ec or unec action, check if the file is locked.
+    if (actionInfo.getActionName().equals(ecActionID) ||
+        actionInfo.getActionName().equals(unecActionID)) {
+      if (fileLock.contains(actionInfo.getArgs().get(HdfsAction.FILE_PATH))) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -143,9 +150,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       }
       // The below code is just for ec or unec action with file as argument, not directory
       // check file lock merely for ec & unec action
-      if (fileLock.contains(srcPath)) {
-        return ScheduleResult.FAIL;
-      }
       if (isLimitedByThrottle(srcPath)) {
         if (LOG.isDebugEnabled()) {
           LOG.debug("Failed to schedule {} due to limitation of throttle!", actionInfo);
