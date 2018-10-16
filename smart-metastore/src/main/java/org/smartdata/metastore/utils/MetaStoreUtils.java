@@ -87,7 +87,8 @@ public class MetaStoreUtils {
             "cluster_info",
             "backup_file",
             "file_state",
-            "small_file"
+            "small_file",
+            "user_info"
   };
 
   public static Connection createConnection(String url,
