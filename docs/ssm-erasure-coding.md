@@ -81,3 +81,10 @@ SSM can track whether a file is stored in EC way and persist such info into SSM 
 
 EC can consume large resources, especially network IO. SSM has a throttle to avoid cluster overload. When a threshold is reached, SSM will delay dispatching more EC action if any.
 By default, the throttle is turned off. To make the throttle work, user needs to set a positive value for the property named `smart.action.ec.throttle.mb` in smart-default.xml.
+
+### 6. Note
+You may see the log similar to the following from SSM when you run enormous EC tasks. Because by default HDFS enables a strategy that considers each datanode's load when writing data. If some nodes are under high loads, they will be excluded temporarily.
+HDFS will recover the corresponding blocks later. To disable this strategy, you need set the value as `false` for a property named `dfs.namenode.replication.considerLoad` in hdfs-site.xml.
+```
+2018-10-18 14:23:31,212 WARN org.apache.hadoop.hdfs.DFSOutputStream.logCorruptBlocks 1296: Block group <1> failed to write 1 blocks.
+```
