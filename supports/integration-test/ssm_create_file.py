@@ -1,29 +1,34 @@
-import sys
+import argparse
+import unittest
 from util import *
-from threading import Thread
 
 
-def test_create_100M_0KB_thread(max_number):
-    """ submit SSM action througth Restful API in parallel
-    """
-    cids = []
-    dir_name = TEST_DIR + random_string()
-    for j in range(max_number):
-        # each has 200K files
-        cid = create_file(dir_name + "/" + str(j), 0)
-        cids.append(cid)
-    wait_for_cmdlets(cids)
+class CreateFile(unittest.TestCase):
 
+    def test_create_file(self):
+        cids = []
+        for i in range(MAX_NUMBER):
+            path, cid = create_random_file_parallel(FILE_SIZE, FILE_DIR)
+            cids.append(cid)
+        failed_cids = wait_for_cmdlets(cids)
+        self.assertTrue(len(failed_cids) == 0, "Failed to create test files!")
 
 if __name__ == '__main__':
-    num = 20
-    try:
-        num = int(sys.argv[1])
-    except ValueError:
-        print "Usage: python dfsio_create_file [num]"
-    except IndexError:
-        pass
-    max_number = 200000
-    for i in range(num):
-        t = Thread(target=test_create_100M_0KB_thread, args=(max_number,))
-        t.start()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-size', default='1MB')
+    parser.add_argument('-num', default='10')
+    default_dir = TEST_DIR + random_string() + "/"
+    parser.add_argument('-path', default=default_dir)
+    parser.add_argument('unittest_args', nargs='*')
+    args, unknown_args = parser.parse_known_args()
+    sys.argv[1:] = unknown_args
+    FILE_SIZE = convert_to_byte(args.size)
+    print "The file size for test is {}.".format(FILE_SIZE)
+    MAX_NUMBER = int(args.num)
+    print "The file number for test is {}.".format(MAX_NUMBER)
+    if not args.path.endswith("/"):
+        args.path = args.path + "/"
+    FILE_DIR = args.path
+    print "The test path is {}.".format(FILE_DIR)
+
+    unittest.main()
