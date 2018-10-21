@@ -74,21 +74,33 @@ public class CompactInputStream extends SmartInputStream {
   @Override
   public synchronized int read(final byte[] buf, int off, int len) throws IOException {
     int realLen = (int) Math.min(len, fileContainerInfo.getLength() - getPos());
-    return super.read(buf, off, realLen);
+    if (realLen == 0) {
+      return -1;
+    } else {
+      return super.read(buf, off, realLen);
+    }
   }
 
   @Override
   public synchronized int read(final ByteBuffer buf) throws IOException {
     int realLen = (int) Math.min(buf.remaining(), fileContainerInfo.getLength() - getPos());
-    buf.limit(realLen + buf.position());
-    return super.read(buf);
+    if (realLen == 0) {
+      return -1;
+    } else {
+      buf.limit(realLen + buf.position());
+      return super.read(buf);
+    }
   }
 
   @Override
   public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-    int realLen = (int) Math.min(length, fileContainerInfo.getLength() - getPos());
     long realPos = position + fileContainerInfo.getOffset();
-    return super.read(realPos, buffer, offset, realLen);
+    int realLen = (int) Math.min(length, fileContainerInfo.getLength() - position);
+    if (realLen == 0) {
+      return -1;
+    } else {
+      return super.read(realPos, buffer, offset, realLen);
+    }
   }
 
   @Override
