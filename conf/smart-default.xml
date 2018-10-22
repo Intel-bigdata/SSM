@@ -231,6 +231,14 @@
   </property>
 
   <property>
+    <name>smart.tidb.enable</name>
+    <value>false</value>
+    <description>
+      This property decides whether TiDB is enabled for SSM use.
+    </description>
+  </property>
+
+  <property>
     <name>pd.client.port</name>
     <value>7060</value>
     <description>Pd port in client-url option</description>
