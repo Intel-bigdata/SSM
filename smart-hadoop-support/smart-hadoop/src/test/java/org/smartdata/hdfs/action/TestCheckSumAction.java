@@ -34,7 +34,6 @@ public class TestCheckSumAction extends MiniClusterHarness {
     checkSumAction.setContext(smartContext);
     final String file = "/testPath/file1";
     dfsClient.mkdirs("/testPath");
-    dfsClient.setStoragePolicy("/testPath", "ONE_SSD");
 
     // write to HDFS
     final OutputStream out = dfsClient.create(file, true);
@@ -47,6 +46,6 @@ public class TestCheckSumAction extends MiniClusterHarness {
     args.put(CheckSumAction.FILE_PATH, file);
     checkSumAction.init(args);
     checkSumAction.run();
-    System.out.print(checkSumAction.getActionStatus().getResult());
+    Assert.assertTrue(checkSumAction.getExpectedAfterRun());
   }
 }
