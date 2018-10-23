@@ -40,7 +40,10 @@ import org.smartdata.server.engine.message.NodeMessage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -519,7 +522,18 @@ public class CmdletDispatcher {
       metrics.setNumInExecution(getTotalSlots() - getTotalSlotsLeft());
       cmdletManager.updateNodeCmdletMetrics(metrics);
     }
-    return regNodeInfos.values();
+    // TODO: temp implementation
+    List<NodeCmdletMetrics> ret = new LinkedList<>();
+    ret.addAll(regNodeInfos.values());
+    Collections.sort(ret, new Comparator<NodeCmdletMetrics>() {
+      @Override
+      public int compare(NodeCmdletMetrics a, NodeCmdletMetrics b) {
+        int tp = a.getNodeInfo().getExecutorType().ordinal()
+            - b.getNodeInfo().getExecutorType().ordinal();
+        return tp == 0 ? a.getNodeInfo().getId().compareToIgnoreCase(b.getNodeInfo().getId()) : tp;
+      }
+    });
+    return ret;
   }
 
   public void start() {
