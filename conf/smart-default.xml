@@ -273,7 +273,7 @@
 
   <property>
     <name>smart.cmdlet.dispatcher.log.disp.result</name>
-    <value>true</value>
+    <value>false</value>
     <description>
       Log dispatch result for each cmdlet been dispatched.
     </description>
