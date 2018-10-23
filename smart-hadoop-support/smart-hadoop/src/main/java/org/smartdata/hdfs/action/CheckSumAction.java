@@ -69,7 +69,6 @@ public class CheckSumAction extends HdfsAction {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         DataOutputStream dataStream = new DataOutputStream(byteStream);
         md5.write(dataStream);
-
         byte[] bytes = byteStream.toByteArray();
         appendLog(
             String.format("%s\t%s\t%s",
@@ -90,20 +89,20 @@ public class CheckSumAction extends HdfsAction {
       }
     }
 
-    appendResult(fileName);
-    appendLog(fileName);
     long length = fileStatus.getLen();
     MD5MD5CRC32FileChecksum md5 = dfsClient.getFileChecksum(fileName, length);
-    appendResult(md5.getAlgorithmName());
-    appendLog(md5.getAlgorithmName());
-
     ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
     DataOutputStream dataStream = new DataOutputStream(byteStream);
     md5.write(dataStream);
 
     byte[] bytes = byteStream.toByteArray();
-    appendResult(byteArray2HexString(bytes));
-    appendLog(byteArray2HexString(bytes));
+
+    appendLog(
+        String.format("%s\t%s\t%s",
+            fileName,
+            md5.getAlgorithmName(),
+            byteArray2HexString(bytes)
+        ));
   }
 
   public static String byteArray2HexString(byte[] bytes) {
