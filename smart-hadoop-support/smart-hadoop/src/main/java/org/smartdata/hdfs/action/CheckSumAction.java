@@ -24,6 +24,9 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.Map;
@@ -36,50 +39,50 @@ import java.util.Map;
 public class CheckSumAction extends HdfsAction {
   private static final Logger LOG = LoggerFactory.getLogger(CheckSumAction.class);
   private String fileName;
+  private SmartConf conf;
 
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
     fileName = args.get(FILE_PATH);
+    this.conf = getContext().getConf();
   }
 
   @Override
   protected void execute() throws Exception {
+
+    this.setDfsClient(HadoopUtil.getDFSClient(HadoopUtil.getNameNodeUri(conf), conf));
+
     if (fileName == null) {
       throw new IllegalArgumentException("File src is missing.");
     }
 
-    if (fileName.charAt(fileName.length()-1)=='*'){
-      DirectoryListing listing = dfsClient.listPaths(fileName.substring(0,fileName.length()-1), HdfsFileStatus.EMPTY_NAME);
+    if (fileName.charAt(fileName.length() - 1) == '*') {
+      DirectoryListing listing = dfsClient.listPaths(fileName.substring(0, fileName.length() - 1), HdfsFileStatus.EMPTY_NAME);
       HdfsFileStatus[] fileList = listing.getPartialListing();
-      for (int i = 0; i < fileList.length; i++) {
-        String file1 = fileList[i].getFullPath(new Path(fileName.substring(0,fileName.length()-1))).toString();
-
+      for (HdfsFileStatus fileStatus : fileList) {
+        String file1 = fileStatus.getFullPath(new Path(fileName.substring(0, fileName.length() - 1))).toString();
         HdfsFileStatus fileStatus1 = dfsClient.getFileInfo(file1);
         long length = fileStatus1.getLen();
-        MD5MD5CRC32FileChecksum md5MD5CRC32FileChecksum = dfsClient.getFileChecksum(file1, length);
+        MD5MD5CRC32FileChecksum md5 = dfsClient.getFileChecksum(file1, length);
 
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-        md5MD5CRC32FileChecksum.write(dataOutputStream);
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        DataOutputStream dataStream = new DataOutputStream(byteStream);
+        md5.write(dataStream);
 
-        byte[] bytes = byteArrayOutputStream.toByteArray();
-
-
+        byte[] bytes = byteStream.toByteArray();
         appendLog(
             String.format("%s\t%s\t%s",
                 file1,
-                md5MD5CRC32FileChecksum.getAlgorithmName(),
+                md5.getAlgorithmName(),
                 byteArray2HexString(bytes)
             ));
-
       }
       return;
     }
 
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(fileName);
-
-    if (fileStatus!=null){
+    if (fileStatus != null) {
       if (fileStatus.isDir()) {
         appendResult("This is a directory which has no checksum result!");
         appendLog("This is a directory which has no checksum result!");
@@ -87,37 +90,32 @@ public class CheckSumAction extends HdfsAction {
       }
     }
 
-
     appendResult(fileName);
     appendLog(fileName);
-
     long length = fileStatus.getLen();
-    MD5MD5CRC32FileChecksum md5MD5CRC32FileChecksum = dfsClient.getFileChecksum(fileName, length);
-    appendResult(md5MD5CRC32FileChecksum.getAlgorithmName());
-    appendLog(md5MD5CRC32FileChecksum.getAlgorithmName());
+    MD5MD5CRC32FileChecksum md5 = dfsClient.getFileChecksum(fileName, length);
+    appendResult(md5.getAlgorithmName());
+    appendLog(md5.getAlgorithmName());
 
-    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
-    md5MD5CRC32FileChecksum.write(dataOutputStream);
+    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+    DataOutputStream dataStream = new DataOutputStream(byteStream);
+    md5.write(dataStream);
 
-    byte[] bytes = byteArrayOutputStream.toByteArray();
-
+    byte[] bytes = byteStream.toByteArray();
     appendResult(byteArray2HexString(bytes));
     appendLog(byteArray2HexString(bytes));
-
   }
+
   public static String byteArray2HexString(byte[] bytes) {
     if (bytes == null || bytes.length <= 0) {
       return null;
     }
-    //先把byte[] 转换维char[]，再把char[]转换为字符串
-    char[] chars = new char[bytes.length * 2]; // 每个byte对应两个字符
-    final char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    char[] chars = new char[bytes.length * 2];
+    final char hexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     for (int i = 0, j = 0; i < bytes.length; i++) {
-      chars[j++] = hexDigits[bytes[i] >> 4 & 0x0f]; // 先存byte的高4位
-      chars[j++] = hexDigits[bytes[i] & 0x0f]; // 再存byte的低4位
+      chars[j++] = hexDigits[bytes[i] >> 4 & 0x0f];
+      chars[j++] = hexDigits[bytes[i] & 0x0f];
     }
-
     return new String(chars);
   }
 }
