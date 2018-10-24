@@ -132,7 +132,7 @@ public class CmdletManager extends AbstractService {
     this.pendingCmdlet = new LinkedList<>();
     this.schedulingCmdlet = new LinkedList<>();
     this.scheduledCmdlet = new LinkedBlockingQueue<>();
-    this.idToLaunchCmdlet = new HashMap<>();
+    this.idToLaunchCmdlet = new ConcurrentHashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
@@ -1328,7 +1328,9 @@ public class CmdletManager extends AbstractService {
     public void run() {
       try {
         Set<CmdletInfo> failedCmdlet = new HashSet<>();
-        for (Long cid : idToLaunchCmdlet.keySet()) {
+        List<Long> cids = new ArrayList<>();
+        cids.addAll(idToLaunchCmdlet.keySet());
+        for (Long cid : cids) {
           CmdletInfo cmdletInfo = idToCmdlets.get(cid);
           if (cmdletInfo == null) {
             continue;
