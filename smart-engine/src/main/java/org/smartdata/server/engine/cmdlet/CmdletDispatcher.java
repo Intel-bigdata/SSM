@@ -73,6 +73,7 @@ public class CmdletDispatcher {
   private boolean disableLocalExec;
   private boolean logDispResult;
   private DispatchTask[] dispatchTasks;
+  private int outputDispMetricsInterval; // 0 means no output
 
   // TODO: to be refined
   private final int defaultSlots;
@@ -123,11 +124,17 @@ public class CmdletDispatcher {
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT);
     int numDisp = conf.getInt(SmartConfKeys.SMART_CMDLET_DISPATCHERS_KEY,
         SmartConfKeys.SMART_CMDLET_DISPATCHERS_DEFAULT);
+    if (numDisp <= 0) {
+      numDisp = 1;
+    }
     dispatchTasks = new DispatchTask[numDisp];
     for (int i = 0; i < numDisp; i++) {
       dispatchTasks[i] = new DispatchTask(this, i);
     }
     schExecService = Executors.newScheduledThreadPool(numDisp + 1);
+    outputDispMetricsInterval = conf.getInt(
+        SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_KEY,
+        SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_DEFAULT);
   }
 
   public void registerExecutorService(CmdletExecutorService executorService) {
@@ -551,8 +558,10 @@ public class CmdletDispatcher {
           100, TimeUnit.MILLISECONDS);
       idx++;
     }
-    schExecService.scheduleAtFixedRate(new LogStatTask(dispatchTasks),
-        5000, 5000, TimeUnit.MILLISECONDS);
+    if (outputDispMetricsInterval > 0) {
+      schExecService.scheduleAtFixedRate(new LogStatTask(dispatchTasks),
+          5000, outputDispMetricsInterval, TimeUnit.MILLISECONDS);
+    }
   }
 
   public void stop() {

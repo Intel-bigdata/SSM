@@ -278,4 +278,14 @@
       Log dispatch result for each cmdlet been dispatched.
     </description>
   </property>
+
+  <property>
+    <name>smart.cmdlet.dispatcher.log.disp.metrics.interval</name>
+    <value>5000</value>
+    <description>
+      Time interval in millisecond to log statistic metrics of cmdlet dispatcher.
+      If no cmdlet dispatched in the time interval, then no output for this interval.
+      Disable the logger if equals 0.
+    </description>
+  </property>
 </configuration>
