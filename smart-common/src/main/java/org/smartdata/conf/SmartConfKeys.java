@@ -132,6 +132,9 @@ public class SmartConfKeys {
   public static final boolean SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT = false;
   public static final String SMART_CMDLET_DISPATCHERS_KEY = "smart.cmdlet.dispatchers";
   public static final int SMART_CMDLET_DISPATCHERS_DEFAULT = 3;
+  public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_KEY =
+      "smart.cmdlet.dispatcher.log.disp.metrics.interval"; // in ms
+  public static final int SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_DEFAULT = 5000;
 
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
