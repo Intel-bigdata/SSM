@@ -131,8 +131,8 @@ public class SmallFileCompactAction extends HdfsAction {
 
     for (String smallFile : smallFileList) {
       if ((smallFile != null) && !smallFile.isEmpty() && dfsClient.exists(smallFile)) {
-        HdfsDataOutputStream append = dfsClient.append(
-            smallFile, 1024, EnumSet.of(CreateFlag.APPEND), null, null);
+        HdfsDataOutputStream append =
+            (HdfsDataOutputStream) CompatibilityHelperLoader.getHelper().getDFSClientAppend(dfsClient, smallFile, 1024);
         long fileLen = dfsClient.getFileInfo(smallFile).getLen();
         if (fileLen > 0) {
           try (InputStream in = dfsClient.open(smallFile)) {
