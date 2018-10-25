@@ -152,6 +152,12 @@ public class CmdletDispatcher {
         service.stop(cmdletId);
       }
     }
+    synchronized (dispatchedToSrvs) {
+      NodeCmdletMetrics metrics = regNodeInfos.get(idToLaunchCmdlet.get(cmdletId).getNodeId());
+      if (metrics != null) {
+        metrics.finishCmdlet();
+      }
+    }
   }
 
   //Todo: move this function to a proper place
