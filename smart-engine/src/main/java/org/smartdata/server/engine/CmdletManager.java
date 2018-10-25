@@ -825,6 +825,9 @@ public class CmdletManager extends AbstractService {
 
   private void unLockFileIfNeeded(ActionInfo actionInfo) {
     SmartAction action;
+    if (actionInfo == null) {
+      return;
+    }
     try {
       action = ActionRegistry.createAction(actionInfo.getActionName());
     } catch (ActionException e) {
