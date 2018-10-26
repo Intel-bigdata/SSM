@@ -41,7 +41,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CompatibilityHelper26 extends CompatibilityHelper2 implements CompatibilityHelper {
+public class CompatibilityHelper26 extends CompatibilityHelper2 {
   @Override
   public String[] getStorageTypes(LocatedBlock lb) {
     List<String> types = new ArrayList<>();
