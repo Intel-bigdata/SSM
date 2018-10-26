@@ -38,7 +38,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-public class CompatibilityHelper2 {
+public abstract class CompatibilityHelper2 implements CompatibilityHelper {
   public int getReadTimeOutConstant() {
     return HdfsServerConstants.READ_TIMEOUT;
   }
