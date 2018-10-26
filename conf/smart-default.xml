@@ -231,38 +231,6 @@
   </property>
 
   <property>
-    <name>smart.tidb.enable</name>
-    <value>false</value>
-    <description>
-      This property decides whether TiDB is enabled for SSM use.
-    </description>
-  </property>
-
-  <property>
-    <name>pd.client.port</name>
-    <value>7060</value>
-    <description>Pd port in client-url option</description>
-  </property>
-
-  <property>
-    <name>pd.peer.port</name>
-    <value>7061</value>
-    <description>Pd port in peer-url option</description>
-  </property>
-
-  <property>
-    <name>tikv.service.port</name>
-    <value>20160</value>
-    <description>Tikv port in addr option</description>
-  </property>
-
-  <property>
-    <name>tidb.service.port</name>
-    <value>7070</value>
-    <description>SmartAgent master port</description>
-  </property>
-
-  <property>
     <name>smart.namespace.fetcher.ignore.unsuccessive.inotify.event</name>
     <value>false</value>
     <description>

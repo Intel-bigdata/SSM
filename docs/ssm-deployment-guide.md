@@ -97,7 +97,7 @@ Please note, the configuration should be the same on all server hosts.
    `export SSM_JAVA_OPT="-XX:MaxHeapSize=10g"`
    It changes heap size for all SSM services, including Smart Server and Smart Agent.
 
-## **Configure Smart Agent (optional)**
+## **Configure Smart Agent (Optional)**
 
 This step can be skipped if SSM standalone mode is preferred.
   
@@ -107,12 +107,6 @@ Smart Agent specific JVM parameters can be changed through the following way in 
 `export SSM_AGENT_JAVA_OPT=<Your Parameters>`
  
 ## **Configure database**
-
-SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
-
-You just need to follow the guide in one of the two following options to configure database for SSM.
-
-###  Option 1. Use MySQL
 
 You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
 Please be noted that, security support will be enabled later. Here is an example for MySQL,
@@ -127,41 +121,6 @@ Please be noted that, security support will be enabled later. Here is an example
 ```
  
 `ssm` is the database name. User needs to create it manually through MySQL client.
-
-### Option 2. Use SSM-TiDB
-
-To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
-
-TiDB can be enabled in smart-site.xml.
-```xml
-    <property>
-        <name>smart.tidb.enable</name>
-        <value>true</value>
-        ......
-    </property>
-```
-For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
-For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
-So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over using MySQL.
-
-If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
-
-An example of configuration in druid.xml for using TiDB is shown as follows.
-```xml
-    <properties>
-        <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
-        <entry key="username">username</entry>
-        <entry key="password">password</entry>
-        ......
-    <properties>
-```
-TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
-If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
-The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
-If you modify it, the port in the above command should also be modified accordingly.
-In TiDB, the database named ssm is used to store metadata.
-
-By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory. You can refer to these logs if encountering database fault.
 
 ## **Configure user account to authenticate to Web UI**
 
@@ -231,7 +190,7 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    If you meet any problem, please open the smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
-##  **Start Smart Agent independently**(optional)
+##  **Start Smart Agent independently (Optional)**
 
    If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
 
@@ -326,7 +285,7 @@ Follow the steps to add SSM Jars to classpath
     </property>
 ```
 
-   #### Copy the Jars  
+   #### Copy the Jars
 Copy the SSM jars to the default Hadoop class path
   1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
   2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
