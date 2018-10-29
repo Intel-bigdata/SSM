@@ -763,7 +763,7 @@ public class CmdletManager extends AbstractService {
 
       // Wait status update from status reporter, so need to update to MetaStore
       if (runningCmdlets.contains(cid)) {
-        dispatcher.stop(cid);
+        dispatcher.stopCmdlet(cid);
       }
     }
   }

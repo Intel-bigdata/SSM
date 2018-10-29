@@ -145,12 +145,10 @@ public class CmdletDispatcher {
     return getTotalSlotsLeft() > 0;
   }
 
-  //Todo: pick the right service to stop cmdlet
-  public void stop(long cmdletId) {
-    for (CmdletExecutorService service : cmdExecServices) {
-      if (service != null) {
-        service.stop(cmdletId);
-      }
+  public void stopCmdlet(long cmdletId) {
+    ExecutorType t = dispatchedToSrvs.get(cmdletId);
+    if (t != null) {
+      cmdExecServices[t.ordinal()].stop(cmdletId);
     }
     synchronized (dispatchedToSrvs) {
       NodeCmdletMetrics metrics = regNodeInfos.get(idToLaunchCmdlet.get(cmdletId).getNodeId());
