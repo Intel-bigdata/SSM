@@ -437,7 +437,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertAccessCountTable(
     AccessCountTable accessCountTable) throws MetaStoreException {
     try {
-      accessCountDao.insert(accessCountTable);
+      if (accessCountDao.getAccessCountTableByName(accessCountTable.getTableName()).isEmpty()) {
+        accessCountDao.insert(accessCountTable);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
