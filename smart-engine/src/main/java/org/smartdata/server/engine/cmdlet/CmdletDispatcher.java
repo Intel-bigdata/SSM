@@ -77,6 +77,7 @@ public class CmdletDispatcher {
 
   // TODO: to be refined
   private final int defaultSlots;
+  private final int executorsNum;
   private AtomicInteger index = new AtomicInteger(0);
 
   private Map<String, AtomicInteger> regNodes = new HashMap<>();
@@ -93,7 +94,7 @@ public class CmdletDispatcher {
     this.runningCmdlets = runningCmdlets;
     this.idToLaunchCmdlet = idToLaunchCmdlet;
     this.schedulers = schedulers;
-    int executorsNum = smartContext.getConf().getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
+    this.executorsNum = smartContext.getConf().getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
         SmartConfKeys.SMART_CMDLET_EXECUTORS_DEFAULT);
     int delta = smartContext.getConf().getInt(SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY,
         SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_DEFAULT);
@@ -472,7 +473,7 @@ public class CmdletDispatcher {
           } else {
             metrics = new NodeCmdletMetrics();
           }
-          metrics.setNumExecutors(defaultSlots);
+          metrics.setNumExecutors(executorsNum);
           metrics.setRegistTime(System.currentTimeMillis());
           metrics.setNodeInfo(msg.getNodeInfo());
           regNodeInfos.put(nodeId, metrics);
