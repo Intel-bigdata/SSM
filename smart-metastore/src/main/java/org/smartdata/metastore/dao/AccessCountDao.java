@@ -56,6 +56,12 @@ public class AccessCountDao {
     }
   }
 
+  public List<AccessCountTable> getAccessCountTableByName(String name) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    String sql = "SELECT * FROM access_count_table WHERE table_name = '" + name + "'";
+    return jdbcTemplate.query(sql, new AccessCountRowMapper());
+  }
+
   public void delete(Long startTime, Long endTime) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     final String sql =
