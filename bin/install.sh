@@ -120,12 +120,32 @@ done
 
 tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
+ARRAY=()
+fqwc=0
+
+
 for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
 do
    host=$(echo $host | tr -d  " ")
    if [[ "$host" =~ ^#.* ]];then
         continue
    else
+      
+      for element in ${ARRAY[@]}
+      do
+         if [ "$host" == "$element" ];then
+ 	    fqwc=1    
+	    break
+         fi
+      done
+
+      if [ $fqwc -eq 1 ];then
+	 fqwc=0         
+         continue
+      else
+         ARRAY+=("$host")
+      fi
+
       #Before install on a host, delete ssm home directory if there exists
       if [[ "$host" != "$TARGET" ]];then
          ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
