@@ -121,8 +121,7 @@ done
 tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 
 ARRAY=()
-fqwc=0
-
+check_flag=0
 
 for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
 do
@@ -134,13 +133,13 @@ do
       for element in ${ARRAY[@]}
       do
          if [ "$host" == "$element" ];then
- 	    fqwc=1    
+ 	    check_flag=1    
 	    break
          fi
       done
 
-      if [ $fqwc -eq 1 ];then
-	 fqwc=0         
+      if [ $check_flag -eq 1 ];then
+	 check_flag=0         
          continue
       else
          ARRAY+=("$host")
