@@ -1,9 +1,9 @@
 import argparse
 import unittest
 from util import *
+import datetime
 
-
-class test_ec_action(unittest.TestCase):
+class test_ec_rule(unittest.TestCase):
 
   def test_ec_rule(self):
     file_dir = TEST_DIR + random_string() + "/"
@@ -15,21 +15,39 @@ class test_ec_action(unittest.TestCase):
     failed_cids = wait_for_cmdlets(cids)
     self.assertTrue(len(failed_cids) == 0, "Failed to create test files!")
     # wait for consistency
-    time.sleep(3)
+    time.sleep(10)
     # submit rule
     rule_str = "file : path matches \"" + file_dir + '*' + "\" | ec -policy " + POLICY
     rid = submit_rule(rule_str)
     # Activate rule
     start_rule(rid)
+
+    start_time = datetime.datetime.now()
+
     # Status check
     rule = get_rule(rid)
-    while rule['numCmdsGen'] < MAX_NUMBER:
-      rule = get_rule(rid)
+    last_checked = rule['numChecked']
+    last_cmdsgen = rule['numCmdsGen']
+
+    time.sleep(.1)
+    rule = get_rule(rid)
+    while not ((rule['numChecked'] > last_checked) and (rule['numCmdsGen'] == last_cmdsgen)):
+        time.sleep(.1)
+        rule = get_rule(rid)
+        last_checked = rule['numChecked']
+        last_cmdsgen = rule['numCmdsGen']
+        time.sleep(.1)
+        rule = get_rule(rid)
     cids = get_cids_of_rule(rid)
     failed_cids = wait_for_cmdlets(cids)
     self.assertTrue(len(failed_cids) == 0, "Test failed for EC rule!")
     # wait for consistency
-    time.sleep(1)
+
+    end_time = datetime.datetime.now()
+    interval = (end_time-start_time).seconds
+    print 'ec_time:\t', interval
+
+    time.sleep(10)
     stop_rule(rid)
 
   def test_unec_rule(self):
@@ -39,7 +57,7 @@ class test_ec_action(unittest.TestCase):
     # create a test dir by creating a file under the dir firstly and then deleting it
     submit_cmdlet("write -file " + file_dir + "tmp.file -length 10")
     # wait the metastore sync
-    time.sleep(3)
+    time.sleep(10)
     # submit action
     action_str = "ec -file {} -policy {}".format(file_dir_path, POLICY)
     # Activate actions
@@ -53,20 +71,38 @@ class test_ec_action(unittest.TestCase):
     failed_cids = wait_for_cmdlets(cids)
     self.assertTrue(len(failed_cids) == 0, "Failed to create test files!")
     # wait for consistency
-    time.sleep(3)
+    time.sleep(10)
     rule_str = "file : path matches \"" + file_dir + '*' + "\" | unec"
     rid = submit_rule(rule_str)
     # Activate rule
     start_rule(rid)
+
+    start_time = datetime.datetime.now()
+
     # Status check
     rule = get_rule(rid)
-    while rule['numCmdsGen'] < MAX_NUMBER:
+    last_checked = rule['numChecked']
+    last_cmdsgen = rule['numCmdsGen']
+
+    time.sleep(.1)
+    rule = get_rule(rid)
+    while not ((rule['numChecked'] > last_checked) and (rule['numCmdsGen'] == last_cmdsgen)):
+      time.sleep(.1)
+      rule = get_rule(rid)
+      last_checked = rule['numChecked']
+      last_cmdsgen = rule['numCmdsGen']
+      time.sleep(.1)
       rule = get_rule(rid)
     cids = get_cids_of_rule(rid)
     failed_cids = wait_for_cmdlets(cids)
     self.assertTrue(len(failed_cids) == 0, "Test failed for EC rule!")
     # wait for consistency
-    time.sleep(1)
+
+    end_time = datetime.datetime.now()
+    interval = (end_time-start_time).seconds
+    print 'unec_time:\t', interval
+
+    time.sleep(10)
     stop_rule(rid)
 
 if __name__ == '__main__':
