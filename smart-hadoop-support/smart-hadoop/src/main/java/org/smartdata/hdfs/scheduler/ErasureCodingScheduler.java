@@ -134,7 +134,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     }
 
     try {
-      // use the default EC policy if ec action has not been given an EC policy
+      // use the default EC policy if an ec action has not been given an EC policy
       if (actionInfo.getActionName().equals(ecActionID)) {
         String ecPolicy = actionInfo.getArgs().get(EC_POLICY);
         if (ecPolicy == null || ecPolicy.isEmpty()) {
@@ -149,10 +149,9 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
         return ScheduleResult.SUCCESS;
       }
       // The below code is just for ec or unec action with file as argument, not directory
-      // check file lock merely for ec & unec action
       if (isLimitedByThrottle(srcPath)) {
         if (LOG.isDebugEnabled()) {
-          LOG.debug("Failed to schedule {} due to limitation of throttle!", actionInfo);
+          LOG.debug("Failed to schedule {} due to the limitation of throttle!", actionInfo);
         }
         return ScheduleResult.RETRY;
       }
