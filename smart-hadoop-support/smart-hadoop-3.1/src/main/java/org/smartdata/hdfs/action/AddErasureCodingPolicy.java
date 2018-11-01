@@ -45,7 +45,6 @@ public class AddErasureCodingPolicy extends HdfsAction {
   public static final String PARITY_UNITS_NUM = "-parityNum";
   public static final String CELL_SIZE = "-cellSize";
   private SmartConf conf;
-  private String policyName;
   private String codecName;
   private int numDataUnits;
   private int numParityUnits;
@@ -55,19 +54,30 @@ public class AddErasureCodingPolicy extends HdfsAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.conf = getContext().getConf();
-    this.codecName = args.get(CODEC_NAME);
-    this.numDataUnits = Integer.parseInt(args.get(DATA_UNITS_NUM));
-    this.numParityUnits = Integer.parseInt(args.get(PARITY_UNITS_NUM));
-    this.cellSize = (int) StringUtil.parseToByte(args.get(CELL_SIZE));
+    if (args.get(CODEC_NAME) != null && !args.get(CODEC_NAME).isEmpty()) {
+      this.codecName = args.get(CODEC_NAME);
+    }
+    if (args.get(DATA_UNITS_NUM) != null && !args.get(DATA_UNITS_NUM).isEmpty()) {
+      this.numDataUnits = Integer.parseInt(args.get(DATA_UNITS_NUM));
+    }
+    if (args.get(PARITY_UNITS_NUM) != null && !args.get(PARITY_UNITS_NUM).isEmpty()) {
+      this.numParityUnits = Integer.parseInt(args.get(PARITY_UNITS_NUM));
+    }
+    if (args.get(CELL_SIZE) != null && !args.get(CELL_SIZE).isEmpty()) {
+      this.cellSize = (int) StringUtil.parseToByte(args.get(CELL_SIZE));
+    }
   }
 
   @Override
   public void execute() throws Exception {
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
-    if (codecName == null || codecName.isEmpty() ||
-        numDataUnits <= 0 || numParityUnits <= 0 || cellSize <= 0) {
-      throw new ActionException("Illegal EC policy Schema!");
+    if (codecName == null || numDataUnits <= 0 || numParityUnits <= 0 ||
+        cellSize <= 0 || cellSize % 1024 != 0) {
+      throw new ActionException("Illegal EC policy Schema! " +
+          "A valid codec name should be given, " +
+          "the dataNum, parityNum and cellSize should be positive and " +
+          "the cellSize should be divisible by 1024.");
     }
     ECSchema ecSchema = new ECSchema(codecName, numDataUnits, numParityUnits);
     ErasureCodingPolicy ecPolicy = new ErasureCodingPolicy(ecSchema, cellSize);
