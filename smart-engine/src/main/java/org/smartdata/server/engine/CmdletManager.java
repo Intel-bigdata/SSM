@@ -127,7 +127,7 @@ public class CmdletManager extends AbstractService {
     super(context);
 
     this.metaStore = context.getMetaStore();
-    this.executorService = Executors.newScheduledThreadPool(3);
+    this.executorService = Executors.newScheduledThreadPool(4);
     this.runningCmdlets = new ArrayList<>();
     this.pendingCmdlet = new LinkedList<>();
     this.schedulingCmdlet = new LinkedList<>();
@@ -274,10 +274,12 @@ public class CmdletManager extends AbstractService {
   public void start() throws IOException {
     LOG.info("Starting ...");
     executorService.scheduleAtFixedRate(new CmdletPurgeTask(getContext().getConf()),
-      10, 5000, TimeUnit.MILLISECONDS);
+        10, 5000, TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new ScheduleTask(), 100, 50, TimeUnit.MILLISECONDS);
+    executorService.scheduleAtFixedRate(new FlushCachedCmdletsTask(), 200, 50,
+        TimeUnit.MILLISECONDS);
     executorService.scheduleAtFixedRate(new DetectFailedActionTask(), 1000, 5000,
-      TimeUnit.MILLISECONDS);
+        TimeUnit.MILLISECONDS);
 
     for (ActionSchedulerService s : schedulerServices) {
       s.start();
@@ -294,6 +296,7 @@ public class CmdletManager extends AbstractService {
       schedulerServices.get(i).stop();
     }
     executorService.shutdown();
+    cacheCmdTh = Integer.MAX_VALUE;
     batchSyncCmdAction();
     dispatcher.shutDownExcutorServices();
     LOG.info("Stopped.");
@@ -1270,13 +1273,24 @@ public class CmdletManager extends AbstractService {
     public void run() {
       try {
         int nScheduled;
-        batchSyncCmdAction();
         do {
           nScheduled = scheduleCmdlet();
           totalScheduled += nScheduled;
         } while (nScheduled != 0);
       } catch (Throwable t) {
         // no meaningful info, ignore
+      }
+    }
+  }
+
+  private class FlushCachedCmdletsTask implements Runnable {
+
+    @Override
+    public void run() {
+      try {
+        batchSyncCmdAction();
+      } catch (Throwable t) {
+        LOG.debug("", t);
       }
     }
   }
