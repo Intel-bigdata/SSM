@@ -29,6 +29,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
+import org.smartdata.server.engine.ServiceMode;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,6 +49,7 @@ public class TestRuleManager extends TestDaoUtil {
     smartConf = new SmartConf();
     metaStore = new MetaStore(druidPool);
     ServerContext serverContext = new ServerContext(smartConf, metaStore);
+    serverContext.setServiceMode(ServiceMode.HDFS);
     ruleManager = new RuleManager(serverContext, null, null);
     ruleManager.init();
     ruleManager.start();
