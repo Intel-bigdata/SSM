@@ -108,6 +108,7 @@ public class CmdletManager extends AbstractService {
   private Map<Long, CmdletInfo> idToCmdlets;
   private Map<Long, ActionInfo> idToActions;
   private Map<Long, CmdletInfo> cacheCmd;
+  private List<Long> tobeDeletedCmd;
   private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
@@ -136,6 +137,7 @@ public class CmdletManager extends AbstractService {
     this.idToCmdlets = new ConcurrentHashMap<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
+    this.tobeDeletedCmd = new LinkedList<>();
     this.fileLocks = new ConcurrentHashMap<>();
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
       idToLaunchCmdlet, runningCmdlets, schedulers);
@@ -393,14 +395,21 @@ public class CmdletManager extends AbstractService {
   }
 
   private void batchSyncCmdAction() {
-    if (cacheCmd.size() == 0) {
+    if (cacheCmd.size() == 0 && tobeDeletedCmd.size() == 0) {
       return;
     }
     List<CmdletInfo> cmdletInfos = new ArrayList<>();
     List<ActionInfo> actionInfos = new ArrayList<>();
     List<CmdletInfo> cmdletFinished = new ArrayList<>();
     LOG.debug("Number of cached cmds {}", cacheCmd.size());
+    int todelSize;
     synchronized (cacheCmd) {
+      synchronized (tobeDeletedCmd) {
+        todelSize = tobeDeletedCmd.size();
+        for (Long cid : tobeDeletedCmd) {
+          cacheCmd.remove(cid);
+        }
+      }
       for (Long cid : cacheCmd.keySet()) {
         CmdletInfo cmdletInfo = cacheCmd.remove(cid);
         if (cmdletInfo.getState() != CmdletState.DISABLED) {
@@ -426,18 +435,35 @@ public class CmdletManager extends AbstractService {
           idToActions.remove(aid);
         }
       }
+    }
 
-      if (cmdletInfos.size() == 0) {
-        return;
-      }
+    if (cmdletInfos.size() > 0) {
       LOG.debug("Number of cmds {} to submit", cmdletInfos.size());
       try {
         metaStore.insertActions(
-          actionInfos.toArray(new ActionInfo[actionInfos.size()]));
+            actionInfos.toArray(new ActionInfo[actionInfos.size()]));
         metaStore.insertCmdlets(
-          cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
+            cmdletInfos.toArray(new CmdletInfo[cmdletInfos.size()]));
       } catch (MetaStoreException e) {
-        LOG.error("{} submit to DB error", cmdletInfos, e);
+        LOG.error("CmdletIds -> [ {} ], submit to DB error", cmdletInfos, e);
+      }
+    }
+
+    if (todelSize > 0) {
+      List<Long> del = new LinkedList<>();
+      synchronized (tobeDeletedCmd) {
+        del.addAll(tobeDeletedCmd.subList(0, todelSize > cacheCmdTh ? cacheCmdTh : todelSize));
+        tobeDeletedCmd.removeAll(del);
+      }
+
+      if (del.size() > 0) {
+        LOG.debug("Number of cmds {} to delete", del.size());
+        try {
+          metaStore.batchDeleteCmdlet(del);
+          metaStore.batchDeleteCmdletActions(del);
+        } catch (MetaStoreException e) {
+          LOG.error("CmdletIds -> [ {} ], delete from DB error", del, e);
+        }
       }
     }
   }
@@ -784,9 +810,7 @@ public class CmdletManager extends AbstractService {
         cids.add(info.getCid());
       }
     }
-    synchronized (cacheCmd) {
-      batchDeleteCmdlet(cids);
-    }
+    batchDeleteCmdlet(cids);
   }
 
   //Todo: optimize this function.
@@ -858,16 +882,12 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  public void batchDeleteCmdlet(List<Long> cids) throws IOException {
+  private void batchDeleteCmdlet(List<Long> cids) throws IOException {
     for (Long cid: cids) {
       this.disableCmdlet(cid);
     }
-    try {
-      metaStore.batchDeleteCmdlet(cids);
-      metaStore.batchDeleteCmdletActions(cids);
-    } catch (MetaStoreException e) {
-      LOG.error("CmdletIds -> [ {} ], delete from DB error", cids, e);
-      throw new IOException(e);
+    synchronized (tobeDeletedCmd) {
+      tobeDeletedCmd.addAll(cids);
     }
   }
 
