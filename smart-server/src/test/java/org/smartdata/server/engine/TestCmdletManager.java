@@ -172,6 +172,7 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertNotNull(dispatcher);
     when(dispatcher.canDispatchMore()).thenReturn(true);
     ServerContext serverContext = new ServerContext(new SmartConf(), metaStore);
+    serverContext.setServiceMode(ServiceMode.HDFS);
     CmdletManager cmdletManager = new CmdletManager(serverContext);
     cmdletManager.init();
     cmdletManager.setDispatcher(dispatcher);
@@ -191,6 +192,15 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     CmdletInfo cmdletInfo = cmdletManager.getCmdletInfo(cmdletId);
     Assert.assertNotNull(actionInfo);
 
+    cmdletManager.updateStatus(
+        new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.EXECUTING));
+    CmdletInfo info = cmdletManager.getCmdletInfo(cmdletId);
+    Assert.assertNotNull(info);
+    Assert.assertEquals(info.getParameters(), "echo");
+    Assert.assertEquals(info.getAids().size(), 1);
+    Assert.assertTrue(info.getAids().get(0) == actionId);
+    Assert.assertEquals(info.getState(), CmdletState.EXECUTING);
+
     long finishTime = System.currentTimeMillis();
     actionStatus = new ActionStatus(cmdletId, true, actionId, null, startTime,
         finishTime, null, true);
@@ -201,15 +211,6 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
     Assert.assertEquals(actionInfo.getCreateTime(), startTime);
     Assert.assertEquals(actionInfo.getFinishTime(), finishTime);
     Assert.assertEquals(cmdletInfo.getState(), CmdletState.DONE);
-
-    cmdletManager.updateStatus(
-        new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.EXECUTING));
-    CmdletInfo info = cmdletManager.getCmdletInfo(cmdletId);
-    Assert.assertNotNull(info);
-    Assert.assertEquals(info.getParameters(), "echo");
-    Assert.assertEquals(info.getAids().size(), 1);
-    Assert.assertTrue(info.getAids().get(0) == actionId);
-    Assert.assertEquals(info.getState(), CmdletState.EXECUTING);
 
     cmdletManager.updateStatus(
         new CmdletStatusUpdate(cmdletId, System.currentTimeMillis(), CmdletState.DONE));
