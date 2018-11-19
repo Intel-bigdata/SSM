@@ -561,7 +561,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
 3. MySQL related "Specified key was too long; max key length is 767 bytes"
 
-    This problem is caused by MySQL version below requirement. Because index length of MySQL version <= 5.6 cannot exceed 767 bytes. We have submitted several patches for this issue. But, the best solution is upgrade your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL). 
+    This problem is caused by MySQL version below requirement (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceeds 767 bytes. We have submitted several patches for this issue. But, the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL). 
 
 	 
 Notes
