@@ -347,25 +347,27 @@ public class MetaStoreUtils {
               + ");"
         };
     try {
-      String url = conn.getMetaData().getURL();
-      conn.getMetaData().getDatabaseMajorVersion();
-      boolean mysqlOldRelease = false;
-      // Mysql version number
-      double mysqlVersion =
-          conn.getMetaData().getDatabaseMajorVersion()
-              + conn.getMetaData().getDatabaseMinorVersion() * 0.1;
-      LOG.debug("Mysql Version Number {}", mysqlVersion);
-      if (mysqlVersion < 5.5) {
-        LOG.error("Required Mysql version >= 5.5, but current is " + mysqlVersion);
-        throw new MetaStoreException("Mysql version is below requirement!");
-      } else if (mysqlVersion < 5.7 && mysqlVersion >= 5.5) {
-        mysqlOldRelease = true;
-      }
-      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
       for (String s : deleteExistingTables) {
         // Drop table if exists
         LOG.debug(s);
         executeSql(conn, s);
+      }
+      // Handle mysql related features
+      String url = conn.getMetaData().getURL();
+      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
+      boolean mysqlOldRelease = false;
+      if (mysql) {
+        // Mysql version number
+        double mysqlVersion =
+            conn.getMetaData().getDatabaseMajorVersion()
+                + conn.getMetaData().getDatabaseMinorVersion() * 0.1;
+        LOG.debug("Mysql Version Number {}", mysqlVersion);
+        if (mysqlVersion < 5.5) {
+          LOG.error("Required Mysql version >= 5.5, but current is " + mysqlVersion);
+          throw new MetaStoreException("Mysql version " + mysqlVersion + " is below requirement!");
+        } else if (mysqlVersion < 5.7 && mysqlVersion >= 5.5) {
+          mysqlOldRelease = true;
+        }
       }
       if (mysqlOldRelease) {
         // Enable dynamic file format to avoid index length limit 767
