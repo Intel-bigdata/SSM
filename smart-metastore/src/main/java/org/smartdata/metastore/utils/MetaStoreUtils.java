@@ -355,7 +355,10 @@ public class MetaStoreUtils {
           conn.getMetaData().getDatabaseMajorVersion()
               + conn.getMetaData().getDatabaseMinorVersion() * 0.1;
       LOG.debug("Mysql Version Number {}", mysqlVersion);
-      if (mysqlVersion < 5.7) {
+      if (mysqlVersion < 5.5) {
+        LOG.error("Required Mysql version >= 5.5, but current is " + mysqlVersion);
+        throw new MetaStoreException("Mysql version is below requirement!");
+      } else if (mysqlVersion < 5.7 && mysqlVersion >= 5.5) {
         mysqlOldRelease = true;
       }
       boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
@@ -364,33 +367,15 @@ public class MetaStoreUtils {
         LOG.debug(s);
         executeSql(conn, s);
       }
+      if (mysqlOldRelease) {
+        // Enable dynamic file format to avoid index length limit 767
+        executeSql(conn, "SET GLOBAL innodb_file_format=barracuda;");
+        executeSql(conn, "SET GLOBAL innodb_file_per_table=true;");
+        executeSql(conn, "SET GLOBAL innodb_large_prefix = ON;");
+      }
       for (String s : createEmptyTables) {
         // Solve mysql and sqlite sql difference
-        if (mysql) {
-          // path/src index should be set to less than 767
-          // to avoid "Specified key was too long" in
-          // Mysql 5.6 or previous version
-          if (mysqlOldRelease) {
-            // Fix index size 767 in mysql 5.6 or previous version
-            if (s.startsWith("CREATE INDEX")
-                && (s.contains("path") || s.contains("src"))) {
-              // Index longer than 767
-              s = s.replace(");", "(749));");
-            } else if (s.contains(") PRIMARY KEY")) {
-              // Primary key longer than 749
-              Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}). PRIMARY KEY");
-              Matcher m = p.matcher(s);
-              if (m.find()) {
-                String targetStr = m.group(0);
-                s = s.replace(targetStr, "749) PRIMARY KEY");
-              }
-            }
-          }
-          // Replace AUTOINCREMENT with AUTO_INCREMENT
-          if (s.contains("AUTOINCREMENT")) {
-            s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
-          }
-        }
+        s = sqlCompatibility(mysql, mysqlOldRelease, s);
         LOG.debug(s);
         executeSql(conn, s);
       }
@@ -399,12 +384,53 @@ public class MetaStoreUtils {
     }
   }
 
+  /**
+   * * Solve SQL compatibility problem caused by mysql and sqlite. * Note that mysql 5.6 or earlier
+   * cannot support index length larger than 767. * Meanwhile, sqlite's keywords are a little
+   * different from mysql.
+   *
+   * @param mysql boolean
+   * @param mysqlOldRelease boolean mysql version is earlier than 5.6
+   * @param sql String sql
+   * @return converted sql
+   */
+  private static String sqlCompatibility(boolean mysql, boolean mysqlOldRelease, String sql) {
+    if (mysql) {
+      // path/src index should be set to less than 767
+      // to avoid "Specified key was too long" in
+      // Mysql 5.6 or previous version
+      if (mysqlOldRelease) {
+        // Fix index size 767 in mysql 5.6 or previous version
+        if (sql.startsWith("CREATE INDEX")
+            && (sql.contains("path") || sql.contains("src"))) {
+          // Index longer than 767
+          sql = sql.replace(");", "(749));");
+        } else if (sql.contains("PRIMARY KEY")) {
+          // Primary key longer than 749
+          Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}).{2,15}PRIMARY");
+          Matcher m = p.matcher(sql);
+          if (m.find()) {
+            // Make this table dynamic
+            sql = sql.replace(");", ") ROW_FORMAT=DYNAMIC ENGINE=INNODB;");
+            LOG.debug(sql);
+          }
+        }
+      }
+      // Replace AUTOINCREMENT with AUTO_INCREMENT
+      if (sql.contains("AUTOINCREMENT")) {
+        sql = sql.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+      }
+    }
+    return sql;
+  }
+
   public static void executeSql(Connection conn, String sql)
       throws MetaStoreException {
     try {
       Statement s = conn.createStatement();
       s.execute(sql);
     } catch (Exception e) {
+      LOG.error("SQL execution error " + sql);
       throw new MetaStoreException(e);
     }
   }
