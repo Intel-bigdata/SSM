@@ -559,6 +559,10 @@ Note: To make the scripts work, you have to set up password-less SSH connections
    2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
 ```
 
+3. MySQL related "Specified key was too long; max key length is 767 bytes"
+
+    This problem is caused by MySQL version below requirement (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceeds 767 bytes. We have submitted several patches for this issue. But, the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL). 
+
 	 
 Notes
 ---------------------------------------------------------------------------------
