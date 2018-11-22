@@ -34,17 +34,20 @@ import java.util.Map;
 @ActionSignature(
     actionId = "addec",
     displayName = "addec",
-    usage = AddErasureCodingPolicy.CODEC_NAME + " $codeName" +
+    usage = AddErasureCodingPolicy.POLICY_NAME + "$policyName" +
+        AddErasureCodingPolicy.CODEC_NAME + " $codeName" +
         AddErasureCodingPolicy.DATA_UNITS_NUM + " $dataNum" +
         AddErasureCodingPolicy.PARITY_UNITS_NUM + " $parityNum" +
         AddErasureCodingPolicy.CELL_SIZE + " $cellSize"
 )
 public class AddErasureCodingPolicy extends HdfsAction {
+  public static final String POLICY_NAME = "-policyName";
   public static final String CODEC_NAME = "-codec";
   public static final String DATA_UNITS_NUM = "-dataNum";
   public static final String PARITY_UNITS_NUM = "-parityNum";
   public static final String CELL_SIZE = "-cellSize";
   private SmartConf conf;
+  private String policyName;
   private String codecName;
   private int numDataUnits;
   private int numParityUnits;
@@ -54,8 +57,20 @@ public class AddErasureCodingPolicy extends HdfsAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.conf = getContext().getConf();
+    if (args.get(POLICY_NAME) != null && !args.get(POLICY_NAME).isEmpty()) {
+      this.policyName = args.get(POLICY_NAME);
+      String[] policyStr = policyName.split("-");
+      if (policyStr.length != 4) {
+        return;
+      }
+      this.codecName = policyStr[0].toLowerCase();
+      this.numDataUnits = Integer.parseInt(policyStr[1]);
+      this.numParityUnits = Integer.parseInt(policyStr[2]);
+      this.cellSize = (int) StringUtil.parseToByte(policyStr[3]);
+      return;
+    }
     if (args.get(CODEC_NAME) != null && !args.get(CODEC_NAME).isEmpty()) {
-      this.codecName = args.get(CODEC_NAME);
+      this.codecName = args.get(CODEC_NAME).toLowerCase();
     }
     if (args.get(DATA_UNITS_NUM) != null && !args.get(DATA_UNITS_NUM).isEmpty()) {
       this.numDataUnits = Integer.parseInt(args.get(DATA_UNITS_NUM));

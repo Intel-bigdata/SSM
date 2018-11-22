@@ -222,7 +222,8 @@ public class StringUtil {
     String str = size.toUpperCase();
     Long ret;
     long times = 1;
-    Pattern p = Pattern.compile("[PTGMK]?B");
+    Pattern p = Pattern.compile("([PTGMK]?B)|([PTGMK]+)");
+    //Pattern p = Pattern.compile("([PTGMK]?)B");
     Matcher m = p.matcher(str);
     String unit = "";
     if (m.find()) {
@@ -231,18 +232,23 @@ public class StringUtil {
     str = str.substring(0, str.length() - unit.length());
     switch (unit) {
       case "PB":
+      case "P":
         times *= 1024L * 1024 * 1024 * 1024 * 1024;
         break;
       case "TB":
+      case "T":
         times *= 1024L * 1024 * 1024 * 1024;
         break;
       case "GB":
+      case "G":
         times *= 1024L * 1024 * 1024;
         break;
       case "MB":
+      case "M":
         times *= 1024L * 1024;
         break;
       case "KB":
+      case "K":
         times *= 1024L;
         break;
     }
