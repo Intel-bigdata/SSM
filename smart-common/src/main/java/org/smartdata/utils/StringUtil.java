@@ -223,7 +223,6 @@ public class StringUtil {
     Long ret;
     long times = 1;
     Pattern p = Pattern.compile("([PTGMK]?B)|([PTGMK]+)");
-    //Pattern p = Pattern.compile("([PTGMK]?)B");
     Matcher m = p.matcher(str);
     String unit = "";
     if (m.find()) {
