@@ -59,14 +59,14 @@ public class AddErasureCodingPolicy extends HdfsAction {
     this.conf = getContext().getConf();
     if (args.get(POLICY_NAME) != null && !args.get(POLICY_NAME).isEmpty()) {
       this.policyName = args.get(POLICY_NAME);
-      String[] policyStr = policyName.split("-");
-      if (policyStr.length != 4) {
+      String[] policySchema = policyName.split("-");
+      if (policySchema.length != 4) {
         return;
       }
-      this.codecName = policyStr[0].toLowerCase();
-      this.numDataUnits = Integer.parseInt(policyStr[1]);
-      this.numParityUnits = Integer.parseInt(policyStr[2]);
-      this.cellSize = (int) StringUtil.parseToByte(policyStr[3]);
+      this.codecName = policySchema[0].toLowerCase();
+      this.numDataUnits = Integer.parseInt(policySchema[1]);
+      this.numParityUnits = Integer.parseInt(policySchema[2]);
+      this.cellSize = (int) StringUtil.parseToByte(policySchema[3]);
       return;
     }
     if (args.get(CODEC_NAME) != null && !args.get(CODEC_NAME).isEmpty()) {
