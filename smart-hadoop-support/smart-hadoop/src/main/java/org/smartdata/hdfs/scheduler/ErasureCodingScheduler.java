@@ -29,6 +29,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
 import org.smartdata.model.CmdletInfo;
+import org.smartdata.model.FileInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
@@ -97,10 +98,16 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
         throw new IOException("No src path is given!");
       }
     }
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    // The root dir should be excluded in checking whether file path ends with slash.
+    if (!srcPath.equals("/") && srcPath.endsWith("/")) {
+      srcPath = srcPath.substring(0, srcPath.length() - 1);
+      actionInfo.getArgs().put(HdfsAction.FILE_PATH, srcPath);
+    }
     // For ec or unec action, check if the file is locked.
     if (actionInfo.getActionName().equals(ecActionID) ||
         actionInfo.getActionName().equals(unecActionID)) {
-      if (fileLock.contains(actionInfo.getArgs().get(HdfsAction.FILE_PATH))) {
+      if (fileLock.contains(srcPath)) {
         return false;
       }
     }
@@ -123,7 +130,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.SUCCESS;
     }
 
-    String srcPath = action.getArgs().get(HdfsAction.FILE_PATH);
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     if (srcPath == null) {
       actionInfo.appendLog("No file is given in this action!");
       return ScheduleResult.FAIL;
@@ -145,9 +152,11 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
         }
       }
 
-      if (metaStore.getFile(srcPath).isdir()) {
+      FileInfo fileinfo = metaStore.getFile(srcPath);
+      if (fileinfo != null && fileinfo.isdir()) {
         return ScheduleResult.SUCCESS;
       }
+
       // The below code is just for ec or unec action with file as argument, not directory
       if (isLimitedByThrottle(srcPath)) {
         if (LOG.isDebugEnabled()) {
