@@ -93,10 +93,12 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       throw new IOException(actionInfo.getActionName() +
           " is not supported on " + VersionInfo.getVersion());
     }
-    if (!actionInfo.getActionName().equals(listecActionID)) {
-      if (actionInfo.getArgs().get(HdfsAction.FILE_PATH) == null) {
-        throw new IOException("No src path is given!");
-      }
+    if (actionInfo.getActionName().equals(listecActionID)) {
+      return true;
+    }
+
+    if (actionInfo.getArgs().get(HdfsAction.FILE_PATH) == null) {
+      throw new IOException("File path is required for action " + actionInfo.getActionName() + "!");
     }
     String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     // The root dir should be excluded in checking whether file path ends with slash.
