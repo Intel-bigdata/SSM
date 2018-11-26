@@ -41,6 +41,10 @@ while [ $# != 0 ]; do
       DEBUG_OPT=$1
       shift
       ;;
+    "--help" | "-h")
+      echo -e "--help -h Show this usage information\n--config Specify or overwrite an configure option.\n-format Format the configured database."
+      shift
+      ;;
     *)
       SMART_VARGS+=" $1"
       shift
