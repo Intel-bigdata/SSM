@@ -156,7 +156,9 @@ public class SecurityUtil {
       throw new IOException("Running in secure mode, but config doesn't have a keytab");
     }
     File keytabPath = new File(keytabFilename);
-    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
+    String principalConfig = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
+    String principal =
+        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
     try {
       SecurityUtil.loginUsingKeytab(keytabPath.getAbsolutePath(), principal);
     } catch (IOException e) {
