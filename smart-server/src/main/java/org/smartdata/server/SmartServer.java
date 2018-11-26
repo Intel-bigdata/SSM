@@ -285,7 +285,9 @@ public class SmartServer {
     UserGroupInformation.setConfiguration(conf);
 
     String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
-    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
+    String principalConfig = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
+    String principal =
+        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
 
     SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
