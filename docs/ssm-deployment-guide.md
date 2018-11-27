@@ -175,7 +175,7 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    
    The start process also requires the user account to start the SSM server is able to ssh to localhost without providing password.  
 
-   `./bin/start-ssm.sh
+   `./bin/start-ssm.sh`
 
    `--help` `-h` Show the usage information.
 

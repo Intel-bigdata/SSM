@@ -84,7 +84,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
     OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
     if [ x"${DEBUG_OPT}" != x"" ]; then
       echo
-      echo "    Please attache to SmartServer@${FIRST_MASTER} and resume the execution first!!"
+      echo "    Please attach to SmartServer@${FIRST_MASTER} and resume the execution first!!"
       read -n1 -s -p "    And then hit any key to continue ... "
       echo -e "\n\nStarting other SmartServers on [${OTHER_MASTERS}]"
       sleep 1
