@@ -175,7 +175,9 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    
    The start process also requires the user account to start the SSM server is able to ssh to localhost without providing password.  
 
-   `./bin/start-ssm.sh`
+   `./bin/start-ssm.sh
+
+   `--help` `-h` Show the usage information.
 
    `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
 
@@ -195,6 +197,8 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
 
    `./bin/start-agent.sh [--host .. --config ..]`
+
+   `--help` `-h` Show the usage information.
 
    If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
    So all SSM services can be killed later.
