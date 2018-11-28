@@ -67,8 +67,8 @@ This will create five files in LOCALSTATEDIR/krb5kdc (or at the locations specif
 
 ### Start the Kerberos daemons on the master KDC
 ```
-shell% krb5kdc
-shell% kadmind
+krb5kdc
+kadmind
 ```
 
 ## 2. Export the keytabs
@@ -120,7 +120,7 @@ kadmin.local:xst -k /xxx/xxx/hdfs-hostname.keytab hdfs/hostname
 ## 4. Update hadoop configuration files
  
 ### Update core-site.xml
-add the following properties:
+Add the following properties:
 ```
 <property>
   <name>hadoop.security.authorization</name>
@@ -136,7 +136,7 @@ add the following properties:
 </property>
 ```
 ### Update hdfs-site.xml
-add the following properties:
+Add the following properties:
 ```
 <!-- General HDFS security config -->
 <property>
@@ -172,10 +172,9 @@ add the following properties:
   <name>dfs.datanode.kerberos.principal</name>
   <value>hdfs/_HOST@HADOOP.COM</value>
 </property>
-
+```
 
 ## 5. Deploy HTTPS
-===============
 
 ### 1. Create a keystore file for each host
 
