@@ -307,6 +307,9 @@ function init_command() {
       ALLOW_DAEMON_OPT=true
       export SMART_LOG_FILE_NAME=${SMART_AGENT_LOG_FILE_NAME}
       export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
+      if [ $SSM_DEBUG_ENABLED == "true" ]; then
+       JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
+      fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
       JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_AGENT_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
