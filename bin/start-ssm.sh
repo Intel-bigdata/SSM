@@ -41,6 +41,12 @@ while [ $# != 0 ]; do
       DEBUG_OPT=$1
       shift
       ;;
+    "--help" | "-h")
+      echo -e "--help -h Show this usage information\n\
+--config Specify or overwrite an configure option.\n\
+-format Format the configured database."
+      shift
+      ;;
     *)
       SMART_VARGS+=" $1"
       shift
@@ -80,7 +86,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
     OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
     if [ x"${DEBUG_OPT}" != x"" ]; then
       echo
-      echo "    Please attache to SmartServer@${FIRST_MASTER} and resume the execution first!!"
+      echo "    Please attach to SmartServer@${FIRST_MASTER} and resume the execution first!!"
       read -n1 -s -p "    And then hit any key to continue ... "
       echo -e "\n\nStarting other SmartServers on [${OTHER_MASTERS}]"
       sleep 1
@@ -93,7 +99,8 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
       --config "${SMART_CONF_DIR}" \
       --hosts "${OTHER_MASTERS}" --hostsend \
       --daemon start \
-      smartserver $SMART_VARGS_STANDBY
+      smartserver $
+SMART_VARGS_STANDBY
   fi
 else
   echo "ERROR: No SmartServers configured in 'servers'."
