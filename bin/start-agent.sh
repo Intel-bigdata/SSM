@@ -24,7 +24,6 @@ bin=$(cd "${bin}">/dev/null; pwd)
 
 AGENT_HOSTS=
 while [ $# != 0 ]; do
-  DEBUG_OPT=""
   case "$1" in
     "--config")
       shift
@@ -45,7 +44,7 @@ while [ $# != 0 ]; do
       shift
       ;;
     "--debug")
-      DEBUG_OPT="$1"
+      DEBUG_OPT_AGENT="$1"
       shift
       ;;
     "--help" | "-h")
@@ -80,5 +79,5 @@ echo "Starting SmartAgents on [${AGENT_HOSTS}]"
   --remote \
   --config "${SMART_CONF_DIR}" \
   --hosts "${AGENT_HOSTS}" --hostsend \
-  --daemon start ${DEBUG_OPT} \
+  --daemon start ${DEBUG_OPT_AGENT} \
   smartagent -D smart.agent.master.address=${AGENT_MASTER}

@@ -38,7 +38,23 @@ while [ $# != 0 ]; do
       shift
       ;;
     "--debug")
-      DEBUG_OPT=$1
+      DEBUG=$1
+      shift
+      case "$1" in
+        "master")
+          DEBUG_OPT_MASTER="$DEBUG"
+          shift
+          ;;
+        "standby")
+          DEBUG_OPT_STANDBY="$DEBUG"
+          shift
+          ;;
+        "agent")
+          DEBUG_OPT_AGENT="$DEBUG"
+          shift
+          ;;
+        *)
+      esac
       shift
       ;;
     "--help" | "-h")
@@ -79,12 +95,12 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
     --remote \
     --config "${SMART_CONF_DIR}" \
     --hosts "${FIRST_MASTER}" --hostsend \
-    --daemon start ${DEBUG_OPT} \
+    --daemon start ${DEBUG_OPT_MASTER} \
     smartserver $SMART_VARGS
 
   if [ x"${SMARTSERVERS}" != x"${FIRST_MASTER}" ]; then
     OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
-    if [ x"${DEBUG_OPT}" != x"" ]; then
+    if [ x"${DEBUG_OPT_STANDBY}" != x"" ]; then
       echo
       echo "    Please attach to SmartServer@${FIRST_MASTER} and resume the execution first!!"
       read -n1 -s -p "    And then hit any key to continue ... "
@@ -98,9 +114,8 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
       --remote \
       --config "${SMART_CONF_DIR}" \
       --hosts "${OTHER_MASTERS}" --hostsend \
-      --daemon start \
-      smartserver $
-SMART_VARGS_STANDBY
+      --daemon start ${DEBUG_OPT_STANDBY} \
+      smartserver $SMART_VARGS_STANDBY
   fi
 else
   echo "ERROR: No SmartServers configured in 'servers'."
@@ -119,7 +134,7 @@ if [ -f "${AGENTS_FILE}" ]; then
 
   if [ x"${AGENT_HOSTS}" != x"" ]; then
     . "${SMART_HOME}"/bin/start-agent.sh \
-      --host "${AGENT_HOSTS}" \
-      "$@"
+     --host "${AGENT_HOSTS}" \
+     "$@"
   fi
 fi
