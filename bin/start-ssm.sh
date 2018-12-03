@@ -100,7 +100,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
 
   if [ x"${SMARTSERVERS}" != x"${FIRST_MASTER}" ]; then
     OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
-    if [ x"${DEBUG_OPT_STANDBY}" != x"" ]; then
+    if [ x"${DEBUG_OPT_MASTER}" != x"" ]; then
       echo
       echo "    Please attach to SmartServer@${FIRST_MASTER} and resume the execution first!!"
       read -n1 -s -p "    And then hit any key to continue ... "
