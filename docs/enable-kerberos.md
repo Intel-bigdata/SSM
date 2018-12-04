@@ -130,10 +130,6 @@ Add the following properties:
   <name>hadoop.security.authentication</name>
   <value>kerberos</value>
 </property>
-<property>
-   <name>hadoop.security.authentication.use.has</name>
-   <value>true</value>
-</property>
 ```
 ### Update hdfs-site.xml
 Add the following properties:
