@@ -177,6 +177,8 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    `./bin/start-ssm.sh`
 
+   `--help` `-h` Show the usage information.
+
    `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
 
    `--config <config-dir>` can be used to specify where the config directory is.
@@ -199,6 +201,8 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    `./bin/start-agent.sh [--host .. --config ..]`
 
    `--debug` can be used to debug smart agent.
+
+   `--help` `-h` Show the usage information.
 
    If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
    So all SSM services can be killed later.
