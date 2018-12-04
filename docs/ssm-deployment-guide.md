@@ -198,6 +198,8 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    `./bin/start-agent.sh [--host .. --config ..]`
 
+   `--debug` can be used to debug smart agent.
+
    If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
    So all SSM services can be killed later.
 
