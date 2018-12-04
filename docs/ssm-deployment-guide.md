@@ -182,6 +182,8 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    `--config <config-dir>` can be used to specify where the config directory is.
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 
+   `--debug [master] [standby] [agent]` can be used to debug different targets.
+
    If Smart Agents are configured, the start script will start the Agents one by one remotely.
    
    Once you start the SSM server, you can open its web UI by 
