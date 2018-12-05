@@ -551,7 +551,7 @@ public class CmdletDispatcher {
   public void start() {
     if (disableLocalExec) {
       ActiveServerNodeCmdletMetrics metrics = new ActiveServerNodeCmdletMetrics();
-      metrics.setNumExecutors(defaultSlots);
+      metrics.setNumExecutors(executorsNum);
       metrics.setRegistTime(System.currentTimeMillis());
       metrics.setNodeInfo(ActiveServerInfo.getInstance());
       regNodeInfos.put(ActiveServerInfo.getInstance().getId(), metrics);
