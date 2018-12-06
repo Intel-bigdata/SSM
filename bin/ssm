@@ -86,6 +86,7 @@ while [ $# != 0 ]; do
       ;;
   esac
 done
+
 SMART_HOSTS=${SMART_HOSTS/ /}
 
 REMOTE_COMMAND+=" $@"

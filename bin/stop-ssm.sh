@@ -64,12 +64,23 @@ if [ -f "${SERVERS_FILE}" ]; then
 
   if [ x"${SMARTSERVERS}" != x"" ]; then
     echo "Stopping SmartServers on [${SMARTSERVERS}]"
+    FIRST_MASTER=$(echo ${SMARTSERVERS} | awk '{print $1}')
     . "${SMART_HOME}/bin/ssm" \
       --remote \
       --config "${SMART_CONF_DIR}" \
-      --hosts "${SMARTSERVERS}" --hostsend \
+      --hosts "${FIRST_MASTER}" --hostsend \
       --daemon stop ${DEBUG_OPT} \
       smartserver
+  
+    if [ x"${SMARTSERVERS}" != x"${FIRST_MASTER}" ]; then
+      OTHER_MASTERS=${SMARTSERVERS/${FIRST_MASTER} /}
+      . "${SMART_HOME}/bin/ssm" \
+        --remote \
+        --config "${SMART_CONF_DIR}" \
+        --hosts "${OTHER_MASTERS}" --hostsend \
+        --daemon stop ${DEBUG_OPT} \
+        standby
+    fi
   else
     echo "No SmartServers configured in 'servers'."
   fi
