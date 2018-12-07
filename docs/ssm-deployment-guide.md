@@ -80,7 +80,9 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
 
 ##  **Configure Smart Server**
 
-SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+
+SSM also supports running one standby server with master server on a single node.
 
 Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
 
@@ -184,8 +186,6 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    `--config <config-dir>` can be used to specify where the config directory is.
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
 
-   `--debug [master] [standby] [agent]` can be used to debug different targets.
-
    If Smart Agents are configured, the start script will start the Agents one by one remotely.
    
    Once you start the SSM server, you can open its web UI by 
@@ -199,8 +199,6 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
    If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
 
    `./bin/start-agent.sh [--host .. --config ..]`
-
-   `--debug` can be used to debug smart agent.
 
    `--help` `-h` Show the usage information.
 
@@ -543,7 +541,11 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
- All logs will go to smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory.
+ Logs for master server will go to smartserver-master-$hostname-$user.log under ${SMART_HOME}/logs directory.
+
+ Logs for standby server will go to smartserver-standy-$hostname-$user.log under ${SMART_HOME}/logs directory.
+
+ Logs for agent will go to smartagent-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
