@@ -48,14 +48,10 @@ while [ $# != 0 ]; do
       shift
       ;;
     "--help" | "-h")
-      echo -e "--help -h Show this usage information\n\
---config Specify or overwrite an configure option.\n\
---host Specify the host on which Smart Agent will be started by giving its hostname or IP. \
-The default one is localhost. "
-      shift
-      ;;
-    "--help" | "-h")
-      echo -e "--help -h Show this usage information\n--config Specify or overwrite an configure option.\n--host Specify the host on which Smart Agent will be started by giving its hostname or IP. The default one is localhost. "
+      echo "--help -h Show this usage information"
+      echo "--config Specify or overwrite an configure option."
+      echo "--host Specify the host on which Smart Agent will be started by giving its hostname or IP."
+      echo "  The default one is localhost."
       shift
       ;;
     *)

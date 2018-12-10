@@ -58,13 +58,9 @@ while [ $# != 0 ]; do
       shift
       ;;
     "--help" | "-h")
-      echo -e "--help -h Show this usage information\n\
---config Specify or overwrite an configure option.\n\
--format Format the configured database."
-      shift
-      ;;
-    "--help" | "-h")
-      echo -e "--help -h Show this usage information\n--config Specify or overwrite an configure option.\n-format Format the configured database."
+      echo "--help -h Show this usage information"
+      echo "--config Specify or overwrite an configure option."
+      echo "-format Format the configured database."
       shift
       ;;
     *)
@@ -119,7 +115,7 @@ if [ x"${SMARTSERVERS}" != x"" ]; then
       --config "${SMART_CONF_DIR}" \
       --hosts "${OTHER_MASTERS}" --hostsend \
       --daemon start ${DEBUG_OPT_STANDBY} \
-      smartserver $SMART_VARGS_STANDBY
+      standby $SMART_VARGS_STANDBY
   fi
 else
   echo "ERROR: No SmartServers configured in 'servers'."
