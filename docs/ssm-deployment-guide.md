@@ -69,7 +69,8 @@ More detailed information, please refer to BUILDING.txt file.
   ```
 
 ###   Ignore Dirs
-SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
+SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about all files under some directory (for example, directory for temporary files), you can make a modification in smart-default.xml as the following shows. SSM will completely ignore the corresponding files.
+Please note that SSM action will not be scheduled for file under ignored directory even though they are specified in a rule by user.
 
   ```xml
    <property>
