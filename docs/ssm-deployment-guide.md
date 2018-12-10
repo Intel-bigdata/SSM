@@ -82,7 +82,9 @@ Please note that SSM action will not be scheduled for file under ignored directo
 
 ##  **Configure Smart Server**
 
-SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+
+SSM also supports running one standby server with master server on a single node.
 
 Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
 
@@ -545,7 +547,11 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
- All logs will go to smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory.
+ Logs for master server will go to smartserver-master-$hostname-$user.log under ${SMART_HOME}/logs directory.
+
+ Logs for standby server will go to smartserver-standby-$hostname-$user.log under ${SMART_HOME}/logs directory.
+
+ Logs for agent will go to smartagent-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
