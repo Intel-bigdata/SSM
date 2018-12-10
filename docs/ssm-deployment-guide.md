@@ -547,7 +547,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 ---------------------------------------------------------------------------------
  Logs for master server will go to smartserver-master-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
- Logs for standby server will go to smartserver-standy-$hostname-$user.log under ${SMART_HOME}/logs directory.
+ Logs for standby server will go to smartserver-standby-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
  Logs for agent will go to smartagent-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
