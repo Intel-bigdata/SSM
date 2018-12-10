@@ -58,9 +58,9 @@ while [ $# != 0 ]; do
       shift
       ;;
     "--help" | "-h")
-      echo -e "--help -h Show this usage information\n\
---config Specify or overwrite an configure option.\n\
--format Format the configured database."
+      echo "--help -h Show this usage information"
+      echo "--config Specify or overwrite an configure option."
+      echo "-format Format the configured database."
       shift
       ;;
     *)
