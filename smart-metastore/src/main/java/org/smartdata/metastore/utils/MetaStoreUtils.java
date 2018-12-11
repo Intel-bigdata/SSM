@@ -62,9 +62,7 @@ public class MetaStoreUtils {
         "performance_schema",
         "PERFORMANCE_SCHEMA"
       };
-  public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
-  private static boolean tidbInited = false;
   public static final String TABLESET[] = new String[]{
             "access_count_table",
             "blank_access_count_info",
@@ -474,26 +472,9 @@ public class MetaStoreUtils {
       Properties p = new Properties();
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
-
-        boolean tidbEnabled = conf.getBoolean(
-                SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
-        if (tidbEnabled) {
-          String tidbPort = conf.get(SmartConfKeys.TIDB_SERVICE_PORT_KEY,
-                  SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
-          String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
-          String user = p.getProperty("username");
-          String password = p.getProperty("password");
-          if (!tidbInited) {
-            initTidb(url, user, password);
-          }
-          url = url + "/" + TIDB_DB_NAME;
+        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+        if (url != null) {
           p.setProperty("url", url);
-          LOG.info("\t" + "The jdbc url for Tidb is " + url);
-        } else {
-          String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-          if (url != null) {
-            p.setProperty("url", url);
-          }
         }
 
         String purl = p.getProperty("url");
@@ -650,29 +631,6 @@ public class MetaStoreUtils {
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
-  }
-
-  public static void initTidb(String url, String user, String password)
-          throws MetaStoreException {
-    Connection conn;
-    try {
-      conn = createConnection(url, user, "");
-      Statement stat = conn.createStatement();
-      stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", TIDB_DB_NAME));
-      stat.executeQuery(String.format("SET PASSWORD FOR root = PASSWORD('%s')", password));
-    } catch (SQLException ex) {
-      try {
-        conn = createConnection(url, user, password);
-        Statement stat = conn.createStatement();
-        stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", TIDB_DB_NAME));
-      } catch (Exception e) {
-        throw new MetaStoreException(ex);
-      }
-    } catch (Exception ex) {
-      throw new MetaStoreException(ex);
-    }
-    tidbInited = true;
-    LOG.info("Tidb is initialized.");
   }
 }
 
