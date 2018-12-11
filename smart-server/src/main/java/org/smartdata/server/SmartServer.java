@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,27 +35,17 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.server.engine.CmdletManager;
-import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
-import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
-import org.smartdata.tidb.LaunchDB;
-import org.smartdata.tidb.PdServer;
-import org.smartdata.tidb.TidbServer;
 import org.smartdata.utils.SecurityUtil;
-import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * From this Smart Storage Management begins.
@@ -63,7 +53,6 @@ import java.util.Scanner;
 public class SmartServer {
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
-  private ConfManager confMgr;
   private final SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
@@ -79,7 +68,6 @@ public class SmartServer {
 
   public SmartServer(SmartConf conf) {
     this.conf = conf;
-    this.confMgr = new ConfManager(conf);
     this.enabled = false;
   }
 
@@ -146,69 +134,7 @@ public class SmartServer {
     return startOpt;
   }
 
-  public static void startDB(SmartConf conf, AgentMaster agentMaster)
-          throws InterruptedException, IOException {
-    if (conf.getInt(NUMBER_OF_SMART_AGENT, 0) != 0) {
-      String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
-      InetAddress address = InetAddress.getByName(host);
-      String ip = address.getHostAddress();
-      PdServer pdServer = new PdServer(ip, conf);
-      Thread pdThread = new Thread(pdServer);
-      pdThread.start();
-      while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady(conf)) {
-        Thread.sleep(100);
-      }
-      LOG.info("Pd server is ready.");
-      agentMaster.sendLaunchTikvMessage();
-      while (!agentMaster.isTikvAlreadyLaunched(conf)) {
-        Thread.sleep(100);
-      }
-      LOG.info("Tikv server is ready.");
-      TidbServer tidbServer = new TidbServer(host, conf);
-      Thread tidbThread = new Thread(tidbServer);
-      tidbThread.start();
-      while (!tidbServer.isReady()) {
-        Thread.sleep(100);
-      }
-      LOG.info("Tidb server is ready.");
-    } else {
-      LaunchDB launchDB = new LaunchDB(conf);
-      Thread db = new Thread(launchDB);
-      LOG.info("Starting Pd, Tikv and Tidb..");
-      db.start();
-      while (!launchDB.isCompleted()) {
-        Thread.sleep(100);
-      }
-    }
-  }
-
-  public static void setAgentNum(SmartConf conf) {
-    String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
-            SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
-    Scanner sc = null;
-    try {
-      sc = new Scanner(new File(agentConfFile));
-    } catch (FileNotFoundException ex) {
-      LOG.error("Cannot find the config file: {}!", agentConfFile);
-    }
-    int num = 0;
-    while (sc.hasNextLine()) {
-      String host = sc.nextLine().trim();
-      if (!host.startsWith("#") && !host.isEmpty()) {
-        num++;
-      }
-    }
-    conf.setInt(NUMBER_OF_SMART_AGENT, num);
-  }
-
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
-    AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
-
-    if (isTidbEnabled(conf)) {
-      setAgentNum(conf);
-      startDB(conf, agentMaster);
-    }
-
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
@@ -222,7 +148,7 @@ public class SmartServer {
       ssm.initWith();
       ssm.run();
       return ssm;
-    } catch (Exception e){
+    } catch (Exception e) {
       ssm.shutdown();
       throw e;
     }
@@ -245,26 +171,21 @@ public class SmartServer {
   }
 
   private static boolean parseHelpArgument(String[] args,
-      String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
-      try {
-        CommandLineParser parser = new PosixParser();
-        CommandLine cmdLine = parser.parse(helpOptions, args);
-        if (cmdLine.hasOption(helpOpt.getOpt())
-            || cmdLine.hasOption(helpOpt.getLongOpt())) {
-          // should print out the help information
-          out.println(helpDescription + "\n");
-          return true;
-        }
-      } catch (ParseException pe) {
-        //LOG.warn("Parse help exception", pe);
-        return false;
+    String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
+    try {
+      CommandLineParser parser = new PosixParser();
+      CommandLine cmdLine = parser.parse(helpOptions, args);
+      if (cmdLine.hasOption(helpOpt.getOpt())
+          || cmdLine.hasOption(helpOpt.getLongOpt())) {
+        // should print out the help information
+        out.println(helpDescription + "\n");
+        return true;
       }
+    } catch (ParseException pe) {
+      //LOG.warn("Parse help exception", pe);
+      return false;
+    }
     return false;
-  }
-
-  private static boolean isTidbEnabled(SmartConf conf) {
-    return conf.getBoolean(
-        SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
   private void authentication() throws IOException {
@@ -277,7 +198,7 @@ public class SmartServer {
       HadoopUtil.loadHadoopConf(conf);
     } catch (IOException e) {
       LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-              + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+          + "Please config smart.hadoop.conf.path property in smart-site.xml.");
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.security.authorization", "true");
     }
@@ -285,9 +206,7 @@ public class SmartServer {
     UserGroupInformation.setConfiguration(conf);
 
     String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
-    String principalConfig = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
-    String principal =
-        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
+    String principal = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
 
     SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
@@ -422,18 +341,18 @@ public class SmartServer {
     try {
       final SmartServer inst = launchWith(args, null);
       if (inst != null) {
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
           @Override
           public void run() {
             LOG.info("Shutting down SmartServer ... ");
             try {
               inst.shutdown();
-             } catch (Exception e) {
-               LOG.error("Error while stopping servlet container", e);
-             }
-             LOG.info("SmartServer was down.");
-           }
-         });
+            } catch (Exception e) {
+              LOG.error("Error while stopping servlet container", e);
+            }
+            LOG.info("SmartServer was down.");
+          }
+        });
         //Todo: when to break
         while (true) {
           Thread.sleep(1000);

@@ -196,17 +196,4 @@ public class SmartConfKeys {
   public static final int SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT = 50;
   public static final String SMART_STATUS_REPORT_RATIO_KEY = "smart.status.report.ratio";
   public static final double SMART_STATUS_REPORT_RATIO_DEFAULT = 0.2;
-
-  //Tidb
-  public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
-  public static final boolean SMART_TIDB_ENABLED_DEFAULT = false;
-
-  public static final String PD_CLIENT_PORT_KEY = "pd.client.port";
-  public static final String PD_CLIENT_PORT_DEFAULT = "7060";
-  public static final String PD_PEER_PORT_KEY = "pd.peer.port";
-  public static final String PD_PEER_PORT_DEFAULT = "7061";
-  public static final String TIKV_SERVICE_PORT_KEY = "tikv.service.port";
-  public static final String TIKV_SERVICE_PORT_DEFAULT = "20160";
-  public static final String TIDB_SERVICE_PORT_KEY = "tidb.service.port";
-  public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "7070";
 }
