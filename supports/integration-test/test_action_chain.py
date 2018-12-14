@@ -30,7 +30,8 @@ class TestMover(unittest.TestCase):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-size', default='64MB')
+    parser.add_argument('-size', default='64MB',
+                        help="size of file, Default Value 64MB.")
     parser.add_argument('unittest_args', nargs='*')
     args, unknown_args = parser.parse_known_args()
     sys.argv[1:] = unknown_args

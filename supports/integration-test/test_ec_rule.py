@@ -107,9 +107,12 @@ class test_ec_rule(unittest.TestCase):
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
-  parser.add_argument('-size', default='1MB')
-  parser.add_argument('-num', default='10')
-  parser.add_argument('-policy', default='XOR-2-1-1024k')
+  parser.add_argument('-size', default='1MB',
+                      help="size of file, Default Value 1MB.")
+  parser.add_argument('-num', default='10',
+                      help="file num, Default Value 10.")
+  parser.add_argument('-policy', default='XOR-2-1-1024k',
+                      help="EC policy, Default Value XOR-2-1-1024k.")
   parser.add_argument('unittest_args', nargs='*')
   args, unknown_args = parser.parse_known_args()
   sys.argv[1:] = unknown_args
