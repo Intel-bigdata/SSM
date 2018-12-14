@@ -26,15 +26,15 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 ###   For CDH 5.10.1
   
-  	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
+  	mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests
    
 ###   For Hadoop 2.7.3
   	
-	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
+	mvn clean package -Pdist,web,hadoop-2.7 -DskipTests
 
 ###   For Hadoop 3.1.0
 
-	`mvn clean package -Pdist,web,hadoop-3.1 -DskipTests`
+	mvn clean package -Pdist,web,hadoop-3.1 -DskipTests
 
 A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
 More detailed information, please refer to BUILDING.txt file.
@@ -183,7 +183,7 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    `--help` `-h` Show the usage information.
 
-   `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
+   `-format` This option is used to format the database configured for SSM use during the starting of Smart Server. All tables in this database will be dropped and then new tables will be created.
 
    `--config <config-dir>` can be used to specify where the config directory is.
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
