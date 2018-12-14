@@ -50,7 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('-size', default='64MB',
                         help="size of file, Default Value 64MB.")
     parser.add_argument('-num', default='10',
-                        help="file nums, Default Value 10.")
+                        help="file num, Default Value 10.")
     parser.add_argument('unittest_args', nargs='*')
     args, unknown_args = parser.parse_known_args()
     sys.argv[1:] = unknown_args

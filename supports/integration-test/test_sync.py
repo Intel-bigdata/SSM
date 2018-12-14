@@ -124,7 +124,7 @@ if __name__ == '__main__':
     parser.add_argument('-size', default='1MB',
                         help="size of file, Default Value 1MB.")
     parser.add_argument('-num', default='50',
-                        help="file nums, Default Value 50.")
+                        help="file num, Default Value 50.")
     # To sync files to another cluster, please use "-dest hdfs://hostname:port/dest/"
     parser.add_argument('-dest', default='/dest/',
                         help="directory to store generated test set, DefaultValue: /dest/")
