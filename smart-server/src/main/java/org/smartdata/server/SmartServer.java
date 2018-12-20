@@ -35,6 +35,7 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.server.engine.CmdletManager;
+import org.smartdata.server.engine.ConfManager;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.ServiceMode;
@@ -53,6 +54,7 @@ import java.util.List;
 public class SmartServer {
   public static final Logger LOG = LoggerFactory.getLogger(SmartServer.class);
 
+  private ConfManager confMgr;
   private final SmartConf conf;
   private SmartEngine engine;
   private ServerContext context;
@@ -68,6 +70,7 @@ public class SmartServer {
 
   public SmartServer(SmartConf conf) {
     this.conf = conf;
+    this.confMgr = new ConfManager(conf);
     this.enabled = false;
   }
 
