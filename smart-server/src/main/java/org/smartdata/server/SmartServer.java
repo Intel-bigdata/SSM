@@ -40,11 +40,7 @@ import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
 import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
-import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
-import org.smartdata.tidb.LaunchDB;
-import org.smartdata.tidb.PdServer;
-import org.smartdata.tidb.TidbServer;
 import org.smartdata.utils.SecurityUtil;
 import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
@@ -52,7 +48,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -146,42 +141,6 @@ public class SmartServer {
     return startOpt;
   }
 
-  public static void startDB(SmartConf conf, AgentMaster agentMaster)
-          throws InterruptedException, IOException {
-    if (conf.getInt(NUMBER_OF_SMART_AGENT, 0) != 0) {
-      String host = conf.get(SmartConfKeys.SMART_AGENT_MASTER_ADDRESS_KEY);
-      InetAddress address = InetAddress.getByName(host);
-      String ip = address.getHostAddress();
-      PdServer pdServer = new PdServer(ip, conf);
-      Thread pdThread = new Thread(pdServer);
-      pdThread.start();
-      while (!pdServer.isReady() || !agentMaster.isAgentRegisterReady(conf)) {
-        Thread.sleep(100);
-      }
-      LOG.info("Pd server is ready.");
-      agentMaster.sendLaunchTikvMessage();
-      while (!agentMaster.isTikvAlreadyLaunched(conf)) {
-        Thread.sleep(100);
-      }
-      LOG.info("Tikv server is ready.");
-      TidbServer tidbServer = new TidbServer(host, conf);
-      Thread tidbThread = new Thread(tidbServer);
-      tidbThread.start();
-      while (!tidbServer.isReady()) {
-        Thread.sleep(100);
-      }
-      LOG.info("Tidb server is ready.");
-    } else {
-      LaunchDB launchDB = new LaunchDB(conf);
-      Thread db = new Thread(launchDB);
-      LOG.info("Starting Pd, Tikv and Tidb..");
-      db.start();
-      while (!launchDB.isCompleted()) {
-        Thread.sleep(100);
-      }
-    }
-  }
-
   public static void setAgentNum(SmartConf conf) {
     String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
             SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
@@ -202,13 +161,6 @@ public class SmartServer {
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
-    AgentMaster agentMaster = AgentMaster.getAgentMaster(conf);
-
-    if (isTidbEnabled(conf)) {
-      setAgentNum(conf);
-      startDB(conf, agentMaster);
-    }
-
     if (startOption == StartupOption.FORMAT) {
       LOG.info("Formatting DataBase ...");
       MetaStoreUtils.formatDatabase(conf);
@@ -260,11 +212,6 @@ public class SmartServer {
         return false;
       }
     return false;
-  }
-
-  private static boolean isTidbEnabled(SmartConf conf) {
-    return conf.getBoolean(
-        SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
   }
 
   private void authentication() throws IOException {
