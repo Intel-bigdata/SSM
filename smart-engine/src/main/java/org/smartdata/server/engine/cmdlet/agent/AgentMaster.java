@@ -35,14 +35,10 @@ import org.smartdata.protocol.message.StatusMessage;
 import org.smartdata.protocol.message.StopCmdlet;
 import org.smartdata.server.engine.CmdletManager;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcherHelper;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.ServeReady;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
-import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,8 +61,6 @@ public class AgentMaster {
   private AgentManager agentManager;
 
   private static CmdletManager statusUpdater;
-  private static int tikvNumber = 0;
-  private static int serveReadyAgent = 0;
   private static AgentMaster agentMaster = null;
 
   private AgentMaster(SmartConf conf) throws IOException {
@@ -95,23 +89,6 @@ public class AgentMaster {
       return agentMaster;
     } else {
       return agentMaster;
-    }
-  }
-
-  public boolean isAgentRegisterReady(SmartConf conf) {
-    //TODO: how many agents are required to launch tikv
-    return serveReadyAgent == conf.getInt(NUMBER_OF_SMART_AGENT, 0);
-  }
-
-  public boolean isTikvAlreadyLaunched(SmartConf conf) {
-    //TODO: how many tikvs are required
-    return tikvNumber == conf.getInt(NUMBER_OF_SMART_AGENT, 0);
-  }
-
-  public void sendLaunchTikvMessage() {
-    for (ActorRef agent : agentManager.getAgents().keySet()) {
-      agent.tell(new ReadyToLaunchTikv(), master);
-      LOG.info("Try to launch Tikv on " + agent.path().address().host().get());
     }
   }
 
@@ -251,13 +228,6 @@ public class AgentMaster {
         return true;
       } else if (message instanceof StatusMessage) {
         AgentMaster.statusUpdater.updateStatus((StatusMessage) message);
-        return true;
-      } else if (message instanceof ServeReady) {
-        AgentMaster.serveReadyAgent++;
-        return true;
-      } else if (message instanceof AlreadyLaunchedTikv) {
-        LOG.info(message.toString());
-        AgentMaster.tikvNumber++;
         return true;
       } else {
         return false;
