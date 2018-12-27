@@ -93,8 +93,4 @@ public class AgentToMaster {
       return "RegisterAgent{ id=" + id + "}";
     }
   }
-
-  public static class ServeReady implements Serializable{
-    private static final long serialVersionUID = 6888516209100011658L;
-  }
 }
