@@ -7,11 +7,11 @@ components.
 
 There are two sets of APIs, Admin APIs and Application APIs. Admin APIs
 are used by Hadoop cluster administrators who are responsible for managing
-SSM rules. This set of APIs includes create/delete/list/update SSM
+SSM rules. This set of APIs is used to create/delete/list/update SSM
 rules. Hadoop super user privilege is required to access Admin APIs.
 
 Application APIs are used by applications running on top of HDFS. This set
-of APIs include move/archive/cache file level operations. The system will
+of APIs is used to move/archive/cache file. The system will
 execute the file operations on behalf of the application, with the privilege of
 the user who started the application.
 
@@ -32,17 +32,17 @@ Define Rule
 <span id="_Add_Reports" class="anchor"></span>A rule defines all the
 things for SSM to work, what kind of data metrics are involved, what
 conditions, at what time which actions should be taken when the
-conditions are true. By writing rules, a user can easily manage their
+conditions are met. By defining rules, a user can easily manage their
 cluster and adjust its behavior for certain purposes.
 
-User need to define the rule first based on the requirements. A rule
+Users need to define the rule first based on the requirements. A rule
 has the following format,
 
 <img src="./image/rule-syntax.png" width="481" height="208" />
 
-A rule contains four parts, Object to manipulate, trigger, conditions
+A rule contains four parts, object to manipulate, trigger, conditions
 and commands. “:” and “|” are used as the separator to separate
-different rule part.
+different rule parts.
 
 Detailed information for each rule part is listed in the following tables.
 
@@ -157,14 +157,14 @@ Once a rule is defined and submitted to SSM, the rule is in “**Active”**
 state. When a rule is in this state, SSM will regularly evaluate the
 conditions of the rule, create commands when the conditions are met and
 execute the commands. Once a rule finishes (rules that are only  checked at a
-given time or within a time interval), the rule will transition to “**Finished**” state.
+given time or within a time interval), the rule will transit to “**Finished**” state.
 
 **Disabled**:
 
 User can disable an **“Active”** rule if he/she wants to pause the
 evaluation of the rule for the time being. Later if the user wants to enable the
 rule again, he/she can re-activate the rule, to continue the evaluation of
-the rule conditions. If there are as yet unexecuted commands associated with a rule when the user at the point in time when it was disabled, the user can choose to cancel these not unexecuted commands or
+the rule conditions. If there are as yet unexecuted commands associated with a rule when the user wants it disabled, the user can choose to cancel these unexecuted commands or
 continue to process/finish them. By default, the  unexecuted commands will
 be cancelled.
 
