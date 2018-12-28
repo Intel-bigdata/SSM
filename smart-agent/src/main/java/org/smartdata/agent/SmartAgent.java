@@ -48,18 +48,13 @@ import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.ServeReady;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.utils.GenericOptionsParser;
-import org.smartdata.tidb.TikvServer;
 import org.smartdata.utils.SecurityUtil;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -206,19 +201,6 @@ public class SmartAgent implements StatusReporter {
       unhandled(message);
     }
 
-    public boolean launchTikv(String masterHost) throws InterruptedException, IOException {
-      String agentAddress = AgentUtils.getAgentAddress(conf);
-      InetAddress address = InetAddress.getByName(new AgentUtils.HostPort(agentAddress).getHost());
-      String ip = address.getHostAddress();
-      TikvServer tikvServer = new TikvServer(masterHost, ip, conf);
-      Thread tikvThread = new Thread(tikvServer);
-      tikvThread.start();
-      while (!tikvServer.isReady()) {
-        Thread.sleep(100);
-      }
-      return true;
-    }
-
     @Override
     public void preStart() {
       Cancellable findMaster = findMaster();
@@ -291,7 +273,6 @@ public class SmartAgent implements StatusReporter {
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
-          master.tell(new ServeReady(), getSelf());
         }
       }
     }
@@ -309,13 +290,6 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof StatusMessage) {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
-        } else if (message instanceof ReadyToLaunchTikv) {
-          String masterHost = master.path().address().host().get();
-          boolean launched = launchTikv(masterHost);
-          if (launched) {
-            LOG.info("Tikv server is ready.");
-            master.tell(new AlreadyLaunchedTikv(id), getSelf());
-          }
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {

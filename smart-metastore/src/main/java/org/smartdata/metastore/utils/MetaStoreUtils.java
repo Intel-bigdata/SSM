@@ -475,25 +475,9 @@ public class MetaStoreUtils {
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
 
-        boolean tidbEnabled = conf.getBoolean(
-                SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
-        if (tidbEnabled) {
-          String tidbPort = conf.get(SmartConfKeys.TIDB_SERVICE_PORT_KEY,
-                  SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
-          String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
-          String user = p.getProperty("username");
-          String password = p.getProperty("password");
-          if (!tidbInited) {
-            initTidb(url, user, password);
-          }
-          url = url + "/" + TIDB_DB_NAME;
+        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+        if (url != null) {
           p.setProperty("url", url);
-          LOG.info("\t" + "The jdbc url for Tidb is " + url);
-        } else {
-          String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-          if (url != null) {
-            p.setProperty("url", url);
-          }
         }
 
         String purl = p.getProperty("url");
