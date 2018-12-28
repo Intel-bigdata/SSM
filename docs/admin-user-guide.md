@@ -133,13 +133,13 @@ Here is a rule example,
 
 This example defines a rule that for each file (specified before key word 'with') with path matches regular
 expression “/fooA/\*.dat”, if the file has been created for more than 30
-days then move the file to archive storage. The rule can be rewrited in the following way:
+days then move the file to archive storage. The rule can be rewritten in the following way:
 
 *file : path matches "/fooA/\*.dat" and age &gt; 30day | archive*
 
 The boolean expression can also be placed in condition expression.
 
-For those who not sure if the rule is defined correctly or not, an API
+For those who are not sure if the rule is defined correctly or not, an API
 is provided to check whether the rule is valid or not. Please refer to
 the Rule API section for detailed API information.
 
@@ -177,7 +177,7 @@ be deleted permanently from the system.
 
 It’s an ephemeral state of a rule. A rule in this state means the rule
 has already been deleted by user, but there are pending commands of this
-rule that user would like should run to completion. Once all pending commands are
+rule that user wants to complete. Once all pending commands are
 finished, the rule will be permanently deleted from the system.
 
 Rule Management API
@@ -214,7 +214,7 @@ updated later.
 
 * void **enableRule**(**long** ruleID) **throws** IOException;
  
-  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in another state rule will throw exception.
+  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in another state will throw exception.
 
 * void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
  
