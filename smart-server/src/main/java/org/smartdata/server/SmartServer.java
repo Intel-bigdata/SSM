@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.utils.SecurityUtil;
+
 import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
 import java.io.File;
@@ -178,7 +179,7 @@ public class SmartServer {
       ssm.initWith();
       ssm.run();
       return ssm;
-    } catch (Exception e){
+    } catch (Exception e) {
       ssm.shutdown();
       throw e;
     }
@@ -201,20 +202,20 @@ public class SmartServer {
   }
 
   private static boolean parseHelpArgument(String[] args,
-      String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
-      try {
-        CommandLineParser parser = new PosixParser();
-        CommandLine cmdLine = parser.parse(helpOptions, args);
-        if (cmdLine.hasOption(helpOpt.getOpt())
-            || cmdLine.hasOption(helpOpt.getLongOpt())) {
-          // should print out the help information
-          out.println(helpDescription + "\n");
-          return true;
-        }
-      } catch (ParseException pe) {
-        //LOG.warn("Parse help exception", pe);
-        return false;
+                                           String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
+    try {
+      CommandLineParser parser = new PosixParser();
+      CommandLine cmdLine = parser.parse(helpOptions, args);
+      if (cmdLine.hasOption(helpOpt.getOpt())
+          || cmdLine.hasOption(helpOpt.getLongOpt())) {
+        // should print out the help information
+        out.println(helpDescription + "\n");
+        return true;
       }
+    } catch (ParseException pe) {
+      //LOG.warn("Parse help exception", pe);
+      return false;
+    }
     return false;
   }
 
@@ -228,7 +229,7 @@ public class SmartServer {
       HadoopUtil.loadHadoopConf(conf);
     } catch (IOException e) {
       LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-              + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+          + "Please config smart.hadoop.conf.path property in smart-site.xml.");
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.security.authorization", "true");
     }
@@ -373,18 +374,18 @@ public class SmartServer {
     try {
       final SmartServer inst = launchWith(args, null);
       if (inst != null) {
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+        Runtime.getRuntime().addShutdownHook(new Thread() {
           @Override
           public void run() {
             LOG.info("Shutting down SmartServer ... ");
             try {
               inst.shutdown();
-             } catch (Exception e) {
-               LOG.error("Error while stopping servlet container", e);
-             }
-             LOG.info("SmartServer was down.");
-           }
-         });
+            } catch (Exception e) {
+              LOG.error("Error while stopping servlet container", e);
+            }
+            LOG.info("SmartServer was down.");
+          }
+        });
         //Todo: when to break
         while (true) {
           Thread.sleep(1000);
