@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,7 +43,6 @@ import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.utils.SecurityUtil;
-
 import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
 import java.io.File;
@@ -202,7 +201,7 @@ public class SmartServer {
   }
 
   private static boolean parseHelpArgument(String[] args,
-                                           String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
+    String helpDescription, PrintStream out, boolean printGenericCmdletUsage) {
     try {
       CommandLineParser parser = new PosixParser();
       CommandLine cmdLine = parser.parse(helpOptions, args);
