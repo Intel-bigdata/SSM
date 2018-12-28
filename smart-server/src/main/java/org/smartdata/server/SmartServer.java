@@ -43,11 +43,15 @@ import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
 import org.smartdata.utils.SecurityUtil;
+import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * From this Smart Storage Management begins.
@@ -136,6 +140,25 @@ public class SmartServer {
     }
 
     return startOpt;
+  }
+
+  public static void setAgentNum(SmartConf conf) {
+    String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
+        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
+    Scanner sc = null;
+    try {
+      sc = new Scanner(new File(agentConfFile));
+    } catch (FileNotFoundException ex) {
+      LOG.error("Cannot find the config file: {}!", agentConfFile);
+    }
+    int num = 0;
+    while (sc.hasNextLine()) {
+      String host = sc.nextLine().trim();
+      if (!host.startsWith("#") && !host.isEmpty()) {
+        num++;
+      }
+    }
+    conf.setInt(NUMBER_OF_SMART_AGENT, num);
   }
 
   static SmartServer processWith(StartupOption startOption, SmartConf conf) throws Exception {
