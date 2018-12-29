@@ -80,7 +80,7 @@ kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab smartserver/{hostname
 ```
 Note: replace the hostname with the hostname of the smart server
 
-### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agents.
+### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent.
 ```
 kadmin.local:addprinc -randkey smartagent/{hostname}
 kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab smartagent/{hostname}
