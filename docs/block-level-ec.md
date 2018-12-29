@@ -2,7 +2,7 @@ Continuous Block Layout Erasure Coding (EC)
 ============================================
 
 The default HDFS 3x replication scheme is expensive. It incurs a 200%
-storage space overhead and other resources, such as network bandwidth
+storage space overhead and other resources occupation, such as network bandwidth
 when writing the data. In Hadoop3.0, HDFS erasure coding feature is
 introduced to address this challenge. After a study of the HDFS
 file-size distribution, the first phase of HDFS Erasure Coding is to
@@ -14,10 +14,10 @@ lot from its design and experience.
 
 Striped EC vs Block EC
 ======================
-EC with striped layout can achieve storage saving with both small files and large files. It supports online erasure coding and when data writen to HDFS, the coding is already done. On high speed network environment, it outperforms than replica because at the same time it can write to more than one datanode in parallel. While one drawback is it loses the data locality advantage which may impact the performance of upper layer applications especially for those particularly optimized according to the advantage. For more Striped EC introduction,
+EC with striped layout can achieve storage saving for both small files and large files. It supports online erasure coding and when data written to HDFS, the coding is already done. On high speed network environment, it outperforms replica because at the same time it can write to more than one datanode in parallel. While one drawback is that it loses the data locality advantage which may impact the performance of upper layer applications especially those particularly optimized according to the advantage. For more Striped EC introduction,
 refer to this [our joint blog with Cloudera](https://blog.cloudera.com/blog/2015/09/introduction-to-hdfs-erasure-coding-in-apache-hadoop/).
 
-Block EC is very suitable for very large files of enough blocks needed by a erasure coding group. The erasure coding is done offline and in background instead of online while client writing data. Compared with striped EC, block EC keeps data locality, being of less performance impact to some frameworks and applications.
+Block EC is very suitable for those large files of enough blocks needed by a erasure coding group. The erasure coding is done offline and in background instead of online while client writing data. Compared with striped EC, block EC keeps data locality, being of less performance impact to some frameworks and applications.
 
 Design Targets 
 ===============
@@ -40,12 +40,12 @@ Use Cases
 Write file
 ----------
 
-In the write path, there needn't change. HDFS client still writes data into HDFS as traditional 3x files, then in the background, SSM server will regularly scan involved files, initiating tasks to compute parity blocks for each file, create a parity file for each file by concatenating parity blocks of this file together.
+In the write path, there need no change. HDFS client still writes data into HDFS as traditional 3x files, then in the background, SSM server will regularly scan involved files, initiate tasks to compute parity blocks for each file, and create a parity file for each file by concatenating parity blocks of this file together.
 
 Case 1. Convert 3x replica file to block EC file
 ----------------------------------------
 
-For some existing 3x replication large files, user many want to convert them to block EC files to save storage space. Apply block EC rule to the files or the directories will trigger the conversion in background. 
+For some existing 3x replication large files, user many wants to convert them to block EC files to save storage space. Apply block EC rule to the files or the directories will trigger the conversion in background.
 
 <img src="./image/block-ec-convert.png" width="624" height="125" />
 
@@ -77,14 +77,14 @@ SSM server will also schedule regular tasks to check the integrity of each data 
 Case 5. Compact Small Files under Directory to Block EC File
 ----------------------------
 
-When files under directory are all small files, there is no space saving when block EC is applied to each file independently. In this case, we can put Block EC to the whole directory. Files with same owner will be grouped together, only one parity file will be generated for all data blocks in the same group. With this approach, we can save more space than file level EC.
+When files under directory are all small files, there is no space saving when block EC is applied to each file independently. In this case, we can put Block EC to the whole directory. Files of the same owner will be grouped together, and only one parity file will be generated for all data blocks in the same group. With this approach, we can save more space than file level EC.
 
 <img src="./image/block-ec-directory-compact.png" width="461" height="130" />
 
 Performance Consideration
 =========
 
-In all above five use cases, write file and read file operation have the same performance as DFSClient. Convert 3x replication file to block EC file and background reconstruction corrupted file are all transparent to application. Only the read corrupted file operation will have performance degradation compared to read 3x replica file. Consider the massive storage space saving, this trade-off is kind of worthy.
+In all above five use cases, write file and read file operations have the same performance as DFSClient. The conversion of 3x replication file to block EC file and the background reconstruction of corrupted file are all transparent to application. Only the read corrupted file operation will have performance degradation compared with read 3x replica file operation. Considering the massive storage space saving, this trade-off is kind of worthy.
 
 Architecture
 ============
