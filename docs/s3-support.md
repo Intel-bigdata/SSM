@@ -87,7 +87,7 @@ where `{hdfs_dir}` and `{s3_dir}` are the HDFS source directory and S3 target di
 
 ## Enable S3 support in HDFS（Optional）
 
-This is an optional step. We highly recommend enable this feature on HDFS for test and trouble shooting. The hadoop version we use is 2.7.3.
+This is an optional step. We highly recommend enabling this feature on HDFS for test and trouble shooting. The hadoop version we use is 2.7.3.
 
 ### Solve HDFS S3 dependency
 
