@@ -32,7 +32,7 @@ Submit a read action to trigger the condition in the above rule.
 read -file /demoCacheFile/f1
 ```
 
-Verify the cached file is shown on SSM's web UI by selecting Data Temperature/Files in Cache on Cluster tab.
+Verify whether the cached file is shown on SSM's web UI by selecting Data Temperature/Files in Cache on Cluster tab.
 
 
 ### Rule for moving data from cold storage to hot storage
