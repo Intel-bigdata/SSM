@@ -15,14 +15,14 @@ of APIs is used to move/archive/cache file. The system will
 execute the file operations on behalf of the application, with the privilege of
 the user who started the application.
 
-If Application API and Admin API are in conflict, for example, they
+If Application API and Admin API are in conflict, for example, if they
 want to execute different operations on the same file at the same time,
 Application API will precede Admin API. Application API operation will
 succeed and Admin API operation on the same file will be cancelled. This
 rule is based on the assumption that application knows more about its
 data (files) than the cluster administrator.
 
-For easily integration, the APIs are exposed via both RPC and RESTful interfaces. Users can choose the one which fits their environment.
+For easy integration, the APIs are exposed via both RPC and RESTful interfaces. Users can choose the one which fits their environment.
 
 <img src="./image/api.png" width="461" height="295" />
 
@@ -30,8 +30,8 @@ Define Rule
 -----------
 
 <span id="_Add_Reports" class="anchor"></span>A rule defines all the
-things for SSM to work, what kind of data metrics are involved, what
-conditions, at what time which actions should be taken when the
+things for SSM to work, including what kind of data metrics that are involved, what
+conditions, and at what time which actions should be taken when the
 conditions are met. By defining rules, a user can easily manage their
 cluster and adjust its behavior for certain purposes.
 

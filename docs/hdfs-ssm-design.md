@@ -11,7 +11,7 @@ SSM polls metrics from NameNode. These metrics are analyzed by SSM as specified 
 SSM uses SQL database to maintain polled data as well as other internal data.
 
 ### HA Support
-HA is supported. The design will be coming soon.
+HA is supported. The design will come soon.
 
 Desgin
 ------------
@@ -56,4 +56,4 @@ Below illustrates how to collect file access counts. As shown in the following c
 1. SSM polls accessCount data from NN to get file access count info generated in the time interval (for example, 5s).
 2. Create a table to store the info and insert the table name into table access_count_tables.
 3. Then file access count of last time interval can be calculated by accumulating data in tables that their start time and end time falls in the interval.
-4. To control the total amount of data, second-level of accessCount tables will be aggregated into minute-level, hour-level, day-level, month-level and year-level. The longer the time from now, the larger the granularity for aggregation. More accurate data kept for near now than long ago.
+4. To control the total amount of data, second-level of accessCount tables will be aggregated into minute-level, hour-level, day-level, month-level and year-level. The longer the time from now, the larger the granularity for aggregation. More accurate data are kept for near now than long ago.
