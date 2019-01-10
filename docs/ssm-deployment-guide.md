@@ -240,17 +240,7 @@ Add property `fs.hdfs.impl` to point to Smart Server which provides "Smart File 
 ```xml
     <property>
         <name>fs.hdfs.impl</name>
-        <value>org.smartdata.hadoop.
-
-
-
-
-
-
-
-
-
-        ystem.SmartFileSystem</value>
+        <value>org.smartdata.hadoop.fileystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
 ```
@@ -291,7 +281,7 @@ Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFi
 Follow the steps to add SSM Jars to classpath
 
   *  After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-  *  Distribute the jars starts with smart to user-defined SSM jars directory such as `${SSM_jars}` in each NameNode/DataNode.
+  *  Distribute the jars starting with smart into user-defined directory such as `${SSM_jars}` in each NameNode/DataNode.
   *  Add the SSM jars directory to hadoop classpath in `hadoop-env.sh` as the following shows.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
@@ -310,7 +300,7 @@ Follow the steps to add SSM Jars to classpath
    #### Copy the Jars
 Copy the SSM jars to the default Hadoop classpath.
   1. After SSM compilation is finished, all the SSM related jars are located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-  2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
+  2. Distribute the jars starting with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
 
 
 ## CDH 5.10.1
@@ -373,7 +363,7 @@ Make sure you have the correct HDFS storage type applied to HDFS DataNode storag
 ```
 ###  Check if HDFS can access SSM jars
 
-After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can have access. There are two ways to ensure Hadoop can access SmartFileSystem.
+After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars. So SmartFileSystem can be used by HDFS, YARN and other upper layer applications. There are two ways to ensure Hadoop can access SmartFileSystem.
  
 #### Add SSM jars to the CDH Hadoop Classpath using Cloudera Manager.
     
@@ -394,7 +384,7 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
 ####  Copy the SSM jars to the CDH default Hadoop class path.
      
  1. After SSM compilation is finished, all the SSM related jars are located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
- 2. Distribute the jars starts with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
+ 2. Distribute the jars starting with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
 
 
 
