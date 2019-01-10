@@ -5,11 +5,11 @@
    
      - a. public void init(Map<String, String> args)
   
-        Initialize action instance, handles all input parameters
+        Initialize action instance, and handles all input parameters.
   
      - b. protected abstract void execute() throws Exception
    
-        Action exuction body. All action steps should be finished in this fuction. 
+        Action execution body. All action steps should be finished in this fuction.
       
    
 2. **Register action class so that SSM knows the new defined action**
@@ -27,7 +27,7 @@
 3. **Define the action string used in rule syntax**
 
     
-    For example, if the user wants to use "distcp" as the action name in the rule syntax, then add the following ahead of the action class definition,
+    For example, if the user wants to use "distcp" as the action name in the rule syntax, add the following content ahead of the action class definition.
 	
 	    @ActionSignature(
          actionId = "distcp",
@@ -37,9 +37,9 @@
        
   	The user needs to define all supported parameters in the `usage` field and handle them in the `init` function. The first parameter `-file $file` is a fixed mandatory parameter for all actions. 
 	
-	  When the rule engine creates a new instance of an action, it will call the action's `init(Map<String, String> args)` function, pass the matched file as the value of first parameter `-file`. 
+	  When the rule engine creates a new instance of an action, it will call the action's `init(Map<String, String> args)` function, and pass the matched file as the value of first parameter `-file`.
 
-	  The user can refer to `WriteFileAction` class for a good example. 
+	  The `WriteFileAction` class is a good example for users to refer to.
     
 
  4. **Try use new action in rule**   
