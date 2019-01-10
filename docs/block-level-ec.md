@@ -17,7 +17,7 @@ Striped EC vs Block EC
 EC with striped layout can achieve storage saving for both small files and large files. It supports online erasure coding and when data written to HDFS, the coding is already done. On high speed network environment, it outperforms replica because at the same time it can write to more than one datanode in parallel. While one drawback is that it loses the data locality advantage which may impact the performance of upper layer applications especially those particularly optimized according to the advantage. For more Striped EC introduction,
 refer to this [our joint blog with Cloudera](https://blog.cloudera.com/blog/2015/09/introduction-to-hdfs-erasure-coding-in-apache-hadoop/).
 
-Block EC is very suitable for those large files of enough blocks needed by a erasure coding group. The erasure coding is done offline and in background instead of online while client writing data. Compared with striped EC, block EC keeps data locality, being of less performance impact to some frameworks and applications.
+Block EC is very suitable for those large files of enough blocks needed by a erasure coding group. The erasure coding is done offline and in background instead of online while client writing data. Compared with striped EC, block EC keeps data locality, having less performance impact to some frameworks and applications.
 
 Design Targets 
 ===============
@@ -45,7 +45,7 @@ In the write path, there need no change. HDFS client still writes data into HDFS
 Case 1. Convert 3x replica file to block EC file
 ----------------------------------------
 
-For some existing 3x replication large files, user many wants to convert them to block EC files to save storage space. Apply block EC rule to the files or the directories will trigger the conversion in background.
+For some existing 3x replication large files, user may want to convert them to block EC files to save storage space. Apply block EC rule to the files or the directories will trigger the conversion in background.
 
 <img src="./image/block-ec-convert.png" width="624" height="125" />
 
@@ -54,7 +54,7 @@ Case 2. Read block EC file
 
 <img src="./image/block-ec-read.png" width="437" height="127" />
 
-SmartDFSClient will leverage DFSClient to read file content. If there is no data corrupted, SmartDFSClient will just read data and return the data back to applications directly.
+SmartDFSClient will leverage DFSClient to read file content. If there is no data corruption, SmartDFSClient will just read data and return the data back to applications directly.
 
 Case 3. Read corrupted block EC file
 ----------------------------
@@ -91,7 +91,7 @@ Architecture
 
 <img src="./image/block-ec-arch.png" width="336" height="275" />
 
-Block EC file is transparent to HDFS. After user applies the block EC rule to HDFS files and directories, for each involved HDFS file, there will be a parity file. SSM server will maintain the relationship between the HDFS data file and parity file into meta data store. For file level continuous block layout EC, following information should be recorded for each data file,
+Block EC file is transparent to HDFS. After user applies the block EC rule to HDFS files and directories, for each involved HDFS file, there will be a parity file. SSM server will maintain the relationship between the HDFS data file and parity file into meta data store. For file level continuous block layout EC, following information should be recorded for each data file.
 
 -   Data file path
 
@@ -101,6 +101,6 @@ Block EC file is transparent to HDFS. After user applies the block EC rule to HD
 
 -   State(data-under-construction, healthy, corrupted, parity-under-construction, under-recovery, damaged)
 
-For directory level continuous block layout EC case, for each block group, there should be some housebooking to group the files together. The needed schema info will be defined and kept in SSM metastore.
+For directory level continuous block layout EC case, for each block group, there should be some housebooking to group the files together. The needed schema info will be defined and stored in SSM metastore.
 
 

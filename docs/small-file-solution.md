@@ -1,7 +1,7 @@
 Transparent Small Files Support 
 ====================
 
-A small file refers to a file that is significantly smaller than the Hadoop block size. Apache Hadoop is designed for handling large files. It does not work well with lots of small files. There are primary two kinds of impacts for HDFS. One is related to NameNode memory consumption and namespace explosion, while the other is related to small file write/read performance with the introduced overhead comparing with the small content.
+A small file refers to a file that is significantly smaller than the Hadoop block size. Apache Hadoop is designed for handling large files. It does not work well with lots of small files. There are primary two kinds of impacts for HDFS. One is related to NameNode memory consumption and namespace explosion, while the other is related to small file write/read performance with the introduced overhead compared with the small content.
 
 There are several existing solutions to handle the small file problem, including Hadoop HAR file, sequence file and saving small files into HBase etc.  This document [HDFS small files problem](http://blog.cloudera.com/blog/2009/02/the-small-files-problem/) is worthy of reference. Additionally, there was an attempt to solve this problem in [HDFS-8998](https://issues.apache.org/jira/browse/HDFS-8998). Another detailed description related to the small files problem is [OZone effort](https://issues.apache.org/jira/browse/HDFS-7240) in Apache Hadoop community.
 

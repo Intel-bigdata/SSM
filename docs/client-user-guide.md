@@ -2,7 +2,7 @@ Application API
 ===============
 
 Application APIs are used by applications that run on top of HDFS. This set
-of APIs is used to cache,uncache, and enforce storage policy file level operations. The system will
+of APIs includes cache,uncache, and enforce storage policy file level operations. The system will
 execute the file operation on behalf of the application, with the privilege of
 the user who started the application. SSM will provide a SmartDFSClient
 which includes both HDFS DFSClient functions and new SSM Application
@@ -23,7 +23,7 @@ SmartDFSClient API
   Uncache a file
 * void **applyStoragePolicy**(**String** filePath, **String** policyName) **throws** IOException;
 
-  Set the storage policy on the file and enforce the same.
+  Set and enforce the storage policy on the file.
 
 SmartClient API
 ------------
