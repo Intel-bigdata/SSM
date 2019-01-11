@@ -151,7 +151,7 @@ We welcome your feedback and contributions. Please feel free to fire issues or p
 
 Acknowledgement
 ------------
-This originates from and is based on the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors of ideas and feedback .
+This work originates from and is based on the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors of ideas and feedback .
 
 
 **For any security concern, please visit https://01.org/security.**

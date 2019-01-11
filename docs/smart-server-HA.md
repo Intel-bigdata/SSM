@@ -34,7 +34,7 @@ SSM supports the configuration of multiple Smart Servers to achieve high availab
       If a cmdlet is running on the standby server which transforms to active server, it will also terminate during the transition.
       If a cmdlet is running on agent, it can be executed successfully.
 
-      For the dispatched cmdlet, SSM can discover the crushed cmdlet through a heart beat like mechanism.
+      For the dispatched cmdlet, SSM can discover the crushed cmdlet through a heartbeat like mechanism.
       The status of a dispatched cmdlet will be reported periodically till it is finished.
       If the status of actions belonging to a dispatched cmdlet has not been reported for a certain time,
       these actions will be marked as failed. A timeout log is attached to these actions.

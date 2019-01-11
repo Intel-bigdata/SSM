@@ -12,7 +12,7 @@ We consolidate existing facilities in a storage and data system into **actions**
 
 That's why **MetaStore** is a core component in the system, where we store data meta and all kinds of collected metrics in history. We leverage a powerful SQL database like MySQL to do so, which allows the system to query and get results instantly about data.
 
-The following lists the storage/data systems that is on-going supported. This work is purely open source and we are open to any ideas and contributions from any party. If you're interested in supporting a system, please PR to update this page and add an entry below.
+The following lists the storage/data systems that is on-going supported. This work is purely open source and we are open to any ideas and contributions. If you're interested in supporting a system, please PR to update this page and add an entry below.
 
 Supported data systems
 ---------------------
