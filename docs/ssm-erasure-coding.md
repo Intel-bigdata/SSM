@@ -79,7 +79,7 @@ SSM can track whether a file is stored in EC way and store such info into SSM Me
 
 ### 5. Throttle for SSM EC
 
-EC can consume large resources, especially network IO. SSM has a throttle to avoid cluster overload. When a threshold is reached, SSM will delay dispatching more EC actions if any.
+EC can consume large resources, especially network IO. SSM has a throttle to avoid cluster overload. When a threshold is reached, SSM will delay dispatching more EC actions if there is any.
 By default, the throttle is turned off. To make the throttle work, user needs to set a positive value for the property named `smart.action.ec.throttle.mb` in smart-default.xml.
 
 ### 6. Note

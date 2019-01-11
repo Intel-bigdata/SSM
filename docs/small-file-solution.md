@@ -52,7 +52,7 @@ The following diagram shows the small file write flow.
 
 <img src="./image/small-file-write-arch.png" width="550" height="350"/>
 
-The following is the description of the writing flow.
+The following describes the writing flow.
 
 1.  SmartDFSClient firstly communicate with SSM server when
     creating a new file. SSM server will check if the file goes to
@@ -93,7 +93,7 @@ i. Now that the original small files are truncated after compact, the meta data 
 * Get and check acl info: getAclStatus, checkAccess.
 * Get and set some other meta data: getBlockSize, exists, listPaths, setTimes.
 
-ii. For the file container info (corresponding container file, offset and length) of small files are stored in SSM meta store, some operations need to firstly query SSM server to get the file container info, then use these information to send exact requests to HDFS server.
+ii. For the file container info (corresponding container file, offset and length) of small files that stored in SSM meta store, some operations need to firstly query SSM server to get the file container info, then use these information to send exact requests to HDFS server.
 
 * Get block info: getLocatedBlocks, getBlockLocations, getFileBlockLocations.
 * Get file info: getFileInfo, listStatus, listStatusIterator, getFileStatus, isFileClosed.
@@ -138,4 +138,4 @@ Security Consideration
 
 For now container file includes the small files which have the same acl under a folder, and the container file is saved in the same directory as small files. In this way we can ensure container file has the same acl as small files.
 
-When reading small file, SSM server will check whether the user has the necessary permission to the small file, and after privilege check passed, SSM server will use the file container info queried from meta store to read small file from the container file.
+When reading small file, SSM server will check whether the user has the necessary permission to the small file, and after the privilege check passed, SSM server will use the file container info queried from meta store to read small file from the container file.

@@ -10,7 +10,7 @@
 
 ## Why JDK 1.7 is preferred for CDH 5.10.1
 
-  Because by default CDH 5.10.1 supports compile and run with JDK 1.7. If you
+  Because by default CDH 5.10.1 supports compiling and running with JDK 1.7. If you
   want to use JDK1.8, please refer to Cloudera web site for how to support JDK1.8
   in CDH 5.10.1.
   For SSM, JDK 1.7 and 1.8 are both supported.
@@ -44,7 +44,7 @@ For more detailed information, please refer to BUILDING.txt file.
 
 ## Configure How to access Hadoop Namenode
 
-   We need to let SSM know where Hadoop Namenode is. There are 2 cases,
+   We need to let SSM know where Hadoop Namenode is. There are 2 cases below.
    
 ### HA-Namenode
    open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, and fill the value field with the path of Hadoop configuration files, for example "file:///etc/hadoop/conf".
@@ -69,7 +69,7 @@ For more detailed information, please refer to BUILDING.txt file.
   ```
 
 ###   Ignore Dirs
-SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about files under some directory (for example, directory for temporary files), you can make a modification in smart-default.xml as the following shows. SSM will completely ignore the corresponding files.
+SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about files under some directory (for example, directory for temporary files), you can configure the directories to be ignored in smart-default.xml as the following shows. SSM will completely ignore the corresponding files.
 
 Please note that SSM action will not be scheduled for files under ignored directory even though they are specified in a rule by user.
 
@@ -82,7 +82,7 @@ Please note that SSM action will not be scheduled for files under ignored direct
 
 ##  **Configure Smart Server**
 
-SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provides services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provides services. One of the standby Smart Servers will take its place if the active Smart Server fails.
 
 SSM also supports running one standby server with master server on a single node.
 
@@ -128,7 +128,7 @@ Please note that security support will be enabled later. Here is an example for 
 
 ## **Configure user account to authenticate to Web UI**
 
-By default, SSM Web UI enables user login with default user "admin" and password "ssm@123".  If user wants define more user accounts, make modification in conf/shiro.ini file.
+By default, SSM Web UI enables user login with default user "admin" and password "ssm@123".  If user wants to define more user accounts, make modification in conf/shiro.ini file.
     
 `[users]` section
 
@@ -166,8 +166,10 @@ For deploy standalone SSM, SSM will only start SSM server without SSM agents. Di
 
    ## SSM Service with multiple Agents
 
-Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent node. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend deploying one agent on each Datanode. Of course, cases like Smart Agents deployed on servers other than Datanodes, and different numbers of Smart Agents from Datanodes are also supported.
-On the SSM service server, switch to the SSM installation directory, and it is ready to start and run the SSM service.
+Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent node. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend deploying one agent on each Datanode. SSM also supports the following two cases. 1) Smart Agent is deployed on a server that does not serve as Datanode.
+2) The number of Smart Agents is different from that of Datanodes.
+
+On a SSM server, user can switch to the SSM installation directory to run all SSM services.
 
 
 # Run SSM
@@ -273,15 +275,15 @@ Make sure you have the correct HDFS storage type applied to HDFS DataNode storag
          <value>[RAM_DISK]file://${RAM_DIR}/dfs/data,[SSD]file://${hadoop.tmp.dir1}/dfs/data,[DISK]file://${hadoop.tmp.dir2}/dfs/data,[ARCHIVE]file://${hadoop.tmp.dir3}/dfs/data</value>
      </property>
 ```
-### Check of HDFS client can access SSM jars  
+### Check if HDFS client can access SSM jars
 
-Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars, so that HDFS, YARN and other upper layer applications can have access. There are two ways to ensure Hadoop can access SmartFileSystem.
+Make sure Hadoop HDFS Client can access SSM jars. After we switch to the SmartFileSystem from the default HDFS implementation, we need to make sure Hadoop can access SmartFileSystem implementation jars. So SmartFileSystem can be used by HDFS, YARN and other upper layer applications. There are two ways to ensure Hadoop can access SmartFileSystem.
    ####  Add SSM jars to the Hadoop classpath.
 
 Follow the steps to add SSM Jars to classpath
 
   *  After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-  *  Distribute the jars starting with smart into user-defined directory such as `${SSM_jars}` in each NameNode/DataNode.
+  *  Distribute the jars whose names are prefixed with smart into user-defined directory such as `${SSM_jars}` in each NameNode/DataNode.
   *  Add the SSM jars directory to hadoop classpath in `hadoop-env.sh` as the following shows.
 
           `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
@@ -300,7 +302,7 @@ Follow the steps to add SSM Jars to classpath
    #### Copy the Jars
 Copy the SSM jars to the default Hadoop classpath.
   1. After SSM compilation is finished, all the SSM related jars are located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
-  2. Distribute the jars starting with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
+  2. Distribute the jars whose names are prefixed with "smart" to hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
 
 
 ## CDH 5.10.1
@@ -384,7 +386,7 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
 ####  Copy the SSM jars to the CDH default Hadoop class path.
      
  1. After SSM compilation is finished, all the SSM related jars are located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
- 2. Distribute the jars starting with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
+ 2. Distribute the jars whose names are prefixed with smart to CDH default Hadoop Classpath in each NameNode/DataNode.
 
 
 
