@@ -27,8 +27,8 @@ Default container file threshold size is 1G. User can set prefer values in `${SM
 file: path matches "/small_files/*" and length < 1MB | compact
 ```
 
-This rule means for all the files under `/small_files` directory, if the lengths of some files are less than 1MB,
-SSM will trigger actions to compact these files to container files.
+This rule means for all the files under `/small_files` directory, SSM will trigger actions
+to compact the files with length less than 1MB into container files.
 
 ## Small file compact action example
 
