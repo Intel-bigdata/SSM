@@ -11,7 +11,7 @@ To overcome the challenge, we have introduced a comprehensive end-to-end solutio
 High Level Goals
 ------------
 ### 1. Enhancement for HDFS-HSM and HDFS-Cache
-**Automatically** and **smartly** adjusting storage policies and options benefiting from data temperature. Already released.
+**Automatically** and **smartly** adjusting storage policies and options according to data temperature. Already released.
 ### 2. Support block level erasure coding
 Similar to the old [HDFS-RAID](https://wiki.apache.org/hadoop/HDFS-RAID), not only for **Hadoop 3.x**, but also for **Hadoop 2.x**. Ref. the [block level erasure coding design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/block-level-ec.md).
 ### 3. Small files support and compaction
@@ -32,11 +32,11 @@ High Level Considerations
 
 Architecture
 ------------
-SSM overall is as follows. Ref. [SSM design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details. Note that some of the contents need to be updated according to the latest implementation.
+SSM architecture is shown as follows. Ref. [SSM design](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/hdfs-ssm-design.md) for details. Note that some of the contents need to be updated according to the latest implementation.
 
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssm-overall.png" />
 
-How SSM server and agents collaborate to serve for one specific service? For example, when moving HDFS file blocks among storage tiers, copy files to back up cluster or block erasure coding? Please ref. below picture.
+How SSM server and agents collaborate to perform one specific service? The below picture illustrates how SSM server and agents collaborate to perform some services.
 
 <img src="https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/ssm-overall-2.png" />
 
@@ -94,7 +94,7 @@ Cluster administrator takes the role of SSM rule management. A set of APIs is ex
 
 User Doc
 ------------
-SSM will provide a SmartDFSClient that includes both original HDFS DFSClient APIs and new SSM APIs. Applications can use this SmartDFSClient to benefit from the provided SSM facilities. New SSM APIs include cache file and archive file etc.. More APIs will be added later. For detailed information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
+SSM will provide a SmartDFSClient that includes both original HDFS DFSClient APIs and new SSM APIs. Applications can use this SmartDFSClient to benefit from the provided SSM facilities. New SSM APIs include cache file and archive file etc. More APIs will be added later. For detailed information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
 
 How to Build
 ------------
@@ -151,7 +151,7 @@ We welcome your feedback and contributions. Please feel free to fire issues or p
 
 Acknowledgement
 ------------
-This work originates from and is based on the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors of ideas and feedback .
+This work derives from the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors of ideas and feedback.
 
 
 **For any security concern, please visit https://01.org/security.**

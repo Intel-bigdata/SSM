@@ -6,11 +6,11 @@
 
 #### (1) Directory case
 
-If $path is a dir, setting its EC policy to the given one will have no impact on the existed files under the directory, but can make new files stored in EC way henceforward.
+If $path is a dir, SSM will set its EC policy to the given one, which have no impact on the existed files under the directory, but can make new files stored in EC way henceforward.
 
 #### (2) File case
 
-If $path is a file, read the file content with append permission (for locking file, read permission may be needed) and write into a temp file in EC way.
+If $path is a file, SSM will read the file content with append permission (for locking file, read permission may be needed) and write into a temp file in EC way.
 The temp file is named by fileName, aid{aid} and timestamp in millisecond, with "_" linked between. And the temp file is stored in /system/ssm/ec_tmp directory. The file attributes (owner, permission, atime, mtime, etc.) will be kept consistent.
 After the EC temp file is created, it will be renamed to original file. So the original file will be overwritten.
 
@@ -75,7 +75,7 @@ Remove the given EC policy named $policyName.
 
 ### 4. Track EC state for each file in HDFS
 
-SSM can track whether a file is stored in EC way and store such info into SSM MetaStore. So if user submits a rule with EC involved, SSM can just check a file’s EC state from MetaStore and trigger corresponding action with low latency.
+SSM can track whether a file is stored in EC way and persist such info into SSM MetaStore. So if user submits a rule with EC involved, SSM can just check a file’s EC state from MetaStore and trigger corresponding action with low latency.
 
 ### 5. Throttle for SSM EC
 

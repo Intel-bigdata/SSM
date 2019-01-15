@@ -30,7 +30,7 @@ SSM supports the configuration of multiple Smart Servers to achieve high availab
    2. The dispatched cmdlet.
 
       A cmdlet can be dispatched to active server, standby server and agent.
-      If a cmdlet is dispatched to active server, it will terminate when the active server is down.
+      If a cmdlet is dispatched to active server, it will be terminated when the active server is down.
       If a cmdlet is running on the standby server which transforms to active server, it will also terminate during the transition.
       If a cmdlet is running on agent, it can be executed successfully.
 

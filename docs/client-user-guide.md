@@ -30,11 +30,11 @@ SmartClient API
 
 * String\[\] **getSupportedActions**() **throws** IOException;
 
-  List all the actions currently supported by the system. Current supported actions are “enforceStoragePolicy”, “cache”, “uncache” etc.
+  List all actions currently supported by the system. Current supported actions are “enforceStoragePolicy”, “cache”, “uncache” etc.
 
 * void **executeAction**(**String** actionName, **String\[\]** actionParams) **throws** IOException;
 
-  A synchronized generic API to execute action. System will maintain an internal task to perform the action. The API will return until the task is finished.
+  A synchronized generic API to execute action. System will maintain an internal task to execute the action. The API will return until the task is finished.
   
 * void **executeActionAsync**(**String** actionName, **String\[\]** actionParams) **throws** IOException;
 

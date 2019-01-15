@@ -420,7 +420,7 @@ will evaluate the condition every MAX{5s,5m/20} interval.
 
 	`file: path matches "/test/*" and age > 5h | archive`
 
-This rule means for each file under /test directory, if it's age is more than 5 hours,
+This rule means for each file under /test directory, if its age is more than 5 hours,
 then move the file to archive storage.
 
 ## **Move one type of file to specific storage**
@@ -450,7 +450,7 @@ This rule will copy files and update all namespace changes(add,delete,rename,app
 	
 SSM use ";" to separate different actions in a rule. Whether the later action will be executed depends on the execution result of the prior action. If prior action fails, the following actions will not be executed.
      
-Above rule means for each file under /test directory, if it's age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is not a built-in action. Users need to implement it by themselves.
+Above rule means for each file under /test directory, if its age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is not a built-in action. Users need to implement it by themselves.
      
 Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
      
@@ -562,7 +562,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
    b. Check whether MySQL server is running
    
    c. Check if there is already a SmartDaemon process running
-   
+
    d. Got to logs under ${SMART_HOME}/logs directory, to find any useful clues in the log file.
    
 2. UI can not show hot files list 
