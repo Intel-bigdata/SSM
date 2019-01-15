@@ -28,6 +28,7 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.CompressionFileState;
@@ -97,7 +98,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     String path = actionInfo.getArgs().get("-file");
     try {
       if (!supportCompression(path)) {
@@ -115,7 +116,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void onActionFinished(ActionInfo actionInfo) {
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     if (actionInfo.isFinished()) {
       try {
         // Action failed
