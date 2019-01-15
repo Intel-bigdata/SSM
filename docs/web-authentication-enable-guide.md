@@ -33,13 +33,13 @@ Steps to enable authentication on WebUI
    
    * **[urls]** section
    
-      comment these two lines by put "#" at the beginning of the line
+      comment these two lines by putting "#" at the beginning of the line
       
       `/api/version = anon`
       
       `/** = anon`
       
-      uncomment these two lines by remove the heading "#"
+      uncomment these two lines by removing the heading "#"
       
       `/api/interpreter/** = authc, roles[admin]`
       

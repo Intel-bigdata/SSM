@@ -40,7 +40,7 @@ Use Cases
 Write file
 ----------
 
-In the write path, there need no change. HDFS client still writes data into HDFS as traditional 3x files, then in the background, SSM server will regularly scan involved files, initiate tasks to compute parity blocks for each file, and create a parity file for each file by concatenating parity blocks of this file together.
+In the write path, there is no need to change. HDFS client still writes data into HDFS as traditional 3x files, then in the background, SSM server will regularly scan involved files, initiate tasks to compute parity blocks for each file, and create a parity file for each file by concatenating parity blocks of this file together.
 
 Case 1. Convert 3x replica file to block EC file
 ----------------------------------------

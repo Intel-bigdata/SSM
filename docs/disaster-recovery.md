@@ -1,22 +1,22 @@
 Transparent Cluster Disaster Recovery
 =============
 
-Apache Hadoop is architected to operate efficiently at scale for normal hardware failures within a data center. It is not designed today to handle data center failures. Although HDFS is not designed for spanning multiple data centers, replicating data from one location to another is common practice for disaster recovery and global service availability.
+Apache Hadoop is architected to operate efficiently at scale for normal hardware failures within a data center. It is not designed today to handle data center failures. Although HDFS is not designed for spanning multiple data centers, replicating data from one location to another is a common practice for disaster recovery and global service availability.
 
 There are lots of ideas contributed to the community in the past about how to solve the notable problem, like in the issue [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlighten us to propose a new solution, which aims to provide a practical, low latency and high throughput HDFS data sync up between clusters for disaster recovery.
 
 Limitations of DistCp
 =====================
 
-Currently an available solution in open source Hadoop for data sync up between clusters uses DistCp. DistCp provides robust and reliable backup capability for HDFS data through batch operations. But at the same time, it has certain disadvantages.
+Currently, DistCp is an available solution in open source Hadoop for data sync up between clusters. DistCp provides robust and reliable backup capability for HDFS data through batch operations. But at the same time, it has certain disadvantages.
 
-1. It requires administrators’ intervene to specify the backup target and the time to start the backup process.
+1. It requires administrators’ intervention to specify the backup target and the time to start the backup process.
 
-2. It is not a real-time backup or even not near real-time backup solution. For those who require critical data real-time backup, DistCp cannot meet their requirements.
+2. It is not a real-time backup, even not near real-time backup solution. For those who require critical data real-time backup, DistCp cannot meet their requirements.
 
-3. DistCp relies on heavy MapReduce even only a few files need to be copied. MapReduce will introduce a lot of execution overhead when only one file or a several files involved.
+3. DistCp relies on heavy MapReduce even only few files need to be copied. MapReduce will introduce a lot of execution overhead.
 
-Compared with DistCp, this solution, built on the top of SSM infrastructure, could be smart and incur lower latency in sync up, as we are aware of user rules and data temperature.
+Compared with DistCp, this solution, built on the top of SSM infrastructure, could be smart and incur lower latency in sync up, because of SSM's automatic management mechanism with SSM rule.
 
 Use Cases
 ==============================
@@ -71,7 +71,7 @@ The following describes the flow of synchronous data writing.
 
 1.  To achieve synchronous data writing, the SmartDFSClient we provided will first write data to the primary cluster.
 
-2.  SmartDFSClient then write data to Secondary cluster. To achieve the real synchronous data replication and to control the latency,
+2.  SmartDFSClient then write data to Secondary cluster. To achieve the real synchronous data replication and control the latency,
     SmartDFSClient will return once 1 replica (configurable) is saved in Secondary cluster.
 
 If both (1) and (2) are finished, SmartDFSClient then will return as success. If step (1) fails, then the operation will return with failure. If step (2) fails, there are two choices for user,
