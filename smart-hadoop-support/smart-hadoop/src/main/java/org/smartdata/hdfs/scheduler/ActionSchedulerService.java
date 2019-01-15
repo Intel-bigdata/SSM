@@ -21,9 +21,11 @@ import org.smartdata.AbstractService;
 import org.smartdata.SmartContext;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 
@@ -35,20 +37,23 @@ public abstract class ActionSchedulerService extends AbstractService implements 
     this.metaStore = metaStore;
   }
 
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
     return true;
   }
 
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     return ScheduleResult.SUCCESS;
   }
 
-  public void postSchedule(ActionInfo actionInfo, ScheduleResult result) {
+  public void postSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex,
+      ScheduleResult result) {
   }
 
-  public void onPreDispatch(LaunchAction action) {
+  public void onPreDispatch(LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
   }
 
-  public void onActionFinished(ActionInfo actionInfo) {
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
   }
 }

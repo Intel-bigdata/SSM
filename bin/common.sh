@@ -16,7 +16,8 @@
 # limitations under the License.
 #
 
-export SMART_SERVER_LOG_FILE_NAME=smartserver-$(hostname)-$(whoami).log
+export SMART_SERVER_LOG_FILE_NAME=smartserver-master-$(hostname)-$(whoami).log
+export SMART_STANDBY_LOG_FILE_NAME=smartserver-standby-$(hostname)-$(whoami).log
 export SMART_AGENT_LOG_FILE_NAME=smartagent-$(hostname)-$(whoami).log
 export SMART_LOG_FILE_NAME=${SMART_SERVER_LOG_FILE_NAME}
 
@@ -307,9 +308,26 @@ function init_command() {
       ALLOW_DAEMON_OPT=true
       export SMART_LOG_FILE_NAME=${SMART_AGENT_LOG_FILE_NAME}
       export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
+      if [ $SSM_DEBUG_ENABLED == "true" ]; then
+       JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
+      fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
       JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_AGENT_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
+    ;;
+    standby)
+      SMART_CLASSNAME=org.smartdata.server.SmartDaemon
+      SMART_PID_FILE=/tmp/Standby.pid
+      ALLOW_DAEMON_OPT=true
+      export SMART_LOG_FILE_NAME=${SMART_STANDBY_LOG_FILE_NAME}
+      export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
+      if [ $SSM_DEBUG_ENABLED == "true" ]; then
+        JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
+      fi
+      JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
+      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
+      SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
+      reorder_lib
     ;;
     getconf)
       SMART_CLASSNAME=org.smartdata.server.utils.tools.GetConf

@@ -43,7 +43,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-public class CompatibilityHelper27 extends CompatibilityHelper2 implements CompatibilityHelper {
+public class CompatibilityHelper27 extends CompatibilityHelper2 {
 
   @Override
   public String[] getStorageTypes(LocatedBlock lb) {

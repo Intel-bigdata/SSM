@@ -66,11 +66,10 @@ The value of size is 1GB if not given. A large value is recommended.
 1. Test file status when move fails
 Set a very small SSD/ARCHIVE storage on datanode. Then, move a large file to it. Then, you can see only a few or none of blocks are moved to this storage. Check if this file is still readable with read action.
 
-### 4. Test Stress/Performance
+### 4. Test Copy Data to S3
 
-#### Cmdlet Stress
 ```
-python test_S3.py -size 10MB -num 10 -v
+python test_s3.py -size 10MB -num 10 -v
 ```
 This command will run copy to S3 test on 10 files each of which is 10MB.
 The values of size and num are 1MB and 100 respectively if not given.
@@ -150,6 +149,21 @@ The default workloads are following:
 - 'websearch/pagerank'      
 
 User can specify workloads by altering `workloads` variable in `test_smart_file_system.py`.
+
+### 7. Test EC/unEC
+
+#### Test EC/unEC action
+To test a given EC policy, it should be enabled in HDFS beforehand. You can also trigger an enableec action in SSM to enable an EC policy.
+```
+python test_ec_action.py -size 10MB -policy XOR-2-1-1024k -v
+```
+This command will test EC & UnEC actions on a 10MB file. In the test, the EC action will use an EC policy named XOR-2-1-1024k.
+
+#### Test rule with EC/unEC action
+```
+python test_ec_rule.py -size 10MB -num 10 -policy XOR-2-1-1024k -v
+```
+This command will test rules with EC/unEC actions respectively on 10 10MB files. In the test, the EC action will use an EC policy named XOR-2-1-1024k.
 
 ## Tips
 

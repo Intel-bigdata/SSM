@@ -30,10 +30,12 @@ import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.StorageGroup;
 
 import java.io.*;
 import java.util.List;
+import java.util.Map;
 
 public interface CompatibilityHelper {
   String[] getStorageTypes(LocatedBlock lb);
@@ -88,4 +90,18 @@ public interface CompatibilityHelper {
       long length, boolean isdir, int block_replication, long blocksize, long modification_time,
       long access_time, FsPermission permission, String owner, String group, byte[] symlink, byte[] path,
       long fileId, int childrenNum, FileEncryptionInfo feInfo, byte storagePolicy);
+
+  byte getErasureCodingPolicy(HdfsFileStatus fileStatus);
+
+  byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
+
+  Map<Byte, String> getErasureCodingPolicies(DFSClient client) throws IOException;
+
+  List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId);
+
+  DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status);
+
+  boolean isLocatedStripedBlock(LocatedBlock lb);
+
+  DBlock getDBlock(DBlock block, StorageGroup source);
 }

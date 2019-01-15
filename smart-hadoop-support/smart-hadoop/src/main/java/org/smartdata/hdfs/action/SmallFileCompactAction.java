@@ -21,8 +21,10 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.smartdata.SmartConstants;
@@ -129,6 +131,8 @@ public class SmallFileCompactAction extends HdfsAction {
 
     for (String smallFile : smallFileList) {
       if ((smallFile != null) && !smallFile.isEmpty() && dfsClient.exists(smallFile)) {
+        HdfsDataOutputStream append =
+            (HdfsDataOutputStream) CompatibilityHelperLoader.getHelper().getDFSClientAppend(dfsClient, smallFile, 1024);
         long fileLen = dfsClient.getFileInfo(smallFile).getLen();
         if (fileLen > 0) {
           try (InputStream in = dfsClient.open(smallFile)) {
@@ -138,6 +142,7 @@ public class SmallFileCompactAction extends HdfsAction {
             // Truncate small file, add file container info to XAttr
             CompactFileState compactFileState = new CompactFileState(
                 smallFile, new FileContainerInfo(containerFile, offset, fileLen));
+            append.close();
             truncateAndSetXAttr(smallFile, compactFileState);
 
             // Update compact file state map, offset, status, and log
@@ -148,7 +153,10 @@ public class SmallFileCompactAction extends HdfsAction {
             appendLog(String.format(
                 "Compact %s to %s successfully.", smallFile, containerFile));
           } catch (IOException e) {
-            // Close output stream and put compact file state map into action result
+            // Close append, output streams and put compact file state map into action result
+            if (append != null) {
+              append.close();
+            }
             if (out != null) {
               out.close();
               appendResult(new Gson().toJson(compactFileStates));

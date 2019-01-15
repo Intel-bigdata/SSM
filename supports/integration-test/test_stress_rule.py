@@ -27,7 +27,8 @@ class TestStressRule(unittest.TestCase):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-num', default='100')
+    parser.add_argument('-num', default='100',
+                        help="file num, Default Value 100.")
     parser.add_argument('unittest_args', nargs='*')
     args, unknown_args = parser.parse_known_args()
     sys.argv[1:] = unknown_args

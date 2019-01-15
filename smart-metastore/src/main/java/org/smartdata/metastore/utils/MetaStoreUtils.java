@@ -17,6 +17,7 @@
  */
 package org.smartdata.metastore.utils;
 
+import com.google.common.hash.Hashing;
 import com.mysql.jdbc.NonRegisteringDriver;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import org.smartdata.metastore.MetaStoreException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -86,7 +88,8 @@ public class MetaStoreUtils {
             "backup_file",
             "file_state",
             "compression_file",
-            "small_file"
+            "small_file",
+            "user_info"
   };
 
   public static Connection createConnection(String url,
@@ -156,7 +159,7 @@ public class MetaStoreUtils {
       tableList.add("DROP TABLE IF EXISTS " + table);
     }
     String deleteExistingTables[] = tableList.toArray(new String[tableList.size()]);
-
+    String password = Hashing.sha512().hashString("ssm@123", StandardCharsets.UTF_8).toString();
     String createEmptyTables[] =
         new String[] {
           "CREATE TABLE access_count_table (\n"
@@ -178,12 +181,8 @@ public class MetaStoreUtils {
           "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
           "CREATE INDEX cached_file_path_idx ON cached_file (path);",
           "CREATE TABLE ec_policy (\n"
-              + "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-              + "  name varchar(255) DEFAULT NULL,\n"
-              + "  cell_size int(11) DEFAULT NULL,\n"
-              + "  data_unit_num int(11) DEFAULT NULL,\n"
-              + "  parity_unit_num int(11) DEFAULT NULL,\n"
-              + "  codec_name varchar(64) DEFAULT NULL\n"
+              + "  id tinyint(1) NOT NULL PRIMARY KEY,\n"
+              + "  policy_name varchar(255) NOT NULL\n"
               + ") ;",
           "CREATE TABLE file (\n"
               + "  path varchar(1000) NOT NULL,\n"
@@ -198,7 +197,7 @@ public class MetaStoreUtils {
               + "  owner varchar(255) DEFAULT NULL,\n"
               + "  owner_group varchar(255) DEFAULT NULL,\n"
               + "  permission smallint(6) DEFAULT NULL,\n"
-              + "  ec_policy_id smallint(6) DEFAULT NULL\n"
+              + "  ec_policy_id tinyint(1) DEFAULT NULL\n"
               + ") ;",
           "CREATE INDEX file_fid_idx ON file (fid);",
           "CREATE INDEX file_path_idx ON file (path);",
@@ -314,6 +313,11 @@ public class MetaStoreUtils {
               + "  property varchar(512) PRIMARY KEY,\n"
               + "  value varchar(4096) NOT NULL\n"
               + ");",
+          "CREATE TABLE user_info (\n"
+              + "  user_name varchar(20) PRIMARY KEY,\n"
+              + "  user_password varchar(256) NOT NULL\n"
+              + ");",
+          "INSERT INTO user_info VALUES('admin','" + password + "');",
           "CREATE TABLE cluster_info (\n"
               + "  cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
               + "  name varchar(512) NOT NULL UNIQUE,\n"
@@ -353,50 +357,37 @@ public class MetaStoreUtils {
               + ");"
         };
     try {
-      String url = conn.getMetaData().getURL();
-      conn.getMetaData().getDatabaseMajorVersion();
-      boolean mysqlOldRelease = false;
-      // Mysql version number
-      double mysqlVersion =
-          conn.getMetaData().getDatabaseMajorVersion()
-              + conn.getMetaData().getDatabaseMinorVersion() * 0.1;
-      LOG.debug("Mysql Version Number {}", mysqlVersion);
-      if (mysqlVersion < 5.7) {
-        mysqlOldRelease = true;
-      }
-      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
       for (String s : deleteExistingTables) {
         // Drop table if exists
         LOG.debug(s);
         executeSql(conn, s);
       }
+      // Handle mysql related features
+      String url = conn.getMetaData().getURL();
+      boolean mysql = url.startsWith(MetaStoreUtils.MYSQL_URL_PREFIX);
+      boolean mysqlOldRelease = false;
+      if (mysql) {
+        // Mysql version number
+        double mysqlVersion =
+            conn.getMetaData().getDatabaseMajorVersion()
+                + conn.getMetaData().getDatabaseMinorVersion() * 0.1;
+        LOG.debug("Mysql Version Number {}", mysqlVersion);
+        if (mysqlVersion < 5.5) {
+          LOG.error("Required Mysql version >= 5.5, but current is " + mysqlVersion);
+          throw new MetaStoreException("Mysql version " + mysqlVersion + " is below requirement!");
+        } else if (mysqlVersion < 5.7 && mysqlVersion >= 5.5) {
+          mysqlOldRelease = true;
+        }
+      }
+      if (mysqlOldRelease) {
+        // Enable dynamic file format to avoid index length limit 767
+        executeSql(conn, "SET GLOBAL innodb_file_format=barracuda;");
+        executeSql(conn, "SET GLOBAL innodb_file_per_table=true;");
+        executeSql(conn, "SET GLOBAL innodb_large_prefix = ON;");
+      }
       for (String s : createEmptyTables) {
         // Solve mysql and sqlite sql difference
-        if (mysql) {
-          // path/src index should be set to less than 767
-          // to avoid "Specified key was too long" in
-          // Mysql 5.6 or previous version
-          if (mysqlOldRelease) {
-            // Fix index size 767 in mysql 5.6 or previous version
-            if (s.startsWith("CREATE INDEX")
-                && (s.contains("path") || s.contains("src"))) {
-              // Index longer than 767
-              s = s.replace(");", "(749));");
-            } else if (s.contains(") PRIMARY KEY")) {
-              // Primary key longer than 749
-              Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}). PRIMARY KEY");
-              Matcher m = p.matcher(s);
-              if (m.find()) {
-                String targetStr = m.group(0);
-                s = s.replace(targetStr, "749) PRIMARY KEY");
-              }
-            }
-          }
-          // Replace AUTOINCREMENT with AUTO_INCREMENT
-          if (s.contains("AUTOINCREMENT")) {
-            s = s.replace("AUTOINCREMENT", "AUTO_INCREMENT");
-          }
-        }
+        s = sqlCompatibility(mysql, mysqlOldRelease, s);
         LOG.debug(s);
         executeSql(conn, s);
       }
@@ -405,12 +396,53 @@ public class MetaStoreUtils {
     }
   }
 
+  /**
+   * * Solve SQL compatibility problem caused by mysql and sqlite. * Note that mysql 5.6 or earlier
+   * cannot support index length larger than 767. * Meanwhile, sqlite's keywords are a little
+   * different from mysql.
+   *
+   * @param mysql boolean
+   * @param mysqlOldRelease boolean mysql version is earlier than 5.6
+   * @param sql String sql
+   * @return converted sql
+   */
+  private static String sqlCompatibility(boolean mysql, boolean mysqlOldRelease, String sql) {
+    if (mysql) {
+      // path/src index should be set to less than 767
+      // to avoid "Specified key was too long" in
+      // Mysql 5.6 or previous version
+      if (mysqlOldRelease) {
+        // Fix index size 767 in mysql 5.6 or previous version
+        if (sql.startsWith("CREATE INDEX")
+            && (sql.contains("path") || sql.contains("src"))) {
+          // Index longer than 767
+          sql = sql.replace(");", "(749));");
+        } else if (sql.contains("PRIMARY KEY")) {
+          // Primary key longer than 749
+          Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}).{2,15}PRIMARY");
+          Matcher m = p.matcher(sql);
+          if (m.find()) {
+            // Make this table dynamic
+            sql = sql.replace(");", ") ROW_FORMAT=DYNAMIC ENGINE=INNODB;");
+            LOG.debug(sql);
+          }
+        }
+      }
+      // Replace AUTOINCREMENT with AUTO_INCREMENT
+      if (sql.contains("AUTOINCREMENT")) {
+        sql = sql.replace("AUTOINCREMENT", "AUTO_INCREMENT");
+      }
+    }
+    return sql;
+  }
+
   public static void executeSql(Connection conn, String sql)
       throws MetaStoreException {
     try {
       Statement s = conn.createStatement();
       s.execute(sql);
     } catch (Exception e) {
+      LOG.error("SQL execution error " + sql);
       throw new MetaStoreException(e);
     }
   }
@@ -453,25 +485,9 @@ public class MetaStoreUtils {
       try {
         p.loadFromXML(new FileInputStream(cpConfigFile));
 
-        boolean tidbEnabled = conf.getBoolean(
-                SmartConfKeys.SMART_TIDB_ENABLED, SmartConfKeys.SMART_TIDB_ENABLED_DEFAULT);
-        if (tidbEnabled) {
-          String tidbPort = conf.get(SmartConfKeys.TIDB_SERVICE_PORT_KEY,
-                  SmartConfKeys.TIDB_SERVICE_PORT_KEY_DEFAULT);
-          String url = String.format("jdbc:mysql://127.0.0.1:%s", tidbPort);
-          String user = p.getProperty("username");
-          String password = p.getProperty("password");
-          if (!tidbInited) {
-            initTidb(url, user, password);
-          }
-          url = url + "/" + TIDB_DB_NAME;
+        String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
+        if (url != null) {
           p.setProperty("url", url);
-          LOG.info("\t" + "The jdbc url for Tidb is " + url);
-        } else {
-          String url = conf.get(SmartConfKeys.SMART_METASTORE_DB_URL_KEY);
-          if (url != null) {
-            p.setProperty("url", url);
-          }
         }
 
         String purl = p.getProperty("url");

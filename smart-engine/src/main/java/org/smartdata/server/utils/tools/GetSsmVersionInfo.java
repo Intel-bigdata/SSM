@@ -15,15 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet;
+package org.smartdata.server.utils.tools;
 
+import org.smartdata.versioninfo.SsmVersionInfo;
 
-public enum CmdletDispatchPolicy {
-    ANY,
-    PREFER_AGENT,
-    PREFER_REMOTE_SSM,
-    PREFER_LOCAL;
-//    MUST_AGENT,
-//    MUST_REMOTE_SSM,
-//    MUST_LOCAL;
+public class GetSsmVersionInfo {
+  public static void main(String[] args) {
+    System.out.println(SsmVersionInfo.infoString());
+    System.exit(0);
+  }
 }

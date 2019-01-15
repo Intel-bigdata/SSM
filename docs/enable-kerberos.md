@@ -1,11 +1,11 @@
 ## 1. Deploy Kerberos KDC
 
-### Install Kerberos
+### 1.1 Install Kerberos
 ```
 yum install -y krb5-server krb5-lib krb5-workstation
 ```
 
-### Config kdc.conf
+### 1.2 Config kdc.conf
 Exmaple:
 ```
 [kdcdefaults]
@@ -28,7 +28,7 @@ export KRB5_KDC_PROFILE=/yourdir/kdc.conf
 ```
 
 
-### Config krb5.conf
+### 1.3 Config krb5.conf
 Example:
 ```
  [libdefaults]
@@ -58,7 +58,7 @@ Set KRB5_CONFIG environment variables to point to the krb5.conf. For example:
 export KRB5_CONFIG=/yourdir/krb5.conf
 ```
 
-### Create the KDC database
+### 1.4 Create the KDC database
 The following is an example of how to create a Kerberos database and stash file on the master KDC, using the kdb5_util command. Replace HADOOP.COM with the name of your Kerberos realm.
 ```
 kdb5_util create -r HADOOP.COM -s
@@ -67,119 +67,183 @@ This will create five files in LOCALSTATEDIR/krb5kdc (or at the locations specif
 
 ### Start the Kerberos daemons on the master KDC
 ```
-shell% krb5kdc
-shell% kadmind
+krb5kdc
+kadmind
 ```
 
 ## 2. Export the keytabs
 
-### Add smartserver Kerberos principal to database and export it to keytab. Replace hostname with the hostname of smart server.
+### 2.1 Add smartserver Kerberos principal to database and export it to keytab.
 ```
-kadmin.local:addprinc -randkey smartserver/hostname
-kadmin.local:xst -k /xxx/xxx/smartserver-hostname.keytab smartserver/hostname
+kadmin.local:addprinc -randkey smartserver/{hostname}
+kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab smartserver/{hostname}
 ```
 Note: replace the hostname with the hostname of the smart server
 
-### Add smartagent Kerberos principals to database and export it to keytabs. Replace hostname with the hostname of smart agent, please create principals for each agents.
+### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agents.
 ```
-kadmin.local:addprinc -randkey smartagent/hostname
-kadmin.local:xst -k /xxx/xxx/smartagent-hostname.keytab smartagent/hostname
+kadmin.local:addprinc -randkey smartagent/{hostname}
+kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab smartagent/{hostname}
 ```
-Note: replace the hostname with the hostname of the smart agent
 
-### Add hdfs Kerberos principals to database and export it to keytabs.
+### 2.3 Add hdfs Kerberos principals to database and export it to keytabs.
 ```
-kadmin.local:addprinc -randkey hdfs/hostname
-kadmin.local:xst -k /xxx/xxx/hdfs-hostname.keytab hdfs/hostname
+kadmin.local:addprinc -randkey hdfs/{hostname}
+kadmin.local:xst -k /xxx/xxx/hdfs-{hostname}.keytab hdfs/{hostname}
 ```
+
+> Note: please replace {hostname} with the real hostname. The below section should follow the same convention.
 
 ## 3. Update smart-site.xml
+```xml
+<!-- hadoop conf dir should be configured -->
+<property>
+    <name>smart.hadoop.conf.path</name>
+    <value>/xxx/xxx/etc/hadoop</value>
+    <description>Hadoop main cluster configuration file path</description>
+</property>
+
+<property>
+    <name>smart.security.enable</name>
+    <value>true</value>
+</property>
+<property>
+    <name>smart.server.keytab.file</name>
+    <value>/xxx/xxx/smartserver-{hostname}.keytab</value>
+</property>
+<property>
+    <name>smart.server.kerberos.principal</name>
+    <value>smartserver/_HOST@HADOOP.COM</value>
+</property>
+<property>
+    <name>smart.agent.keytab.file</name>
+    <value>/xxx/xxx/smartagent-{hostname}.keytab</value>
+</property>
+<property>
+    <name>smart.agent.kerberos.principal</name>
+    <value>smartagent/_HOST@HADOOP.COM</value>
+</property>
 ```
-<property>
-  <name>smart.security.enable</name>
-  <value>true</value>
-</property>
-<property>
-  <name>smart.server.keytab.file</name>
-  <value>/xxx/xxx/smartserver-hostname.keytab</value>
-</property>
-<property>
-  <name>smart.server.kerberos.principal</name>
-  <value>smartserver/_HOST@HADOOP.COM</value>
-</property>
-<property>
-  <name>smart.agent.keytab.file</name>
-  <value>/xxx/xxx/smartagent-hostname.keytab</value>
-</property>
-<property>
-  <name>smart.agent.kerberos.principal</name>
-  <value>smartagent/_HOST@HADOOP.COM</value>
-</property>
-```
+
+> Note: _HOST will be converted to the real hostname by program. But if it is not correctly mapped to the hostname you used for adding principle,
+_HOST should be replaced by the expected hostname. This convention should also be followed in the below sections.
 
 ## 4. Update hadoop configuration files
  
-### Update core-site.xml
-add the following properties:
-```
+### 4.1 Update core-site.xml
+Add the following properties:
+```xml
 <property>
-  <name>hadoop.security.authorization</name>
-  <value>true</value>
+    <name>hadoop.security.authorization</name>
+    <value>true</value>
 </property>
 <property>
-  <name>hadoop.security.authentication</name>
-  <value>kerberos</value>
-</property>
-<property>
-   <name>hadoop.security.authentication.use.has</name>
-   <value>true</value>
+    <name>hadoop.security.authentication</name>
+    <value>kerberos</value>
 </property>
 ```
-### Update hdfs-site.xml
-add the following properties:
-```
+### 4.2 Update hdfs-site.xml
+Add the following properties:
+```xml
 <!-- General HDFS security config -->
 <property>
-  <name>dfs.block.access.token.enable</name>
-  <value>true</value>
+    <name>dfs.block.access.token.enable</name>
+    <value>true</value>
 </property>
 
 <!-- NameNode security config -->
 <property>
-  <name>dfs.namenode.keytab.file</name>
-  <value>/xxx/xxx/hdfs-hostname.keytab</value>
+    <name>dfs.namenode.keytab.file</name>
+    <value>/xxx/xxx/hdfs-{hostname}.keytab</value>
 </property>
 <property>
-  <name>dfs.namenode.kerberos.principal</name>
-  <value>hdfs/_HOST@HADOOP.COM</value>
+    <name>dfs.namenode.kerberos.principal</name>
+    <value>hdfs/_HOST@HADOOP.COM</value>
 </property>
 <property>
-  <name>dfs.namenode.delegation.token.max-lifetime</name>
-  <value>604800000</value>
-  <description>The maximum lifetime in milliseconds for which a delegation token is valid.</description>
+    <name>dfs.namenode.delegation.token.max-lifetime</name>
+    <value>604800000</value>
+    <description>The maximum lifetime in milliseconds for which a delegation token is valid.</description>
 </property>
 
-<!-- DataNode security config -->
+<!-- Configuration for HDFS web on namenode [optional] -->
 <property>
-  <name>dfs.datanode.data.dir.perm</name>
-  <value>700</value>
-</property>
-<property>
-  <name>dfs.datanode.keytab.file</name>
-  <value>/xxx/xxx/hdfs-hostname.keytab</value>
+    <name>dfs.webhdfs.enabled</name>
+    <value>true</value>
 </property>
 <property>
-  <name>dfs.datanode.kerberos.principal</name>
-  <value>hdfs/_HOST@HADOOP.COM</value>
+    <name>dfs.web.authentication.kerberos.principal</name>
+    <value>web/_HOST@HADOOP.COM</value>
+</property>
+<property>
+    <name>dfs.web.authentication.kerberos.keytab</name>
+    <value>/root/sorttest/web-{hostname}.keytab</value>
+</property>
+
+<!-- To fix resolving hostname problem [optional] -->
+<property>
+  <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+  <value>false</value>
+</property>
+<property>
+  <name>dfs.client.use.datanode.hostname</name>
+  <value>false</value>
+</property>
+<property>
+  <name>dfs.datanode.use.datanode.hostname</name>
+  <value>false</value>
 </property>
 
 
-## 5. Deploy HTTPS
-===============
+<!-- Configuration for dataNode security, should not be added on namenode -->
+<property>
+    <name>dfs.datanode.data.dir.perm</name>
+    <value>700</value>
+</property>
+<property>
+    <name>dfs.datanode.keytab.file</name>
+    <value>/xxx/xxx/hdfs-{hostname}.keytab</value>
+</property>
+<property>
+    <name>dfs.datanode.kerberos.principal</name>
+    <value>hdfs/_HOST@HADOOP.COM</value>
+</property>
+```
 
-### 1. Create a keystore file for each host
+## 5. Deploy jsvc [Alternative to HTTPS]
 
-> keystore: the keystore file that stores the certificate.      
+You can configure jsvc instead of HTTPS through the following steps.
+
+### 5.1 Install jsvc
+
+jsvc should be installed on each datanode.
+
+`sudo yum install jsvc` or `apt-get install jsvc`
+
+Please add the following statements in hadoop-env.sh for hadoop.
+
+`export HADOOP_SECURE_DN_USER="root"`
+
+`export JSVC_HOME=/usr/bin`
+
+### 5.2 Additional modification in hdfs-site.xml
+```xml
+<property>
+    <name>dfs.datanode.address</name>
+    <value>0.0.0.0:1004</value>
+</property>
+<property>
+    <name>dfs.datanode.http.address</name>
+    <value>0.0.0.0:1006</value>
+</property>
+```
+## 6. Deploy HTTPS [Alternative to jsvc]
+
+You can configure HTTPS instead of jsvc through the following steps.
+
+### 6.1 Create a keystore file for each host
+
+> keystore: the keystore file that stores the certificate.
 > validity: the valid time of the certificate in days.
 ```
 keytool -alias {hostname} -keystore {keystore} -validity {validity} -genkey
@@ -187,34 +251,34 @@ keytool -alias {hostname} -keystore {keystore} -validity {validity} -genkey
 
 > The keytool will ask for more details such as the keystore password, keypassword and CN(hostname).
 
-### 2. Export the certificate public key to a certificate file for each host
+### 6.2 Export the certificate public key to a certificate file for each host
 ```
 keytool -export -alias {hostname} -keystore {keystore} -rfc -file {cert-file}
 ```
 
-### 3. Create a common truststore file (trustAll)
+### 6.3 Create a common truststore file (trustAll)
 The truststore file contains the public key from all certificates. If you assume a 2-node cluster with node1 and node2,
 login to node1 and import the truststore file for node1.
 ```
 keytool -import -alias {hostname} -keystore {trustAll} -file {cert-file}
 ```
 
-### 4. Update the common truststore file
+### 6.4 Update the common truststore file
 * Move {trustAll} from node1 to node2 ({trustAll} already has the certificate entry of node1), and repeat Step 3.
 
 * Move the updated {trustAll} from node2 to node1. Repeat these steps for each node in the cluster.
 When you finish, the {trustAll} file will have the certificates from all nodes.
 
-> Note these work could be done on the same node, just notice the hostname.
+> Note: these work could be done on the same node, just notice the hostname.
 
-### 5. Copy {trustAll} from node1 to all of the other nodes
+### 6.5 Copy {trustAll} from node1 to all of the other nodes
 
-### 6. Validate the common truststore file
+### 6.6. Validate the common truststore file
 ```
 keytool -list -v -keystore {trustAll}
 ```
 
-### 7. Edit the Configuration files
+### 6.7. Edit the Configuration files
 > Deploy {keystore} and {trustAll} files and config /etc/has/ssl-server.conf for HAS server
 ```
 ssl.server.keystore.location = {path to keystore}
@@ -232,96 +296,84 @@ ssl.client.truststore.password = {trustAll password}
 ```
 
 > Config $HADOOP_HOME/etc/hadoop/ssl-server.xml for Hadoop
-```
-<configuration>
-
+```xml
 <property>
-  <name>ssl.server.truststore.location</name>
-  <value>path to trustAll</value>
+    <name>ssl.server.truststore.location</name>
+    <value>path to trustAll</value>
 </property>
-
 <property>
-  <name>ssl.server.truststore.password</name>
-  <value>trustAll password</value>
+    <name>ssl.server.truststore.password</name>
+    <value>trustAll password</value>
 </property>
-
 <property>
-  <name>ssl.server.truststore.type</name>
-  <value>jks</value>
+    <name>ssl.server.truststore.type</name>
+    <value>jks</value>
 </property>
-
 <property>
-  <name>ssl.server.truststore.reload.interval</name>
-  <value>10000</value>
+    <name>ssl.server.truststore.reload.interval</name>
+    <value>10000</value>
 </property>
-
 <property>
-  <name>ssl.server.keystore.location</name>
-  <value>path to keystore</value>
+    <name>ssl.server.keystore.location</name>
+    <value>path to keystore</value>
 </property>
-
 <property>
-  <name>ssl.server.keystore.password</name>
-  <value>keystore password</value>
+    <name>ssl.server.keystore.password</name>
+    <value>keystore password</value>
 </property>
-
 <property>
-  <name>ssl.server.keystore.keypassword</name>
-  <value>keystore keypassword</value>
+    <name>ssl.server.keystore.keypassword</name>
+    <value>keystore keypassword</value>
 </property>
-
 <property>
-  <name>ssl.server.keystore.type</name>
-  <value>jks</value>
+    <name>ssl.server.keystore.type</name>
+    <value>jks</value>
 </property>
-
-</configuration>
 ```
 
 > Config $HADOOP_HOME/etc/hadoop/ssl-client.xml for Hadoop
-```
-<configuration>
-
+```xml
 <property>
-  <name>ssl.client.truststore.location</name>
-  <value>patch to trustAll</value>
+    <name>ssl.client.truststore.location</name>
+    <value>patch to trustAll</value>
 </property>
 
 <property>
-  <name>ssl.client.truststore.password</name>
-  <value>trustAll password</value>
+    <name>ssl.client.truststore.password</name>
+    <value>trustAll password</value>
 </property>
-
 <property>
-  <name>ssl.client.truststore.type</name>
-  <value>jks</value>
+    <name>ssl.client.truststore.type</name>
+    <value>jks</value>
 </property>
-
 <property>
-  <name>ssl.client.truststore.reload.interval</name>
-  <value>10000</value>
+    <name>ssl.client.truststore.reload.interval</name>
+    <value>10000</value>
 </property>
-
 <property>
-  <name>ssl.client.keystore.location</name>
-  <value>path to keystore</value>
+    <name>ssl.client.keystore.location</name>
+    <value>path to keystore</value>
 </property>
-
 <property>
-  <name>ssl.client.keystore.password</name>
-  <value>keystore password</value>
+    <name>ssl.client.keystore.password</name>
+    <value>keystore password</value>
 </property>
-
 <property>
-  <name>ssl.client.keystore.keypassword</name>
-  <value>keystore keypassword</value>
+    <name>ssl.client.keystore.keypassword</name>
+    <value>keystore keypassword</value>
 </property>
-
 <property>
-  <name>ssl.client.keystore.type</name>
-  <value>jks</value>
+    <name>ssl.client.keystore.type</name>
+    <value>jks</value>
 </property>
-
-</configuration>
 ```
 
+## Trouble Shooting
+
+- If each machine's time is not synchronized visibly, the following error may occur. You need sync the time.
+
+```
+javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level:
+Server not found in Kerberos database (7) - LOOKING_UP_SERVER)]
+        at com.sun.security.sasl.gsskerb.GssKrb5Client.evaluateChallenge(GssKrb5Client.java:211)
+```

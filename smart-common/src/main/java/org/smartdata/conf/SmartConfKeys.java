@@ -67,7 +67,7 @@ public class SmartConfKeys {
   public static final String SMART_SERVER_KEYTAB_FILE_KEY = "smart.server.keytab.file";
   public static final String SMART_SERVER_KERBEROS_PRINCIPAL_KEY =
     "smart.server.kerberos.principal";
-  public static final String SMART_AGENT_KEYTAB_FILE_KEY = "smart.server.keytab.file";
+  public static final String SMART_AGENT_KEYTAB_FILE_KEY = "smart.agent.keytab.file";
   public static final String SMART_AGENT_KERBEROS_PRINCIPAL_KEY =
     "smart.agent.kerberos.principal";
   public static final String SMART_SECURITY_CLIENT_PROTOCOL_ACL =
@@ -129,15 +129,20 @@ public class SmartConfKeys {
   // Dispatcher
   public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY =
       "smart.cmdlet.dispatcher.log.disp.result";
-  public static final boolean SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT = true;
+  public static final boolean SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT = false;
   public static final String SMART_CMDLET_DISPATCHERS_KEY = "smart.cmdlet.dispatchers";
   public static final int SMART_CMDLET_DISPATCHERS_DEFAULT = 3;
+  public static final String SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_KEY =
+      "smart.cmdlet.dispatcher.log.disp.metrics.interval"; // in ms
+  public static final int SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_DEFAULT = 5000;
 
   // Action
   public static final String SMART_ACTION_MOVE_THROTTLE_MB_KEY = "smart.action.move.throttle.mb";
   public static final long SMART_ACTION_MOVE_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
   public static final String SMART_ACTION_COPY_THROTTLE_MB_KEY = "smart.action.copy.throttle.mb";
   public static final long SMART_ACTION_COPY_THROTTLE_MB_DEFAULT = 0L;  // 0 means unlimited
+  public static final String SMART_ACTION_EC_THROTTLE_MB_KEY = "smart.action.ec.throttle.mb";
+  public static final long SMART_ACTION_EC_THROTTLE_MB_DEFAULT = 0L;
   public static final String SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY =
     "smart.action.local.execution.disabled";
   public static final boolean SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT = false;
@@ -191,19 +196,6 @@ public class SmartConfKeys {
   public static final int SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT = 50;
   public static final String SMART_STATUS_REPORT_RATIO_KEY = "smart.status.report.ratio";
   public static final double SMART_STATUS_REPORT_RATIO_DEFAULT = 0.2;
-
-  //Tidb
-  public static final String SMART_TIDB_ENABLED = "smart.tidb.enable";
-  public static final boolean SMART_TIDB_ENABLED_DEFAULT = false;
-
-  public static final String PD_CLIENT_PORT_KEY = "pd.client.port";
-  public static final String PD_CLIENT_PORT_DEFAULT = "7060";
-  public static final String PD_PEER_PORT_KEY = "pd.peer.port";
-  public static final String PD_PEER_PORT_DEFAULT = "7061";
-  public static final String TIKV_SERVICE_PORT_KEY = "tikv.service.port";
-  public static final String TIKV_SERVICE_PORT_DEFAULT = "20160";
-  public static final String TIDB_SERVICE_PORT_KEY = "tidb.service.port";
-  public static final String TIDB_SERVICE_PORT_KEY_DEFAULT = "7070";
 
   // Compression
   public static final String SMART_COMPRESSION_IMPL = "smart.compression.impl";

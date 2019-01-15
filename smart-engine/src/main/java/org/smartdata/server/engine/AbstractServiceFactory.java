@@ -29,6 +29,7 @@ import org.smartdata.metastore.StatesUpdateService;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,21 +51,21 @@ public class AbstractServiceFactory {
     }
   }
 
-  public static String getStatesUpdaterName(ServiceMode mode) {
-    switch (mode) {
-    case HDFS:
-      return SmartConstants.SMART_HDFS_STATES_UPDATE_SERVICE_IMPL;
-    case ALLUXIO:
-      return SmartConstants.SMART_ALLUXIO_STATES_UPDATE_SERVICE_IMPL;
-    default:
-      return SmartConstants.SMART_HDFS_STATES_UPDATE_SERVICE_IMPL;
+  public static String getStatesUpdaterName(ServiceMode mode)
+      throws IOException {
+    String template = "SMART_@@_STATES_UPDATE_SERVICE_IMPL";
+    try {
+      return getConstantValue(mode, template);
+    } catch (Exception e) {
+      throw new IOException("Can not get value of SmartConstants."
+          + getFieldName(mode, template), e);
     }
   }
 
   public static List<ActionSchedulerService> createActionSchedulerServices(Configuration conf,
-      SmartContext context, MetaStore metaStore, boolean allMustSuccess) throws IOException {
+      ServerContext context, MetaStore metaStore, boolean allMustSuccess) throws IOException {
     List<ActionSchedulerService> services = new ArrayList<>();
-    String[] serviceNames = getActionSchedulerNames(conf);
+    String[] serviceNames = getActionSchedulerNames(context.getServiceMode());
     for (String name : serviceNames) {
       try {
         Class clazz = Class.forName(name);
@@ -83,7 +84,26 @@ public class AbstractServiceFactory {
     return services;
   }
 
-  public static String[] getActionSchedulerNames(Configuration conf) {
-    return SmartConstants.SMART_ACTION_SCHEDULER_SERVICE_IMPL.trim().split("\\s*,\\s*");
+  public static String[] getActionSchedulerNames(ServiceMode mode) {
+    String template = "SMART_@@_ACTION_SCHEDULER_SERVICE_IMPL";
+    try {
+      return getConstantValue(mode, template).trim().split("\\s*,\\s*");
+    } catch (Exception e) {
+      LOG.warn("Can not get value of SmartConstants."
+          + getFieldName(mode, template), e);
+    }
+    return new String[0];
+  }
+
+  public static String getConstantValue(ServiceMode serviceMode, String template)
+      throws NoSuchFieldException, SecurityException,
+      IllegalArgumentException, IllegalAccessException {
+    String fieldName = getFieldName(serviceMode, template);
+    Field field = SmartConstants.class.getField(fieldName);
+    return (String) field.get(SmartConstants.class);
+  }
+
+  public static String getFieldName(ServiceMode serviceMode, String template) {
+    return template.replaceAll("@@", serviceMode.getName());
   }
 }

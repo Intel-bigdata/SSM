@@ -30,11 +30,4 @@
         <value></value>
         <description>Hadoop main cluster configuration file path</description>
     </property>
-    <property>
-        <name>smart.tidb.enable</name>
-        <value>false</value>
-        <description>
-            This decides whether Tidb is enabled.
-        </description>
-    </property>
 </configuration>

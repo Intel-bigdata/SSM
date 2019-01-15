@@ -22,4 +22,8 @@ angular.module('zeppelinWebApp')
   NodesCtrl.$inject = ['$scope', '$filter', 'nodes0'];
   function NodesCtrl($scope, $filter, nodes0) {
     $scope.nodes = nodes0.body;
+    angular.forEach($scope.nodes, function (data,index) {
+      data.registTime = data.registTime === 0 ? "-" :
+        $filter('date')(data.registTime,'yyyy-MM-dd HH:mm:ss');
+    });
   }

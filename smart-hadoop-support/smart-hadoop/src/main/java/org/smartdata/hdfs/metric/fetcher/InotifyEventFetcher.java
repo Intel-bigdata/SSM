@@ -42,7 +42,6 @@ import org.smartdata.model.SystemInfo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -138,7 +137,7 @@ public class InotifyEventFetcher {
   private Long getLastTxid() {
     try {
       SystemInfo info =
-          metaStore.getSystemInfoByProperty(SmartConstants.SMART_HADOOP_LAST_INOTIFY_TXID);
+          metaStore.getSystemInfoByProperty(SmartConstants.SMART_HDFS_LAST_INOTIFY_TXID);
       return info != null ? Long.parseLong(info.getValue()) : -1L;
     } catch (MetaStoreException e) {
       return -1L;

@@ -18,6 +18,7 @@
 package org.smartdata.rule;
 
 import org.junit.Test;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
@@ -52,7 +53,7 @@ public class TestSmartRuleStringParser {
 
   private void parseRule(String rule) throws Exception {
     TranslationContext tc = new TranslationContext(1, System.currentTimeMillis());
-    SmartRuleStringParser parser = new SmartRuleStringParser(rule, tc);
+    SmartRuleStringParser parser = new SmartRuleStringParser(rule, tc, new SmartConf());
     TranslateResult tr = parser.translate();
 
     int index = 1;

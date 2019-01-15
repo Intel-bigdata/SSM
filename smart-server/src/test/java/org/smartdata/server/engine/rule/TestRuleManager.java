@@ -29,6 +29,7 @@ import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.server.engine.RuleManager;
 import org.smartdata.server.engine.ServerContext;
+import org.smartdata.server.engine.ServiceMode;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,6 +49,7 @@ public class TestRuleManager extends TestDaoUtil {
     smartConf = new SmartConf();
     metaStore = new MetaStore(druidPool);
     ServerContext serverContext = new ServerContext(smartConf, metaStore);
+    serverContext.setServiceMode(ServiceMode.HDFS);
     ruleManager = new RuleManager(serverContext, null, null);
     ruleManager.init();
     ruleManager.start();
@@ -303,7 +305,7 @@ public class TestRuleManager extends TestDaoUtil {
     long length = 100;
     long fid = 10000;
     FileInfo[] files = { new FileInfo("/tmp/testfile", fid,  length, false, (short) 3,
-        1024, now, now, (short) 1, null, null, (byte) 3) };
+        1024, now, now, (short) 1, null, null, (byte) 3, (byte) 0) };
 
     metaStore.insertFiles(files);
     long rid = ruleManager.submitRule(rule, RuleState.ACTIVE);

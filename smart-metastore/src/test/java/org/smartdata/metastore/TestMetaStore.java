@@ -176,6 +176,7 @@ public class TestMetaStore extends TestDaoUtil {
     String group = "admin";
     long fileId = 56L;
     byte storagePolicy = 0;
+    byte erasureCodingPolicy = 0;
     FileInfo fileInfo =
         new FileInfo(
             pathString,
@@ -189,7 +190,8 @@ public class TestMetaStore extends TestDaoUtil {
             (short) 1,
             owner,
             group,
-            storagePolicy);
+            storagePolicy,
+            erasureCodingPolicy);
     metaStore.insertFile(fileInfo);
     FileInfo dbFileInfo = metaStore.getFile(56);
     Assert.assertTrue(dbFileInfo.equals(fileInfo));
@@ -295,6 +297,7 @@ public class TestMetaStore extends TestDaoUtil {
     String group = "admin";
     long fileId = 56L;
     byte storagePolicy = 0;
+    byte erasureCodingPolicy = 0;
     FileInfo fileInfo =
         new FileInfo(
             pathString,
@@ -308,7 +311,8 @@ public class TestMetaStore extends TestDaoUtil {
             (short) 1,
             owner,
             group,
-            storagePolicy);
+            storagePolicy,
+            erasureCodingPolicy);
     metaStore.insertFile(fileInfo);
     Map<String, String> args = new HashMap();
     args.put("-file", "/src/1");
@@ -420,6 +424,7 @@ public class TestMetaStore extends TestDaoUtil {
     String group = "admin";
     long fileId = 312321L;
     byte storagePolicy = 0;
+    byte erasureCodingPolicy = 0;
     FileInfo[] files = {
       new FileInfo(
           pathString,
@@ -433,7 +438,8 @@ public class TestMetaStore extends TestDaoUtil {
           (short) 1,
           owner,
           group,
-          storagePolicy)
+          storagePolicy,
+          erasureCodingPolicy)
     };
     metaStore.insertFiles(files);
     FileInfo dbFileInfo = metaStore.getFile("/tmp/testFile");

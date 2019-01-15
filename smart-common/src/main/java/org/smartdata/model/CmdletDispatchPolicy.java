@@ -15,28 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.server.engine.cmdlet.message;
+package org.smartdata.model;
 
-import org.smartdata.AgentService;
-import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
-
-public class StopCmdlet implements AgentService.Message {
-  private long cmdletId;
-
-  public StopCmdlet(long cmdletId) {
-    this.cmdletId = cmdletId;
-  }
-
-  public long getCmdletId() {
-    return cmdletId;
-  }
-
-  public void setCmdletId(long cmdletId) {
-    this.cmdletId = cmdletId;
-  }
-
-  @Override
-  public String getServiceName() {
-    return AgentCmdletService.NAME;
-  }
+/**
+ * The policy defines which type of executor service should be used
+ * to execute the given cmdlet.
+ *
+ */
+public enum CmdletDispatchPolicy {
+  ANY,
+  // If not available then dispatch to other types
+  PREFER_AGENT,
+  PREFER_REMOTE_SSM,
+  PREFER_LOCAL;
+//  MUST_AGENT,
+//  MUST_REMOTE_SSM,
+//  MUST_LOCAL;
 }

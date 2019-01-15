@@ -20,19 +20,25 @@ package org.smartdata.hdfs;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocolPB.PBHelper;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
+import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.StorageGroup;
+import org.smartdata.hdfs.action.move.StorageMap;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
-public class CompatibilityHelper2 {
+public abstract class CompatibilityHelper2 implements CompatibilityHelper {
   public int getReadTimeOutConstant() {
     return HdfsServerConstants.READ_TIMEOUT;
   }
@@ -61,5 +67,36 @@ public class CompatibilityHelper2 {
     return new HdfsFileStatus(
         length, isdir, block_replication, blocksize, modification_time, access_time, permission,
         owner, group, symlink, path, fileId, childrenNum, feInfo, storagePolicy);
+  }
+
+  public byte getErasureCodingPolicy(HdfsFileStatus fileStatus) {
+    // for HDFS2.x, the erasure policy is always replication whose id is 0 in HDFS.
+    return (byte) 0;
+  }
+
+  public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {
+    return (byte) 0;
+  }
+
+  public Map<Byte, String> getErasureCodingPolicies(DFSClient dfsClient) throws IOException {
+    return null;
+  }
+
+  public List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId) {
+    return null;
+  }
+
+  public DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status) {
+    Block blk = lb.getBlock().getLocalBlock();
+    DBlock db = new DBlock(blk);
+    return db;
+  }
+
+  public boolean isLocatedStripedBlock(LocatedBlock lb) {
+    return false;
+  }
+
+  public DBlock getDBlock(DBlock block, StorageGroup source) {
+    return block;
   }
 }

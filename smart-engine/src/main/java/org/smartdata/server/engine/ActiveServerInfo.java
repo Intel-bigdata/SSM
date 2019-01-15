@@ -23,8 +23,8 @@ import org.smartdata.server.cluster.NodeInfo;
 public class ActiveServerInfo extends NodeInfo {
   private static ActiveServerInfo inst;
 
-  private ActiveServerInfo(String id, String location, ExecutorType executorType) {
-    super(id, location, executorType);
+  private ActiveServerInfo(String id, String location) {
+    super(id, location, ExecutorType.LOCAL);
   }
 
   public static ActiveServerInfo getInstance() {
@@ -32,8 +32,7 @@ public class ActiveServerInfo extends NodeInfo {
     return inst;
   }
 
-  public static void setInstance(String id, String location,
-      ExecutorType executorType) {
-    inst = new ActiveServerInfo(id, location, executorType);
+  public static void setInstance(String id, String location) {
+    inst = new ActiveServerInfo(id, location);
   }
 }

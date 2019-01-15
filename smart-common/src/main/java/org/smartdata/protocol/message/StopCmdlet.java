@@ -15,18 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.smartdata.hdfs.action;
+package org.smartdata.protocol.message;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.smartdata.AgentService;
+import org.smartdata.SmartConstants;
 
-/**
- * An action to do strip level erasure code a file. Only for Hadoop 3.x.
- */
-public class StripErasureCodeFileAction extends HdfsAction {
-  private static final Logger LOG = LoggerFactory.getLogger(StripErasureCodeFileAction.class);
+public class StopCmdlet implements AgentService.Message {
+  private long cmdletId;
+
+  public StopCmdlet(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
+
+  public long getCmdletId() {
+    return cmdletId;
+  }
+
+  public void setCmdletId(long cmdletId) {
+    this.cmdletId = cmdletId;
+  }
 
   @Override
-  protected void execute() throws Exception {
+  public String getServiceName() {
+    return SmartConstants.AGENT_CMDLET_SERVICE_NAME;
   }
 }

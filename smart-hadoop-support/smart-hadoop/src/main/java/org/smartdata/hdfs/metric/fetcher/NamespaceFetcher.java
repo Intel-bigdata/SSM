@@ -24,7 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.model.ErasureCodingPolicyInfo;
 import org.smartdata.model.FileInfo;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.ingestion.IngestionTask;
@@ -38,10 +40,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import static org.smartdata.hdfs.CompatibilityHelperLoader.getHelper;
 
 public class NamespaceFetcher {
   private static final Long DEFAULT_INTERVAL = 1L;
@@ -52,6 +57,7 @@ public class NamespaceFetcher {
   private ScheduledFuture[] consumerFutures;
   private FileStatusIngester[] consumers;
   private IngestionTask[] ingestionTasks;
+  private DFSClient client;
   private MetaStore metaStore;
   private SmartConf conf;
 
@@ -93,11 +99,28 @@ public class NamespaceFetcher {
     } else {
       scheduledExecutorService = Executors.newScheduledThreadPool(numProducers + numConsumers);
     }
+    this.client = client;
     this.metaStore = metaStore;
     this.conf = conf;
   }
 
   public void startFetch() throws IOException {
+    try {
+      metaStore.deleteAllEcPolicies();
+      Map<Byte, String> idToPolicyName =
+          CompatibilityHelperLoader.getHelper().getErasureCodingPolicies(client);
+      if (idToPolicyName != null) {
+        ArrayList<ErasureCodingPolicyInfo> ecInfos = new ArrayList<>();
+        for (Byte id : idToPolicyName.keySet()) {
+          ecInfos.add(new ErasureCodingPolicyInfo(id, idToPolicyName.get(id)));
+        }
+        metaStore.insertEcPolicies(ecInfos);
+        LOG.info("Finished fetching all EC policies!");
+      }
+    } catch (MetaStoreException e) {
+      throw new IOException("Failed to clean and fetch EC policies!");
+    }
+
     try {
       metaStore.deleteAllFileInfo();
     } catch (MetaStoreException e) {
@@ -307,7 +330,8 @@ public class NamespaceFetcher {
           status.getPermission().toShort(),
           status.getOwner(),
           status.getGroup(),
-          status.getStoragePolicy());
+          status.getStoragePolicy(),
+          getHelper().getErasureCodingPolicy(status));
       return fileInfo;
     }
   }

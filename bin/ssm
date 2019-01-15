@@ -17,10 +17,6 @@
 
 Usage="ssm --config <config dir> [--daemon] [--hosts <hostA> <hostB> --hostsend] [--daemon start|stop ] [--remote] <command> <command args>"
 
-#The tikv server will fail to start or provide service if http_proxy and https_proxy are set
-unset http_proxy
-unset https_proxy
-
 SCRIPT_ARGS="$*"
 
 bin=$(dirname "${BASH_SOURCE-$0}")
@@ -111,7 +107,7 @@ addNonTestJarInDir "${SMART_HOME}/smart-agent/target"
 addJarInDir "${SMART_HOME}/lib"
 
 if [ $SSM_VERSION = "true" ]; then
-  java -cp ${SMART_CLASSPATH} org.smartdata.versioninfo.VersionInfoRead
+  java -cp ${SMART_CLASSPATH} org.smartdata.server.utils.tools.GetSsmVersionInfo
   exit 1
 fi
 

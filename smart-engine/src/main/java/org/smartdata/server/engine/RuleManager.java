@@ -34,6 +34,7 @@ import org.smartdata.model.rule.TimeBasedScheduleInfo;
 import org.smartdata.model.rule.TranslateResult;
 import org.smartdata.rule.parser.SmartRuleStringParser;
 import org.smartdata.rule.parser.TranslationContext;
+import org.smartdata.server.engine.rule.ErasureCodingPlugin;
 import org.smartdata.server.engine.rule.ExecutorScheduler;
 import org.smartdata.server.engine.rule.FileCopy2S3Plugin;
 import org.smartdata.server.engine.rule.FileCopyDrPlugin;
@@ -79,9 +80,12 @@ public class RuleManager extends AbstractService {
     this.serverContext = context;
     this.metaStore = context.getMetaStore();
 
-    RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
-    RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
-    RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context, cmdletManager));
+    if (serverContext.getServiceMode() == ServiceMode.HDFS) {
+      RuleExecutorPluginManager.addPlugin(new FileCopyDrPlugin(context.getMetaStore()));
+      RuleExecutorPluginManager.addPlugin(new FileCopy2S3Plugin());
+      RuleExecutorPluginManager.addPlugin(new SmallFilePlugin(context, cmdletManager));
+      RuleExecutorPluginManager.addPlugin(new ErasureCodingPlugin(context));
+    }
   }
 
   /**
@@ -124,7 +128,7 @@ public class RuleManager extends AbstractService {
       throw new IOException("RuleText = " + rule, e);
     }
 
-    RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore);
+    RuleInfoRepo infoRepo = new RuleInfoRepo(ruleInfo, metaStore, serverContext.getConf());
     mapRules.put(ruleInfo.getId(), infoRepo);
     submitRuleToScheduler(infoRepo.launchExecutor(this));
 
@@ -146,7 +150,7 @@ public class RuleManager extends AbstractService {
   }
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx) throws IOException {
-    SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx);
+    SmartRuleStringParser parser = new SmartRuleStringParser(rule, ctx, serverContext.getConf());
     return parser.translate();
   }
 
@@ -266,7 +270,7 @@ public class RuleManager extends AbstractService {
       LOG.error("Can not load rules from database:\n" + e.getMessage());
     }
     for (RuleInfo rule : rules) {
-      mapRules.put(rule.getId(), new RuleInfoRepo(rule, metaStore));
+      mapRules.put(rule.getId(), new RuleInfoRepo(rule, metaStore, serverContext.getConf()));
     }
     LOG.info("Initialized. Totally " + rules.size() + " rules loaded from DataBase.");
     if (LOG.isDebugEnabled()) {

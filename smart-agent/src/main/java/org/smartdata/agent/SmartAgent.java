@@ -36,6 +36,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AgentService;
+import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
@@ -47,18 +48,13 @@ import org.smartdata.server.engine.cmdlet.agent.AgentCmdletService;
 import org.smartdata.server.engine.cmdlet.agent.AgentConstants;
 import org.smartdata.server.engine.cmdlet.agent.AgentUtils;
 import org.smartdata.server.engine.cmdlet.agent.SmartAgentContext;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.AlreadyLaunchedTikv;
 import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.RegisterNewAgent;
-import org.smartdata.server.engine.cmdlet.agent.messages.AgentToMaster.ServeReady;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentRegistered;
-import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.ReadyToLaunchTikv;
 import org.smartdata.server.utils.GenericOptionsParser;
-import org.smartdata.tidb.TikvServer;
 import org.smartdata.utils.SecurityUtil;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
@@ -90,7 +86,7 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
-    RegisterNewAgent.getInstance(agentAddress + "-" + getDateString());
+    RegisterNewAgent.getInstance("SSMAgent@" + agentAddress.replaceAll(":.*$", ""));
 
     HadoopUtil.setSmartConfByHadoop(conf);
     agent.authentication(conf);
@@ -118,7 +114,9 @@ public class SmartAgent implements StatusReporter {
     UserGroupInformation.setConfiguration(conf);
 
     String keytabFilename = conf.get(SmartConfKeys.SMART_AGENT_KEYTAB_FILE_KEY);
-    String principal = conf.get(SmartConfKeys.SMART_AGENT_KERBEROS_PRINCIPAL_KEY);
+    String principalConfig = conf.get(SmartConfKeys.SMART_AGENT_KERBEROS_PRINCIPAL_KEY);
+    String principal =
+        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
 
     SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
@@ -150,7 +148,7 @@ public class SmartAgent implements StatusReporter {
     Services.start();
 
     AgentCmdletService agentCmdletService =
-            (AgentCmdletService) Services.getService(AgentCmdletService.NAME);
+            (AgentCmdletService) Services.getService(SmartConstants.AGENT_CMDLET_SERVICE_NAME);
     cmdletExecutor = agentCmdletService.getCmdletExecutor();
 
     ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
@@ -201,19 +199,6 @@ public class SmartAgent implements StatusReporter {
     @Override
     public void onReceive(Object message) throws Exception {
       unhandled(message);
-    }
-
-    public boolean launchTikv(String masterHost) throws InterruptedException, IOException {
-      String agentAddress = AgentUtils.getAgentAddress(conf);
-      InetAddress address = InetAddress.getByName(new AgentUtils.HostPort(agentAddress).getHost());
-      String ip = address.getHostAddress();
-      TikvServer tikvServer = new TikvServer(masterHost, ip, conf);
-      Thread tikvThread = new Thread(tikvServer);
-      tikvThread.start();
-      while (!tikvServer.isReady()) {
-        Thread.sleep(100);
-      }
-      return true;
     }
 
     @Override
@@ -271,7 +256,6 @@ public class SmartAgent implements StatusReporter {
     }
 
     private class WaitForRegisterAgent implements Procedure<Object> {
-
       private final Cancellable registerAgent;
 
       public WaitForRegisterAgent(Cancellable registerAgent) {
@@ -289,7 +273,6 @@ public class SmartAgent implements StatusReporter {
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
-          master.tell(new ServeReady(), getSelf());
         }
       }
     }
@@ -307,13 +290,6 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof StatusMessage) {
           master.tell(message, getSelf());
           getSender().tell("status reported", getSelf());
-        } else if (message instanceof ReadyToLaunchTikv) {
-          String masterHost = master.path().address().host().get();
-          boolean launched = launchTikv(masterHost);
-          if (launched) {
-            LOG.info("Tikv server is ready.");
-            master.tell(new AlreadyLaunchedTikv(id), getSelf());
-          }
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {

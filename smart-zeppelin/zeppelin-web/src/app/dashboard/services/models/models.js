@@ -261,7 +261,7 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('cluster/primary/utilization/' + resourceName, decoder.default)
         },
         nodes: function () {
-          return get('cluster/primary/ssmnodesinfo', decoder.nodes);
+          return get('cluster/primary/ssmnodescmdletmetrics', decoder.nodes);
         },
         notebookInfo: function () {
           return get('note/info', decoder.default)

@@ -26,15 +26,15 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 ###   For CDH 5.10.1
   
-  	`mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests`
+  	mvn clean package -Pdist,web,hadoop-cdh-2.6 -DskipTests
    
 ###   For Hadoop 2.7.3
   	
-	`mvn clean package -Pdist,web,hadoop-2.7 -DskipTests`
+	mvn clean package -Pdist,web,hadoop-2.7 -DskipTests
 
 ###   For Hadoop 3.1.0
 
-	`mvn clean package -Pdist,web,hadoop-3.1 -DskipTests`
+	mvn clean package -Pdist,web,hadoop-3.1 -DskipTests
 
 A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
 More detailed information, please refer to BUILDING.txt file.
@@ -69,7 +69,9 @@ More detailed information, please refer to BUILDING.txt file.
   ```
 
 ###   Ignore Dirs
-SSM will fetch the whole HDFS namespace when it starts by default. If you do not care about files under some directories (directories for temporary files for example) then you can configure them in the following way, SSM will completely ignore these files. Please note, actions will also not be triggered for these files by rules.
+SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about all files under some directory (for example, directory for temporary files), you can make a modification in smart-default.xml as the following shows. SSM will completely ignore the corresponding files.
+
+Please note that SSM action will not be scheduled for file under ignored directory even though they are specified in a rule by user.
 
   ```xml
    <property>
@@ -80,7 +82,9 @@ SSM will fetch the whole HDFS namespace when it starts by default. If you do not
 
 ##  **Configure Smart Server**
 
-SSM supports running multiple Smart Servers for high-availability. Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
+
+SSM also supports running one standby server with master server on a single node.
 
 Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
 
@@ -97,7 +101,7 @@ Please note, the configuration should be the same on all server hosts.
    `export SSM_JAVA_OPT="-XX:MaxHeapSize=10g"`
    It changes heap size for all SSM services, including Smart Server and Smart Agent.
 
-## **Configure Smart Agent (optional)**
+## **Configure Smart Agent (Optional)**
 
 This step can be skipped if SSM standalone mode is preferred.
   
@@ -107,12 +111,6 @@ Smart Agent specific JVM parameters can be changed through the following way in 
 `export SSM_AGENT_JAVA_OPT=<Your Parameters>`
  
 ## **Configure database**
-
-SSM currently supports MySQL and TiDB (release-1.0.0 version) as the backend to store metadata. TiDB is a distributed NewSQL database, which can provide good scalability and high availability for SSM.
-
-You just need to follow the guide in one of the two following options to configure database for SSM.
-
-###  Option 1. Use MySQL
 
 You need to install a MySQL instance first. Then open conf/druid.xml, configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password are enough.
 Please be noted that, security support will be enabled later. Here is an example for MySQL,
@@ -127,41 +125,6 @@ Please be noted that, security support will be enabled later. Here is an example
 ```
  
 `ssm` is the database name. User needs to create it manually through MySQL client.
-
-### Option 2. Use SSM-TiDB
-
-To use TiDB, three shared libraries should be built beforehand and put into ${SMART_HOME}/lib. For build guide, you can refer to https://github.com/Intel-bigdata/ssm-tidb/tree/release-1.0.0.
-
-TiDB can be enabled in smart-site.xml.
-```xml
-    <property>
-        <name>smart.tidb.enable</name>
-        <value>true</value>
-        ......
-    </property>
-```
-For SSM standalone mode, the three instances PD, TiKV and TiDB are all deployed on Smart Server host.
-For SSM with multiple agents mode, Smart Server will run PD and TiDB instance and each agent will run a TiKV instance.
-So the storage capacity of SSM-TiDB can easily be scaled up by just adding more agent server. This is a great advantage over using MySQL.
-
-If TiDB is enabled, there is no need to configure jdbc url in druid.xml. In TiDB only root user is created initially, so you should set username as root. Optionally, you can set a password for root user in druid.xml.
-
-An example of configuration in druid.xml for using TiDB is shown as follows.
-```xml
-    <properties>
-        <!-- <entry key="url">jdbc:mysql://127.0.0.1:4000/test</entry> no need to configure url for TiDB -->
-        <entry key="username">username</entry>
-        <entry key="password">password</entry>
-        ......
-    <properties>
-```
-TiDB supports the usage of MySQL shell. The way of MySQL shell connecting to TiDB server is as same as that for MySQL.
-If user password is not set in druid, by default the command to enter into MySQL shell on Smart Server is `mysql -h 127.0.0.1 -u root -P 7070`.
-The 7070 port is the default one configured for tidb.service.port in smart-default.xml.
-If you modify it, the port in the above command should also be modified accordingly.
-In TiDB, the database named ssm is used to store metadata.
-
-By default, the logs of Pd, TiKV and TiDB are under ${SMART_HOME}/logs directory. You can refer to these logs if encountering database fault.
 
 ## **Configure user account to authenticate to Web UI**
 
@@ -218,10 +181,14 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    `./bin/start-ssm.sh`
 
-   `-format` This option `should` be used in the first time starting SSM server for formatting the database. The option will drop all tables in the database configured in druid.xml and create all tables required by SSM.
+   `--help` `-h` Show the usage information.
+
+   `-format` This option is used to format the database configured for SSM use during the starting of Smart Server. All tables in this database will be dropped and then new tables will be created.
 
    `--config <config-dir>` can be used to specify where the config directory is.
    `${SMART_HOME}/conf` is the default config directory if the config option is not used.
+
+   `--debug [master] [standby] [agent]` can be used to debug different targets.
 
    If Smart Agents are configured, the start script will start the Agents one by one remotely.
    
@@ -231,11 +198,15 @@ Enter into ${SMART_HOME} directory for running SSM. You can type `./bin/ssm vers
 
    If you meet any problem, please open the smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
-##  **Start Smart Agent independently**(optional)
+##  **Start Smart Agent independently (Optional)**
 
    If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
 
    `./bin/start-agent.sh [--host .. --config ..]`
+
+   `--debug` can be used to debug smart agent.
+
+   `--help` `-h` Show the usage information.
 
    If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
    So all SSM services can be killed later.
@@ -326,7 +297,7 @@ Follow the steps to add SSM Jars to classpath
     </property>
 ```
 
-   #### Copy the Jars  
+   #### Copy the Jars
 Copy the SSM jars to the default Hadoop class path
   1. After SSM compilation is finished, all the SSM related jars is located in `/smart-dist/target/smart-data-{version}-SNAPSHOT/smart-data-{version}-SNAPSHOT/lib`.
   2. Distribute the jars starts with smart to one of default hadoop classpath in each NameNode/DataNode. For example, copy SSM jars to `$HADOOP_HOME/share/hadoop/common/lib`.
@@ -576,7 +547,11 @@ Note: To make the scripts work, you have to set up password-less SSH connections
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
- All logs will go to smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory.
+ Logs for master server will go to smartserver-master-$hostname-$user.log under ${SMART_HOME}/logs directory.
+
+ Logs for standby server will go to smartserver-standby-$hostname-$user.log under ${SMART_HOME}/logs directory.
+
+ Logs for agent will go to smartagent-$hostname-$user.log under ${SMART_HOME}/logs directory.
 
 1. Smart Server can't start successfully
 
@@ -599,6 +574,10 @@ Note: To make the scripts work, you have to set up password-less SSH connections
    2017-07-15 00:38:29,350 ERROR org.smartdata.hdfs.HdfsStatesUpdateService.checkAndMarkRunning 138: Unable to lock 'mover', please stop 'mover' first.
    2017-07-15 00:38:29,350 INFO org.smartdata.server.engine.StatesManager.initStatesUpdaterService 180: Failed to create states updater service.
 ```
+
+3. MySQL related "Specified key was too long; max key length is 767 bytes"
+
+    This problem is caused by MySQL version below requirement (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceeds 767 bytes. We have submitted several patches for this issue. But, the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL). 
 
 	 
 Notes

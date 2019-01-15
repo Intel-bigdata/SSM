@@ -24,6 +24,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.rule.TranslateResult;
 
@@ -40,6 +41,7 @@ import java.util.Map;
 public class SmartRuleStringParser {
   private String rule;
   private TranslationContext ctx = null;
+  private SmartConf conf;
 
   private static Map<String, String> optCond = new HashMap<>();
 
@@ -53,6 +55,8 @@ public class SmartRuleStringParser {
     optCond.put("cache", "not inCache");
     optCond.put("uncache", "inCache");
     optCond.put("sync", "unsynced");
+    optCond.put("ec", "1");
+    optCond.put("unec", "1");
   }
 
   List<RecognitionException> parseErrors = new ArrayList<RecognitionException>();
@@ -74,9 +78,10 @@ public class SmartRuleStringParser {
     }
   }
 
-  public SmartRuleStringParser(String rule, TranslationContext ctx) {
+  public SmartRuleStringParser(String rule, TranslationContext ctx, SmartConf conf) {
     this.rule = rule;
     this.ctx = ctx;
+    this.conf = conf;
   }
 
   public TranslateResult translate() throws IOException {
@@ -89,9 +94,24 @@ public class SmartRuleStringParser {
     if (cmdDes.getActionSize() != 1 || optCond.get(actName) == null) {
       return tr;
     }
+
+    String repl = optCond.get(actName);
+    if (cmdDes.getActionName(0).equals("ec") || cmdDes.getActionName(0).equals("unec")) {
+      String policy;
+      if (cmdDes.getActionName(0).equals("ec")) {
+        policy = cmdDes.getActionArgs(0).get("-policy");
+        if (policy == null) {
+          policy = conf.getTrimmed("dfs.namenode.ec.system.default.policy",
+              "RS-6-3-1024k");
+        }
+      } else {
+        policy = "replication";
+      }
+      repl = "ecPolicy != \"" + policy + "\"";
+    }
     int[] condPosition = tr.getCondPosition();
     String cond = rule.substring(condPosition[0], condPosition[1] + 1);
-    String optRule = rule.replace(cond, optCond.get(actName) + " and (" + cond + ")");
+    String optRule = rule.replace(cond, repl + " and (" + cond + ")");
     return doTranslate(optRule);
   }
 

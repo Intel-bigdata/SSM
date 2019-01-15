@@ -134,6 +134,12 @@
   </property>
 
   <property>
+    <name>smart.action.ec.throttle.mb</name>
+    <value>0</value>
+    <description>The throughput limit (MB) for SSM EC overall</description>
+  </property>
+
+  <property>
     <name>smart.action.local.execution.disabled</name>
     <value>false</value>
     <description>Actions will not be executed on SSM server if true.</description>
@@ -225,30 +231,6 @@
   </property>
 
   <property>
-    <name>pd.client.port</name>
-    <value>7060</value>
-    <description>Pd port in client-url option</description>
-  </property>
-
-  <property>
-    <name>pd.peer.port</name>
-    <value>7061</value>
-    <description>Pd port in peer-url option</description>
-  </property>
-
-  <property>
-    <name>tikv.service.port</name>
-    <value>20160</value>
-    <description>Tikv port in addr option</description>
-  </property>
-
-  <property>
-    <name>tidb.service.port</name>
-    <value>7070</value>
-    <description>SmartAgent master port</description>
-  </property>
-
-  <property>
     <name>smart.namespace.fetcher.ignore.unsuccessive.inotify.event</name>
     <value>false</value>
     <description>
@@ -259,9 +241,19 @@
 
   <property>
     <name>smart.cmdlet.dispatcher.log.disp.result</name>
-    <value>true</value>
+    <value>false</value>
     <description>
       Log dispatch result for each cmdlet been dispatched.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.cmdlet.dispatcher.log.disp.metrics.interval</name>
+    <value>5000</value>
+    <description>
+      Time interval in millisecond to log statistic metrics of cmdlet dispatcher.
+      If no cmdlet dispatched in the time interval, then no output for this interval.
+      Disable the logger if equals 0.
     </description>
   </property>
 </configuration>

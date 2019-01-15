@@ -30,22 +30,27 @@ import org.apache.hadoop.hdfs.protocolPB.PBHelperClient;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
+import org.apache.hadoop.hdfs.server.namenode.ErasureCodingPolicyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.StorageGroup;
+import org.smartdata.hdfs.action.move.DBlockStriped;
 
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public String[] getStorageTypes(LocatedBlock lb) {
     List<String> types = new ArrayList<>();
-    for(StorageType type : lb.getStorageTypes()) {
+    for (StorageType type : lb.getStorageTypes()) {
       types.add(type.toString());
     }
     return types.toArray(new String[types.size()]);
@@ -66,7 +71,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public String[] getMovableTypes() {
     List<String> types = new ArrayList<>();
-    for(StorageType type : StorageType.getMovableTypes()) {
+    for (StorageType type : StorageType.getMovableTypes()) {
       types.add(type.toString());
     }
     return types.toArray(new String[types.size()]);
@@ -80,7 +85,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public List<String> chooseStorageTypes(BlockStoragePolicy policy, short replication) {
     List<String> types = new ArrayList<>();
-    for(StorageType type : policy.chooseStorageTypes(replication)) {
+    for (StorageType type : policy.chooseStorageTypes(replication)) {
       types.add(type.toString());
     }
     return types;
@@ -94,7 +99,7 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
   @Override
   public DatanodeInfo newDatanodeInfo(String ipAddress, int xferPort) {
     DatanodeID datanodeID = new DatanodeID(ipAddress, null, null,
-    xferPort, 0, 0, 0);
+        xferPort, 0, 0, 0);
     DatanodeDescriptor datanodeDescriptor = new DatanodeDescriptor(datanodeID);
     return datanodeDescriptor;
   }
@@ -206,5 +211,90 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
         .feInfo(feInfo)
         .storagePolicy(storagePolicy)
         .build();
+  }
+
+  @Override
+  public byte getErasureCodingPolicy(HdfsFileStatus fileStatus) {
+    ErasureCodingPolicy erasureCodingPolicy = fileStatus.getErasureCodingPolicy();
+    // null means replication policy and its id is 0 in HDFS.
+    if (erasureCodingPolicy == null) {
+      return (byte) 0;
+    }
+    return fileStatus.getErasureCodingPolicy().getId();
+  }
+
+  @Override
+  public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {
+    if (ecPolicyName.equals(SystemErasureCodingPolicies.getReplicationPolicy().getName())) {
+      return (byte) 0;
+    }
+    for (ErasureCodingPolicyInfo policyInfo : client.getErasureCodingPolicies()) {
+      if (policyInfo.getPolicy().getName().equals(ecPolicyName)) {
+        return policyInfo.getPolicy().getId();
+      }
+    }
+    return (byte) -1;
+  }
+
+  @Override
+  public Map<Byte, String> getErasureCodingPolicies(DFSClient dfsClient) throws IOException {
+    Map<Byte, String> policies = new HashMap<>();
+    /**
+     * The replication policy is excluded by the get method of client,
+     * but it should also be put. Its id is always 0.
+     */
+    policies.put((byte) 0, SystemErasureCodingPolicies.getReplicationPolicy().getName());
+    for (ErasureCodingPolicyInfo policyInfo : dfsClient.getErasureCodingPolicies()) {
+      ErasureCodingPolicy policy = policyInfo.getPolicy();
+      policies.put(policy.getId(), policy.getName());
+    }
+    return policies;
+  }
+
+
+  @Override
+  public List<String> getStorageTypeForEcBlock(
+      LocatedBlock lb, BlockStoragePolicy policy, byte policyId) {
+    if (lb.isStriped()) {
+      //TODO: verify the current storage policy (policyID) or the target one
+      //TODO: output log for unsupported storage policy for EC block
+      if (ErasureCodingPolicyManager
+          .checkStoragePolicySuitableForECStripedMode(policyId)) {
+        return chooseStorageTypes(policy, (short) lb.getLocations().length);
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status) {
+    Block blk = lb.getBlock().getLocalBlock();
+    ErasureCodingPolicy ecPolicy = status.getErasureCodingPolicy();
+    DBlock db;
+    if (lb.isStriped()) {
+      LocatedStripedBlock lsb = (LocatedStripedBlock) lb;
+      byte[] indices = new byte[lsb.getBlockIndices().length];
+      for (int i = 0; i < indices.length; i++) {
+        indices[i] = (byte) lsb.getBlockIndices()[i];
+      }
+      db = (DBlock) new DBlockStriped(blk, indices, (short) ecPolicy.getNumDataUnits(),
+          ecPolicy.getCellSize());
+    } else {
+      db = new DBlock(blk);
+    }
+    return db;
+  }
+
+  @Override
+  public boolean isLocatedStripedBlock(LocatedBlock lb) {
+    return lb instanceof LocatedStripedBlock;
+  }
+
+  @Override
+  public DBlock getDBlock(DBlock block, StorageGroup source) {
+    if (block instanceof DBlockStriped) {
+      return ((DBlockStriped) block).getInternalBlock(source);
+    }
+    return block;
   }
 }

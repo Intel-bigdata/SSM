@@ -33,6 +33,7 @@ import org.smartdata.metastore.dao.CmdletDao;
 import org.smartdata.metastore.dao.CompressionFileDao;
 import org.smartdata.metastore.dao.DataNodeInfoDao;
 import org.smartdata.metastore.dao.DataNodeStorageInfoDao;
+import org.smartdata.metastore.dao.ErasureCodingPolicyDao;
 import org.smartdata.metastore.dao.FileDiffDao;
 import org.smartdata.metastore.dao.FileInfoDao;
 import org.smartdata.metastore.dao.FileStateDao;
@@ -44,6 +45,7 @@ import org.smartdata.metastore.dao.SmallFileDao;
 import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.StorageHistoryDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
+import org.smartdata.metastore.dao.UserInfoDao;
 import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
@@ -60,6 +62,7 @@ import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.DetailedRuleInfo;
+import org.smartdata.model.ErasureCodingPolicyInfo;
 import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffState;
@@ -73,6 +76,7 @@ import org.smartdata.model.S3FileState;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.StoragePolicy;
 import org.smartdata.model.SystemInfo;
+import org.smartdata.model.UserInfo;
 import org.smartdata.model.XAttribute;
 
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -119,10 +123,12 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private BackUpInfoDao backUpInfoDao;
   private ClusterInfoDao clusterInfoDao;
   private SystemInfoDao systemInfoDao;
+  private UserInfoDao userInfoDao;
   private FileStateDao fileStateDao;
   private CompressionFileDao compressionFileDao;
   private GeneralDao generalDao;
   private SmallFileDao smallFileDao;
+  private ErasureCodingPolicyDao ecDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -145,10 +151,12 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     backUpInfoDao = new BackUpInfoDao(pool.getDataSource());
     clusterInfoDao = new ClusterInfoDao(pool.getDataSource());
     systemInfoDao = new SystemInfoDao(pool.getDataSource());
+    userInfoDao = new UserInfoDao(pool.getDataSource());
     fileStateDao = new FileStateDao(pool.getDataSource());
     compressionFileDao = new CompressionFileDao(pool.getDataSource());
     generalDao = new GeneralDao(pool.getDataSource());
     smallFileDao = new SmallFileDao(pool.getDataSource());
+    ecDao = new ErasureCodingPolicyDao(pool.getDataSource());
   }
 
   private void initDbInfo() throws MetaStoreException {
@@ -381,6 +389,30 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public void deleteAllEcPolicies() throws MetaStoreException {
+    try {
+      ecDao.deleteAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void insertEcPolicies(List<ErasureCodingPolicyInfo> ecInfos) throws MetaStoreException {
+    try {
+      ecDao.insert(ecInfos);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public List<ErasureCodingPolicyInfo> getAllEcPolicies() throws MetaStoreException {
+    try {
+      return ecDao.getAllEcPolicies();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void deleteFileByPath(String path) throws MetaStoreException {
     try {
       fileInfoDao.deleteByPath(path);
@@ -409,7 +441,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public void insertAccessCountTable(
     AccessCountTable accessCountTable) throws MetaStoreException {
     try {
-      accessCountDao.insert(accessCountTable);
+      if (accessCountDao.getAccessCountTableByName(accessCountTable.getTableName()).isEmpty()) {
+        accessCountDao.insert(accessCountTable);
+      }
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -690,7 +724,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add a mock fileInfo
         fileInfo = new FileInfo(filePath, 0L, 0L, false,
           (short) 0, 0L, 0L, 0L, (short) 0,
-          "root", "root", (byte) 0);
+          "root", "root", (byte) 0, (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
@@ -727,7 +761,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         // Add a mock fileInfo
         fileInfo = new FileInfo(filePath, 0L, 0L, false,
           (short) 0, 0L, 0L, 0L, (short) 0,
-          "root", "root", (byte) 0);
+          "root", "root", (byte) 0, (byte) 0);
       }
       detailedFileAction.setFileLength(fileInfo.getLength());
       detailedFileAction.setFilePath(filePath);
@@ -2062,6 +2096,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public List<UserInfo> listAllUserInfo() throws MetaStoreException {
+    try {
+      return userInfoDao.getAll();
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
 
   public ClusterInfo getClusterInfoByCid(long id) throws MetaStoreException {
     try {
@@ -2080,9 +2122,27 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public UserInfo getUserInfoByUserName(
+      String name) throws MetaStoreException {
+    try {
+      // LOG.info(userInfoDao.getByUserName(name).toString());
+      return userInfoDao.getByUserName(name);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public boolean containSystemInfo(String property) throws MetaStoreException {
     try {
       return systemInfoDao.containsProperty(property);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public boolean containUserInfo(String name) throws MetaStoreException {
+    try {
+      return userInfoDao.containsUserName(name);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -2100,6 +2160,15 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     SystemInfo systemInfo) throws MetaStoreException {
     try {
       systemInfoDao.update(systemInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  public void newPassword(
+      UserInfo userInfo) throws MetaStoreException {
+    try {
+      userInfoDao.newPassword(userInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
@@ -2157,12 +2226,18 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
-  /**
-   * Insert or update fileState.
-   *
-   * @param fileState
-   * @throws MetaStoreException
-   */
+  public void insertUserInfo(UserInfo userInfo)
+      throws MetaStoreException {
+    try {
+      if (userInfoDao.containsUserName(userInfo.getUserName())) {
+        throw new Exception("The user name already exists");
+      }
+      userInfoDao.insert(userInfo);
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
   public void insertUpdateFileState(FileState fileState)
     throws MetaStoreException {
     try {

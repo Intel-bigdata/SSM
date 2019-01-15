@@ -29,11 +29,13 @@ import org.smartdata.hdfs.action.SmallFileUncompactAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -123,7 +125,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(ActionInfo actionInfo) throws IOException {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
     // check args
     if (actionInfo.getArgs() == null) {
       throw new IOException("No arguments for the action");
@@ -412,7 +415,8 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public ScheduleResult onSchedule(ActionInfo actionInfo, LaunchAction action) {
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       return getCompactScheduleResult(actionInfo);
     } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
@@ -472,7 +476,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void onActionFinished(ActionInfo actionInfo) {
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     if (actionInfo.isFinished()) {
       if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
         handleCompactActionResult(actionInfo);

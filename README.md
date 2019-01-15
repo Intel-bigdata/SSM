@@ -98,27 +98,28 @@ SSM will provide a SmartDFSClient that includes both original HDFS DFSClient API
 
 How to Build
 ------------
-Currently SSM supports 2 hadoop major versions, hadoop 2.7.X and CDH 5.10.1, which is based on 2.6.0.
-So you can build SSM with command
+Currently SSM supports CDH 5.10.1 (which is based on hadoop-2.6.0), hadoop-2.7.X and hadoop-3.1.X.
+So you can build SSM with the following commands accordingly.
 
 ```
-mvn package -P dist,hadoop-2.7
+mvn package -D skipTests -P dist,web,hadoop-cdh-2.6
 ```
 
-or
-
 ```
-mvn package -P dist,hadoop-cdh-2.6
+mvn package -D skipTests -P dist,web,hadoop-2.7
 ```
 
-Then there will be a `smart-data-${version}.tar.gz` built out under `smart-dist/target`.
+```
+mvn package -D skipTests -P dist,web,hadoop-3.1
+```
+
+Then a package named like `smart-data-${version}.tar.gz` will be generated under `smart-dist/target`.
 
 Third-party dependencies
 ------------------------
-SSM uses SQL database as its backend metastore. The following two databases were tested and recommended for using in production environment:
-**MySQL** : User have to deploy MySQL service manually.
-**TiDB** : TiDB instance can be embedded into SSM for convenience of deployment. Independent TiDB deployment is also supported.
-Please ref. [SSM Deployment Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-deployment-guide.md) for more details.
+SSM uses SQL database as its backend metastore. MySQL is used in our multiple tests and it is recommended in production environment.
+
+**MySQL** : User should deploy MySQL service in advance.
 
 Developers
 ------------
@@ -151,3 +152,6 @@ We welcome your feedback and contributions. Please feel free to fire issues or p
 Acknowledgement
 ------------
 This originates from and bases on the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). It not only thanks to all the team members of this project, but also thanks a lot to all the idea and feedback contributors.
+
+
+**For any security concenrs, please visit https://01.org/security.**

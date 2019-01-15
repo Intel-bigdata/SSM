@@ -21,8 +21,10 @@ import org.apache.hadoop.fs.XAttr;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
 import org.smartdata.metastore.MetaStore;
@@ -32,6 +34,8 @@ import org.smartdata.model.FileDiff;
 import org.smartdata.model.FileDiffType;
 import org.smartdata.model.FileInfo;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +63,7 @@ public class InotifyEventApplier {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
       List<String> gen = getSqlStatement(event);
-      if (gen != null && !gen.isEmpty()){
+      if (gen != null && !gen.isEmpty()) {
         for (String s : gen) {
           if (s != null && s.length() > 0) {
             statements.add(s);
@@ -234,6 +238,12 @@ public class InotifyEventApplier {
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
+    // The dest path which the src is renamed to should be checked in file table
+    // to avoid duplicated record for one same path.
+    FileInfo destInfo = metaStore.getFile(dest);
+    if (destInfo != null) {
+      metaStore.deleteFileByPath(dest);
+    }
     if (info == null) {
       if (status != null) {
         info = HadoopUtil.convertFileStatus(status, dest);
@@ -335,6 +345,7 @@ public class InotifyEventApplier {
             "UPDATE file SET block_replication = %s WHERE path = '%s';",
             metadataUpdateEvent.getReplication(), metadataUpdateEvent.getPath());
       case XATTRS:
+        final String EC_POLICY = "hdfs.erasurecoding.policy";
         //Todo
         if (LOG.isDebugEnabled()) {
           String message = "\n";
@@ -342,6 +353,24 @@ public class InotifyEventApplier {
             message += xAttr.toString() + "\n";
           }
           LOG.debug(message);
+        }
+        // The following code should be executed merely on HDFS3.x.
+        for (XAttr xAttr : metadataUpdateEvent.getxAttrs()) {
+          if (xAttr.getName().equals(EC_POLICY)) {
+            try {
+              String ecPolicyName = WritableUtils.readString(
+                  new DataInputStream(new ByteArrayInputStream(xAttr.getValue())));
+              byte ecPolicyId = CompatibilityHelperLoader.getHelper().
+                  getErasureCodingPolicyByName(client, ecPolicyName);
+              if (ecPolicyId == (byte) -1) {
+                LOG.error("Unrecognized EC policy for updating!");
+              }
+              return String.format("UPDATE file SET ec_policy_id = %s WHERE path = '%s'",
+                  ecPolicyId, metadataUpdateEvent.getPath());
+            } catch (IOException ex) {
+              LOG.error("Error occurred for updating ecPolicy!", ex);
+            }
+          }
         }
         break;
       case ACLS:
