@@ -63,6 +63,8 @@ public class TestCompressionAction extends MiniClusterHarness {
 //    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Zlib");
     CompressionAction compressionAction = new CompressionAction();
+    compressionAction.setDefaultDfsClient(dfsClient);
+    compressionAction.setContext(smartContext);
     compressionAction.init(args);
   }
 

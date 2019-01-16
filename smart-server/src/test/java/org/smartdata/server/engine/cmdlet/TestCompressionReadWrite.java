@@ -275,8 +275,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     // Test unsupported methods on compressed file
     try {
-      smartDFSClient.append(fileName, DEFAULT_BLOCK_SIZE,
-          EnumSet.of(CreateFlag.APPEND), null, null);
+      smartDFSClient.truncate(fileName, 10);
     } catch (IOException e) {
       Assert.assertTrue(e.getMessage().contains("Compressed"));
     }
