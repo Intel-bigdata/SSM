@@ -18,7 +18,6 @@
 package org.smartdata.server.engine.cmdlet;
 
 import org.apache.hadoop.fs.BlockLocation;
-import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
@@ -44,7 +43,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Random;
 
 public class TestCompressionReadWrite extends MiniSmartClusterHarness {
