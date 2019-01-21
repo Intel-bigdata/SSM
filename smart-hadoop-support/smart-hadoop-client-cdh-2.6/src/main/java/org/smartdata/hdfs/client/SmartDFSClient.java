@@ -155,6 +155,15 @@ public class SmartDFSClient extends DFSClient {
       }
       is = SmartInputStreamFactory.create(this, src,
           verifyChecksum, fileState);
+    } else {
+      is.close();
+      FileState fileState = getFileState(src);
+      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
+        throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
+            + fileState.getFileType());
+      }
+      is = SmartInputStreamFactory.create(this, src,
+          verifyChecksum, fileState);
     }
     reportFileAccessEvent(src);
     return is;
