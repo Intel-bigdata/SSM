@@ -36,7 +36,8 @@ public class CompressionFileState extends FileState implements Serializable {
 
   public CompressionFileState(String fileName, FileStage stage) {
     // default bufferSize=1024 * 1024
-    this(fileName, 1024 * 1024, "Zlib", 0, 0, new Long[0], new Long[0], stage);
+    // snappy, Zlib
+    this(fileName, 1024 * 1024, "snappy", 0, 0, new Long[0], new Long[0], stage);
   }
 
   public CompressionFileState(String fileName, int bufferSize) {

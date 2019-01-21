@@ -154,6 +154,7 @@ public class CompressionAction extends HdfsAction {
     LOG.warn(compressionInfoJson);
     if (compressionFileInfo.needReplace()) {
       // Add to temp path
+      // Please make sure content write to Xatte is less than 64K
       dfsClient.setXAttr(compressionFileInfo.getTempPath(),
           xAttrName, SerializationUtils.serialize(compressionFileState),
           EnumSet.of(XAttrSetFlag.CREATE));
