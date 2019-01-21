@@ -473,7 +473,7 @@ public class SmartDFSClient extends DFSClient {
         if (fileState instanceof CompactFileState) {
           throw new IOException(getExceptionMsg("Concat", "SSM Small File"));
         } else if (fileState instanceof CompressionFileState) {
-          throw new IOException(getExceptionMsg("Append", "Compressed File"));
+          throw new IOException(getExceptionMsg("Concat", "Compressed File"));
         }
       }
       throw e;
