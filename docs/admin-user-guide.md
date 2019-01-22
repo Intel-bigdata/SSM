@@ -31,7 +31,7 @@ Define Rule
 
 <span id="_Add_Reports" class="anchor"></span>A rule defines all the
 things for SSM to work, including what kind of data metrics that are involved, what
-conditions, and at what time which actions should be taken when the
+conditions, and at what time the given actions should start to execute when
 conditions are met. By defining rules, a user can easily manage their
 cluster and adjust its behavior for certain purposes.
 
@@ -131,7 +131,7 @@ Here is a rule example,
 
 *file with path matches "/fooA/\*.dat": age &gt; 30day | archive*
 
-This example defines a rule that for each file (specified before key word 'with') with path matches regular
+This example defines a rule that for each file (specified before key word 'with') whose path matches regular
 expression “/fooA/\*.dat”, if the file has been created for more than 30
 days then move the file to archive storage. The rule can be rewritten in the following way:
 
@@ -164,20 +164,21 @@ given time or within a time interval), the rule will transit to “**Finished**�
 User can disable an **“Active”** rule if he/she wants to pause the
 evaluation of the rule for the time being. Later if the user wants to enable the
 rule again, he/she can re-activate the rule, to continue the evaluation of
-the rule conditions. If there are as yet unexecuted commands associated with a rule when the user wants it disabled, the user can choose to cancel these unexecuted commands or
-continue to process/finish them. By default, the  unexecuted commands will
-be cancelled.
+the rule conditions. If there are as yet unexecuted actions associated with a disabled rule,
+user can choose to cancel these unexecuted actions or continue to process/finish them.
+By default, the  unexecuted actions will be cancelled.
 
 **Finished**:
 
-If a rule is a one-shot rule or a time-constrained rule whose time is past, the rule enters the “**Finished**” state. A finished rule can
+If a rule is a one-shot rule or a time-constrained rule whose time condition has been satisfied,
+the rule will enter the “**Finished**” state. A finished rule can
 be deleted permanently from the system.
 
 **Deleted:**
 
 It’s an ephemeral state of a rule. A rule in this state means the rule
-has already been deleted by user, but there are pending commands of this
-rule that user wants to complete. Once all pending commands are
+has already been deleted by user, but there are pending actions of this
+rule that user wants to complete. Once all pending actions are
 finished, the rule will be permanently deleted from the system.
 
 Rule Management API
@@ -208,14 +209,14 @@ updated later.
 
   List all current rules in the system, including active, disabled, finished, or deleted.
 
-* void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+* void **deleteRule**(**long** ruleID, **boolean** dropPendingCmdlets) **throws** IOException;
 
-  Delete a rule. If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted. Only “disabled” or “finished” rule can be deleted.  
+  Delete a rule. If dropPendingCmdlets is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted. Only “disabled” or “finished” rule can be deleted.
 
 * void **enableRule**(**long** ruleID) **throws** IOException;
  
-  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in another state will throw exception.
+  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in other states will throw exception.
 
-* void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+* void **disableRule**(**long** ruleID, **boolean** dropPendingCmdlets) **throws** IOException;
  
-  Disable a rule. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only an “active” rule can be disabled.
+  Disable a rule. If dropPendingCmdlets is false, the rule will be marked as “disabled” state immediately, but all the pending actions will still be executed. Only an “active” rule can be disabled.

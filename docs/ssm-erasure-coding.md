@@ -6,7 +6,7 @@
 
 #### (1) Directory case
 
-If $path is a dir, SSM will set its EC policy to the given one, which have no impact on the existed files under the directory, but can make new files stored in EC way henceforward.
+If $path is a dir, SSM will set its EC policy to the given one, which has no impact on the existed files under the directory, but can make new files stored in EC way henceforward.
 
 #### (2) File case
 

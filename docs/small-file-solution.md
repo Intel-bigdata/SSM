@@ -7,7 +7,7 @@ There are several existing solutions to handle the small file problem, including
 
 Most existing solutions may solve part of the problems well, but may be not transparent to applications, or introduce non-trivial modification into HDFS. We’d like to propose a solution to solve these HDFS small files problems in the framework of SSM on top of HDFS, based on the ideas learned from existing approaches and industry experts.
 
-In this solution, we introduce the concept of container file. A container file is a normal big HDFS file with configurable threshold size, saying 1G, which can contain hundreds or thousands of small files. The mapping between small files and container file is maintained by SSM metastore. As for the format of container file, we may consider existing Hadoop file format. SSM metastore holds the mapping information between small files and container file. The mapping maintains small file id, container file id and index info.
+In this solution, we introduce the concept of container file. A container file is a normal big HDFS file with configurable threshold size, saying 1G, which can contain hundreds or thousands of small files. As for the format of container file, we may consider existing Hadoop file format. SSM metastore holds the mapping information between small files and container file. The mapping maintains small file id, container file id and index info.
 
 Design Targets 
 ===============
@@ -16,7 +16,7 @@ The following lists the targets of this design:
 
 1. Better read performance than current average read performance of HDFS small file.
 
-2. At least equivalent with if not better than current HDFS small file write performance.
+2. At least equivalent with, if not better than, current HDFS small file write performance.
 
 3. Optimized NameNode memory usage and compact namespace.
 
@@ -25,7 +25,7 @@ The following lists the targets of this design:
 Use Cases
 =========
 
-We want to optimize and solve the small files problem in 3 cases, for both read and write. We also support compaction for existing small files in an HDFS cluster.
+We want to optimize and solve the small files problem in 3 cases, for both read and write. We also support compaction for existing small files in a HDFS cluster.
 
 ### 1. Write new small file
 
@@ -54,12 +54,12 @@ The following diagram shows the small file write flow.
 
 The following describes the writing flow.
 
-1.  SmartDFSClient firstly communicate with SSM server when
+1.  SmartDFSClient firstly communicates with SSM server when
     creating a new file. SSM server will check if the file goes to
-    directory applied with small-file-write rule. If it is a small
-    file, SSM server will execute privilege check to guarantee that
+    the directory applied with small-file-write rule. If the new file is a small
+    file, SSM server will check privilege to guarantee that
     SmartDFSClient has the privilege to write data into the directory.
-    If the privilege check fails, SSM server will return error
+    If the privilege requirement is not satisfied, SSM server will return error
     to SmartDFSClient.
 
 2.  After the privilege check is passed, SSM server will query
@@ -87,7 +87,7 @@ Other HDFS operations support
 
 In addition to write and read, we also provide many HDFS compatible operations. Some of the operations do not need to get any information from SSM server, while others may need to get file container info from meta store first or require special handling.
 
-i. Now that the original small files are truncated after compact, the meta data are still preserved in the namespace. Below shows the operations which need to get information from namespace.
+i. Now that the original small files are truncated after compact, the meta data are still preserved in the namespace. The below shows the operations which need to get information from namespace.
 
 * Get and set extended attributes: getXAttr, getXAttrs, listXAttrs, setXAttr, removeXAttr.
 * Get and check acl info: getAclStatus, checkAccess.
@@ -104,21 +104,21 @@ iii. The following operations impact small files' meta in namespace as well as m
 
 * Delete small file: delete small file in hdfs, then delete the file container info of small file in meta store.
 
-* Truncate small file: since the small file is already truncated in hdfs, the length of small file is set to zero in meta store.
+* Truncate small file: since the small file is already truncated in hdfs, only the length of small file is set to zero in meta store.
 
 > Note that the content of small file is still stored in the container file after delete or truncate.
 
 ### 2. Unsupported operations
 
-There are a number of operations, such as setAcl, which are not supported at present, but we can consider their supports in the future.
+There are a number of operations, such as setAcl, which are not supported at present, but we can consider such supports in the future.
 
-i. Operations below can be executed successfully, but the results are not accurate.
+i. The operations below can be executed successfully, but the results are not accurate.
 
 * Get and set storage policy: getStoragePolicies, setStoragePolicy.
 * Get and set cache: addCacheDirective, removeCacheDirective, listCacheDirectives, modifyCacheDirective.
 * Others: setReplication, getContentSummary.
 
-ii. Operations below are not allowed to execute.
+ii. The operations below are not allowed to execute.
 
 * Set acl: setPermission, setOwner, modifyAclEntries, removeAclEntries, setAcl, removeDefaultAcl.
 * Symlink: createSymlink, getFileLinkStatus, getLinkTarget, getFileLinkInfo.
@@ -129,13 +129,13 @@ Performance Consideration
 =========================
 
 The read performance penalty is mainly caused by random diskIO when access small-size files. To improve the small file read
-performance, Smart Agent may leverage HDFS cache mechanism to cache the whole container block once a small file content in the block is read. Most likely, the adjacent small files will be read soon by upper application, so cache ahead or read ahead may improve the read performance a lot. Generally container files will be regarded as **HOT** so policy like ALL-SSD can be used to speed up the read.
+performance, Smart Agent may leverage HDFS cache mechanism to cache the whole container block once a small file content in the block is read. Most likely, the adjacent small files will be read soon by upper application, so cache ahead or read ahead may improve the read performance a lot. Generally container files will be regarded as **HOT**, so the storage policy like ALL-SSD can be used to improve the read performance.
 
 A special case is small files batch read. In such case new APIs will be provided by SmartDFSClient, allowing applications to list small files buckets/containers and to read batch of small files in a container/bucket at a time. Some new Hadoop format based on this feature can also be considered. This case is particularly useful in deep learning training, because many small image files are fed to a training worker as a batch at a time.
 
 Security Consideration 
 =======================
 
-For now container file includes the small files which have the same acl under a folder, and the container file is saved in the same directory as small files. In this way we can ensure container file has the same acl as small files.
+For now container file includes the small files which have the same acl under a folder, and the container file is saved in the same directory as that of small files. In this way we can ensure container file has the same acl as small files.
 
-When reading small file, SSM server will check whether the user has the necessary permission to the small file, and after the privilege check passed, SSM server will use the file container info queried from meta store to read small file from the container file.
+When reading small file, SSM server will check whether the user has the read permission to the small file. After the privilege check passed, SSM server will use the file container info queried from meta store to read small file from the container file.

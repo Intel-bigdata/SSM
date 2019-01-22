@@ -47,7 +47,7 @@ For more detailed information, please refer to BUILDING.txt file.
    We need to let SSM know where Hadoop Namenode is. There are 2 cases below.
    
 ### HA-Namenode
-   open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, and fill the value field with the path of Hadoop configuration files, for example "file:///etc/hadoop/conf".
+   open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, and fill the value field with the path of Hadoop configuration directory, for example "file:///etc/hadoop/conf".
    
    ```xml   
    <property>
@@ -69,7 +69,7 @@ For more detailed information, please refer to BUILDING.txt file.
   ```
 
 ###   Ignore Dirs
-SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about files under some directory (for example, directory for temporary files), you can configure the directories to be ignored in smart-default.xml as the following shows. SSM will completely ignore the corresponding files.
+SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about files under some directory (for example, directory for temporary files), you can make the configuration in smart-default.xml to ignore these directories as the following shows. SSM will completely ignore the corresponding files.
 
 Please note that SSM action will not be scheduled for files under ignored directory even though they are specified in a rule by user.
 
@@ -88,15 +88,15 @@ SSM also supports running one standby server with master server on a single node
 
 Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
 
-The active SSM server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please use the following command to find new active SSM servers
+The active Smart Server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please use the following command to find new active Smart Server.
      `hadoop fs -cat /system/ssm.id `
 
-Please note, the configuration should be the same on all server hosts.
+Please note, the configuration should be same on all server hosts.
 
-   Optionally, JVM parameters may need to be adjusted according to resource available (such as physical memory) to achieve better performance. JVM parameters can be configured in file ${SMART_HOME}/conf/smart-env.sh.
-   Take maximum heap size setting for example. By adding the following line to the file:
+   Optionally, JVM parameters may need to be adjusted according to available resource (such as physical memory) to achieve better performance. JVM parameters can be configured in file ${SMART_HOME}/conf/smart-env.sh.
+   Take maximum heap size configuration for example. By adding the following line to the file:
    `export SSM_SERVER_JAVA_OPT="-XX:MaxHeapSize=10g"`,
-   the Smart Servers' maximum heap size can be changed to 10GB.
+   the maximum heap size for each Smart Server can be changed to 10GB.
    Also, the following line can be used instead:
    `export SSM_JAVA_OPT="-XX:MaxHeapSize=10g"`,
    which changes the maximum heap size for all SSM services, including Smart Server and Smart Agent.
@@ -105,14 +105,16 @@ Please note, the configuration should be the same on all server hosts.
 
 This step can be skipped if SSM standalone mode is preferred.
   
-Open `agents` file under ${SMART_HOME}/conf, and put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments. This configuration file is required by Smart Server to communicate with each Agent. So please make sure Smart Server can access these hosts by SSH without password.
+Open `agents` file under ${SMART_HOME}/conf, and put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+The start script will access each Smart Agent host via SSH to launch the service.
+So please make sure that login by SSH without password is configured.
 After the configuration, the Smart Agents should be installed in the same path on their respective hosts as that of Smart Server.
-Smart Agent specific JVM parameters can be changed through the following way in file ${SMART_HOME}/conf/smart-env.sh.
+The specific JVM parameters for Smart Agent can be changed through the following way in file ${SMART_HOME}/conf/smart-env.sh.
 `export SSM_AGENT_JAVA_OPT=<Your Parameters>`
  
 ## **Configure database**
 
-You need to install a MySQL instance first. Then open conf/druid.xml, and configure how SSM can access MySQL DB. Basically filling out the jdbc url, username and password is enough.
+You need to install a MySQL instance first. The jdbc url, username and password should be configured in conf/druid.xml for SSM connecting to the database.
 Please note that security support will be enabled later. Here is an example for MySQL,
 
 ```xml
@@ -132,7 +134,7 @@ By default, SSM Web UI enables user login with default user "admin" and password
     
 `[users]` section
 
-      define supported user name and password. It follows the format of username = password, role. Here is an example,
+      define supported user name and password. It follows the format of "username = password, role". Here is an example,
 
 	     admin = ssm@123, admin
 	
@@ -156,17 +158,19 @@ After finishing the SSM configuration, we can start to deploy the SSM package wi
 # Deploy SSM
 ---------------------------------------------------------------------------------
 
-SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If file move performance is not the concern, standalone service mode is enough. If better performance is desired, we recommend deploying one agent on each Datanode.
+SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If the performance is not the concern, standalone service mode is enough. If better performance is desired, we recommend deploying one agent on each Datanode.
 
 To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), please execute command `./bin/install.sh` in ${SMART_HOME}. You can use --config <config-dir> to specify where SSM's config directory is. ${SMART_HOME}/conf is the default config directory if the config option is not used.
    
    ## Standalone SSM Service
 
-For deploy standalone SSM, SSM will only start SSM server without SSM agents. Distribute `${SMART_HOME}` directory to SSM Server nodes. The configuration files are under `${SMART_HOME}/conf`.
+For deploying SSM in standalone mode, because only Smart Server needs to be launched,
+you can just distribute `${SMART_HOME}` directory to all Smart Server nodes.
+The default conf directory `${SMART_HOME}/conf`.
 
    ## SSM Service with multiple Agents
 
-Distribute `${SMART_HOME}` directory to SSM Server nodes and each Smart Agent node. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend deploying one agent on each Datanode. SSM also supports the following two cases. 1) Smart Agent is deployed on a server that does not serve as Datanode.
+Distribute `${SMART_HOME}` directory to each Smart Server node and each Smart Agent node. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend deploying one agent on each Datanode. SSM also supports the following two cases. 1) Smart Agent is deployed on a server that does not serve as Datanode.
 2) The number of Smart Agents is different from that of Datanodes.
 
 On a SSM server, user can switch to the SSM installation directory to run all SSM services.
@@ -179,7 +183,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
    
    SSM server requires HDFS superuser privilege to access some Namenode APIs. So please make sure the account you used to start SSM has the privilege.
    
-   The start process also requires that the user account used to start the SSM server is able to ssh to localhost without password.
+   It is required that the OS user is able to ssh to localhost without password for starting Smart Server.
 
    `./bin/start-ssm.sh`
 
@@ -198,7 +202,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
    `http://Active_SSM_Server_IP:7045`
 
-   If you meet any problem, please open the smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
+   If you meet any problem, please try to find trouble shooting clues in log file smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
 ##  **Start Smart Agent independently (Optional)**
 
@@ -229,7 +233,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
 # Hadoop Configuration
 ----------------------------------------------------------------------------------
-Please do the following configurations for integrating SSM with CDH 5.10.1, Apache Hadoop 2.7.3 or Apache Hadoop 3.1.0.
+Please follow the below configuration guide to integrate SSM with CDH 5.10.1, Apache Hadoop 2.7.3 or Apache Hadoop 3.1.0.
 
 **Warning: This step may lead to `Hadoop not working issue` if it's not configured correctly. So, during testing, we do not recommend changing any configurations in Hadoop.** Actually, SSM can work with an existing Hadoop cluster without any configuration change in Hadoop. Although in that case SSM cannot collect access count or data temperature from Hadoop, you can still use SSM action to change access count or data temperature. For example, you can use `read -file XXX` to change access count or data temperature of file `XXX`.
 
@@ -259,7 +263,7 @@ The value for the following property should be modified in hdfs-site.xml. This v
 
 value=executors*(agents+servers)*10,
 
-in which executors represents the value of smart.cmdlet.executors in SSM, and agents as well as servers represent the number of smart agents and servers respectively.
+in which executors_num represents the value of smart.cmdlet.executors in SSM, and agents_num and servers_num represent the number of smart agents and servers respectively.
 ```xml
     <property>
         <name>dfs.datanode.balance.max.concurrent.moves</name>
@@ -268,7 +272,7 @@ in which executors represents the value of smart.cmdlet.executors in SSM, and ag
 ```
 ### Storage volume types   
 
-Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, and below is an example which sets the RAM_DISK, SSD, DISK and Archive volumes.
+Make sure you have the correct HDFS storage type applied to HDFS DataNode storage volumes, and the below is an example which sets the RAM_DISK, SSD, DISK and Archive volumes.
 ```xml
      <property>
          <name>dfs.datanode.data.dir</name>
@@ -346,7 +350,7 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
 
     value=executors*(agents+servers)*10,
 
-    in which executors represents the value of smart.cmdlet.executors in SSM, and agents as well as servers represent the number of agents and smart servers respectively.
+    in which executors_num represents the value of smart.cmdlet.executors in SSM, and agents_num and servers_num represent the number of agents and smart servers respectively.
 
  5.    Click the Save Changes button
  6.    Restart stale Services and re-deploy the client configurations
@@ -392,7 +396,7 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
 
 ## Validate the Hadoop Configuration
      After all these steps, a cluster restart is required. After the restart, try to run some simple test to see if
-the configuration takes effect. For example, you can try TestDFSIO.
+the configuration takes effect. For example, you can try to run TestDFSIO workload.
 
  	* write data
  
@@ -402,7 +406,7 @@ the configuration takes effect. For example, you can try TestDFSIO.
 
 	  `hadoop jar ./share/hadoop/mapreduce/hadoop-mapreduce-client-jobclient-2.6.0-cdh5.10.1-tests.jar TestDFSIO –read`
 
-   You may want to replace the jar with the version used in your cluster. After the read data operation, if all the data files are listed on SSM web UI page "hot files" table, the integration works very well.
+   You may want to replace the jar with the version used in your cluster. After the read operation, if all the data files are listed in "hot files" table on SSM web UI page, it proves that the integration works very well.
 
 
 # SSM Rule Examples
@@ -428,7 +432,7 @@ then move the file to archive storage.
 	`file: path matches "/test/*.xml" | allssd`
 
 This rule will move all XML files under /test directory to SSD. In this rule, neither a
-single date nor time value is specified, and the rule will be evaluated every short time interval (5s by default).
+single date nor time interval value is specified, and the rule will be evaluated every short time interval (5s by default).
 
 ## **Specify rule evaluation interval**
 
@@ -448,9 +452,10 @@ This rule will copy files and update all namespace changes(add,delete,rename,app
 
 	`file: path matches "/test/*" and age > 90d | archive ; setReplica 1 `
 	
-SSM use ";" to separate different actions in a rule. Whether the later action will be executed depends on the execution result of the prior action. If prior action fails, the following actions will not be executed.
+In SSM rule, ";" is used to separate two or more actions. These actions are executed in sequence.
+If a prior action fails, the followed actions will not be executed.
      
-Above rule means for each file under /test directory, if its age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is not a built-in action. Users need to implement it by themselves.
+The above rule means for each file under /test directory, if its age is more than 90 days, SSM will move the file to archive storage, and set the replica to 1. "setReplica 1" is not a built-in action. Users need to implement it by themselves.
      
 Please refer to https://github.com/Intel-bigdata/SSM/blob/trunk/docs/support-new-action-guide.md for how to add a new action in SSM.
      
@@ -467,7 +472,7 @@ There are two configurable parameters which impact the SSM rule evaluation and a
 
 ### smart.rule.executors
 
-Current default value is 5, which means system will concurrently evaluate 5 rule states at the same time.
+The default value is 5, which means system will concurrently evaluate 5 rule states at the same time.
 ```xml
     <property>
         <name>smart.rule.executors</name>
@@ -477,7 +482,7 @@ Current default value is 5, which means system will concurrently evaluate 5 rule
 ```
 ### smart.cmdlet.executors
 
-Current default value is 10, which means there will be 10 actions executed concurrently at the same time.
+The default value is 10, which means there will be 10 actions executed concurrently at the same time.
 If the current configuration cannot meet your performance requirements, you can change it by defining the property in the smart-site.xml under ${SMART_HOME}/conf directory. Here is an example showing how to change the action execution parallelism to 50.
 ```xml
      <property>
@@ -487,7 +492,7 @@ If the current configuration cannot meet your performance requirements, you can 
 ```
 ## Cmdlet history purge in metastore  
 
-SSM choose to save cmdlet and action execution history in metastore for audit and log purposes. To not blow up the metastore space, SSM support periodically purging cmdlet and action execution history. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
+SSM will save cmdlet and action execution history in metastore for audit and log purposes. To avoid blowing up the metastore space, SSM supports configuration for periodically purging historical records for cmdlets and actions. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 ```xml
     <property>
         <name>smart.cmdlet.hist.max.num.records</name>
@@ -544,7 +549,7 @@ After that if you want to re-enable SmartDFSClients, the following commands can 
 or
 `./bin/enable-smartclient.sh --hostsfile <file path>`
 The arguments are the same as `disable-smartclient.sh`
-Note: To make the scripts work, you have to set up password-less SSH connections between the node that executes these scripts and the rest hosts.
+Note: To make the scripts work, you have to set up password-free SSH connections between the node that executes these scripts and the rest hosts.
 
 
 # Trouble Shooting
@@ -563,7 +568,7 @@ Note: To make the scripts work, you have to set up password-less SSH connections
    
    c. Check if there is already a SmartDaemon process running
 
-   d. Got to logs under ${SMART_HOME}/logs directory, to find any useful clues in the log file.
+   d. Check logs under ${SMART_HOME}/logs directory, to find any useful clues in the log file.
    
 2. UI can not show hot files list 
 

@@ -1,6 +1,6 @@
 # The design of Smart Server HA
 
-SSM supports the configuration of multiple Smart Servers to achieve high availability.
+SSM supports configuring multiple Smart Servers to achieve high availability.
 
 #### The details of SSM HA
 
@@ -19,7 +19,7 @@ SSM supports the configuration of multiple Smart Servers to achieve high availab
 2. HA Transition
 
    When active server is down, a standby server will take at least several seconds to transform its role to active server.
-   During this transition, we try to minimize the impact on some user's tasks. Two kinds of cmdlets are considered by SSM.
+   During this transition, we try to minimize the impact on user's task. Two kinds of cmdlets are considered by SSM.
    Their infomation is flushed to DB.
 
    1. The pending cmdlet.
@@ -31,7 +31,7 @@ SSM supports the configuration of multiple Smart Servers to achieve high availab
 
       A cmdlet can be dispatched to active server, standby server and agent.
       If a cmdlet is dispatched to active server, it will be terminated when the active server is down.
-      If a cmdlet is running on the standby server which transforms to active server, it will also terminate during the transition.
+      If a cmdlet is running on the standby server which transforms to active server, it will also be terminated during the transition.
       If a cmdlet is running on agent, it can be executed successfully.
 
       For the dispatched cmdlet, SSM can discover the crushed cmdlet through a heartbeat like mechanism.

@@ -54,7 +54,7 @@ limitations under the License.
     </tr>
     <tr>
       <td>file: every 500ms | path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
-      <td>The same as the above one except that the rule will be executed every 500ms (by
+      <td>The rule is as same as the above one except that the rule will be executed every 500ms (by
         default the time interval is 5s). In this way, the sync operation becomes more real-time.
         to real time.</td>
     </tr>
@@ -127,7 +127,7 @@ limitations under the License.
     <tbody>
     <tr>
       <td>Object property</td>
-      <td>Object property as subject of condition, refer to table4 for supported object property list</td>
+      <td>Object property as subject of condition. Refer to table4 for supported object property list</td>
       <td>-length &gt; 5MB</td>
     </tr>
     <tr>
@@ -147,7 +147,7 @@ limitations under the License.
     </tr>
     <tr>
       <td>String</td>
-      <td>Start and end with ", supporting escapes</td>
+      <td>Start and end with ", and escapes are supported</td>
       <td>-"abc", "123", "Hello word\n"</td>
     </tr>
     <tr>

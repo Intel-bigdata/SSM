@@ -9,7 +9,7 @@
   
      - b. protected abstract void execute() throws Exception
    
-        Action execution body. All action steps should be finished in this fuction.
+        Action execution body. All action steps should be provided in this function.
       
    
 2. **Register action class so that SSM knows the new defined action**
@@ -35,7 +35,8 @@
          usage = "-file " + "$file" + " -delete " +  "-override " + "-target " + "$path"; 
          )
        
-  	The user needs to define all supported parameters in the `usage` field and handle them in the `init` function. The first parameter `-file $file` is a fixed mandatory parameter for all actions. 
+  	The user needs to define all supported parameters in the `usage` field and handle them in the `init` function. The first parameter `-file $file` is a fixed mandatory parameter for most actions that
+  	require a file path to execute.
 	
 	  When the rule engine creates a new instance of an action, it will call the action's `init(Map<String, String> args)` function, and pass the matched file as the value of first parameter `-file`.
 
