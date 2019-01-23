@@ -114,7 +114,7 @@
         <module>smart-hadoop-support</module>
       </modules>
       <activation>
-        <activeByDefault>true</activeByDefault>
+        <activeByDefault>false</activeByDefault>
       </activation>
     </profile>
   </profiles>
