@@ -17,9 +17,14 @@
  */
 package org.smartdata.metastore.ingestion;
 
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileInfoBatch;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,9 +46,23 @@ public abstract class IngestionTask implements Runnable {
 
   protected long lastUpdateTime = System.currentTimeMillis();
   protected long startTime = lastUpdateTime;
+  private static List<String> fetchList;
 
   static {
-    deque.add(ROOT);
+    SmartConf conf = new SmartConf();
+    Collection<String> fetchDirs =
+        conf.getTrimmedStringCollection(SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY);
+    fetchList = new ArrayList<>(fetchDirs.size());
+    for (String dir : fetchDirs) {
+      fetchList.add(dir.endsWith("/") ? dir : dir + "/");
+    }
+    if (fetchList.isEmpty()) {
+      deque.add(ROOT);
+    } else {
+      for (String dir : fetchList) {
+        deque.add(dir);
+      }
+    }
   }
 
   public IngestionTask() {
