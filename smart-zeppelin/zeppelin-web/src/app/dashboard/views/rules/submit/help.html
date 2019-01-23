@@ -15,20 +15,20 @@ limitations under the License.
 <h3 class="text-center">Rules</h3>
 <div class="col-md-offset-1 col-md-10">
   <p>
-    A rule defines all the things for SSM to work, what kind of data metrics are involved, what
-    conditions, at what time which actions should be taken when the conditions are true.
+    A rule defines all the things for SSM to work: at what time, to analyze what kind of metrics and conditions,
+    and what actions should be taken when the conditions are met.
     <br/>
     <br/>
-    By writing rules,
-    a user can easily manage cluster and adjust its behavior for certain purposes. A rule contains 4 parts.  Here
-    is the format,
+    By defining rules,
+    a user can easily manage cluster and adjust its behavior for certain purposes. A rule contains 4 parts.
+    The format is as follows.
     <br/>
     <br/>
     Objects_to_manipulate :  Trigger | Conditions | Commands
     <br/>
     <br/>
-    Trigger part is optional.  “:” and “|” are used as the separator to separate different
-    rule part. These two characters are reserved for SSM, cannot be used in rule
+    Trigger part is optional.  “:” and “|” are used to separate different
+    rule parts. These two characters are reserved by SSM, and cannot be used in rule
     content, otherwise rule parse will fail.
     <br/>
   </p>
@@ -43,31 +43,31 @@ limitations under the License.
     <tbody>
     <tr>
       <td>file: path matches "/foo/*.dat" and accessCount(7day) &lt; 3 | archive</td>
-      <td>For each file with path matches the wildcard expression “/foo/*.dat”,
-        if the file has been read for lesser than 3 times during the last 7 days,
-        then move the file to archive storage.</td>
+      <td>For each file with path matching the wildcard expression “/foo/*.dat”,
+        if the file has been read for less than 3 times during the last 7 days,
+        move the file to archive storage.</td>
     </tr>
     <tr>
       <td>file: path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
-      <td>For each file with path matches the wildcard expression “/foo/*.dat”,
+      <td>For each file with path matching the wildcard expression “/foo/*.dat”,
         incrementally sync it into "/destdir" of HDFS cluster denoted by 'ip:port'.</td>
     </tr>
     <tr>
       <td>file: every 500ms | path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
-      <td>The same as the above one except the rule will be executed every 500ms (by
-        default the time interval is 5s). By doing this, the sync can acts more likely
+      <td>The rule is as same as the above one except that the rule will be executed every 500ms (by
+        default the time interval is 5s). In this way, the sync operation becomes more real-time.
         to real time.</td>
     </tr>
     <tr>
       <td>file: accessCount(10min) &lt; 2 | uncache; archive</td>
-      <td>If the file has been read for lesser than 2 times during the last 10 minutes,
-        then uncache it from memory and archive it.</td>
+      <td>If the file has been read for less than 2 times during the last 10 minutes,
+        uncache it from memory and archive it.</td>
     </tr>
     </tbody>
   </table>
   <br/>
   <p>
-    Detail information of each rule part are listed in following tables.
+    The following table lists detailed information of each rule part.
   </p>
   <table class="table table-bordered">
     <caption class="text-left">Table-1 Objects to manipulate</caption>
@@ -127,7 +127,7 @@ limitations under the License.
     <tbody>
     <tr>
       <td>Object property</td>
-      <td>Object property as condition subject, refer to table4 to supported object property list</td>
+      <td>Object property as subject of condition. Refer to table4 for supported object property list</td>
       <td>-length &gt; 5MB</td>
     </tr>
     <tr>
@@ -147,7 +147,7 @@ limitations under the License.
     </tr>
     <tr>
       <td>String</td>
-      <td>Start and ends with", support escapes</td>
+      <td>Start and end with ", and escapes are supported</td>
       <td>-"abc", "123", "Hello word\n"</td>
     </tr>
     <tr>
@@ -180,7 +180,7 @@ limitations under the License.
     </thead>
     <tbody>
     <tr>
-      <td rowspan="15" valign="middle">file</td>
+      <td rowspan="16" valign="middle">file</td>
       <td>accessCount(interval)</td>
       <td>ac</td>
       <td>The access counts during the last time interval.</td>
@@ -260,7 +260,6 @@ limitations under the License.
       <td>-</td>
       <td>The file is not synced.</td>
     </tr>
-
     </tbody>
   </table>
   <br/>

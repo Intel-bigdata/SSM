@@ -7,22 +7,22 @@ components.
 
 There are two sets of APIs, Admin APIs and Application APIs. Admin APIs
 are used by Hadoop cluster administrators who are responsible for managing
-SSM rules. This set of APIs includes create/delete/list/update SSM
+SSM rules. This set of APIs is used to create/delete/list/update SSM
 rules. Hadoop super user privilege is required to access Admin APIs.
 
 Application APIs are used by applications running on top of HDFS. This set
-of APIs include move/archive/cache file level operations. The system will
+of APIs is used to move/archive/cache file. The system will
 execute the file operations on behalf of the application, with the privilege of
 the user who started the application.
 
-If Application API and Admin API are in conflict, for example, they
-want to execute different operations on the same file at the same time,
+If Application API and Admin API are in conflict, for example, in the case of that they
+are executing different operations on the same file at the same time,
 Application API will precede Admin API. Application API operation will
 succeed and Admin API operation on the same file will be cancelled. This
 rule is based on the assumption that application knows more about its
 data (files) than the cluster administrator.
 
-For easily integration, the APIs are exposed via both RPC and RESTful interfaces. Users can choose the one which fits their environment.
+For easy integration, the APIs are exposed via both RPC and RESTful interfaces. Users can choose the one which fits their environment.
 
 <img src="./image/api.png" width="461" height="295" />
 
@@ -30,19 +30,19 @@ Define Rule
 -----------
 
 <span id="_Add_Reports" class="anchor"></span>A rule defines all the
-things for SSM to work, what kind of data metrics are involved, what
-conditions, at what time which actions should be taken when the
-conditions are true. By writing rules, a user can easily manage their
+things for SSM to work, including what kind of data metrics that are involved, what
+conditions, and at what time the given actions should start to execute when
+conditions are met. By defining rules, a user can easily manage their
 cluster and adjust its behavior for certain purposes.
 
-User need to define the rule first based on the requirements. A rule
+Users need to define the rule first based on the requirements. A rule
 has the following format,
 
 <img src="./image/rule-syntax.png" width="481" height="208" />
 
-A rule contains four parts, Object to manipulate, trigger, conditions
+A rule contains four parts, object to manipulate, trigger, conditions
 and commands. “:” and “|” are used as the separator to separate
-different rule part.
+different rule parts.
 
 Detailed information for each rule part is listed in the following tables.
 
@@ -131,15 +131,15 @@ Here is a rule example,
 
 *file with path matches "/fooA/\*.dat": age &gt; 30day | archive*
 
-This example defines a rule that for each file (specified before key word 'with') with path matches regular
+This example defines a rule that for each file (specified before key word 'with') whose path matches regular
 expression “/fooA/\*.dat”, if the file has been created for more than 30
-days then move the file to archive storage. The rule can be rewrited in the following way:
+days then move the file to archive storage. The rule can be rewritten in the following way:
 
 *file : path matches "/fooA/\*.dat" and age &gt; 30day | archive*
 
 The boolean expression can also be placed in condition expression.
 
-For those who not sure if the rule is defined correctly or not, an API
+For those who are not sure if the rule is defined correctly or not, an API
 is provided to check whether the rule is valid or not. Please refer to
 the Rule API section for detailed API information.
 
@@ -157,27 +157,28 @@ Once a rule is defined and submitted to SSM, the rule is in “**Active”**
 state. When a rule is in this state, SSM will regularly evaluate the
 conditions of the rule, create commands when the conditions are met and
 execute the commands. Once a rule finishes (rules that are only  checked at a
-given time or within a time interval), the rule will transition to “**Finished**” state.
+given time or within a time interval), the rule will transit to “**Finished**” state.
 
 **Disabled**:
 
 User can disable an **“Active”** rule if he/she wants to pause the
 evaluation of the rule for the time being. Later if the user wants to enable the
 rule again, he/she can re-activate the rule, to continue the evaluation of
-the rule conditions. If there are as yet unexecuted commands associated with a rule when the user at the point in time when it was disabled, the user can choose to cancel these not unexecuted commands or
-continue to process/finish them. By default, the  unexecuted commands will
-be cancelled.
+the rule conditions. If there are as yet unexecuted actions associated with a disabled rule,
+user can choose to cancel these unexecuted actions or continue to process/finish them.
+By default, the  unexecuted actions will be cancelled.
 
 **Finished**:
 
-If a rule is a one-shot rule or a time-constrained rule whose time is past, the rule enters the “**Finished**” state. A finished rule can
+If a rule is a one-shot rule or a time-constrained rule whose time condition has been satisfied,
+the rule will enter the “**Finished**” state. A finished rule can
 be deleted permanently from the system.
 
 **Deleted:**
 
 It’s an ephemeral state of a rule. A rule in this state means the rule
-has already been deleted by user, but there are pending commands of this
-rule that user would like should run to completion. Once all pending commands are
+has already been deleted by user, but there are pending actions of this
+rule that user wants to complete. Once all pending actions are
 finished, the rule will be permanently deleted from the system.
 
 Rule Management API
@@ -208,14 +209,14 @@ updated later.
 
   List all current rules in the system, including active, disabled, finished, or deleted.
 
-* void **deleteRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+* void **deleteRule**(**long** ruleID, **boolean** dropPendingCmdlets) **throws** IOException;
 
-  Delete a rule. If dropPendingCommands is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted. Only “disabled” or “finished” rule can be deleted.  
+  Delete a rule. If dropPendingCmdlets is false then the rule will still be kept in the system with “deleted” state. Once all the pending commands are finished then the rule will be deleted. Only “disabled” or “finished” rule can be deleted.
 
 * void **enableRule**(**long** ruleID) **throws** IOException;
  
-  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in another state rule will throw exception.
+  Enable a rule. Only “disabled” rules can be enabled. Enabling a rule in other states will throw exception.
 
-* void **disableRule**(**long** ruleID, **boolean** dropPendingCommands) **throws** IOException;
+* void **disableRule**(**long** ruleID, **boolean** dropPendingCmdlets) **throws** IOException;
  
-  Disable a rule. If dropPendingCommands is false then the rule will still be marked as “disabled” state while all the pending commands continue to execute to finish. Only an “active” rule can be disabled.
+  Disable a rule. If dropPendingCmdlets is false, the rule will be marked as “disabled” state immediately, but all the pending actions will still be executed. Only an “active” rule can be disabled.

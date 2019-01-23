@@ -6,12 +6,12 @@
 
 #### (1) Directory case
 
-If $path is a dir, set its EC policy to the given one, which has no impact on the existed files under it but can make new files stored in EC way henceforward.
+If $path is a dir, SSM will set its EC policy to the given one, which has no impact on the existed files under the directory, but can make new files stored in EC way henceforward.
 
 #### (2) File case
 
-If $path is a file, read the file content with append permission (for locking file, may then need read permission for read) and write into a temp file in EC way.
-The temp file is named by fileName, aidxxx and timestamp in millisecond with "_" separated /system/ssm/ec_tmp. The file attributes (owner, permission, atime, mtime, etc.) will be kept consistent.
+If $path is a file, SSM will read the file content with append permission (for locking file, read permission may be needed) and write into a temp file in EC way.
+The temp file is named by fileName, aid{aid} and timestamp in millisecond, with "_" linked between. And the temp file is stored in /system/ssm/ec_tmp directory. The file attributes (owner, permission, atime, mtime, etc.) will be kept consistent.
 After the EC temp file is created, it will be renamed to original file. So the original file will be overwritten.
 
 #### (3) EC policy
@@ -79,12 +79,12 @@ SSM can track whether a file is stored in EC way and persist such info into SSM 
 
 ### 5. Throttle for SSM EC
 
-EC can consume large resources, especially network IO. SSM has a throttle to avoid cluster overload. When a threshold is reached, SSM will delay dispatching more EC action if any.
+EC can consume large resources, especially network IO. SSM has a throttle to avoid cluster overload. When a threshold is reached, SSM will delay dispatching more EC actions if there is any.
 By default, the throttle is turned off. To make the throttle work, user needs to set a positive value for the property named `smart.action.ec.throttle.mb` in smart-default.xml.
 
 ### 6. Note
-You may see the log similar to the following from SSM when you run enormous EC tasks. Because by default HDFS enables a strategy that considers each datanode's load when writing data. If some nodes are under high loads, they will be excluded temporarily.
-HDFS will recover the corresponding blocks later. To disable this strategy, you need set the value as `false` for a property named `dfs.namenode.replication.considerLoad` in hdfs-site.xml.
+You may see the log similar to the following one from SSM when you run enormous EC tasks. Because by default HDFS enables a strategy that considers each datanode's load when writing data. If some nodes are under high loads, they will be excluded temporarily.
+HDFS will recover the corresponding blocks later. To disable this strategy, you need to set the value as `false` for a property named `dfs.namenode.replication.considerLoad` in hdfs-site.xml.
 ```
 2018-10-18 14:23:31,212 WARN org.apache.hadoop.hdfs.DFSOutputStream.logCorruptBlocks 1296: Block group <1> failed to write 1 blocks.
 ```

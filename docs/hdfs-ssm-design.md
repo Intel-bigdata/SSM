@@ -6,12 +6,13 @@ Architecture
 ------------
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/architecture.png)
 
-SSM polls metrics from NameNode. These metrics are analyzed by SSM as specified by rules, and if conditions of some rule are fulfilled then it will execute the corresponding actions. 
+SSM polls metrics from NameNode. As specified by SSM rule, some of these metrics are analyzed by SSM.
+If all conditions of a certain rule are met, SSM will trigger the corresponding actions.
 
-SSM uses SQL database to maintain data polled as well as other internal data. 
+SSM uses SQL database to maintain the polled data as well as other internal data.
 
 ### HA Support
-HA is supported. The design will be coming soon.
+HA is supported. The design will come soon.
 
 Desgin
 ------------
@@ -33,10 +34,12 @@ SSM consists of 5 chief components illustrated in the following figure:
 	* Schedule the execution of storage related actions
 	
 * ActionExecutor
-	* Execute actions generated
-	
+	* Execute generated actions
+
 ## Rules
-A rule is an interface between user and SSM, through which the user tells SSM how to function. A rule defines all the things for SSM to work: at what time, analysis what kind of metrics and conditions, and what actions should be taken when the conditions are true. By writing rules, a user can easily manage their cluster and adjust its behavior for certain purposes.
+A rule is an interface between user and SSM, through which the user tells SSM how to function. A rule defines all the things for SSM to work:
+at what time, to analyze what kind of metrics and conditions, and what actions should be taken when the conditions are met.
+By customizing SSM rules, user can easily manage the cluster and adjust the storage behavior for certain purposes.
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/usage.png)
 
 ### Rule Syntax
@@ -44,16 +47,18 @@ A rule is an interface between user and SSM, through which the user tells SSM ho
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/rule-syntax.png)
 
 ### SSM Meta Store
-SSM uses a SQL database as MetaStore to maintain data meta infos internally. Core tables in SSM:
+SSM uses a SQL database as MetaStore to maintain data meta info internally. Core tables in SSM:
 
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/core-tables.png)
 
 #### Access Count Collection
-Below is to illustrate how to collect file access counts. As shown in the following chart:
+The below section illustrates how to collect file access counts. As shown in the following chart:
 
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/access-count-tables.png)
 
 1. SSM polls accessCount data from NN to get file access count info generated in the time interval (for example, 5s).
 2. Create a table to store the info and insert the table name into table access_count_tables.
 3. Then file access count of last time interval can be calculated by accumulating data in tables that their start time and end time falls in the interval.
-4. To control the total amount of data, second-level of accessCount tables will be aggregated into minute-level, hour-level, day-level, month-level and year-level. The longer the time from now, the larger the granularity for aggregation. More accurate data kept for near now than long ago.
+4. AccessCount tables include tables in minute-level, hour-level, day-level, month-level and year-level.
+To control the total amount of data, accessCount tables of smaller time granularity will be aggregated into those of larger time granularity accordingly.
+For each time level, the amount of accessCount tables is maintained constant by deleting the outdated table when the table amount exceeds the limit.

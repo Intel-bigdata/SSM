@@ -24,7 +24,7 @@ Steps to enable authentication on WebUI
     
    * **[roles]** section
    
-      define support roles. Here is the example, 
+      define support roles. Here is an example,
    
       ```
       operator = *
@@ -33,13 +33,13 @@ Steps to enable authentication on WebUI
    
    * **[urls]** section
    
-      comment out these two lines by put "#" at the begining of the line
+      comment these two lines by putting "#" at the beginning of the line
       
       `/api/version = anon`
       
       `/** = anon`
       
-      uncomment theset two lines by remove the heading "#"
+      uncomment these two lines by removing the heading "#"
       
       `/api/interpreter/** = authc, roles[admin]`
       
@@ -57,7 +57,7 @@ For more information about security configuration, please refer to official docu
    
    `https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html`
    
-or other shiro offical documents. 
+or other shiro official documents.
 
 
 
