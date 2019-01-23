@@ -74,7 +74,7 @@ HDFS-SSM development is separated into 3 major phases. Currently the Phase 2 wor
 Phase I -- Use Cases 
 ------------
 ### 1. Cache most hot data
-When the files got very hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
+When the files get very hot, they can be moved from fast storage into cache memory to achieve the best read performance. The following shows the example of moving data to memory cache if the data has been read over 3 times during the last 5 minutes
 
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/cache-case.png)
 
@@ -84,7 +84,7 @@ When the files got very hot, they can be moved from fast storage into cache memo
 Without SSM, data may always be read from HDD. With SSM, optimizations can be made through rules. As shown in the figure above, data can be moved to faster SSD to achieve better performance.
 
 ### 3. Archive cold data
-Files are less likely to be read during the ending of lifecycle, so it is better to move these cold files into lower performance storage to decrease the cost of data storage. The following shows the example of archiving data that has not been read over 1 times during the last 90 days.
+Files are less likely to be read during the ending of lifecycle, so it is better to move these cold files into lower performance storage to decrease the cost of data storage. The following shows the example of archiving the data that has not been read during the last 90 days.
 
 ![](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/image/archive-case.png)
 
@@ -94,7 +94,7 @@ Cluster administrator takes the role of SSM rule management. A set of APIs is ex
 
 User Doc
 ------------
-SSM will provide a SmartDFSClient that includes both original HDFS DFSClient APIs and new SSM APIs. Applications can use this SmartDFSClient to benefit from the provided SSM facilities. New SSM APIs include cache file and archive file etc. More APIs will be added later. For detailed information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
+SSM provides a SmartDFSClient that includes both original HDFS DFSClient APIs and new SSM APIs. Applications can use this SmartDFSClient to benefit from the provided SSM facilities. New SSM APIs include cache file and archive file etc. More APIs will be added later. For detailed information, please refer to [User Guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/client-user-guide.md).
 
 How to Build
 ------------
@@ -147,11 +147,11 @@ Developers
 
 How to Contribute
 ------------
-We welcome your feedback and contributions. Please feel free to fire issues or push PRs, and we'll respond soon. Note that the project is evolving very fast.
+We welcome your feedback and contributions. Please feel free to submit issues or PRs, and we'll respond soon. Note that the project is evolving very fast.
 
 Acknowledgement
 ------------
-This work derives from the discussions occurred in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors of ideas and feedback.
+This work derives from the discussions in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors for their valuable ideas and feedback.
 
 
 **For any security concern, please visit https://01.org/security.**

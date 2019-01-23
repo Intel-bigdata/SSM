@@ -35,7 +35,7 @@ In SSM framework, all user preferences are represented by rules. For foreseeable
 
 ### 2. Read small file
 
-To read a small file, SSM server has the knowledge of which container file the small file is stored in. When reading the small file, SmartDFSClient will firstly query SSM server to acquire the information including corresponding container file, offset into the container file and length of the small file, then it will transfer all these information to the Smart Agent to read the data content from the DataNode.
+When reading a small file, SSM server has the knowledge of which container file the small file is stored in. SmartDFSClient will firstly query SSM server to acquire the information including corresponding container file, offset into the container file and length of the small file, then it will transfer all these information to the Smart Agent to read the data content from the DataNode.
 
 <img src="./image/small-file-read.png" />
 
@@ -65,7 +65,7 @@ The following describes the writing flow.
 2.  After the privilege check is passed, SSM server will query
     metadata store to acquire information including the suitable container file to hold the
     new small file, the offset of the container file from which to start put
-    the new content, and the SSM Agent to be the proxy to chain the
+    the new content, and the SSM Agent to be the proxy to execute the
     data writing action. SSM server then packages all these information
     into a token, and return the token to SmartDFSClient.
 

@@ -261,9 +261,9 @@ Add property `smart.server.rpc.address` to point to the installed Smart Server. 
 ```
 The value for the following property should be modified in hdfs-site.xml. This value is recommended to be set as follows.
 
-value=executors*(agents+servers)*10,
+value=executors_num*(agents_num+servers_num)*10,
 
-in which executors_num represents the value of smart.cmdlet.executors in SSM, and agents_num and servers_num represent the number of smart agents and servers respectively.
+in which executors_num, agents_num and servers_num represent the value of smart.cmdlet.executors, the number of smart agents and the number of smart servers respectively.
 ```xml
     <property>
         <name>dfs.datanode.balance.max.concurrent.moves</name>
@@ -348,9 +348,9 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
 ```
  4. In HDFS configuration, dfs.datanode.balance.max.concurrent.moves should be set by
 
-    value=executors*(agents+servers)*10,
+    value=executors_num*(agents_num+servers_num)*10,
 
-    in which executors_num represents the value of smart.cmdlet.executors in SSM, and agents_num and servers_num represent the number of agents and smart servers respectively.
+    in which executors_num, agents_num and servers_num represent the value of smart.cmdlet.executors, the number of smart agents and the number of smart servers respectively.
 
  5.    Click the Save Changes button
  6.    Restart stale Services and re-deploy the client configurations
@@ -549,7 +549,7 @@ After that if you want to re-enable SmartDFSClients, the following commands can 
 or
 `./bin/enable-smartclient.sh --hostsfile <file path>`
 The arguments are the same as `disable-smartclient.sh`
-Note: To make the scripts work, you have to set up password-free SSH connections between the node that executes these scripts and the rest hosts.
+Note: To make the scripts work, you have to set up SSH password-less connections between the node that executes these scripts and the rest hosts.
 
 
 # Trouble Shooting
@@ -584,13 +584,13 @@ Note: To make the scripts work, you have to set up password-free SSH connections
 
 3. MySQL related "Specified key was too long; max key length is 767 bytes"
 
-    This problem is caused by MySQL version belowing requirement (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceeds 767 bytes. We have submitted several patches for this issue. But the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL).
+    This problem will occur when MySQL version does not meet the requirement of SSM (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceed 767 bytes. We have submitted several patches for this issue. But the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL).
 
 	 
 Notes
 ---------------------------------------------------------------------------------
 1. If there is no SSD or Archive type disk volume configured in DataNodes, "allssd" or "archive" action will fail.
-2. When SSM starts, it will pull the whole namespace from Namenode. If the namespace is very huge, it will take long time for SSM to finish namespace synchronization. SSM may half function during this period.
+2. When SSM starts, it will pull the whole namespace from Namenode. If the namespace is very huge, it will take long time for SSM to finish namespace synchronization. SSM cannot provide complete functions during this period.
 
 
    

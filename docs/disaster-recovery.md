@@ -1,7 +1,7 @@
 Transparent Cluster Disaster Recovery
 =============
 
-Apache Hadoop is architected to operate efficiently at scale for normal hardware failures within a data center. It is not designed today to handle data center failures. Although HDFS is not designed for spanning multiple data centers, replicating data from one location to another is a common practice for disaster recovery and global service availability.
+Apache Hadoop is built to operate efficiently at scale for normal hardware failures within a data center. It is not designed today to handle data center failures. Although HDFS is not designed for spanning multiple data centers, replicating data from one location to another is a common practice for disaster recovery and global service availability.
 
 There are lots of ideas contributed to the community in the past about how to solve the notable problem, like in the issue [HDFS-5442](https://issues.apache.org/jira/browse/HDFS-5442). Ideas in HDFS-5442 enlighten us to propose a new solution, which aims to provide a practical, low latency and high throughput solution for syncing up data between clusters to guarantee disaster recovery.
 
@@ -56,7 +56,7 @@ Design Targets
 
 The targets of this design are listed below:
 
-1. Support both synchronous writing and asynchronous replication for data and namespace.
+1. Support both synchronously writing and asynchronously replicating for data and namespace.
 
 2. Configuration and management of disaster recovery feature should be simple.
 
@@ -65,27 +65,27 @@ The targets of this design are listed below:
 Architecture
 ============
 
-The basis of this solution is to have one primary Hadoop cluster and one or more secondary Hadoop clusters. Secondary cluster will be continuously updated with the data from the primary cluster in either a synchronous method or an asynchronous method. In this solution, we support both synchronous writing and asynchronous replication across data centers for both namespace and data block. The following architecture diagram shows the overall architecture of this solution.
+The basis of this solution is to have one primary Hadoop cluster and one or more secondary Hadoop clusters. Secondary cluster will be continuously updated with the data from the primary cluster in either a synchronous method or an asynchronous method. In this solution, we support both synchronously writing and asynchronously replicating across data centers for both namespace and data block. The following architecture diagram shows the overall architecture of this solution.
 
 <img src="./image/high-level-disaster-recovery-arch.png" width="481" height="408" />
 
 The following describes the flow of synchronous data writing.
 
-1.  To achieve synchronous data writing, the SmartDFSClient we provided will first write data to the primary cluster.
+1.  To achieve synchronously data writing, the SmartDFSClient we provided will first write data to the primary cluster.
 
-2.  SmartDFSClient then write data to Secondary cluster. To achieve the real synchronous data replication and control the latency,
+2.  SmartDFSClient then write data to Secondary cluster. To achieve the real synchronously data replicating and control the latency,
     SmartDFSClient will return once 1 replica (configurable) is saved in Secondary cluster.
 
-If both (1) and (2) are finished, SmartDFSClient then will return as success. If step (1) fails, then the operation will return with failure. If step (2) fails, there are two choices for user,
+If the above steps (1) and (2) are both finished, SmartDFSClient will return as success. If step (1) fails, the operation will return with failure. If step (2) fails, there are two choices for user.
 
 * Retry the action a few times(configurable), if it still fails, rollback step (1) and the operation will return with failure.
 * Tell Smart Server to start a “replicate data to Secondary cluster” asynchronous action, and return the operation with success. This is
   Step (3). Once the replication action is recorded, SmartDFSClient will return immediately.
 
-4.  SSM sever will schedule the replication action to SSM Agent which is generally installed on a Datanode.
+3.  SSM sever will schedule a replication action to SSM Agent which is near the Datanode with the blocks of the source file. This is Step (4).
 
-5.  SSM agent pull the data from primary HDFS cluster
+4.  SSM agents pull the data from primary HDFS cluster. This is Step (5).
 
-6.  SSM agent write the data to secondary HDFS cluster
+5.  SSM agents write the data to secondary HDFS cluster. This is Step (6).
 
 

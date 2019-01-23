@@ -1,5 +1,7 @@
 # SSM配置与部署
 
+#### {Fangbin Sun, Jie Tao}@China Mobile, {Feilong He, Jian Zhang}@Intel
+
 # 简介
 
 Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDFS数据的智能管理方案。SSM有如下几个重要的功能。
