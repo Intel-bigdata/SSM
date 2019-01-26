@@ -60,7 +60,9 @@ public class AlluxioUtil {
         (short) status.getMode(),
         status.getOwner(),
         status.getGroup(),
-        (byte) 0);
+        (byte) 0,
+        (byte) 0
+    );
     return fileInfo;
   }
  
