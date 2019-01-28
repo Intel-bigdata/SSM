@@ -32,6 +32,7 @@ import org.apache.hadoop.hdfs.SmartInputStreamFactory;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.CorruptFileBlocks;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -43,6 +44,7 @@ import org.smartdata.client.SmartClient;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
 
@@ -50,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -152,10 +155,95 @@ public class SmartDFSClient extends DFSClient {
       }
       is = SmartInputStreamFactory.create(this, src,
           verifyChecksum, fileState);
+    } else {
+      is.close();
+      FileState fileState = getFileState(src);
+      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
+        throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
+            + fileState.getFileType());
+      }
+      is = SmartInputStreamFactory.create(this, src,
+          verifyChecksum, fileState);
     }
     reportFileAccessEvent(src);
     return is;
   }
+
+  /*@Override
+  public LocatedBlocks getLocatedBlocks(String src, long start, long length)
+      throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.getLocatedBlocks(src, start, length);
+    }
+
+    CompressionFileState compressionInfo = smartClient.getFileCompressionInfo(src);
+    Long[] originalPos = compressionInfo.getOriginalPos().toArray(new Long[0]);
+    Long[] compressedPos = compressionInfo.getCompressedPos().toArray(new Long[0]);
+    int startIndex = compressionInfo.getPosIndexByOriginalOffset(start);
+    int endIndex = compressionInfo.getPosIndexByOriginalOffset(start + length - 1);
+    long compressedStart = compressedPos[startIndex];
+    long compressedLength = 0;
+    if (endIndex < compressedPos.length - 1) {
+      compressedLength = compressedPos[endIndex + 1] - compressedStart;
+    } else {
+      compressedLength = compressionInfo.getCompressedLength() - compressedStart;
+    }
+
+    LocatedBlocks originalLocatedBlocks = super.getLocatedBlocks(src, compressedStart, compressedLength);
+
+    List<LocatedBlock> blocks = new ArrayList<>();
+    for (LocatedBlock block : originalLocatedBlocks.getLocatedBlocks()) {
+
+      blocks.add(new LocatedBlock(
+          block.getBlock(),
+          block.getLocations(),
+          block.getStorageIDs(),
+          block.getStorageTypes(),
+          compressionInfo.getPosIndexByCompressedOffset(block.getStartOffset()),
+          block.isCorrupt(),
+          block.getCachedLocations()
+      ));
+    }
+    LocatedBlock lastLocatedBlock = originalLocatedBlocks.getLastLocatedBlock();
+    long fileLength = compressionInfo.getOriginalLength();
+
+    return new LocatedBlocks(fileLength,
+        originalLocatedBlocks.isUnderConstruction(),
+        blocks,
+        lastLocatedBlock,
+        originalLocatedBlocks.isLastBlockComplete(),
+        originalLocatedBlocks.getFileEncryptionInfo());
+  }*/
+
+  /*
+  // Not complete
+  @Override
+  public BlockLocation[] getBlockLocations(String src, long start,
+      long length) throws IOException, UnresolvedLinkException {
+    if (!isFileCompressed(src)) {
+      return super.getBlockLocations(src, start, length);
+    }
+    BlockLocation[] blockLocations = super.getBlockLocations(src, start, length);
+    return null;
+  }
+
+  @Override
+  public DirectoryListing listPaths(String src, byte[] startAfter,
+      boolean needLocation) throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.listPaths(src, startAfter, needLocation);
+    }
+    return null;
+  }
+
+  @Override
+  public HdfsFileStatus getFileInfo(String src) throws IOException {
+    if (!isFileCompressed(src)) {
+      return super.getFileInfo(src);
+    }
+    return null;
+  }
+  */
 
   @Deprecated
   @Override
@@ -176,8 +264,23 @@ public class SmartDFSClient extends DFSClient {
         out.close();
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        out.close();
+        throw new IOException(getExceptionMsg("Append", "Compressed File"));
+      }
     }
     return out;
+  }
+
+  @Override
+  public boolean truncate(String src, long newLength) throws IOException {
+    FileState fileState = getFileState(src);
+    if (fileState instanceof CompressionFileState) {
+      throw new IOException(getExceptionMsg("Append", "Compressed File"));
+    }
+    return super.truncate(src, newLength);
   }
 
   @Override
@@ -193,6 +296,12 @@ public class SmartDFSClient extends DFSClient {
         out.close();
         throw new IOException(getExceptionMsg("Append", "SSM Small File"));
       }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        out.close();
+        throw new IOException(getExceptionMsg("Append", "Compressed File"));
+      }
     }
     return out;
   }
@@ -200,11 +309,24 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public HdfsFileStatus getFileInfo(String src) throws IOException {
     HdfsFileStatus oldStatus = super.getFileInfo(src);
-    if (oldStatus != null && oldStatus.getLen() == 0) {
+    if (oldStatus == null) return null;
+    if (oldStatus.getLen() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
         return CompatibilityHelperLoader.getHelper().createHdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
+            oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
+            oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
+            oldStatus.isSymlink() ? oldStatus.getSymlinkInBytes() : null,
+            oldStatus.isEmptyLocalName() ? new byte[0] : oldStatus.getLocalNameInBytes(),
+            oldStatus.getFileId(), oldStatus.getChildrenNum(),
+            oldStatus.getFileEncryptionInfo(), oldStatus.getStoragePolicy());
+      }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        long len = ((CompressionFileState) fileState).getOriginalLength();
+        return new HdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
             oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
             oldStatus.getPermission(), oldStatus.getOwner(), oldStatus.getGroup(),
             oldStatus.isSymlink() ? oldStatus.getSymlinkInBytes() : null,
@@ -248,6 +370,62 @@ public class SmartDFSClient extends DFSClient {
           blockLocation.setOffset(blockLocation.getOffset() - offset);
         }
         return blockLocations;
+      }
+    } else {
+      FileState fileState = getFileState(src);
+      if (fileState instanceof CompressionFileState) {
+        CompressionFileState compressionInfo = (CompressionFileState) fileState;
+        Long[] originalPos =
+            compressionInfo.getOriginalPos().clone();
+        Long[] compressedPos =
+            compressionInfo.getCompressedPos().clone();
+        int startIndex = compressionInfo.getPosIndexByOriginalOffset(start);
+        int endIndex =
+            compressionInfo.getPosIndexByOriginalOffset(start + length - 1);
+        long compressedStart = compressedPos[startIndex];
+        long compressedLength = 0;
+        if (endIndex < compressedPos.length - 1) {
+          compressedLength = compressedPos[endIndex + 1] - compressedStart;
+        } else {
+          compressedLength =
+              compressionInfo.getCompressedLength() - compressedStart;
+        }
+
+        LocatedBlocks originalLocatedBlocks =
+            super.getLocatedBlocks(src, compressedStart, compressedLength);
+
+        List<LocatedBlock> blocks = new ArrayList<>();
+        for (LocatedBlock block : originalLocatedBlocks.getLocatedBlocks()) {
+          // TODO handle CDH2.6 storage type
+          // blocks.add(new LocatedBlock(
+          //     block.getBlock(),
+          //     block.getLocations(),
+          //     block.getStorageIDs(),
+          //     block.getStorageTypes(),
+          //     compressionInfo
+          //         .getPosIndexByCompressedOffset(block.getStartOffset()),
+          //     block.isCorrupt(),
+          //     block.getCachedLocations()
+          // ));
+          blocks.add(new LocatedBlock(
+              block.getBlock(),
+              block.getLocations(),
+              compressionInfo
+                  .getPosIndexByCompressedOffset(block.getStartOffset()),
+              block.isCorrupt()
+          ));
+        }
+        LocatedBlock lastLocatedBlock =
+            originalLocatedBlocks.getLastLocatedBlock();
+        long fileLength = compressionInfo.getOriginalLength();
+
+        return new LocatedBlocks(fileLength,
+            originalLocatedBlocks.isUnderConstruction(),
+            blocks,
+            lastLocatedBlock,
+            originalLocatedBlocks.isLastBlockComplete(),
+            originalLocatedBlocks.getFileEncryptionInfo())
+            .getLocatedBlocks().toArray(new BlockLocation[0]);
       }
     }
     return blockLocations;
@@ -295,6 +473,8 @@ public class SmartDFSClient extends DFSClient {
         FileState fileState = getFileState(src);
         if (fileState instanceof CompactFileState) {
           throw new IOException(getExceptionMsg("Concat", "SSM Small File"));
+        } else if (fileState instanceof CompressionFileState) {
+          throw new IOException(getExceptionMsg("Concat", "Compressed File"));
         }
       }
       throw e;

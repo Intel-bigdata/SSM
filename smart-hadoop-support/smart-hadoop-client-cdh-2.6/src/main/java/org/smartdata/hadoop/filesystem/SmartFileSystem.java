@@ -45,6 +45,8 @@ import org.apache.hadoop.util.Progressable;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.CompactFileState;
+import org.smartdata.model.CompressionFileState;
+import org.smartdata.model.CompressionTrunk;
 import org.smartdata.model.FileContainerInfo;
 import org.smartdata.model.FileState;
 
@@ -146,6 +148,12 @@ public class SmartFileSystem extends DistributedFileSystem {
         throw new IOException(
             smartDFSClient.getExceptionMsg("Append", "SSM Small File"));
       }
+    } else {
+      FileState fileState = smartDFSClient.getFileState(getPathName(f));
+      if (fileState instanceof CompressionFileState) {
+        throw new IOException(
+            smartDFSClient.getExceptionMsg("Append", "Compressed File"));
+      }
     }
     return out;
   }
@@ -169,10 +177,21 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public FileStatus getFileStatus(Path f) throws IOException {
     FileStatus oldStatus = super.getFileStatus(f);
-    if (oldStatus != null && oldStatus.getLen() == 0) {
+    if (oldStatus == null) return null;
+    if (oldStatus.getLen() == 0) {
       FileState fileState = smartDFSClient.getFileState(getPathName(f));
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
+        return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
+            oldStatus.getBlockSize(), oldStatus.getModificationTime(),
+            oldStatus.getAccessTime(), oldStatus.getPermission(),
+            oldStatus.getOwner(), oldStatus.getGroup(),
+            oldStatus.isSymlink() ? oldStatus.getSymlink() : null, oldStatus.getPath());
+      }
+    } else {
+      FileState fileState = smartDFSClient.getFileState(getPathName(f));
+      if (fileState instanceof CompressionFileState) {
+        long len = ((CompressionFileState) fileState).getOriginalLength();
         return new FileStatus(len, oldStatus.isDirectory(), oldStatus.getReplication(),
             oldStatus.getBlockSize(), oldStatus.getModificationTime(),
             oldStatus.getAccessTime(), oldStatus.getPermission(),
@@ -188,7 +207,11 @@ public class SmartFileSystem extends DistributedFileSystem {
     FileStatus[] oldStatus = super.listStatus(p);
     ArrayList<FileStatus> newStatus = new ArrayList<>(oldStatus.length);
     for (FileStatus status : oldStatus) {
-      if (status != null && status.getLen() == 0) {
+      if (oldStatus == null) {
+        newStatus.add(null);
+        continue;
+      }
+      if (status.getLen() == 0) {
         FileState fileState = smartDFSClient.getFileState(getPathName(status.getPath()));
         if (fileState instanceof CompactFileState) {
           long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
@@ -200,7 +223,16 @@ public class SmartFileSystem extends DistributedFileSystem {
           newStatus.add(status);
         }
       } else {
-        newStatus.add(status);
+        FileState fileState = smartDFSClient.getFileState(getPathName(status.getPath()));
+        if (fileState instanceof CompressionFileState) {
+          long len = ((CompressionFileState) fileState).getOriginalLength();
+          newStatus.add(new FileStatus(len, status.isDirectory(), status.getReplication(),
+              status.getBlockSize(), status.getModificationTime(), status.getAccessTime(),
+              status.getPermission(), status.getOwner(), status.getGroup(),
+              status.isSymlink() ? status.getSymlink() : null, status.getPath()));
+        } else {
+          newStatus.add(status);
+        }
       }
     }
     return newStatus.toArray(new FileStatus[oldStatus.length]);
@@ -274,6 +306,12 @@ public class SmartFileSystem extends DistributedFileSystem {
       Path target = getLinkTarget(f);
       FileState fileState = smartDFSClient.getFileState(getPathName(target));
       if (fileState instanceof CompactFileState) {
+        fileStatus = getFileStatus(target);
+      }
+    } else {
+      Path target = getLinkTarget(f);
+      FileState fileState = smartDFSClient.getFileState(getPathName(target));
+      if (fileState instanceof CompressionFileState) {
         fileStatus = getFileStatus(target);
       }
     }
@@ -595,6 +633,29 @@ public class SmartFileSystem extends DistributedFileSystem {
                   next.getPath(),
                   blockLocations);
             }
+          } else {
+            FileState fileState = smartDFSClient.getFileState(fileName);
+            if (fileState instanceof CompressionFileState) {
+              CompressionFileState compressionFileState = (CompressionFileState) fileState;
+              long fileLen = compressionFileState.getOriginalLength();
+              BlockLocation[] blockLocations =
+                  ((LocatedFileStatus)next).getBlockLocations();
+              for (BlockLocation blockLocation : blockLocations) {
+                convertBlockLocation(blockLocation, compressionFileState);
+              }
+              next = (T) new LocatedFileStatus(fileLen,
+                  next.isDirectory(),
+                  next.getReplication(),
+                  next.getBlockSize(),
+                  next.getModificationTime(),
+                  next.getAccessTime(),
+                  next.getPermission(),
+                  next.getOwner(),
+                  next.getGroup(),
+                  next.isSymlink() ? next.getSymlink() : null,
+                  next.getPath(),
+                  blockLocations);
+            }
           }
         } else {
           next = (T) fileStat.makeQualified(getUri(), p);
@@ -618,6 +679,29 @@ public class SmartFileSystem extends DistributedFileSystem {
                   next.isSymlink() ? next.getSymlink() : null,
                   next.getPath());
             }
+          } else {
+            FileState fileState = smartDFSClient.getFileState(fileName);
+            if (fileState instanceof CompressionFileState) {
+              CompressionFileState compressionFileState = (CompressionFileState) fileState;
+              long fileLen = compressionFileState.getOriginalLength();
+              BlockLocation[] blockLocations =
+                  ((LocatedFileStatus)next).getBlockLocations();
+              for (BlockLocation blockLocation : blockLocations) {
+                convertBlockLocation(blockLocation, compressionFileState);
+              }
+              next = (T) new LocatedFileStatus(fileLen,
+                  next.isDirectory(),
+                  next.getReplication(),
+                  next.getBlockSize(),
+                  next.getModificationTime(),
+                  next.getAccessTime(),
+                  next.getPermission(),
+                  next.getOwner(),
+                  next.getGroup(),
+                  next.isSymlink() ? next.getSymlink() : null,
+                  next.getPath(),
+                  blockLocations);
+            }
           }
         }
 
@@ -628,6 +712,43 @@ public class SmartFileSystem extends DistributedFileSystem {
       }
       return curStat != null;
     }
+
+    // Definitions:
+    // * Compression trunk doesn't cross over two blocks:
+    // - Offset = original start of the first trunk
+    // - End = original end of the last trunk
+    // * Compression trunk crosses over two blocks:
+    // - Offset = original middle of the first incomplete trunk
+    // - End = original middle of the last incomplete trunk
+    private void convertBlockLocation(BlockLocation blockLocation,
+        CompressionFileState compressionInfo) throws IOException {
+      long compressedStart = blockLocation.getOffset();
+      long compressedEnd = compressedStart + blockLocation.getLength() - 1;
+
+      CompressionTrunk startTrunk = compressionInfo.locateCompressionTrunk(
+          true, compressedStart);
+      CompressionTrunk endTrunk = compressionInfo.locateCompressionTrunk(
+          true, compressedEnd);
+
+      long originStart;
+      // If the first trunk crosses over two blocks, set start as middle of the trunk
+      if (startTrunk.getCompressedOffset() < compressedStart) {
+        originStart = startTrunk.getOriginOffset() + startTrunk.getOriginLength() / 2 + 1;
+      } else {
+        originStart = startTrunk.getOriginOffset();
+      }
+
+      long originEnd;
+      // If the last trunk corsses over two blocks, set end as middle of the trunk
+      if (endTrunk.getCompressedOffset() + endTrunk.getCompressedLength() - 1 > compressedEnd) {
+        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() / 2;
+      } else {
+        originEnd = endTrunk.getOriginOffset() + endTrunk.getOriginLength() - 1;
+      }
+      blockLocation.setOffset(originStart);
+      blockLocation.setLength(originEnd - originStart + 1);
+    }
+
 
     /**
      * Check if there is a next item before applying the given filter

@@ -29,10 +29,13 @@ import org.smartdata.model.ClusterConfig;
 import org.smartdata.model.ClusterInfo;
 import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
+import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.DataNodeInfo;
 import org.smartdata.model.DataNodeStorageInfo;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileState;
 import org.smartdata.model.GlobalConfig;
+import org.smartdata.model.NormalFileState;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
 import org.smartdata.model.StorageCapacity;
@@ -827,5 +830,84 @@ public class TestMetaStore extends TestDaoUtil {
     metaStore.updateAndInsertIfNotExist(systemInfo);
     Assert.assertTrue(metaStore.containSystemInfo("test"));
     Assert.assertTrue(metaStore.getSystemInfoByProperty("test").equals(systemInfo));
+  }
+
+  @Test
+  public void testInsertUpdateFileState() throws MetaStoreException {
+    // Normal file
+    FileState fileState = new NormalFileState("/test1");
+    metaStore.insertUpdateFileState(fileState);
+    Assert.assertEquals(fileState, metaStore.getFileState("/test1"));
+
+    // Compression & Processing (without compression info)
+    // fileState = new FileState("/test1", FileState.FileType.COMPRESSION,
+    //     FileState.FileStage.PROCESSING);
+    // metaStore.insertUpdateFileState(fileState);
+    // Assert.assertEquals(fileState, metaStore.getFileState("/test1"));
+
+    // Compression & Done (with compression info)
+    int bufferSize = 1024;
+    long originalLen = 100;
+    long compressedLen = 50;
+    Long[] originPos = {0L, 30L, 60L, 90L};
+    Long[] compressedPos = {0L, 13L, 30L, 41L};
+    fileState = new CompressionFileState("/test1", bufferSize, originalLen,
+        compressedLen, originPos, compressedPos);
+    metaStore.insertUpdateFileState(fileState);
+    compareCompressionInfo(fileState, metaStore.getFileState("/test1"));
+  }
+
+  private void compareCompressionInfo(FileState fileState1, FileState fileState2) {
+    Assert.assertEquals(fileState1, fileState2);
+    Assert.assertTrue(fileState1 instanceof CompressionFileState);
+    Assert.assertTrue(fileState2 instanceof CompressionFileState);
+    CompressionFileState compressionFileState1 = (CompressionFileState) fileState1;
+    CompressionFileState compressionFileState2 = (CompressionFileState) fileState2;
+    Assert.assertEquals(compressionFileState1.getBufferSize(),
+        compressionFileState2.getBufferSize());
+    Assert.assertEquals(compressionFileState1.getOriginalLength(),
+        compressionFileState2.getOriginalLength());
+    Assert.assertEquals(compressionFileState1.getCompressedLength(),
+        compressionFileState2.getCompressedLength());
+    Assert.assertArrayEquals(compressionFileState1.getOriginalPos(),
+        compressionFileState2.getOriginalPos());
+    Assert.assertArrayEquals(compressionFileState1.getCompressedPos(),
+        compressionFileState2.getCompressedPos());
+  }
+
+  @Test
+  public void testDeleteFileState() throws MetaStoreException {
+    // Normal file
+    FileState fileState1 = new NormalFileState("/test1");
+    metaStore.insertUpdateFileState(fileState1);
+    Assert.assertEquals(fileState1, metaStore.getFileState("/test1"));
+
+    // Compression & Processing (without compression info)
+    // FileState fileState2 = new FileState("/test2", FileState.FileType.COMPRESSION,
+    //     FileState.FileStage.PROCESSING);
+    // metaStore.insertUpdateFileState(fileState2);
+    // Assert.assertEquals(fileState2, metaStore.getFileState("/test2"));
+
+    // Compression & Done (with compression info)
+    int bufferSize = 1024;
+    long originalLen = 100;
+    long compressedLen = 50;
+    Long[] originPos = {0L, 30L, 60L, 90L};
+    Long[] compressedPos = {0L, 13L, 30L, 41L};
+    FileState fileState3 = new CompressionFileState("/test3", bufferSize, originalLen,
+        compressedLen, originPos, compressedPos);
+    metaStore.insertUpdateFileState(fileState3);
+    compareCompressionInfo(fileState3, metaStore.getFileState("/test3"));
+
+    // Delete /test3
+    metaStore.deleteFileState("/test3");
+    Assert.assertNull(metaStore.getCompressionInfo("/test3"));
+    Assert.assertEquals(new NormalFileState("/test3"), metaStore.getFileState("/test3"));
+
+    // Delete all
+    metaStore.deleteAllFileState();
+    Assert.assertEquals(new NormalFileState("/test1"), metaStore.getFileState("/test1"));
+    Assert.assertEquals(new NormalFileState("/test2"), metaStore.getFileState("/test2"));
+    Assert.assertEquals(new NormalFileState("/test3"), metaStore.getFileState("/test3"));
   }
 }

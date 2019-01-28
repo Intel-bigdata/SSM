@@ -35,6 +35,15 @@ message GetFileStateRequestProto {
    required string filePath = 1;
 }
 
+message CompressionFileStateProto {
+  required int32 bufferSize = 1;
+  required string compressionImpl = 2;
+  required int64 originalLength = 3;
+  required int64 compressedLength = 4;
+  repeated int64 originalPos = 5;
+  repeated int64 compressedPos = 6;
+}
+
 message FileStateProto {
   required string path = 1;
   required int32 type = 2;
@@ -42,9 +51,6 @@ message FileStateProto {
   optional CompressionFileStateProto compressionFileState = 4;
   optional CompactFileStateProto compactFileState = 5;
   optional S3FileStateProto s3FileState = 6;
-}
-
-message CompressionFileStateProto {
 }
 
 message CompactFileStateProto {

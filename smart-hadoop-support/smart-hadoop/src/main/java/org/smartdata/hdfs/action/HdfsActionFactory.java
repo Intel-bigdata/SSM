@@ -64,6 +64,7 @@ public class HdfsActionFactory extends AbstractActionFactory {
     addAction(MergeFileAction.class);
     addAction(MetaDataAction.class);
     addAction(Copy2S3Action.class);
+    addAction(CompressionAction.class);
     addAction(TruncateAction.class);
     addAction(Truncate0Action.class);
     addAction(SmallFileCompactAction.class);

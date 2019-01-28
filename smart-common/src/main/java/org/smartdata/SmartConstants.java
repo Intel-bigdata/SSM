@@ -29,6 +29,7 @@ public class SmartConstants {
         + "org.smartdata.hdfs.scheduler.CopyScheduler, "
         + "org.smartdata.hdfs.scheduler.Copy2S3Scheduler,"
         + "org.smartdata.hdfs.scheduler.SmallFileScheduler,"
+        + "org.smartdata.hdfs.scheduler.CompressionScheduler,"
         + "org.smartdata.hdfs.scheduler.ErasureCodingScheduler";
 
   public static final String SMART_HDFS_LAST_INOTIFY_TXID =

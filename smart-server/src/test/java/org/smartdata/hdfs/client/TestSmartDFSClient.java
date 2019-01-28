@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.server.MiniSmartClusterHarness;
@@ -36,13 +35,6 @@ import java.util.Map;
 import java.util.Random;
 
 public class TestSmartDFSClient extends MiniSmartClusterHarness {
-
-  @Before
-  @Override
-  public void init() throws Exception {
-    super.init();
-    createSmallFiles();
-  }
 
   private void createSmallFiles() throws Exception {
     Path path = new Path("/test/small_files/");
@@ -57,7 +49,7 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
       out.write(buf, 0, (int) fileLen);
       out.close();
     }
-
+    // Compact small files
     SmallFileCompactAction smallFileCompactAction = new SmallFileCompactAction();
     smallFileCompactAction.setDfsClient(dfsClient);
     smallFileCompactAction.setContext(smartContext);
@@ -73,8 +65,9 @@ public class TestSmartDFSClient extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void test() throws Exception {
+  public void testSmallFile() throws Exception {
     waitTillSSMExitSafeMode();
+    createSmallFiles();
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     BlockLocation[] blockLocations = smartDFSClient.getBlockLocations(
         "/test/small_files/file_0", 0, 30);

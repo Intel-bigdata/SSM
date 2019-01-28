@@ -256,4 +256,12 @@
       Disable the logger if equals 0.
     </description>
   </property>
+
+  <property>
+    <name>smart.compression.impl</name>
+    <value>Zlib</value>
+    <description>
+      Default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
+    </description>
+  </property>
 </configuration>

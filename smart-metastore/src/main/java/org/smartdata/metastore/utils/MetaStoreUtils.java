@@ -87,6 +87,7 @@ public class MetaStoreUtils {
             "cluster_info",
             "backup_file",
             "file_state",
+            "compression_file",
             "small_file",
             "user_info"
   };
@@ -335,9 +336,18 @@ public class MetaStoreUtils {
               + ") ;",
           "CREATE INDEX backup_file_rid_idx ON backup_file (rid);",
           "CREATE TABLE file_state (\n"
-              + " path varchar(1000) PRIMARY KEY,\n"
+              + " path varchar(512) PRIMARY KEY,\n"
               + " type tinyint(4) NOT NULL,\n"
               + " stage tinyint(4) NOT NULL\n"
+              + ");",
+          "CREATE TABLE compression_file (\n"
+              + " path varchar(512) PRIMARY KEY,\n"
+              + " buffer_size int(11) NOT NULL,\n"
+              + " compression_impl varchar(64) NOT NULL,\n"
+              + " original_length bigint(20) NOT NULL,\n"
+              + " compressed_length bigint(20) NOT NULL,\n"
+              + " originalPos text NOT NULL,\n"
+              + " compressedPos text NOT NULL\n"
               + ");",
           "CREATE TABLE small_file (\n"
               + "path varchar(1000) NOT NULL PRIMARY KEY,\n"

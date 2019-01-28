@@ -28,7 +28,8 @@ import org.smartdata.model.CmdletDescriptor;
 public abstract class HdfsAction extends SmartAction {
   public static final String FILE_PATH = CmdletDescriptor.HDFS_FILE_PATH;
   protected ActionType actionType;
-  protected DFSClient dfsClient;
+  // SmartDFSClient
+  protected DFSClient dfsClient = null;
 
   public void setDfsClient(DFSClient dfsClient) {
     this.dfsClient = dfsClient;
