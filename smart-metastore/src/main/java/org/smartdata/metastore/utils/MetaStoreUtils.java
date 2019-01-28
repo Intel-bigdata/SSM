@@ -341,7 +341,7 @@ public class MetaStoreUtils {
               + " stage tinyint(4) NOT NULL\n"
               + ");",
           "CREATE TABLE compression_file (\n"
-              + " file_name varchar(512) PRIMARY KEY,\n"
+              + " path varchar(512) PRIMARY KEY,\n"
               + " buffer_size int(11) NOT NULL,\n"
               + " compression_impl varchar(64) NOT NULL,\n"
               + " original_length bigint(20) NOT NULL,\n"

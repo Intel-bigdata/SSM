@@ -2403,7 +2403,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    */
   private synchronized void deleteCompressedFile(String fileName)
       throws MetaStoreException {
-    compressionFileDao.deleteByName(fileName);
+    compressionFileDao.deleteByPath(fileName);
   }
 
   /**
@@ -2425,7 +2425,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   public synchronized CompressionFileState getCompressionInfo(
       String fileName) throws MetaStoreException {
     try {
-      return compressionFileDao.getInfoByName(fileName);
+      return compressionFileDao.getInfoByPath(fileName);
     } catch (EmptyResultDataAccessException e) {
       return null;
     } catch (Exception e) {

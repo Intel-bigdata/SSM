@@ -58,7 +58,7 @@ public class CompressionFileDao {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     Gson gson = new Gson();
     String sql = "REPLACE INTO " + TABLE_NAME
-        + "(file_name, buffer_size, compression_impl, "
+        + "(path, buffer_size, compression_impl, "
         + "original_length, compressed_length, originalPos, compressedPos)"
         + " VALUES(?,?,?,?,?,?,?);";
     jdbcTemplate.update(sql, compressionInfo.getPath(),
@@ -70,10 +70,10 @@ public class CompressionFileDao {
         gson.toJson(compressionInfo.getCompressedPos()));
   }
 
-  public void deleteByName(String fileName) {
+  public void deleteByPath(String filePath) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE file_name = ?";
-    jdbcTemplate.update(sql, fileName);
+    final String sql = "DELETE FROM " + TABLE_NAME + " WHERE path = ?";
+    jdbcTemplate.update(sql, filePath);
   }
 
   public void deleteAll() {
@@ -88,10 +88,10 @@ public class CompressionFileDao {
         new CompressFileRowMapper());
   }
 
-  public CompressionFileState getInfoByName(String fileName) {
+  public CompressionFileState getInfoByPath(String filePath) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE file_name = ?",
-        new Object[]{fileName}, new CompressFileRowMapper());
+    return jdbcTemplate.queryForObject("SELECT * FROM " + TABLE_NAME + " WHERE path = ?",
+        new Object[]{filePath}, new CompressFileRowMapper());
   }
 
   private Map<String, Object> toMap(CompressionFileState compressionInfo) {
@@ -101,7 +101,7 @@ public class CompressionFileDao {
     Long[] compressedPos = compressionInfo.getCompressedPos();
     String originalPosGson = gson.toJson(originalPos);
     String compressedPosGson = gson.toJson(compressedPos);
-    parameters.put("file_name", compressionInfo.getPath());
+    parameters.put("path", compressionInfo.getPath());
     parameters.put("buffer_size", compressionInfo.getBufferSize());
     parameters.put("compression_impl", compressionInfo.getCompressionImpl());
     parameters.put("original_length", compressionInfo.getOriginalLength());
@@ -121,7 +121,7 @@ public class CompressionFileDao {
       Long[] compressedPos = gson.fromJson(compressedPosGson, new TypeToken<Long[]>(){}.getType());
       CompressionFileState compressionInfo =
           CompressionFileState.newBuilder()
-          .setFileName(resultSet.getString("file_name"))
+          .setFileName(resultSet.getString("path"))
           .setBufferSize(resultSet.getInt("buffer_size"))
           .setCompressImpl(resultSet.getString("compression_impl"))
           .setOriginalLength(resultSet.getLong("original_length"))

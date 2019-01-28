@@ -58,11 +58,11 @@ public class TestCompressionFileDao extends TestDaoUtil {
 
     //insert test
     compressionFileDao.insert(compressionInfo);
-    Assert.assertTrue(compressionFileDao.getInfoByName("/test").
+    Assert.assertTrue(compressionFileDao.getInfoByPath("/test").
       getOriginalPos()[0].equals(9000L));
 
     //delete test
-    compressionFileDao.deleteByName("/test");
+    compressionFileDao.deleteByPath("/test");
     Assert.assertTrue(compressionFileDao.getAll().size() == 0);
   }
 
@@ -74,14 +74,14 @@ public class TestCompressionFileDao extends TestDaoUtil {
 
     //insert test
     compressionFileDao.insertUpdate(compressionInfo);
-    Assert.assertTrue(compressionFileDao.getInfoByName("/test").
+    Assert.assertTrue(compressionFileDao.getInfoByPath("/test").
         getOriginalPos()[0].equals(9000L));
 
     //update test
     compressionInfo.setOriginalLength(1000);
     compressionInfo.setCompressedLength(100);
     compressionFileDao.insertUpdate(compressionInfo);
-    CompressionFileState newCompressionInfo = compressionFileDao.getInfoByName("/test");
+    CompressionFileState newCompressionInfo = compressionFileDao.getInfoByPath("/test");
     Assert.assertEquals(compressionInfo.getOriginalLength(),
         newCompressionInfo.getOriginalLength());
     Assert.assertEquals(compressionInfo.getCompressedLength(),
@@ -101,7 +101,7 @@ public class TestCompressionFileDao extends TestDaoUtil {
 
     compressionFileDao.insert(compressionInfo);
     compressionFileDao.insert(compressionInfo2);
-    CompressionFileState dbcompressionInfo = compressionFileDao.getInfoByName("/test1");
+    CompressionFileState dbcompressionInfo = compressionFileDao.getInfoByPath("/test1");
 
     Assert.assertTrue(dbcompressionInfo.getPath().equals("/test1"));
     Assert.assertTrue(dbcompressionInfo.getBufferSize() == 131072);

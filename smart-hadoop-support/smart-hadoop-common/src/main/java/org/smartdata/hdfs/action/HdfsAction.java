@@ -37,7 +37,4 @@ public abstract class HdfsAction extends SmartAction {
     this.dfsClient = dfsClient;
   }
 
-  public void setDefaultDfsClient(DFSClient dfsClient) {
-    this.defaultDfsClient = dfsClient;
-  }
 }

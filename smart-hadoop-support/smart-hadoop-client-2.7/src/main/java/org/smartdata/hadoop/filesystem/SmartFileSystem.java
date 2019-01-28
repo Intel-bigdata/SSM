@@ -180,7 +180,8 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public FileStatus getFileStatus(Path f) throws IOException {
     FileStatus oldStatus = super.getFileStatus(f);
-    if (oldStatus != null && oldStatus.getLen() == 0) {
+    if (oldStatus == null) return null;
+    if (oldStatus.getLen() == 0) {
       FileState fileState = smartDFSClient.getFileState(getPathName(f));
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
@@ -209,7 +210,11 @@ public class SmartFileSystem extends DistributedFileSystem {
     FileStatus[] oldStatus = super.listStatus(p);
     ArrayList<FileStatus> newStatus = new ArrayList<>(oldStatus.length);
     for (FileStatus status : oldStatus) {
-      if (status != null && status.getLen() == 0) {
+      if (status == null) {
+        newStatus.add(null);
+        continue;
+      }
+      if (status.getLen() == 0) {
         FileState fileState = smartDFSClient.getFileState(getPathName(status.getPath()));
         if (fileState instanceof CompactFileState) {
           long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();

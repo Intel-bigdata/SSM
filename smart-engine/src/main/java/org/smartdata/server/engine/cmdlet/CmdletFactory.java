@@ -17,7 +17,6 @@
  */
 package org.smartdata.server.engine.cmdlet;
 
-import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
@@ -83,11 +82,6 @@ public class CmdletFactory {
                     HadoopUtil.getNameNodeUri(smartContext.getConf()),
                     smartContext.getConf(),
                     getRpcServerAddress()));
-        ((HdfsAction) smartAction)
-            .setDefaultDfsClient(
-                new DFSClient(
-                    HadoopUtil.getNameNodeUri(smartContext.getConf()),
-                    smartContext.getConf()));
       } catch (IOException e) {
         LOG.error("smartAction aid={} setDfsClient error", launchAction.getActionId(), e);
         throw new ActionException(e);

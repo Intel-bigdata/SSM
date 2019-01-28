@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -32,6 +33,7 @@ import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.CompressionFileState;
+import org.smartdata.model.LaunchAction;
 
 import java.io.IOException;
 import java.net.URI;
@@ -95,6 +97,25 @@ public class CompressionScheduler extends ActionSchedulerService {
     LOG.debug("File " + path + " doesn't support compression action. "
         + "Type: " + fileState.getFileType() + "; Stage: " + fileState.getFileStage());
     return false;
+  }
+
+  private String createTmpName(LaunchAction action) {
+    String path = action.getArgs().get(HdfsAction.FILE_PATH);
+    String fileName;
+    int index = path.lastIndexOf("/");
+    if (index == path.length() - 1) {
+      index = path.substring(0, path.length() - 1).indexOf("/");
+      fileName = path.substring(index + 1, path.length() - 1);
+    } else {
+      fileName = path.substring(index + 1, path.length());
+    }
+    /**
+     * The dest tmp file is under EC_DIR and
+     * named by fileName, aidxxx and current time in millisecond with "_" separated
+     */
+    String tmpName = fileName + "_" + "aid" + action.getActionId() +
+        "_" + System.currentTimeMillis();
+    return tmpName;
   }
 
   @Override

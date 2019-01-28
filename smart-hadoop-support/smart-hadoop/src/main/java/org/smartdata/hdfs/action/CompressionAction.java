@@ -63,6 +63,7 @@ public class CompressionAction extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
   private static List<String> compressionImplList = Arrays.asList("Lz4","Bzip2","Zlib","snappy");
+  private static final String COMPRESS_DIR = "/system/ssm/compress_tmp/";
 
   private String filePath;
   private Configuration conf;
@@ -119,7 +120,8 @@ public class CompressionAction extends HdfsAction {
     if (srcFile.getLen() == 0) {
       compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
     } else {
-      String tempPath = "/tmp/ssm" + filePath + "." + System.currentTimeMillis() + ".ssm_compression";
+      String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + getActionId() +
+          "_" + System.currentTimeMillis();
       short replication = srcFile.getReplication();
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();

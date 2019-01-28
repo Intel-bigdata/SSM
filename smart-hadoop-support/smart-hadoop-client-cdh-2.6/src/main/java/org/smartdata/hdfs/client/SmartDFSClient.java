@@ -208,7 +208,8 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public HdfsFileStatus getFileInfo(String src) throws IOException {
     HdfsFileStatus oldStatus = super.getFileInfo(src);
-    if (oldStatus != null && oldStatus.getLen() == 0) {
+    if (oldStatus == null) return null;
+    if (oldStatus.getLen() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
         long len = ((CompactFileState) fileState).getFileContainerInfo().getLength();
