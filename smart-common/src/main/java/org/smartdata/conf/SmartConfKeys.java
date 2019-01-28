@@ -48,7 +48,6 @@ public class SmartConfKeys {
   public static final String SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_KEY =
       "smart.namespace.fetcher.consumers.num";
   public static final int SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_DEFAULT = 3;
-  public static final String SMART_NAMESPACE_FETCHER_DIRS_KEY = "smart.fetch.dirs";
 
   // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
@@ -174,9 +173,14 @@ public class SmartConfKeys {
   /**
    * Namespace, access info and other info related to files under these dirs will be ignored.
    * Clients will not report access event of these files to SSM.
-   * Directories are separated with ','.
+   * For more than one directories, they should be separated by ",".
    */
   public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
+  /**
+   * Namespace, access info and other info related to files under these dirs will be fetched only.
+   * For more than one directories, they should be separated by ",".
+   */
+  public static final String SMART_NAMESPACE_FETCHER_DIRS_KEY = "smart.fetch.dirs";
 
   // Target cluster
   public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =

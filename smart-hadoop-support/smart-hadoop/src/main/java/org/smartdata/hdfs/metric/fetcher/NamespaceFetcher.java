@@ -286,6 +286,8 @@ public class NamespaceFetcher {
           if (startAfter != null) {
             pendingParent = parent;
           }
+        } else {
+          LOG.warn("Configured directory does not exist");
         }
       } catch (IOException | InterruptedException e) {
         startAfter = null;

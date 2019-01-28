@@ -36,16 +36,16 @@
     <value></value>
     <description>
       SSM will completely ignore files under the given directories.
-      Directories are separated by ','.
+      For more than one directories, they should be separated by ",".
     </description>
   </property>
 
   <property>
     <name>smart.fetch.dirs</name>
-    <value>/morui</value>
+    <value></value>
     <description>
       SSM will only fetch files under the given directories.
-      Directories are separated by ','.
+      For more than one directories, they should be separated by ",".
     </description>
   </property>
 
