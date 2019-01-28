@@ -30,8 +30,6 @@ public abstract class HdfsAction extends SmartAction {
   protected ActionType actionType;
   // SmartDFSClient
   protected DFSClient dfsClient = null;
-  // DFSClient
-  protected DFSClient defaultDfsClient = null;
 
   public void setDfsClient(DFSClient dfsClient) {
     this.dfsClient = dfsClient;

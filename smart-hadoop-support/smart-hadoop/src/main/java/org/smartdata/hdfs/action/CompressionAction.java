@@ -63,7 +63,7 @@ public class CompressionAction extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
   private static List<String> compressionImplList = Arrays.asList("Lz4","Bzip2","Zlib","snappy");
-  private static final String COMPRESS_DIR = "/system/ssm/compress_tmp/";
+  private static final String COMPRESS_DIR = "/system/ssm/compress_tmp";
 
   private String filePath;
   private Configuration conf;
@@ -110,11 +110,11 @@ public class CompressionAction extends HdfsAction {
     appendLog(
         String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
 
-    if (!defaultDfsClient.exists(filePath)) {
+    if (!dfsClient.exists(filePath)) {
       throw new ActionException("ReadFile Action fails, file doesn't exist!");
     }
     // Generate compressed file
-    HdfsFileStatus srcFile = defaultDfsClient.getFileInfo(filePath);
+    HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     compressionFileState = new CompressionFileState(filePath, bufferSize, compressionImpl);
     compressionFileState.setOriginalLength(srcFile.getLen());
     if (srcFile.getLen() == 0) {
@@ -140,12 +140,12 @@ public class CompressionAction extends HdfsAction {
       }
       bufferSize = Math.max(Math.max(UserDefinedbuffersize, Calculatedbuffersize), bufferSize);
 
-      DFSInputStream dfsInputStream = defaultDfsClient.open(filePath);
+      DFSInputStream dfsInputStream = dfsClient.open(filePath);
 
-      OutputStream compressedOutputStream = defaultDfsClient.create(tempPath,
+      OutputStream compressedOutputStream = dfsClient.create(tempPath,
           true, replication, blockSize);
       compress(dfsInputStream, compressedOutputStream);
-      HdfsFileStatus destFile = defaultDfsClient.getFileInfo(tempPath);
+      HdfsFileStatus destFile = dfsClient.getFileInfo(tempPath);
       compressionFileState.setCompressedLength(destFile.getLen());
       compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
     }
