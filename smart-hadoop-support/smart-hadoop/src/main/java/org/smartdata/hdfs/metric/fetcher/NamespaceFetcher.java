@@ -32,12 +32,10 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfoBatch;
 import org.smartdata.metastore.ingestion.FileStatusIngester;
-import org.smartdata.protocol.message.StatusReport;
 
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -260,7 +258,12 @@ public class NamespaceFetcher {
 
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
-        if (status != null && status.isDir()) {
+
+        if (status == null) {
+          throw new IOException();
+        }
+
+        if (status.isDir()) {
           if (startAfter == null) {
             FileInfo internal = convertToFileInfo(status, "");
             internal.setPath(parent);
@@ -286,8 +289,6 @@ public class NamespaceFetcher {
           if (startAfter != null) {
             pendingParent = parent;
           }
-        } else {
-          LOG.warn("Configured directory does not exist");
         }
       } catch (IOException | InterruptedException e) {
         startAfter = null;

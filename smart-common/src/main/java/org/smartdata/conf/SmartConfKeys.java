@@ -177,7 +177,7 @@ public class SmartConfKeys {
    */
   public static final String SMART_IGNORE_DIRS_KEY = "smart.ignore.dirs";
   /**
-   * Namespace, access info and other info related to files under these dirs will be fetched only.
+   * Namespace, access info and other info only related to files under these dirs will be tackled.
    * For more than one directories, they should be separated by ",".
    */
   public static final String SMART_NAMESPACE_FETCHER_DIRS_KEY = "smart.fetch.dirs";

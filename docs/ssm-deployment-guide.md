@@ -80,6 +80,19 @@ Please note that SSM action will not be scheduled for file under ignored directo
    </property>
    ```
 
+###   Fetch Dirs
+SSM will fetch the whole HDFS namespace by default when it starts. If you only care about the files under some directory, you can make a modification in smart-default.xml as the following shows.
+SSM will only fetch files under the given directories. For more than one directories, they should be separated by ",".
+
+The access info and other info related to fetched files will be considered. For other files not under the fetched directories, their info will be ignored.
+
+  ```xml
+   <property>
+       <name>smart.fetch.dirs</name>
+       <value>/foodirA,/foodirB</value>
+   </property>
+   ```
+
 ##  **Configure Smart Server**
 
 SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provide services. One of the standby Smart Servers will take its place if the active Smart Server failed.
