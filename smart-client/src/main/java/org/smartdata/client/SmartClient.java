@@ -44,6 +44,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
+  private List<String> fetchAccessEventDirs;
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -78,12 +79,18 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     ClientProtocolProtoBuffer proxy = RPC.getProxy(
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
     server = new ClientProtocolClientSideTranslator(proxy);
-    Collection<String> dirs = conf.getTrimmedStringCollection(
+    Collection<String> ignoreDirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    Collection<String> fetchDirs = conf.getTrimmedStringCollection(
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY);
     ignoreAccessEventDirs = new ArrayList<>();
+    fetchAccessEventDirs = new ArrayList<>();
     singleIgnoreList = new ConcurrentHashMap<>(200);
-    for (String s : dirs) {
+    for (String s : ignoreDirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
+    }
+    for (String s : fetchDirs) {
+      fetchAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
   }
 
@@ -127,7 +134,15 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         return true;
       }
     }
-    return false;
+    if (fetchAccessEventDirs.isEmpty()) {
+      return false;
+    }
+    for (String s : fetchAccessEventDirs) {
+      if (toCheck.startsWith(s)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
