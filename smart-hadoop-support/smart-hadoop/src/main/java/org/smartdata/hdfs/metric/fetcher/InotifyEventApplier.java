@@ -24,6 +24,8 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
@@ -38,6 +40,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.io.IOException;
 import java.net.URI;
@@ -52,10 +55,30 @@ public class InotifyEventApplier {
   private DFSClient client;
   private static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
+  private List<String> ignoreEventDirs;
+  private List<String> fetchEventDirs;
+
 
   public InotifyEventApplier(MetaStore metaStore, DFSClient client) {
     this.metaStore = metaStore;
     this.client = client;
+    initialize();
+  }
+
+  private void initialize(){
+    SmartConf conf = new SmartConf();
+    Collection<String> ignoreDirs = conf.getTrimmedStringCollection(
+        SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    Collection<String> fetchDirs = conf.getTrimmedStringCollection(
+        SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY);
+    ignoreEventDirs = new ArrayList<>();
+    fetchEventDirs = new ArrayList<>();
+    for (String s : ignoreDirs) {
+      ignoreEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
+    }
+    for (String s : fetchDirs) {
+      fetchEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
+    }
   }
 
 
@@ -80,31 +103,77 @@ public class InotifyEventApplier {
     this.apply(Arrays.asList(events));
   }
 
+  private boolean shouldIgnore(String path) {
+    String toCheck = path.endsWith("/") ? path : path + "/";
+    for (String s : ignoreEventDirs) {
+      if (toCheck.startsWith(s)) {
+        return true;
+      }
+    }
+    if (fetchEventDirs.isEmpty()) {
+      return false;
+    }
+    for (String s : fetchEventDirs) {
+      if (toCheck.startsWith(s)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
+    String path;
+    String srcPath, dstPath;
+
     LOG.debug("Even Type = {}", event.getEventType().toString());
     switch (event.getEventType()) {
       case CREATE:
+        path = ((Event.CreateEvent) event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent) event).getPath());
         return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
       case CLOSE:
+        path = ((Event.CloseEvent) event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent) event).getPath());
         return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
+        srcPath = ((Event.RenameEvent) event).getSrcPath();
+        dstPath = ((Event.RenameEvent) event).getDstPath();
+        if (shouldIgnore(srcPath) && shouldIgnore(dstPath)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", src path:" + ((Event.RenameEvent) event).getSrcPath() +
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
+        path = ((Event.MetadataUpdateEvent)event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.MetadataUpdateEvent)event).getPath());
         return Arrays.asList(this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event));
       case APPEND:
+        path = ((Event.AppendEvent)event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.AppendEvent)event).getPath());
         return this.getAppendSql((Event.AppendEvent)event);
       case UNLINK:
+        path = ((Event.UnlinkEvent)event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
         return this.getUnlinkSql((Event.UnlinkEvent)event);
