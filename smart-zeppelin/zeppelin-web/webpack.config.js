@@ -104,7 +104,7 @@ module.exports = function makeWebpackConfig () {
 
     // Output path from the view of the page
     // Uses webpack-dev-server in development
-    publicPath: isProd ? '' : 'http://localhost:9000/',
+    publicPath: isProd ? '' : 'http://localhost:1234/',
 
     // Filename for entry points
     // Only adds hash in build mode
@@ -268,7 +268,7 @@ module.exports = function makeWebpackConfig () {
    */
   config.devServer = {
     historyApiFallback: true,
-    port: 9000,
+    port: 1234,
     inline: true,
     hot: true,
     progress: true,
@@ -279,6 +279,16 @@ module.exports = function makeWebpackConfig () {
         require('express').static(path.join(__dirname, './bower_components/')));
     },
     stats: 'minimal',
+    proxy: {
+      '/api': 'http://localhost:7045',
+      '/smart/api/v1/cluster/primary/hist_utilization': 'https://www.easy-mock.com/mock/5c685d51c5d6817e50999e8d/smart/api/v1/cluster/primary/hist_utilization/cache',
+      '/smart/api': 'http://localhost:7045',
+      '/extensions': 'http://localhost:7045',
+      '/jax': 'http://localhost:7045',
+      '/liverload.js': 'http://localhost:7045',
+      // secure: false,
+      // changeOrigin: true
+    }
   };
 
   return config;
