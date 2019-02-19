@@ -32,9 +32,9 @@ function BigChartCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $root
   var builtInViz;
 
   var getStorageData = function () {
-    // $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/cluster/primary/hist_utilization/'
-    //   +  $scope.storageType + '/' + timeGranularity + '000/-' + timeGranularity * 60 + '000/0')
-    $http.get('assets/resp.json')
+    $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/cluster/primary/hist_utilization/'
+      +  $scope.storageType + '/' + timeGranularity + '000/-' + timeGranularity * 60 + '000/0')
+    // $http.get('assets/resp.json')
       .then(function(response) {
         var storageData = angular.fromJson(response.data).body;
         var rows = new Array();
@@ -69,7 +69,7 @@ function BigChartCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $root
   var initAreaChart = function() {
     var targetEl = angular.element('#bigChart');
     //generate area chart.
-    targetEl.height(300);
+    targetEl.height(500);
     if (!builtInViz) {
       builtInViz = new AreachartVisualization(targetEl, config);
       angular.element(window).resize(function () {
@@ -82,6 +82,13 @@ function BigChartCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $root
     builtInViz.render(transformed);
     builtInViz.activate();
   };
+
+  $(document).on('shown.bs.modal', function () {
+      let fixBigChartSize = document.createEvent('MouseEvents');
+      fixBigChartSize.initEvent('click', true, true);
+      document.querySelector('#bigChartModal .nv-legend-text').dispatchEvent(fixBigChartSize);
+    }
+  );
 
   var timer=$interval(function(){
     getStorageData();

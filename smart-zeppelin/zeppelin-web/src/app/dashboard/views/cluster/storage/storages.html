@@ -16,8 +16,8 @@ limitations under the License.
        ng-controller="StorageCtrl"
        ng-init="initStorage(storage);"
        ng-click="showBigChart(storage)"
-       class="col-md-2 box">
-    <h3>{{storage|uppercase}} Utilization</h3>
+       class="col-md-2 box thumbnail-thumbnail-margin-right storage-thumbnail">
+    <h4>{{storage|uppercase}} Utilization</h4>
     <div id="{{storage}}"></div>
   </div>
 
@@ -27,22 +27,33 @@ limitations under the License.
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>{{storageType | uppercase}}</h3>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+            &times;
           </button>
+          <h3 class="modal-title" id="myModalLabel">
+            {{storageType | uppercase}} Utilization
+          </h3>
         </div>
 
         <div class="modal-body">
-          <div id="bigChart"></div>
+          <div class="row">
+            <div class="col-md-12"
+                 id="bigChart"></div>
+          </div>
         </div>
 
         <div class="modal-footer">
           <div class="result-chart-selector" style="width: 100%;text-align: left;">
-            <div class="btn-group">
-              <button type="button" class="btn btn-default btn-sm" ng-click="selectTimeGranularity(2);">d</button>
-              <button type="button" class="btn btn-default btn-sm" ng-click="selectTimeGranularity(1);">h</button>
-              <button type="button" class="btn btn-default btn-sm" ng-click="selectTimeGranularity(0);">m</button>
+            <div class="btn-group btn-group-justified">
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="selectTimeGranularity(1);">D</button>
+              </div>
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="selectTimeGranularity(0);">H</button>
+              </div>
+              <div class="btn-group">
+                <button type="button" class="btn btn-primary btn-sm" ng-click="selectTimeGranularity(2);">M</button>
+              </div>
             </div>
           </div>
         </div>

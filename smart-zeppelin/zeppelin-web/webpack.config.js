@@ -269,10 +269,12 @@ module.exports = function makeWebpackConfig () {
   config.devServer = {
     historyApiFallback: true,
     port: 1234,
+    host: 'localhost',
     inline: true,
     hot: true,
     progress: true,
     contentBase: './src',
+    disableHostCheck: true,
     setup: function(app) {
       app.use(
         '/bower_components/',
@@ -281,7 +283,8 @@ module.exports = function makeWebpackConfig () {
     stats: 'minimal',
     proxy: {
       '/api': 'http://localhost:7045',
-      '/smart/api/v1/cluster/primary/hist_utilization': 'https://www.easy-mock.com/mock/5c685d51c5d6817e50999e8d/smart/api/v1/cluster/primary/hist_utilization/cache',
+      '/smart/api/v1/cluster/primary/hist_utilization': 'https://www.easy-mock.com/mock/5c685d51c5d6817e5' +
+        '0999e8d/smart/api/v1/cluster/primary/hist_utilization/cache',
       '/smart/api': 'http://localhost:7045',
       '/extensions': 'http://localhost:7045',
       '/jax': 'http://localhost:7045',
