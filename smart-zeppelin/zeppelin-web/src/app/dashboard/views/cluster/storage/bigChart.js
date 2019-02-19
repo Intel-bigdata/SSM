@@ -84,9 +84,10 @@ function BigChartCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $root
   };
 
   $(document).on('shown.bs.modal', function () {
-      let fixBigChartSize = document.createEvent('MouseEvents');
-      fixBigChartSize.initEvent('click', true, true);
-      document.querySelector('#bigChartModal .nv-legend-text').dispatchEvent(fixBigChartSize);
+      // let fixBigChartSize = document.createEvent('MouseEvents');
+      // fixBigChartSize.initEvent('click', true, true);
+      // document.querySelector('#bigChartModal .nv-legend-text').dispatchEvent(fixBigChartSize);
+    $scope.selectTimeGranularity(0);
     }
   );
 
