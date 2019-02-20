@@ -124,7 +124,6 @@ public class InotifyEventApplier {
   private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
     String path;
     String srcPath, dstPath;
-
     LOG.debug("Even Type = {}", event.getEventType().toString());
     switch (event.getEventType()) {
       case CREATE:
@@ -268,6 +267,7 @@ public class InotifyEventApplier {
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(dest);
     FileInfo info = metaStore.getFile(src);
+    // TODO: consider src or dest is ignored by SSM
     if (inBackup(src)) {
       // rename the file if the renamed file is still under the backup src dir
       // if not, insert a delete file diff
@@ -313,33 +313,45 @@ public class InotifyEventApplier {
     if (destInfo != null) {
       metaStore.deleteFileByPath(dest);
     }
+    // src is not in file table because it is not fetched or other reason
     if (info == null) {
       if (status != null) {
         info = HadoopUtil.convertFileStatus(status, dest);
         metaStore.insertFile(info);
       }
     } else {
-      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') "
-          + "WHERE path = '%s';", src, dest, src));
-      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') "
-          + "WHERE path = '%s';", src, dest, src));
-      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
-          + "WHERE path = '%s';", src, dest, src));
-      if (info.isdir()) {
-        if (metaStore.getDbType() == DBType.MYSQL) {
-          ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-        } else if (metaStore.getDbType() == DBType.SQLITE) {
-          ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+      // if the dest is ignored, delete src info from file table
+      // TODO: tackle with file_state and small_state
+      if (shouldIgnore(dest)) {
+        // fuzzy matching is used to delete content under the dir
+        if (info.isdir()) {
+          ret.add(String.format("DELETE FROM file WHERE path LIKE '%s/%%';", src));
+        }
+        ret.add(String.format("DELETE FROM file WHERE path = '%s';", src));
+        return ret;
+      } else {
+        ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') "
+            + "WHERE path = '%s';", src, dest, src));
+        ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') "
+            + "WHERE path = '%s';", src, dest, src));
+        ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
+            + "WHERE path = '%s';", src, dest, src));
+        if (info.isdir()) {
+          if (metaStore.getDbType() == DBType.MYSQL) {
+            ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          } else if (metaStore.getDbType() == DBType.SQLITE) {
+            ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          }
         }
       }
     }
