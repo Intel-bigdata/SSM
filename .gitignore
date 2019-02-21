@@ -42,6 +42,7 @@ smart-zeppelin/zeppelin-web/.flattened-pom.xml
 smart-zeppelin/zeppelin-web/.tmp
 smart-zeppelin/zeppelin-web/bower_components
 smart-zeppelin/zeppelin-web/dist
+smart-zeppelin/zeppelin-web/src/assets/resp.json
 smart-zeppelin/zeppelin-web/node
 smart-zeppelin/zeppelin-web/node_modules
 smart-zeppelin/zeppelin-web/reports

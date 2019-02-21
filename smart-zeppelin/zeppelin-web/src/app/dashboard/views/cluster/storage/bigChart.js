@@ -34,7 +34,6 @@ function BigChartCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $root
   var getStorageData = function () {
     $http.get(baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/cluster/primary/hist_utilization/'
       +  $scope.storageType + '/' + timeGranularity + '000/-' + timeGranularity * 60 + '000/0')
-    // $http.get('assets/resp.json')
       .then(function(response) {
         var storageData = angular.fromJson(response.data).body;
         var rows = new Array();
