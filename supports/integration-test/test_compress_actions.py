@@ -19,7 +19,7 @@ def run_compress_actions(test_file_list, debug):
     file_list = ast.literal_eval(test_file_list)
     cids = []
     for f in file_list:
-        cid = compress_file(f, debug)
+        cid = compress_file(f)
         if debug:
             print("DEBUG：Action with ID " + str(cid) + " submitted.")
         cids.append(cid)
@@ -86,7 +86,6 @@ if __name__ == '__main__':
             test_dir = options.testDir
 
         action = options.action
-        container_file = options.containerFile
         if DEBUG:
             print("DEBUG: compress file number: " + file_num + ", file size: " + str(file_size) + sizeUnit
                   + ", test compress files directory: " + test_dir)
@@ -104,7 +103,7 @@ if __name__ == '__main__':
 
     if action == "compress":
         if test_files:
-            run_compress_actions(test_files, container_file, DEBUG)
+            run_compress_actions(test_files, DEBUG)
         else:
             print("Test file list is not specified!")
             print("Usage: python test_compress_actions.py -h")
