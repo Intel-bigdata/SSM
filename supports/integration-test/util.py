@@ -295,6 +295,14 @@ def append_file(file_path, length=1024):
     return submit_cmdlet(cmdlet_str)
 
 
+def compress_file(src_file):
+    """
+    compress file with default codec (zlib)
+    """
+    cmdlet_str = "compress -file " + src_file
+    return submit_cmdlet(cmdlet_str)
+
+
 def compact_small_file(src_files, container_file):
     """
     compact small files into container_file
