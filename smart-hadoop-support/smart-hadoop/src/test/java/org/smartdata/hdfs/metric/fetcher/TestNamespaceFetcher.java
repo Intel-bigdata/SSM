@@ -43,7 +43,7 @@ import java.util.List;
 
 public class TestNamespaceFetcher {
   @Test
-  public void testNamespaceFetcher() throws IOException, InterruptedException,
+  public void testFetchingFromRoot() throws IOException, InterruptedException,
       MissingEventsException, MetaStoreException {
     final Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
@@ -82,6 +82,50 @@ public class TestNamespaceFetcher {
       fetcher.stop();
     } finally {
       cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testFetchingFromGivenDir() throws IOException, InterruptedException,
+      MissingEventsException, MetaStoreException {
+    final Configuration conf = new SmartConf();
+    final MiniDFSCluster cluster1 = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).build();
+    String fetchDir = "/dir";
+    try {
+      final DistributedFileSystem dfs = cluster1.getFileSystem();
+      dfs.mkdir(new Path("/dir"), new FsPermission("777"));
+      dfs.create(new Path("/dir/file1"));
+      dfs.create(new Path("/dir/file2"));
+      dfs.mkdir(new Path("/dir1"), new FsPermission("777"));
+      DFSClient client = dfs.getClient();
+
+      MetaStore adapter = Mockito.mock(MetaStore.class);
+      final List<String> pathesInDB = new ArrayList<>();
+      doAnswer(new Answer<Void>() {
+        @Override
+        public Void answer(InvocationOnMock invocationOnMock) {
+          try {
+            Object[] objects = invocationOnMock.getArguments();
+            for (FileInfo fileInfo : (FileInfo[]) objects[0]) {
+              pathesInDB.add(fileInfo.getPath());
+            }
+          } catch (Throwable t) {
+            t.printStackTrace();
+          }
+          return null;
+        }
+      }).when(adapter).insertFiles(any(FileInfo[].class));
+      NamespaceFetcher fetcher1 = new NamespaceFetcher(client, adapter, 100);
+      fetcher1.startFetch(fetchDir);
+      List<String> expected = Arrays.asList("/dir", "/dir/file1", "/dir/file2");
+      while (!fetcher1.fetchFinished()) {
+        Thread.sleep(100);
+      }
+      Assert.assertTrue(pathesInDB.size() == expected.size() && pathesInDB.containsAll(expected));
+      fetcher1.stop();
+    } finally {
+      cluster1.shutdown();
     }
   }
 }

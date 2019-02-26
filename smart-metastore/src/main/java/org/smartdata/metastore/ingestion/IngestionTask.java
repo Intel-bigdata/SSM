@@ -58,6 +58,12 @@ public abstract class IngestionTask implements Runnable {
     }
   }
 
+  public static void init(String dir) {
+    deque.clear();
+    IngestionTask.isFinished = false;
+    deque.add(dir);
+  }
+
   public IngestionTask() {
     this.currentBatch = new FileInfoBatch(defaultBatchSize);
   }

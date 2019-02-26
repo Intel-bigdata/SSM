@@ -138,6 +138,27 @@ public class NamespaceFetcher {
     LOG.info("Started.");
   }
 
+  public static void init(String dir) {
+    IngestionTask.init(dir);
+    HdfsFetchTask.init();
+  }
+
+  public void startFetch(String dir) {
+    init(dir);
+    this.fetchTaskFutures = new ScheduledFuture[ingestionTasks.length];
+    for (int i = 0; i < ingestionTasks.length; i++) {
+      fetchTaskFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          ingestionTasks[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+    }
+
+    this.consumerFutures = new ScheduledFuture[consumers.length];
+    for (int i = 0; i < consumers.length; i++) {
+      consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          consumers[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+    }
+    LOG.info("Started.");
+  }
+
   public boolean fetchFinished() {
     return IngestionTask.finished();
   }
@@ -188,6 +209,10 @@ public class NamespaceFetcher {
       for (String dir : ignoreDirs) {
         ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
       }
+    }
+
+    public static void init() {
+      HdfsFetchTask.idCounter = 0;
     }
 
     // BFS finished

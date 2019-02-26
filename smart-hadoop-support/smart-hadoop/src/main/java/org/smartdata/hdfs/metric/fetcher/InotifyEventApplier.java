@@ -57,12 +57,17 @@ public class InotifyEventApplier {
       LoggerFactory.getLogger(InotifyEventFetcher.class);
   private List<String> ignoreEventDirs;
   private List<String> fetchEventDirs;
-
+  private NamespaceFetcher namespaceFetcher;
 
   public InotifyEventApplier(MetaStore metaStore, DFSClient client) {
     this.metaStore = metaStore;
     this.client = client;
     initialize();
+  }
+
+  public InotifyEventApplier(MetaStore metaStore, DFSClient client, NamespaceFetcher namespaceFetcher) {
+    this(metaStore, client);
+    this.namespaceFetcher = namespaceFetcher;
   }
 
   private void initialize(){
@@ -82,7 +87,7 @@ public class InotifyEventApplier {
   }
 
 
-  public void apply(List<Event> events) throws IOException, MetaStoreException {
+  public void apply(List<Event> events) throws IOException, MetaStoreException, InterruptedException {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
       List<String> gen = getSqlStatement(event);
@@ -99,7 +104,7 @@ public class InotifyEventApplier {
 
   //check if the dir is in ignoreList
 
-  public void apply(Event[] events) throws IOException, MetaStoreException {
+  public void apply(Event[] events) throws IOException, MetaStoreException, InterruptedException {
     this.apply(Arrays.asList(events));
   }
 
@@ -121,7 +126,7 @@ public class InotifyEventApplier {
     return true;
   }
 
-  private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
+  private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException, InterruptedException {
     String path;
     String srcPath, dstPath;
     LOG.debug("Even Type = {}", event.getEventType().toString());
@@ -261,7 +266,7 @@ public class InotifyEventApplier {
 //  }
 
   private List<String> getRenameSql(Event.RenameEvent renameEvent)
-      throws IOException, MetaStoreException {
+      throws IOException, MetaStoreException, InterruptedException {
     String src = renameEvent.getSrcPath();
     String dest = renameEvent.getDstPath();
     List<String> ret = new ArrayList<>();
@@ -316,8 +321,14 @@ public class InotifyEventApplier {
     // src is not in file table because it is not fetched or other reason
     if (info == null) {
       if (status != null) {
-        info = HadoopUtil.convertFileStatus(status, dest);
-        metaStore.insertFile(info);
+        //info = HadoopUtil.convertFileStatus(status, dest);
+        //metaStore.insertFile(info);
+        namespaceFetcher.startFetch(dest);
+        while(!namespaceFetcher.fetchFinished()) {
+          LOG.info("Fetching the files under " + dest);
+          Thread.sleep(100);
+        }
+        namespaceFetcher.stop();
       }
     } else {
       // if the dest is ignored, delete src info from file table
