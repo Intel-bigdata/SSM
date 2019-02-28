@@ -33,14 +33,11 @@ import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
 import org.smartdata.server.engine.cmdlet.agent.AgentExecutorService;
+import org.smartdata.server.engine.cmdlet.agent.AgentHosts;
 import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class SmartEngine extends AbstractService {
   private ConfManager confMgr;
@@ -50,6 +47,7 @@ public class SmartEngine extends AbstractService {
   private RuleManager ruleMgr;
   private CmdletManager cmdletManager;
   private AgentExecutorService agentService;
+  private AgentHosts agentHosts;
   private HazelcastExecutorService hazelcastService;
   private List<AbstractService> services = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartEngine.class);
@@ -67,6 +65,7 @@ public class SmartEngine extends AbstractService {
     cmdletManager = new CmdletManager(serverContext);
     services.add(cmdletManager);
     agentService = new AgentExecutorService(conf, cmdletManager);
+    agentHosts = new AgentHosts(conf);
     hazelcastService = new HazelcastExecutorService(cmdletManager);
     cmdletManager.registerExecutorService(agentService);
     cmdletManager.registerExecutorService(hazelcastService);
@@ -122,6 +121,10 @@ public class SmartEngine extends AbstractService {
 
   public List<AgentInfo> getAgents() {
     return agentService.getAgentInfos();
+  }
+
+  public Set<String> getAgentHosts() {
+    return agentHosts.getHosts();
   }
 
   public ConfManager getConfMgr() {

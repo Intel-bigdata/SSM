@@ -60,4 +60,10 @@ public class SystemRestApi {
     // return list of agents and their states
     return new JsonResponse<>(Response.Status.OK, smartEngine.getAgents()).build();
   }
+
+  @GET
+  @Path("/allagenthosts")
+  public Response allAgents() {
+    return new JsonResponse<>(Response.Status.OK, smartEngine.getAgentHosts()).build();
+  }
 }
