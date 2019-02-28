@@ -1,27 +1,33 @@
 package org.smartdata.server.engine.cmdlet.agent;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
-
-import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
+import java.util.HashSet;
+import java.util.Scanner;
+import java.util.Set;
 
 public class AgentHosts {
 
-    private final String agentConfFile = "agents";
     private SmartConf conf;
     public AgentHosts(SmartConf conf) {
         this.conf = conf;
     }
 
-    public Set<String> getHosts() {
+    public Set<String> getHosts(String role) {
+        String fileName = "/agents";
+        switch (role) {
+            case "agent":
+                fileName = "/agents";
+                break;
+            case "server":
+                fileName = "/servers";
+                break;
+        }
         String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
-                SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/agents";
+                SmartConfKeys.SMART_CONF_DIR_DEFAULT) + fileName;
         Scanner sc = null;
         HashSet<String> hosts = new HashSet<>();
         try {

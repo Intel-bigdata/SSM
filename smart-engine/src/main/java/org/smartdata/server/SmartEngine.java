@@ -37,7 +37,13 @@ import org.smartdata.server.engine.cmdlet.agent.AgentHosts;
 import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 
 import java.io.IOException;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class SmartEngine extends AbstractService {
   private ConfManager confMgr;
@@ -119,12 +125,16 @@ public class SmartEngine extends AbstractService {
     return hazelcastService.getStandbyServers();
   }
 
-  public List<AgentInfo> getAgents() {
-    return agentService.getAgentInfos();
+  public Set<String> getAgentHosts() {
+    return agentHosts.getHosts("agent");
   }
 
-  public Set<String> getAgentHosts() {
-    return agentHosts.getHosts();
+  public Set<String> getServerHosts() {
+    return agentHosts.getHosts("server");
+  }
+
+  public List<AgentInfo> getAgents() {
+    return agentService.getAgentInfos();
   }
 
   public ConfManager getConfMgr() {
