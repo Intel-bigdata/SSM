@@ -19,7 +19,7 @@ under the License.
 <div class="col-md-12">
   <br/>
   <table class="table table-bordered">
-    <caption class="text-center"><h4>Node Info</h4></caption>
+    <caption class="text-center"><h4>Node Info</h4><p>{{liveNumber}} Live, {{deadNumber}} Dead</p></caption>
     <thead ng-show="nodes.length > 0">
     <tr>
       <th>Id</th>
@@ -27,6 +27,7 @@ under the License.
       <th>Number of Executors</th>
       <th>Cmdlets Executed</th>
       <th>Cmdlets In Execution</th>
+      <th>Status</th>
     </tr>
     </thead>
     <thead ng-if="nodes.length <= 0">
@@ -41,13 +42,14 @@ under the License.
       </th>
     </tr>
     </thead>
-    <tbody>
-    <tr ng-repeat="node in nodes">
-      <td>{{node.nodeInfo.id + (node.nodeInfo.executorType == "LOCAL" ? " (PendingSchedule:" + node.numPendingSchedule + ", PendingDispatch:" + node.numPendingDispatch + ")" : "")}}</td>
-      <td>{{node.registTime}}</td>
-      <td>{{node.numExecutors}}</td>
-      <td>{{node.cmdletsExecuted}}</td>
-      <td>{{node.cmdletsInExecution}}</td>
+    <tbody ng-init="index=-1">
+    <tr ng-repeat="node in nodes" ng-init="isLive=node.isLive">
+      <td>{{isLive ? (node.nodeInfo.id + (node.nodeInfo.executorType == "LOCAL" ? " (PendingSchedule:" + node.numPendingSchedule + ", PendingDispatch:" + node.numPendingDispatch + ")" : "")): node.nodeInfo.host}}</td>
+      <td>{{isLive ? node.registTime : '-'}}</td>
+      <td>{{isLive ? node.numExecutors : '-'}}</td>
+      <td>{{isLive ? node.cmdletsExecuted : '-'}}</td>
+      <td>{{isLive ? node.cmdletsInExecution : '-'}}</td>
+      <td class="statusPoint-container"><div class="statusPoint {{isLive ? 'btn-success' : 'btn-danger'}}"></div></td>
     </tr>
     </tbody>
   </table>
