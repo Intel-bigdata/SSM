@@ -13,9 +13,9 @@
  */
 
 import AreachartVisualization from '../../../../visualization/builtins/storage-areachart';
-angular.module('zeppelinWebApp').controller('StorageCtrl', StorageCtrl);
-StorageCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval', '$rootScope'];
-function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $rootScope) {
+angular.module('zeppelinWebApp').controller('BigChartCtrl', BigChartCtrl);
+BigChartCtrl.$inject = ['$scope', 'baseUrlSrv', '$filter', '$http', 'conf', '$interval', '$rootScope'];
+function BigChartCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $rootScope) {
   var tableData = {
     columns: [
       {name: 'time', index: 0, aggr: 'sum'},
@@ -43,7 +43,7 @@ function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $rootS
         });
         tableData.rows = rows;
         initAreaChart();
-    });
+      });
   };
 
   $scope.initStorage = function (storage) {
@@ -66,9 +66,9 @@ function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $rootS
   };
 
   var initAreaChart = function() {
-    var targetEl = angular.element('#' + $scope.storageType);
+    var targetEl = angular.element('#bigChart');
     //generate area chart.
-    targetEl.height(150);
+    targetEl.height(500);
     if (!builtInViz) {
       builtInViz = new AreachartVisualization(targetEl, config);
       angular.element(window).resize(function () {
@@ -82,6 +82,14 @@ function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $rootS
     builtInViz.activate();
   };
 
+  $(document).on('shown.bs.modal', function () {
+      // let fixBigChartSize = document.createEvent('MouseEvents');
+      // fixBigChartSize.initEvent('click', true, true);
+      // document.querySelector('#bigChartModal .nv-legend-text').dispatchEvent(fixBigChartSize);
+    $scope.selectTimeGranularity(0);
+    }
+  );
+
   var timer=$interval(function(){
     getStorageData();
   },30000);
@@ -90,12 +98,7 @@ function StorageCtrl($scope, baseUrlSrv, $filter, $http, conf, $interval, $rootS
     $interval.cancel(timer);
   });
 
-  $scope.showBigChart = function (storageType) {
-    let bigChartModal = angular.element('#bigChartModal');
-    $rootScope.$emit('$bigChartInit', storageType);
-    bigChartModal.modal({
-      backdrop: 'static',
-      keyboard: true
-    });
-  };
+  $rootScope.$on('$bigChartInit', function (event, storageType) {
+    $scope.initStorage(storageType);
+  })
 }
