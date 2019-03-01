@@ -5,6 +5,8 @@ import org.smartdata.conf.SmartConfKeys;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -26,6 +28,14 @@ public class AgentHosts {
                 fileName = "/servers";
                 break;
         }
+        String hostName = "";
+        try {
+            InetAddress address = InetAddress.getLocalHost();
+            hostName = address.getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
         String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
                 SmartConfKeys.SMART_CONF_DIR_DEFAULT) + fileName;
         Scanner sc = null;
@@ -39,7 +49,11 @@ public class AgentHosts {
         while (sc != null && sc.hasNextLine()) {
             String host = sc.nextLine().trim();
             if (!host.startsWith("#") && !host.isEmpty()) {
-                hosts.add(host);
+                if (host.equals("localhost")) {
+                    hosts.add(hostName);
+                } else {
+                    hosts.add(host);
+                }
             }
         }
 
