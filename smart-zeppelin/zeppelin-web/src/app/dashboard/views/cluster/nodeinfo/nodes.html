@@ -44,7 +44,11 @@ under the License.
     </thead>
     <tbody ng-init="index=-1">
     <tr ng-repeat="node in nodes" ng-init="isLive=node.isLive">
-      <td>{{isLive ? (node.nodeInfo.id + (node.nodeInfo.executorType == "LOCAL" ? " (PendingSchedule:" + node.numPendingSchedule + ", PendingDispatch:" + node.numPendingDispatch + ")" : "")): node.nodeInfo.host}}</td>
+      <td>{{
+        isLive
+        ? (node.nodeInfo.id + (node.nodeInfo.executorType == "LOCAL" ? " (PendingSchedule:" + node.numPendingSchedule + ", PendingDispatch:" + node.numPendingDispatch + ")" : ""))
+        : node.nodeInfo.host + (node.type === "agent" ? "@agent" : "@server")
+        }}</td>
       <td>{{isLive ? node.registTime : '-'}}</td>
       <td>{{isLive ? node.numExecutors : '-'}}</td>
       <td>{{isLive ? node.cmdletsExecuted : '-'}}</td>
