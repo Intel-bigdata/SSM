@@ -13,6 +13,7 @@
 .classpath
 .project
 .settings
+*.patch
 target
 build
 local-repo
