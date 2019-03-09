@@ -32,6 +32,8 @@ angular.module('zeppelinWebApp')
     $scope.searching = false;
     $scope.currentSearchPage = 1;
     $scope.path;
+    $scope.searchKeyword;
+    let heartPause = false;
 
     function getActions() {
       var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
@@ -187,7 +189,6 @@ angular.module('zeppelinWebApp')
       }
       $scope.path = res;
       search($scope.path);
-
     };
 
     $scope.jumpToPage = function () {
@@ -253,7 +254,9 @@ angular.module('zeppelinWebApp')
     });
 
     var timer = $interval(function(){
-        checkCookie();
+        if (!heartPause) {
+          checkCookie();
+        }
 //      if (!$scope.searching) {
 //        getActions();
 //      }
@@ -265,4 +268,12 @@ angular.module('zeppelinWebApp')
     $scope.$on('$destroy',function(){
       $interval.cancel(timer);
     });
+
+    $scope.stopHeart  = function () {
+      heartPause = true;
+    };
+
+    $scope.startHeart = function () {
+      heartPause = false;
+    }
   }

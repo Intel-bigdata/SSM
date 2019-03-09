@@ -68,12 +68,32 @@ under the License.
     -ms-animation: none !important;
     animation: none !important;
   }
+
+  .search-inputbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-back {
+    margin-right: 5px;
+    border-radius: 5px;
+    line-height: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
 </style>
 
 <!-- The form -->
 <form class="form-inline" role="group" style="float: right;">
   <div class="form-group mx-sm-3 mb-2" align="right">
-    <input class="form-control" id="search" type="text" float="right" placeholder="Search..." name="search"\>
+    <div class="search-inputbox" ng-init="searchKeyword = ''">
+      <button class="btn btn-primary search-back" ng-click="searchKeyword = '' || getContent() || startHeart()">Back</button>
+      <input class="form-control" id="search" type="search"
+             ng-model="searchKeyword"
+             ng-focus="stopHeart()"
+             ng-blur="searchKeyword === '' && startHeart()"
+             float="right" placeholder="Search..." name="search"\>
+    </div>
   </div>
   <button class="btn btn-primary mb-2" id="searchBtn" type="submit" value="Submit" ng-click="getContent()">search</button>
 </form>
