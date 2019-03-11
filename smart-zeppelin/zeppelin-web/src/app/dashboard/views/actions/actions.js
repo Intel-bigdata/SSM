@@ -33,6 +33,7 @@ angular.module('zeppelinWebApp')
     $scope.currentSearchPage = 1;
     $scope.path;
     $scope.searchKeyword;
+    $scope.showBack = false;
     let heartPause = false;
 
     function getActions() {
@@ -270,10 +271,12 @@ angular.module('zeppelinWebApp')
     });
 
     $scope.stopHeart  = function () {
+      $scope.showBack = true;
       heartPause = true;
     };
 
     $scope.startHeart = function () {
+      $scope.showBack = false;
       heartPause = false;
     }
   }

@@ -87,7 +87,7 @@ under the License.
 <form class="form-inline" role="group" style="float: right;">
   <div class="form-group mx-sm-3 mb-2" align="right">
     <div class="search-inputbox" ng-init="searchKeyword = ''">
-      <button class="btn btn-primary search-back" ng-click="searchKeyword = '' || getContent() || startHeart()">Back</button>
+      <button class="btn btn-primary search-back" ng-click="searchKeyword = '' || getContent() || startHeart()" ng-show="showBack">Back</button>
       <input class="form-control" id="search" type="search"
              ng-model="searchKeyword"
              ng-focus="stopHeart()"
