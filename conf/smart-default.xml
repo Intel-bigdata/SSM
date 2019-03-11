@@ -33,7 +33,7 @@
 
   <property>
     <name>smart.ignore.dirs</name>
-    <value>/dir3</value>
+    <value></value>
     <description>
       SSM will completely ignore files under the given directories.
       For more than one directories, they should be separated by ",".

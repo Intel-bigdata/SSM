@@ -74,12 +74,17 @@ public class NamespaceFetcher {
     this(client, metaStore, fetchInterval, null, new SmartConf());
   }
 
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval, SmartConf conf) {
+    this(client, metaStore, fetchInterval, null, conf);
+  }
+
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service, SmartConf conf) {
     int numProducers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_KEY,
         SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_DEFAULT);
     numProducers = numProducers <= 0 ? 1 : numProducers;
     this.ingestionTasks = new IngestionTask[numProducers];
+    HdfsFetchTask.init();
     for (int i = 0; i < numProducers; i++) {
       ingestionTasks[i] = new HdfsFetchTask(ingestionTasks, client, conf);
     }
@@ -102,8 +107,13 @@ public class NamespaceFetcher {
     this.conf = conf;
   }
 
+  public static void init(SmartConf conf) {
+    IngestionTask.init(conf);
+  }
+
   public void startFetch() throws IOException {
     try {
+      init(conf);
       metaStore.deleteAllEcPolicies();
       Map<Byte, String> idToPolicyName =
           CompatibilityHelperLoader.getHelper().getErasureCodingPolicies(client);
@@ -140,7 +150,6 @@ public class NamespaceFetcher {
 
   public static void init(String dir) {
     IngestionTask.init(dir);
-    HdfsFetchTask.init();
   }
 
   public void startFetch(String dir) {
@@ -156,7 +165,7 @@ public class NamespaceFetcher {
       consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
           consumers[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
     }
-    LOG.info("Started.");
+    LOG.info("Start fetch the given dir.");
   }
 
   public boolean fetchFinished() {
