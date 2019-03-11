@@ -1,4 +1,4 @@
-package org.smartdata.server.engine.cmdlet.agent;
+package org.smartdata;
 
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
@@ -11,14 +11,18 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
-public class AgentHosts {
+public class NodeHosts {
 
     private SmartConf conf;
-    public AgentHosts(SmartConf conf) {
+    public Set<String> agentHosts;
+    public Set<String> serverHosts;
+    public NodeHosts(SmartConf conf) {
         this.conf = conf;
+        this.serverHosts = init("server");
+        this.agentHosts = init("agent");
     }
 
-    public Set<String> getHosts(String role) {
+    public Set<String> init(String role) {
         String fileName = "/agents";
         switch (role) {
             case "agent":
@@ -58,5 +62,13 @@ public class AgentHosts {
         }
 
         return hosts;
+    }
+
+    public Set<String> getServerHosts() {
+        return serverHosts;
+    }
+
+    public Set<String> getAgentHosts() {
+        return agentHosts;
     }
 }

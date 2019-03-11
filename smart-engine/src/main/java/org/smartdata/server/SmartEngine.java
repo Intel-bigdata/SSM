@@ -20,6 +20,7 @@ package org.smartdata.server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
+import org.smartdata.NodeHosts;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.Utilization;
@@ -33,7 +34,6 @@ import org.smartdata.server.engine.StandbyServerInfo;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.HazelcastExecutorService;
 import org.smartdata.server.engine.cmdlet.agent.AgentExecutorService;
-import org.smartdata.server.engine.cmdlet.agent.AgentHosts;
 import org.smartdata.server.engine.cmdlet.agent.AgentInfo;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class SmartEngine extends AbstractService {
   private RuleManager ruleMgr;
   private CmdletManager cmdletManager;
   private AgentExecutorService agentService;
-  private AgentHosts agentHosts;
+  private NodeHosts nodeHosts;
   private HazelcastExecutorService hazelcastService;
   private List<AbstractService> services = new ArrayList<>();
   public static final Logger LOG = LoggerFactory.getLogger(SmartEngine.class);
@@ -71,7 +71,7 @@ public class SmartEngine extends AbstractService {
     cmdletManager = new CmdletManager(serverContext);
     services.add(cmdletManager);
     agentService = new AgentExecutorService(conf, cmdletManager);
-    agentHosts = new AgentHosts(conf);
+    nodeHosts = new NodeHosts(conf);
     hazelcastService = new HazelcastExecutorService(cmdletManager);
     cmdletManager.registerExecutorService(agentService);
     cmdletManager.registerExecutorService(hazelcastService);
@@ -126,11 +126,11 @@ public class SmartEngine extends AbstractService {
   }
 
   public Set<String> getAgentHosts() {
-    return agentHosts.getHosts("agent");
+    return nodeHosts.getAgentHosts();
   }
 
   public Set<String> getServerHosts() {
-    return agentHosts.getHosts("server");
+    return nodeHosts.getServerHosts();
   }
 
   public List<AgentInfo> getAgents() {
