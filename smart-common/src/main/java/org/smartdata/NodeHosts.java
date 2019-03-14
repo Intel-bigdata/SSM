@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,62 +30,63 @@ import java.util.Set;
 
 public class NodeHosts {
 
-    private SmartConf conf;
-    public Set<String> agentHosts;
-    public Set<String> serverHosts;
-    public NodeHosts(SmartConf conf) {
-        this.conf = conf;
-        this.serverHosts = init("server");
-        this.agentHosts = init("agent");
+  private SmartConf conf;
+  public Set<String> agentHosts;
+  public Set<String> serverHosts;
+
+  public NodeHosts(SmartConf conf) {
+    this.conf = conf;
+    this.serverHosts = init("server");
+    this.agentHosts = init("agent");
+  }
+
+  public Set<String> init(String role) {
+    String fileName = "/agents";
+    switch (role) {
+      case "agent":
+        fileName = "/agents";
+        break;
+      case "server":
+        fileName = "/servers";
+        break;
+    }
+    String hostName = "";
+    try {
+      InetAddress address = InetAddress.getLocalHost();
+      hostName = address.getHostName();
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
     }
 
-    public Set<String> init(String role) {
-        String fileName = "/agents";
-        switch (role) {
-            case "agent":
-                fileName = "/agents";
-                break;
-            case "server":
-                fileName = "/servers";
-                break;
-        }
-        String hostName = "";
-        try {
-            InetAddress address = InetAddress.getLocalHost();
-            hostName = address.getHostName();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-
-        String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
-                SmartConfKeys.SMART_CONF_DIR_DEFAULT) + fileName;
-        Scanner sc = null;
-        HashSet<String> hosts = new HashSet<>();
-        try {
-            sc = new Scanner(new File(agentConfFile));
-        } catch (FileNotFoundException ex) {
-            ex.printStackTrace();
-        }
-
-        while (sc != null && sc.hasNextLine()) {
-            String host = sc.nextLine().trim();
-            if (!host.startsWith("#") && !host.isEmpty()) {
-                if (host.equals("localhost")) {
-                    hosts.add(hostName);
-                } else {
-                    hosts.add(host);
-                }
-            }
-        }
-
-        return hosts;
+    String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
+        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + fileName;
+    Scanner sc = null;
+    HashSet<String> hosts = new HashSet<>();
+    try {
+      sc = new Scanner(new File(agentConfFile));
+    } catch (FileNotFoundException ex) {
+      ex.printStackTrace();
     }
 
-    public Set<String> getServerHosts() {
-        return serverHosts;
+    while (sc != null && sc.hasNextLine()) {
+      String host = sc.nextLine().trim();
+      if (!host.startsWith("#") && !host.isEmpty()) {
+        if (host.equals("localhost")) {
+          hosts.add(hostName);
+        } else {
+          hosts.add(host);
+        }
+      }
     }
 
-    public Set<String> getAgentHosts() {
-        return agentHosts;
-    }
+    return hosts;
+  }
+
+  public Set<String> getServerHosts() {
+    return serverHosts;
+  }
+
+  public Set<String> getAgentHosts() {
+    return agentHosts;
+  }
 }
