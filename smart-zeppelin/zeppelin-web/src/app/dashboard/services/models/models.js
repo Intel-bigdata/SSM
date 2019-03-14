@@ -263,10 +263,10 @@ angular.module('org.apache.hadoop.ssm.models', [])
           return get('cluster/primary/ssmnodescmdletmetrics', decoder.nodes);
         },
         agentHosts: function () {
-          return get('system/all_agent_hosts', decoder.nodes);
+          return get('system/allAgentHosts', decoder.nodes);
         },
         serverHosts: function () {
-          return get('system/all_server_hosts', decoder.nodes);
+          return get('system/allServerHosts', decoder.nodes);
         },
         notebookInfo: function () {
           return get('note/info', decoder.default)

@@ -62,13 +62,13 @@ public class SystemRestApi {
   }
 
   @GET
-  @Path("/all_agent_hosts")
+  @Path("/allAgentHosts")
   public Response allAgentHosts() {
     return new JsonResponse<>(Response.Status.OK, smartEngine.getAgentHosts()).build();
   }
 
   @GET
-  @Path("/all_server_hosts")
+  @Path("/allServerHosts")
   public Response allMasterHosts() {
     return new JsonResponse<>(Response.Status.OK, smartEngine.getServerHosts()).build();
   }
