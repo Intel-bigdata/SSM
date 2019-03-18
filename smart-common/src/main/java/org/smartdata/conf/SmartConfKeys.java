@@ -180,7 +180,7 @@ public class SmartConfKeys {
    * Namespace, access info and other info only related to files under these dirs will be tackled.
    * For more than one directories, they should be separated by ",".
    */
-  public static final String SMART_NAMESPACE_FETCHER_DIRS_KEY = "smart.fetch.dirs";
+  public static final String SMART_COVER_DIRS_KEY = "smart.cover.dirs";
 
   // Target cluster
   public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =

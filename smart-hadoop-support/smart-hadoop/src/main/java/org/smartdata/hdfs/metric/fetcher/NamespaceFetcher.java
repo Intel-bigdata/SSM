@@ -36,7 +36,6 @@ import org.smartdata.metastore.ingestion.FileStatusIngester;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -152,6 +151,11 @@ public class NamespaceFetcher {
     IngestionTask.init(dir);
   }
 
+  /*
+  startFetch(dir) is used to restart fetcher to fetch one specific dir.
+  In rename event, when src is not in file table because it is not fetched or other reason,
+  dest should be fetched by using startFetch(dest).
+  */
   public void startFetch(String dir) {
     init(dir);
     this.fetchTaskFutures = new ScheduledFuture[ingestionTasks.length];
@@ -211,13 +215,7 @@ public class NamespaceFetcher {
       defaultBatchSize = conf.getInt(SmartConfKeys
               .SMART_NAMESPACE_FETCHER_BATCH_KEY,
           SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
-
-      Collection<String> ignoreDirs =
-          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      ignoreList = new ArrayList<>(ignoreDirs.size());
-      for (String dir : ignoreDirs) {
-        ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
-      }
+      ignoreList = this.conf.getIgnoreDir();
     }
 
     public static void init() {

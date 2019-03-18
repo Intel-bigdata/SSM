@@ -42,7 +42,6 @@ import org.smartdata.model.SystemInfo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -266,22 +265,12 @@ public class InotifyEventFetcher {
     }
 
     public List<String> getIgnoreDirFromConfig() {
-      Collection<String> ignoreDirs =
-          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      List<String> ignoreList = new ArrayList<>(ignoreDirs.size());
-      for (String dir : ignoreDirs) {
-        ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
-      }
+      ignoreList = conf.getIgnoreDir();
       return ignoreList;
     }
 
     public List<String> getFetchDirFromConfig() {
-      Collection<String> fetchDirs =
-          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY);
-      List<String> fetchList = new ArrayList<>(fetchDirs.size());
-      for (String dir : fetchDirs) {
-        fetchList.add(dir.endsWith("/") ? dir : dir + "/");
-      }
+      this.conf.getCoverDir();
       return fetchList;
     }
 

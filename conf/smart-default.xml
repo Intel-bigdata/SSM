@@ -41,7 +41,7 @@
   </property>
 
   <property>
-    <name>smart.fetch.dirs</name>
+    <name>smart.cover.dirs</name>
     <value></value>
     <description>
       SSM will only fetch files under the given directories.

@@ -25,7 +25,6 @@ import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
@@ -40,7 +39,6 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.io.IOException;
 import java.net.URI;
@@ -72,18 +70,8 @@ public class InotifyEventApplier {
 
   private void initialize(){
     SmartConf conf = new SmartConf();
-    Collection<String> ignoreDirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-    Collection<String> fetchDirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY);
-    ignoreEventDirs = new ArrayList<>();
-    fetchEventDirs = new ArrayList<>();
-    for (String s : ignoreDirs) {
-      ignoreEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
-    }
-    for (String s : fetchDirs) {
-      fetchEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
-    }
+    ignoreEventDirs = conf.getIgnoreDir();
+    fetchEventDirs = conf.getCoverDir();
   }
 
 

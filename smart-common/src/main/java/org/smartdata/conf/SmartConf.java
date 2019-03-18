@@ -23,17 +23,57 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Console;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * SSM related configurations as well as HDFS configurations.
  */
 public class SmartConf extends Configuration {
   private static final Logger LOG = LoggerFactory.getLogger(SmartConf.class);
+  private final List<String> ignoreList;
+  private final List<String> coverList;
 
   public SmartConf() {
     Configuration.addDefaultResource("smart-default.xml");
     Configuration.addDefaultResource("smart-site.xml");
+
+    Collection<String> ignoreDirs = this.getTrimmedStringCollection(
+        SmartConfKeys.SMART_IGNORE_DIRS_KEY);
+    Collection<String> fetchDirs = this.getTrimmedStringCollection(
+        SmartConfKeys.SMART_COVER_DIRS_KEY);
+    ignoreList = new ArrayList<>();
+    coverList = new ArrayList<>();
+    for (String s : ignoreDirs) {
+      ignoreList.add(s + (s.endsWith("/") ? "" : "/"));
+    }
+    for (String s : fetchDirs) {
+      coverList.add(s + (s.endsWith("/") ? "" : "/"));
+    }
   }
+
+  public List<String> getCoverDir() {
+    return coverList;
+  }
+
+  public List<String> getIgnoreDir() {
+    return ignoreList;
+  }
+
+  public void setCoverDir(ArrayList<String> fetchDirs) {
+    coverList.clear();
+    for (String s : fetchDirs) {
+      coverList.add(s + (s.endsWith("/") ? "" : "/"));
+    }
+  }
+
+  public void setIgnoreDir(ArrayList<String> ignoreDirs) {
+    ignoreList.clear();
+    for (String s : ignoreDirs) {
+      ignoreList.add(s + (s.endsWith("/") ? "" : "/"));
+    }
+}
 
   public static void main(String[] args) {
     Console console = System.console();

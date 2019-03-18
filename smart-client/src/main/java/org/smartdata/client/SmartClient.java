@@ -20,6 +20,7 @@ package org.smartdata.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
@@ -31,8 +32,6 @@ import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,19 +78,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     ClientProtocolProtoBuffer proxy = RPC.getProxy(
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
     server = new ClientProtocolClientSideTranslator(proxy);
-    Collection<String> ignoreDirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-    Collection<String> fetchDirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY);
-    ignoreAccessEventDirs = new ArrayList<>();
-    fetchAccessEventDirs = new ArrayList<>();
     singleIgnoreList = new ConcurrentHashMap<>(200);
-    for (String s : ignoreDirs) {
-      ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
-    }
-    for (String s : fetchDirs) {
-      fetchAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
-    }
+    ignoreAccessEventDirs = ((SmartConf) conf).getIgnoreDir();
+    fetchAccessEventDirs = ((SmartConf) conf).getCoverDir();
+
   }
 
   private void checkOpen() throws IOException {

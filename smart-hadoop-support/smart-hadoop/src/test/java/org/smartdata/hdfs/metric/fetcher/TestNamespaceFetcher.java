@@ -35,8 +35,6 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
 import static org.mockito.Mockito.*;
-import static org.smartdata.conf.SmartConfKeys.SMART_IGNORE_DIRS_KEY;
-import static org.smartdata.conf.SmartConfKeys.SMART_NAMESPACE_FETCHER_DIRS_KEY;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -83,7 +81,7 @@ public class TestNamespaceFetcher {
   public void testFetchingFromRoot() throws IOException, InterruptedException,
       MissingEventsException, MetaStoreException {
     pathesInDB.clear();
-    final Configuration conf = new SmartConf();
+    Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(2).build();
     try {
@@ -129,7 +127,9 @@ public class TestNamespaceFetcher {
     final Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(2).build();
-    conf.set(SMART_IGNORE_DIRS_KEY, "/tmp");
+    ArrayList<String> ignoreList = new ArrayList<>();
+    ignoreList.add("/tmp");
+    ((SmartConf) conf).setIgnoreDir(ignoreList);
     try {
       NamespaceFetcher fetcher = init(cluster, (SmartConf) conf);
       fetcher.startFetch();
@@ -151,11 +151,13 @@ public class TestNamespaceFetcher {
     final Configuration conf = new SmartConf();
     final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
         .numDataNodes(2).build();
-    conf.set(SMART_NAMESPACE_FETCHER_DIRS_KEY, "/user");
+    ArrayList<String> coverList = new ArrayList<>();
+    coverList.add("/user");
+    ((SmartConf) conf).setCoverDir(coverList);
     try {
       NamespaceFetcher fetcher = init(cluster, (SmartConf) conf);
       fetcher.startFetch();
-      List<String> expected = Arrays.asList("/user", "/user/user1", "/user/user2");
+      List<String> expected = Arrays.asList("/user/", "/user/user1", "/user/user2");
       while (!fetcher.fetchFinished()) {
         Thread.sleep(100);
       }

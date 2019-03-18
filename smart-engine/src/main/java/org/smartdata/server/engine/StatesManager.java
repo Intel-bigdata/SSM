@@ -40,7 +40,6 @@ import org.smartdata.server.engine.data.AccessEventFetcher;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -89,11 +88,7 @@ public class StatesManager extends AbstractService implements Reconfigurable {
           getReconfigurableProperties(), this);
     }
 
-    Collection<String> dirs = serverContext.getConf()
-        .getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-    for (String s : dirs) {
-      ignoreDirs.add(s.endsWith("/") ? s : s + "/");
-    }
+    ignoreDirs = serverContext.getConf().getIgnoreDir();
     LOG.info("Initialized.");
   }
 
