@@ -182,7 +182,13 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         resolve: {
           nodes0: ['models', function (models) {
             return models.$get.nodes();
-          }]
+          }],
+          serverHosts: ['models', function (models) {
+            return models.$get.serverHosts();
+          }],
+          agentHosts: ['models', function (models) {
+            return models.$get.agentHosts();
+          }],
         }
       })
       .when('/jobmanager', {

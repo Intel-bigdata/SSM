@@ -1,0 +1,18 @@
+.thumbnail-thumbnail-margin-right {
+  margin-right: 10px;
+}
+
+.storage-thumbnail {
+  position: relative;
+  transition: all 0.4s;
+  cursor: pointer;
+}
+
+.storage-thumbnail:hover {
+  top: -5px;
+  box-shadow: 0 5px 25px -6px #8f8f8f ;
+}
+
+.nvtooltip {
+  z-index: 10003;
+}

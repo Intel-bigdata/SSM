@@ -20,7 +20,6 @@ angular.module('org.apache.hadoop.ssm.models', [])
 
   .factory('models', ['$timeout', 'conf', 'restapi', 'locator',
     function ($timeout, conf, restapi, locator) {
-      'use strict';
 
       var util = {
         usage: function (current, total) {
@@ -262,6 +261,12 @@ angular.module('org.apache.hadoop.ssm.models', [])
         },
         nodes: function () {
           return get('cluster/primary/ssmnodescmdletmetrics', decoder.nodes);
+        },
+        agentHosts: function () {
+          return get('system/allAgentHosts', decoder.nodes);
+        },
+        serverHosts: function () {
+          return get('system/allServerHosts', decoder.nodes);
         },
         notebookInfo: function () {
           return get('note/info', decoder.default)
