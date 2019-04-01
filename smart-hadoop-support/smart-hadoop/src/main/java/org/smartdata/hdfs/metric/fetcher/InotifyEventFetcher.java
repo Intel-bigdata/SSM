@@ -42,7 +42,6 @@ import org.smartdata.model.SystemInfo;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -73,7 +72,7 @@ public class InotifyEventFetcher {
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, Callable callBack, SmartConf conf) {
-    this(client, metaStore, service, new InotifyEventApplier(metaStore, client), callBack, conf);
+    this(client, metaStore, service, null, callBack, conf);
   }
   
 
@@ -93,12 +92,12 @@ public class InotifyEventFetcher {
       ScheduledExecutorService service, InotifyEventApplier applier,
       Callable callBack, SmartConf conf) {
     this.client = client;
-    this.applier = applier;
     this.metaStore = metaStore;
     this.scheduledExecutorService = service;
     this.finishedCallback = callBack;
     this.conf = conf;
     this.nameSpaceFetcher = new NamespaceFetcher(client, metaStore, null, conf);
+    this.applier = new InotifyEventApplier(metaStore, client, nameSpaceFetcher);
   }
 
   public void start() throws IOException {
@@ -242,6 +241,7 @@ public class InotifyEventFetcher {
     private long lastId;
     private SmartConf conf;
     private List<String> ignoreList;
+    private List<String> fetchList;
 
     public EventApplyTask(NamespaceFetcher namespaceFetcher, InotifyEventApplier applier,
         QueueFile queueFile, long lastId) {
@@ -261,19 +261,20 @@ public class InotifyEventFetcher {
       this.lastId = lastId;
       this.conf = conf;
       this.ignoreList = getIgnoreDirFromConfig();
+      this.fetchList = getFetchDirFromConfig();
     }
 
     public List<String> getIgnoreDirFromConfig() {
-      Collection<String> ignoreDirs =
-          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      List<String> ignoreList = new ArrayList<>(ignoreDirs.size());
-      for (String dir : ignoreDirs) {
-        ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
-      }
+      ignoreList = conf.getIgnoreDir();
       return ignoreList;
     }
 
-    public boolean fetchPathInIgnoreList(String path) {
+    public List<String> getFetchDirFromConfig() {
+      this.conf.getCoverDir();
+      return fetchList;
+    }
+
+    public boolean shouldIgnore(String path) {
       if (!path.endsWith("/")) {
         path = path.concat("/");
       }
@@ -282,7 +283,15 @@ public class InotifyEventFetcher {
           return true;
         }
       }
-      return false;
+      if (fetchList.isEmpty()) {
+        return false;
+      }
+      for (String dir : fetchList) {
+        if (path.startsWith(dir)) {
+          return false;
+        }
+      }
+      return true;
     }
 
     public boolean ifEventIgnore(Event event) {
@@ -291,28 +300,28 @@ public class InotifyEventFetcher {
         case CREATE:
           Event.CreateEvent createEvent = (Event.CreateEvent) event;
           path = createEvent.getPath();
-          return fetchPathInIgnoreList(path);
+          return shouldIgnore(path);
         case CLOSE:
           Event.CloseEvent closeEvent = (Event.CloseEvent) event;
           path = closeEvent.getPath();
-          return fetchPathInIgnoreList(path);
+          return shouldIgnore(path);
         case RENAME:
           Event.RenameEvent renameEvent = (Event.RenameEvent) event;
           path = renameEvent.getSrcPath();
           String dest = renameEvent.getDstPath();
-          return fetchPathInIgnoreList(path) && fetchPathInIgnoreList(dest);
+          return shouldIgnore(path) && shouldIgnore(dest);
         case METADATA:
           Event.MetadataUpdateEvent metadataUpdateEvent = (Event.MetadataUpdateEvent) event;
           path = metadataUpdateEvent.getPath();
-          return fetchPathInIgnoreList(path);
+          return shouldIgnore(path);
         case APPEND:
           Event.AppendEvent appendEvent = (Event.AppendEvent) event;
           path = appendEvent.getPath();
-          return fetchPathInIgnoreList(path);
+          return shouldIgnore(path);
         case UNLINK:
           Event.UnlinkEvent unlinkEvent = (Event.UnlinkEvent) event;
           path = unlinkEvent.getPath();
-          return fetchPathInIgnoreList(path);
+          return shouldIgnore(path);
       }
       return true;
     }

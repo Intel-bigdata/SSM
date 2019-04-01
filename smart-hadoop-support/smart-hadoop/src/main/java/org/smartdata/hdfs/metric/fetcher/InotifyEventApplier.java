@@ -24,6 +24,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.DBType;
@@ -52,14 +53,29 @@ public class InotifyEventApplier {
   private DFSClient client;
   private static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
+  private List<String> ignoreEventDirs;
+  private List<String> fetchEventDirs;
+  private NamespaceFetcher namespaceFetcher;
 
   public InotifyEventApplier(MetaStore metaStore, DFSClient client) {
     this.metaStore = metaStore;
     this.client = client;
+    initialize();
+  }
+
+  public InotifyEventApplier(MetaStore metaStore, DFSClient client, NamespaceFetcher namespaceFetcher) {
+    this(metaStore, client);
+    this.namespaceFetcher = namespaceFetcher;
+  }
+
+  private void initialize(){
+    SmartConf conf = new SmartConf();
+    ignoreEventDirs = conf.getIgnoreDir();
+    fetchEventDirs = conf.getCoverDir();
   }
 
 
-  public void apply(List<Event> events) throws IOException, MetaStoreException {
+  public void apply(List<Event> events) throws IOException, MetaStoreException, InterruptedException {
     List<String> statements = new ArrayList<>();
     for (Event event : events) {
       List<String> gen = getSqlStatement(event);
@@ -76,35 +92,80 @@ public class InotifyEventApplier {
 
   //check if the dir is in ignoreList
 
-  public void apply(Event[] events) throws IOException, MetaStoreException {
+  public void apply(Event[] events) throws IOException, MetaStoreException, InterruptedException {
     this.apply(Arrays.asList(events));
   }
 
-  private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException {
+  private boolean shouldIgnore(String path) {
+    String toCheck = path.endsWith("/") ? path : path + "/";
+    for (String s : ignoreEventDirs) {
+      if (toCheck.startsWith(s)) {
+        return true;
+      }
+    }
+    if (fetchEventDirs.isEmpty()) {
+      return false;
+    }
+    for (String s : fetchEventDirs) {
+      if (toCheck.startsWith(s)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private List<String> getSqlStatement(Event event) throws IOException, MetaStoreException, InterruptedException {
+    String path;
+    String srcPath, dstPath;
     LOG.debug("Even Type = {}", event.getEventType().toString());
     switch (event.getEventType()) {
       case CREATE:
+        path = ((Event.CreateEvent) event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CreateEvent) event).getPath());
         return Arrays.asList(this.getCreateSql((Event.CreateEvent) event));
       case CLOSE:
+        path = ((Event.CloseEvent) event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.CloseEvent) event).getPath());
         return Arrays.asList(this.getCloseSql((Event.CloseEvent) event));
       case RENAME:
+        srcPath = ((Event.RenameEvent) event).getSrcPath();
+        dstPath = ((Event.RenameEvent) event).getDstPath();
+        if (shouldIgnore(srcPath) && shouldIgnore(dstPath)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", src path:" + ((Event.RenameEvent) event).getSrcPath() +
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
+        path = ((Event.MetadataUpdateEvent)event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.MetadataUpdateEvent)event).getPath());
         return Arrays.asList(this.getMetaDataUpdateSql((Event.MetadataUpdateEvent)event));
       case APPEND:
+        path = ((Event.AppendEvent)event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.AppendEvent)event).getPath());
         return this.getAppendSql((Event.AppendEvent)event);
       case UNLINK:
+        path = ((Event.UnlinkEvent)event).getPath();
+        if (shouldIgnore(path)) {
+          return Arrays.asList();
+        }
         LOG.trace("event type:" + event.getEventType().name() +
             ", path:" + ((Event.UnlinkEvent)event).getPath());
         return this.getUnlinkSql((Event.UnlinkEvent)event);
@@ -193,12 +254,13 @@ public class InotifyEventApplier {
 //  }
 
   private List<String> getRenameSql(Event.RenameEvent renameEvent)
-      throws IOException, MetaStoreException {
+      throws IOException, MetaStoreException, InterruptedException {
     String src = renameEvent.getSrcPath();
     String dest = renameEvent.getDstPath();
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(dest);
     FileInfo info = metaStore.getFile(src);
+    // TODO: consider src or dest is ignored by SSM
     if (inBackup(src)) {
       // rename the file if the renamed file is still under the backup src dir
       // if not, insert a delete file diff
@@ -244,33 +306,51 @@ public class InotifyEventApplier {
     if (destInfo != null) {
       metaStore.deleteFileByPath(dest);
     }
+    // src is not in file table because it is not fetched or other reason
     if (info == null) {
       if (status != null) {
-        info = HadoopUtil.convertFileStatus(status, dest);
-        metaStore.insertFile(info);
+        //info = HadoopUtil.convertFileStatus(status, dest);
+        //metaStore.insertFile(info);
+        namespaceFetcher.startFetch(dest);
+        while(!namespaceFetcher.fetchFinished()) {
+          LOG.info("Fetching the files under " + dest);
+          Thread.sleep(100);
+        }
+        namespaceFetcher.stop();
       }
     } else {
-      ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') "
-          + "WHERE path = '%s';", src, dest, src));
-      ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') "
-          + "WHERE path = '%s';", src, dest, src));
-      ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
-          + "WHERE path = '%s';", src, dest, src));
-      if (info.isdir()) {
-        if (metaStore.getDbType() == DBType.MYSQL) {
-          ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-        } else if (metaStore.getDbType() == DBType.SQLITE) {
-          ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
-          ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
-              + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+      // if the dest is ignored, delete src info from file table
+      // TODO: tackle with file_state and small_state
+      if (shouldIgnore(dest)) {
+        // fuzzy matching is used to delete content under the dir
+        if (info.isdir()) {
+          ret.add(String.format("DELETE FROM file WHERE path LIKE '%s/%%';", src));
+        }
+        ret.add(String.format("DELETE FROM file WHERE path = '%s';", src));
+        return ret;
+      } else {
+        ret.add(String.format("UPDATE file SET path = replace(path, '%s', '%s') "
+            + "WHERE path = '%s';", src, dest, src));
+        ret.add(String.format("UPDATE file_state SET path = replace(path, '%s', '%s') "
+            + "WHERE path = '%s';", src, dest, src));
+        ret.add(String.format("UPDATE small_file SET path = replace(path, '%s', '%s') "
+            + "WHERE path = '%s';", src, dest, src));
+        if (info.isdir()) {
+          if (metaStore.getDbType() == DBType.MYSQL) {
+            ret.add(String.format("UPDATE file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE file_state SET path = CONCAT('%s', SUBSTR(path, %d)) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE small_file SET path = CONCAT('%s', SUBSTR(path, %d)) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          } else if (metaStore.getDbType() == DBType.SQLITE) {
+            ret.add(String.format("UPDATE file SET path = '%s' || SUBSTR(path, %d) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE file_state SET path = '%s' || SUBSTR(path, %d) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+            ret.add(String.format("UPDATE small_file SET path = '%s' || SUBSTR(path, %d) "
+                + "WHERE path LIKE '%s/%%';", dest, src.length() + 1, src));
+          }
         }
       }
     }

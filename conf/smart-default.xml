@@ -36,7 +36,16 @@
     <value></value>
     <description>
       SSM will completely ignore files under the given directories.
-      Directories are separated by ','.
+      For more than one directories, they should be separated by ",".
+    </description>
+  </property>
+
+  <property>
+    <name>smart.cover.dirs</name>
+    <value></value>
+    <description>
+      SSM will only fetch files under the given directories.
+      For more than one directories, they should be separated by ",".
     </description>
   </property>
 

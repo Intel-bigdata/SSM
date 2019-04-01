@@ -20,6 +20,7 @@ package org.smartdata.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
@@ -31,8 +32,6 @@ import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +43,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
+  private List<String> fetchAccessEventDirs;
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -78,13 +78,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     ClientProtocolProtoBuffer proxy = RPC.getProxy(
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
     server = new ClientProtocolClientSideTranslator(proxy);
-    Collection<String> dirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-    ignoreAccessEventDirs = new ArrayList<>();
     singleIgnoreList = new ConcurrentHashMap<>(200);
-    for (String s : dirs) {
-      ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
-    }
+    ignoreAccessEventDirs = ((SmartConf) conf).getIgnoreDir();
+    fetchAccessEventDirs = ((SmartConf) conf).getCoverDir();
+
   }
 
   private void checkOpen() throws IOException {
@@ -127,7 +124,15 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         return true;
       }
     }
-    return false;
+    if (fetchAccessEventDirs.isEmpty()) {
+      return false;
+    }
+    for (String s : fetchAccessEventDirs) {
+      if (toCheck.startsWith(s)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override

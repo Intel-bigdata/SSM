@@ -32,13 +32,10 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.ingestion.IngestionTask;
 import org.smartdata.model.FileInfoBatch;
 import org.smartdata.metastore.ingestion.FileStatusIngester;
-import org.smartdata.protocol.message.StatusReport;
 
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -76,12 +73,17 @@ public class NamespaceFetcher {
     this(client, metaStore, fetchInterval, null, new SmartConf());
   }
 
+  public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval, SmartConf conf) {
+    this(client, metaStore, fetchInterval, null, conf);
+  }
+
   public NamespaceFetcher(DFSClient client, MetaStore metaStore, long fetchInterval,
       ScheduledExecutorService service, SmartConf conf) {
     int numProducers = conf.getInt(SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_KEY,
         SmartConfKeys.SMART_NAMESPACE_FETCHER_PRODUCERS_NUM_DEFAULT);
     numProducers = numProducers <= 0 ? 1 : numProducers;
     this.ingestionTasks = new IngestionTask[numProducers];
+    HdfsFetchTask.init();
     for (int i = 0; i < numProducers; i++) {
       ingestionTasks[i] = new HdfsFetchTask(ingestionTasks, client, conf);
     }
@@ -104,8 +106,13 @@ public class NamespaceFetcher {
     this.conf = conf;
   }
 
+  public static void init(SmartConf conf) {
+    IngestionTask.init(conf);
+  }
+
   public void startFetch() throws IOException {
     try {
+      init(conf);
       metaStore.deleteAllEcPolicies();
       Map<Byte, String> idToPolicyName =
           CompatibilityHelperLoader.getHelper().getErasureCodingPolicies(client);
@@ -138,6 +145,31 @@ public class NamespaceFetcher {
           consumers[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
     }
     LOG.info("Started.");
+  }
+
+  public static void init(String dir) {
+    IngestionTask.init(dir);
+  }
+
+  /*
+  startFetch(dir) is used to restart fetcher to fetch one specific dir.
+  In rename event, when src is not in file table because it is not fetched or other reason,
+  dest should be fetched by using startFetch(dest).
+  */
+  public void startFetch(String dir) {
+    init(dir);
+    this.fetchTaskFutures = new ScheduledFuture[ingestionTasks.length];
+    for (int i = 0; i < ingestionTasks.length; i++) {
+      fetchTaskFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          ingestionTasks[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+    }
+
+    this.consumerFutures = new ScheduledFuture[consumers.length];
+    for (int i = 0; i < consumers.length; i++) {
+      consumerFutures[i] = this.scheduledExecutorService.scheduleAtFixedRate(
+          consumers[i], 0, fetchInterval, TimeUnit.MILLISECONDS);
+    }
+    LOG.info("Start fetch the given dir.");
   }
 
   public boolean fetchFinished() {
@@ -183,13 +215,11 @@ public class NamespaceFetcher {
       defaultBatchSize = conf.getInt(SmartConfKeys
               .SMART_NAMESPACE_FETCHER_BATCH_KEY,
           SmartConfKeys.SMART_NAMESPACE_FETCHER_BATCH_DEFAULT);
+      ignoreList = this.conf.getIgnoreDir();
+    }
 
-      Collection<String> ignoreDirs =
-          this.conf.getTrimmedStringCollection(SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-      ignoreList = new ArrayList<>(ignoreDirs.size());
-      for (String dir : ignoreDirs) {
-        ignoreList.add(dir.endsWith("/") ? dir : dir + "/");
-      }
+    public static void init() {
+      HdfsFetchTask.idCounter = 0;
     }
 
     // BFS finished
@@ -260,7 +290,12 @@ public class NamespaceFetcher {
 
       try {
         HdfsFileStatus status = client.getFileInfo(parent);
-        if (status != null && status.isDir()) {
+
+        if (status == null) {
+          throw new IOException();
+        }
+
+        if (status.isDir()) {
           if (startAfter == null) {
             FileInfo internal = convertToFileInfo(status, "");
             internal.setPath(parent);

@@ -42,13 +42,10 @@ import java.util.Arrays;
 import java.util.List;
 
 public class TestNamespaceFetcher {
-  @Test
-  public void testNamespaceFetcher() throws IOException, InterruptedException,
+  final List<java.lang.String> pathesInDB = new ArrayList<>();
+
+  NamespaceFetcher init(MiniDFSCluster cluster, SmartConf conf) throws IOException, InterruptedException,
       MissingEventsException, MetaStoreException {
-    final Configuration conf = new SmartConf();
-    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
-      .numDataNodes(2).build();
-    try {
       final DistributedFileSystem dfs = cluster.getFileSystem();
       dfs.mkdir(new Path("/user"), new FsPermission("777"));
       dfs.create(new Path("/user/user1"));
@@ -57,7 +54,6 @@ public class TestNamespaceFetcher {
       DFSClient client = dfs.getClient();
 
       MetaStore adapter = Mockito.mock(MetaStore.class);
-      final List<String> pathesInDB = new ArrayList<>();
       doAnswer(new Answer<Void>() {
         @Override
         public Void answer(InvocationOnMock invocationOnMock) {
@@ -72,9 +68,96 @@ public class TestNamespaceFetcher {
           return null;
         }
       }).when(adapter).insertFiles(any(FileInfo[].class));
-      NamespaceFetcher fetcher = new NamespaceFetcher(client, adapter, 100);
+      NamespaceFetcher fetcher;
+      if(conf != null) {
+        fetcher = new NamespaceFetcher(client, adapter, 100, conf);
+      } else {
+        fetcher = new NamespaceFetcher(client, adapter, 100);
+      }
+      return fetcher;
+  }
+
+  @Test
+  public void testFetchingFromRoot() throws IOException, InterruptedException,
+      MissingEventsException, MetaStoreException {
+    pathesInDB.clear();
+    Configuration conf = new SmartConf();
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).build();
+    try {
+      NamespaceFetcher fetcher = init(cluster, null);
       fetcher.startFetch();
       List<String> expected = Arrays.asList("/", "/user", "/user/user1", "/user/user2", "/tmp");
+      while (!fetcher.fetchFinished()) {
+        Thread.sleep(100);
+      }
+      Assert.assertTrue(pathesInDB.size() == expected.size() && pathesInDB.containsAll(expected));
+      fetcher.stop();
+    } finally {
+      cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testFetchingFromGivenDir() throws IOException, InterruptedException,
+      MissingEventsException, MetaStoreException {
+    pathesInDB.clear();
+    final Configuration conf = new SmartConf();
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).build();
+    String fetchDir = "/user";
+    try {
+      NamespaceFetcher fetcher = init(cluster, null);
+      fetcher.startFetch(fetchDir);
+      List<String> expected = Arrays.asList("/user", "/user/user1", "/user/user2");
+      while (!fetcher.fetchFinished()) {
+        Thread.sleep(100);
+      }
+      Assert.assertTrue(pathesInDB.size() == expected.size() && pathesInDB.containsAll(expected));
+      fetcher.stop();
+    } finally {
+      cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testIgnore() throws IOException, InterruptedException,
+      MissingEventsException, MetaStoreException {
+    pathesInDB.clear();
+    final Configuration conf = new SmartConf();
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).build();
+    ArrayList<String> ignoreList = new ArrayList<>();
+    ignoreList.add("/tmp");
+    ((SmartConf) conf).setIgnoreDir(ignoreList);
+    try {
+      NamespaceFetcher fetcher = init(cluster, (SmartConf) conf);
+      fetcher.startFetch();
+      List<String> expected = Arrays.asList("/", "/user", "/user/user1", "/user/user2");
+      while (!fetcher.fetchFinished()) {
+        Thread.sleep(100);
+      }
+      Assert.assertTrue(pathesInDB.size() == expected.size() && pathesInDB.containsAll(expected));
+      fetcher.stop();
+    } finally {
+      cluster.shutdown();
+    }
+  }
+
+  @Test
+  public void testFetch() throws IOException, InterruptedException,
+      MissingEventsException, MetaStoreException {
+    pathesInDB.clear();
+    final Configuration conf = new SmartConf();
+    final MiniDFSCluster cluster = new MiniDFSCluster.Builder(conf)
+        .numDataNodes(2).build();
+    ArrayList<String> coverList = new ArrayList<>();
+    coverList.add("/user");
+    ((SmartConf) conf).setCoverDir(coverList);
+    try {
+      NamespaceFetcher fetcher = init(cluster, (SmartConf) conf);
+      fetcher.startFetch();
+      List<String> expected = Arrays.asList("/user/", "/user/user1", "/user/user2");
       while (!fetcher.fetchFinished()) {
         Thread.sleep(100);
       }
