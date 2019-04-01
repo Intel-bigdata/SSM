@@ -137,6 +137,7 @@ public class SmartEngine extends AbstractService {
     return agentService.getAgentInfos();
   }
 
+
   public ConfManager getConfMgr() {
     return confMgr;
   }
