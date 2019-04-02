@@ -126,11 +126,11 @@ public class SmartEngine extends AbstractService {
   }
 
   public Set<String> getAgentHosts() {
-    return nodeHosts.getAgentHosts();
+    return conf.getAgentHosts();
   }
 
   public Set<String> getServerHosts() {
-    return nodeHosts.getServerHosts();
+    return conf.getServerHosts();
   }
 
   public List<AgentInfo> getAgents() {
