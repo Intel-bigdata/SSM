@@ -215,6 +215,7 @@
                                 <configuration>
                                     <finalName>smart-data-${project.version}</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
+                                    <archiveBaseDirectory>smart-data-${project.version}</archiveBaseDirectory>
                                     <descriptors>
                                         <descriptor>src/assemblies/bin.xml</descriptor>
                                     </descriptors>

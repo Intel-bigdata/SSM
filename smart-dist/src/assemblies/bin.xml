@@ -7,6 +7,7 @@
         <format>tar.gz</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>smart</baseDirectory>
     <fileSets>
         <fileSet>
             <directory>${basedir}/../bin</directory>
