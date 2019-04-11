@@ -62,8 +62,8 @@ public class SmartConf extends Configuration {
       coverList.add(s + (s.endsWith("/") ? "" : "/"));
     }
 
-    this.serverHosts = init("server", this);
-    this.agentHosts = init("agent", this);
+    this.serverHosts = init("servers", this);
+    this.agentHosts = init("agents", this);
   }
 
   public List<String> getCoverDir() {
@@ -88,16 +88,7 @@ public class SmartConf extends Configuration {
     }
 }
 
-  public Set<String> init(String role, SmartConf conf) {
-    String fileName = "/agents";
-    switch (role) {
-      case "agent":
-        fileName = "/agents";
-        break;
-      case "server":
-        fileName = "/servers";
-        break;
-    }
+  public Set<String> init(String fileName, SmartConf conf) {
     String hostName = "";
     try {
       InetAddress address = InetAddress.getLocalHost();
@@ -106,12 +97,12 @@ public class SmartConf extends Configuration {
       e.printStackTrace();
     }
 
-    String agentConfFile = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
-        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + fileName;
+    String filePath = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
+        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/" + fileName;
     Scanner sc = null;
     HashSet<String> hosts = new HashSet<>();
     try {
-      sc = new Scanner(new File(agentConfFile));
+      sc = new Scanner(new File(filePath));
     } catch (FileNotFoundException ex) {
       ex.printStackTrace();
     }
@@ -126,7 +117,6 @@ public class SmartConf extends Configuration {
         }
       }
     }
-
     return hosts;
   }
 
