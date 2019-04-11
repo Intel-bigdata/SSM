@@ -22,10 +22,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Console;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Scanner;
+import java.util.Set;
+
 
 /**
  * SSM related configurations as well as HDFS configurations.
@@ -34,6 +42,8 @@ public class SmartConf extends Configuration {
   private static final Logger LOG = LoggerFactory.getLogger(SmartConf.class);
   private final List<String> ignoreList;
   private final List<String> coverList;
+  private Set<String> agentHosts;
+  private Set<String> serverHosts;
 
   public SmartConf() {
     Configuration.addDefaultResource("smart-default.xml");
@@ -51,6 +61,9 @@ public class SmartConf extends Configuration {
     for (String s : fetchDirs) {
       coverList.add(s + (s.endsWith("/") ? "" : "/"));
     }
+
+    this.serverHosts = init("servers", this);
+    this.agentHosts = init("agents", this);
   }
 
   public List<String> getCoverDir() {
@@ -74,6 +87,46 @@ public class SmartConf extends Configuration {
       ignoreList.add(s + (s.endsWith("/") ? "" : "/"));
     }
 }
+
+  public Set<String> init(String fileName, SmartConf conf) {
+    String hostName = "";
+    try {
+      InetAddress address = InetAddress.getLocalHost();
+      hostName = address.getHostName();
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
+
+    String filePath = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
+        SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/" + fileName;
+    Scanner sc = null;
+    HashSet<String> hosts = new HashSet<>();
+    try {
+      sc = new Scanner(new File(filePath));
+    } catch (FileNotFoundException ex) {
+      ex.printStackTrace();
+    }
+
+    while (sc != null && sc.hasNextLine()) {
+      String host = sc.nextLine().trim();
+      if (!host.startsWith("#") && !host.isEmpty()) {
+        if (host.equals("localhost")) {
+          hosts.add(hostName);
+        } else {
+          hosts.add(host);
+        }
+      }
+    }
+    return hosts;
+  }
+
+  public Set<String> getServerHosts() {
+    return serverHosts;
+  }
+
+  public Set<String> getAgentHosts() {
+    return agentHosts;
+  }
 
   public static void main(String[] args) {
     Console console = System.console();
