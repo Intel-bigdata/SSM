@@ -1,0 +1,11 @@
+.statusPoint {
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+}
+
+.statusPoint-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

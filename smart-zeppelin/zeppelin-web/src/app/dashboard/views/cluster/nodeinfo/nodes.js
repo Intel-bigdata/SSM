@@ -19,11 +19,59 @@
 angular.module('zeppelinWebApp')
 
   .controller('NodesCtrl', NodesCtrl);
-  NodesCtrl.$inject = ['$scope', '$filter', 'nodes0'];
-  function NodesCtrl($scope, $filter, nodes0) {
+  NodesCtrl.$inject = ['$scope', '$filter', 'nodes0', 'serverHosts', 'agentHosts'];
+  function NodesCtrl($scope, $filter, nodes0, serverHosts, agentHosts) {
     $scope.nodes = nodes0.body;
+    $scope.serverHosts = serverHosts.body;
+    $scope.agentHosts = agentHosts.body;
+
+    angular.forEach($scope.nodes, function (data, index) {
+      if ('maxInExecution' in data) {
+        let index = $scope.serverHosts.indexOf(data.nodeInfo.host);
+        if (index >= 0) {
+          data.isLive = true;
+          data.type = 'server';
+          $scope.serverHosts.splice(index, 1);
+        }
+      } else {
+        let index = $scope.agentHosts.indexOf(data.nodeInfo.host);
+        if (index >= 0) {
+          data.isLive = true;
+          data.type = 'agent';
+          $scope.agentHosts.splice(index, 1);
+        }
+      }
+    });
+
+    $scope.liveNumber = $scope.nodes.length;
+    $scope.deadNumber = $scope.serverHosts.length + $scope.agentHosts.length;
+
+    angular.forEach($scope.serverHosts, function (host, index) {
+      $scope.nodes.push(
+        {
+          nodeInfo: {
+            host: host
+          },
+          isLive: false,
+          type: 'server'
+        }
+      );
+    });
+
+    angular.forEach($scope.agentHosts, function (host, index) {
+      $scope.nodes.push(
+        {
+          nodeInfo: {
+            host: host
+          },
+          isLive: false,
+          type: 'agent'
+        }
+      );
+    });
+
     angular.forEach($scope.nodes, function (data,index) {
-      data.registTime = data.registTime === 0 ? "-" :
+      data.registTime = data.registTime === 0 ? '-' :
         $filter('date')(data.registTime,'yyyy-MM-dd HH:mm:ss');
     });
   }

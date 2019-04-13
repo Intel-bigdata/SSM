@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.metastore.MetaStore;
@@ -233,7 +234,9 @@ public class TestInotifyEventApplier extends TestDaoUtil {
   @Test
   public void testApplierRenameEvent() throws Exception {
     DFSClient client = Mockito.mock(DFSClient.class);
-    InotifyEventApplier applier = new InotifyEventApplier(metaStore, client);
+    SmartConf conf = new SmartConf();
+    NamespaceFetcher namespaceFetcher = new NamespaceFetcher(client, metaStore, null, conf);
+    InotifyEventApplier applier = new InotifyEventApplier(metaStore, client, namespaceFetcher);
 
     FileInfo[] fileInfos = new FileInfo[]{
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dirfile", 7000), "/dirfile"),
@@ -245,6 +248,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dir2/file2", 8102), "/dir2/file2"),
         HadoopUtil.convertFileStatus(getDummyDirStatus("/dir/dir", 8200), "/dir/dir"),
         HadoopUtil.convertFileStatus(getDummyFileStatus("/dir/dir/f1", 8201), "/dir/dir/f1"),
+        HadoopUtil.convertFileStatus(getDummyFileStatus("/file", 2000), "/file"),
     };
     metaStore.insertFiles(fileInfos);
     Mockito.when(client.getFileInfo("/dir1")).thenReturn(getDummyDirStatus("/dir1", 8000));
@@ -261,6 +265,7 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     Assert.assertTrue(metaStore.getFile("/dir1/dir/f1") != null);
     Assert.assertTrue(metaStore.getFile("/dir2") != null);
     Assert.assertTrue(metaStore.getFile("/dir2/file1") != null);
+    Assert.assertTrue(metaStore.getFile("/file") != null);
 
     List<Event> events = new ArrayList<>();
     Event.RenameEvent renameEvent = new Event.RenameEvent.Builder()
@@ -271,32 +276,34 @@ public class TestInotifyEventApplier extends TestDaoUtil {
     applier.apply(events);
     Assert.assertTrue(metaStore.getFile("/file2") == null);
 
+    /*
     Mockito.when(client.getFileInfo("/file2")).thenReturn(getDummyFileStatus("/file2", 2000));
     applier.apply(events);
     FileInfo info = metaStore.getFile("/file2");
     Assert.assertTrue(info != null && info.getFileId() == 2000);
+    */
 
     events.clear();
     renameEvent = new Event.RenameEvent.Builder()
-        .srcPath("/file2")
-        .dstPath("/file3")
+        .srcPath("/file")
+        .dstPath("/file1")
         .build();
     events.add(renameEvent);
     applier.apply(events);
-    FileInfo info2 = metaStore.getFile("/file2");
+    FileInfo info2 = metaStore.getFile("/file");
     Assert.assertTrue(info2 == null);
-    FileInfo info3 = metaStore.getFile("/file3");
+    FileInfo info3 = metaStore.getFile("/file1");
     Assert.assertTrue(info3 != null);
 
     renameEvent = new Event.RenameEvent.Builder()
-        .srcPath("/file3")
-        .dstPath("/file4")
+        .srcPath("/file1")
+        .dstPath("/file2")
         .build();
     events.clear();
     events.add(renameEvent);
     applier.apply(events);
-    FileInfo info4 = metaStore.getFile("/file3");
-    FileInfo info5 = metaStore.getFile("/file4");
+    FileInfo info4 = metaStore.getFile("/file1");
+    FileInfo info5 = metaStore.getFile("/file2");
     Assert.assertTrue(info4 == null && info5 != null);
   }
 

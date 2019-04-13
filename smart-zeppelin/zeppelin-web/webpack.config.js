@@ -269,10 +269,12 @@ module.exports = function makeWebpackConfig () {
   config.devServer = {
     historyApiFallback: true,
     port: 1234,
+    host: 'localhost',
     inline: true,
     hot: true,
     progress: true,
     contentBase: './src',
+    disableHostCheck: true,
     setup: function(app) {
       app.use(
         '/bower_components/',

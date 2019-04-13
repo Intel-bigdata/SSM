@@ -73,6 +73,7 @@ import './app/dashboard/services/models/models.js';
 import './app/dashboard/views/cluster/cluster_hottestFiles.js';
 import './app/dashboard/views/cluster/cluster_fileInCache.js';
 import './app/dashboard/views/cluster/storage/storage.js';
+import './app/dashboard/views/cluster/storage/bigChart.js'
 import './app/dashboard/views/cluster/nodeinfo/nodes.js';
 import './app/dashboard/views/cluster/storage/storages.js';
 import './app/dashboard/views/actions/actions.js';
