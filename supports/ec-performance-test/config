@@ -1,0 +1,53 @@
+# These are test cases which specify file size and num. The base sync dir name is "size_num".
+
+# The files for these case should be created under them in advance.
+
+# declare -A CASES=(["10MB"]="10" ["100MB"]="10")
+
+declare -A CASES=(["500MB"]="10000")
+
+# SSM home, e.g., SMART_HOME=~/smart-data-1.4.0
+
+SMART_HOME=
+
+
+
+# PAT home, e.g., PAT_HOME=~/PAT
+
+PAT_HOME=/root/rui/PAT-master/
+
+# File path
+FILE_PATH=
+
+# The src node
+SRC_NODE="sr613"
+
+# The src cluster hdfs url for sync, e.g., SRC_CLUSTER=hdfs://sr519:9000
+
+SRC_CLUSTER=hdfs://sr613:9000
+
+# The dest node
+
+DEST_NODE="sr613"
+
+# The dest cluster hdfs url for sync, e.g., DEST_CLUSTER=hdfs://sr518:9000
+
+DEST_CLUSTER=hdfs://sr613:9000
+
+
+
+# The namenode's hostname for remote HDFS cluster
+
+REMOTE_NAMENODE="sr613"
+
+
+
+# The hosts require dropping cache, e.g., HOSTS="host1 host2"
+
+HOSTS="sr605 sr606 sr607 sr608 sr609 sr610 sr611 sr612 sr613 sr614"
+
+
+
+# the number of mapper for distcp, e.g., MAPPER_NUM="30 60 90"
+
+MAPPER_NUM="90"

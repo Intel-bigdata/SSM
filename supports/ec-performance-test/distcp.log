@@ -1,0 +1,4 @@
+Test case 500MB_10000 with 90 mappers:
+ ec
+3900s 3584s 3694s 
+Test case 500MB_10000 with  mapper is finished!
