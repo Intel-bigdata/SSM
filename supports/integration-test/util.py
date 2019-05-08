@@ -146,6 +146,12 @@ def get_cmdlet(cid):
     """
     get cmdlet json with cid
     """
+    '''
+    s = requests.Session()
+    a = requests.adapters.HTTPAdapter(max_retries=3)
+    s.mount('http://', a)
+    resp = s.get(CMDLET_ROOT + "/" + str(cid) + "/info")
+    '''
     resp = requests.get(CMDLET_ROOT + "/" + str(cid) + "/info")
     return resp.json()["body"]
 
