@@ -181,6 +181,21 @@ def wait_for_cmdlets(cids, period=60):
     return failed_cids
 
 
+def wait_cmdlets(cids):
+    num_cmds = len(cids)
+    num_complete = 0
+    complete = False
+    while not complete:
+        for cid in cids:
+            cmdlet = get_cmdlet(cid)
+            if cmdlet['state'] == "DONE" or cmdlet['state'] == "FAILED":
+                num_complete += 1
+            if num_complete == num_cmds:
+                complete = True
+        if complete:
+            break
+
+
 def get_rule(rid):
     resp = requests.get(RULE_ROOT + "/" + str(rid) + "/info",
                         data=str(rid))
