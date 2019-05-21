@@ -182,18 +182,19 @@ def wait_for_cmdlets(cids, period=60):
 
 
 def wait_cmdlets(cids):
-    num_cmds = len(cids)
     num_complete = 0
     complete = False
     while not complete:
-        for cid in cids:
-            cmdlet = get_cmdlet(cid)
+        i = 0
+        while i < len(cids):
+            cmdlet = get_cmdlet(cids[i])
             if cmdlet['state'] == "DONE" or cmdlet['state'] == "FAILED":
                 num_complete += 1
-            if num_complete == num_cmds:
-                complete = True
-        if complete:
-            break
+                cids.pop(i)
+                if len(cids) == 0:
+                    complete = True
+            else:
+                i += 1
 
 
 def get_rule(rid):
