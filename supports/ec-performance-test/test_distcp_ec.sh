@@ -22,7 +22,7 @@ for size in "${!CASES[@]}"; do
         echo "==================== test case: $case, mapper num: ${MAPPER_NUM}, test round: $i ============================"
         sh drop_cache.sh
         # delete historical data and set ec policy
-	sh prepare_ec.sh
+	    sh prepare_ec.sh
         cd ${PAT_HOME}/PAT-collecting-data          
         echo "start_time=\`date +%s\`;\
         hadoop distcp -skipcrccheck -m ${MAPPER_NUM} ${SRC_CLUSTER}/${case}/* ${DEST_CLUSTER}/${DEST_DIR}/${case}/ > results/$case_${MAPPER_NUM}_$i.log 2>&1;\

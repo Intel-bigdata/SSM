@@ -2,7 +2,7 @@
 
 . ./config
 
-# generate test data using distcp
+# generate test data using DFSIO
 for size in "${!CASES[@]}"; do
     num=${CASES[$size]}
     dir="${size}_${num}"
