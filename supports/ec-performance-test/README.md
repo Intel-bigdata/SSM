@@ -2,7 +2,7 @@
 
 ## Requirements
 - Deploy SSM, please refer to /SSM/doc/ssm-deployment-guide.md.
-- Deploy two HDFS clusters and configure its bin in $PATH of OS.
+- Deploy one HDFS cluster and configure its bin in $PATH of OS.
 - Install MySQL for SSM storing Metadata.
 - Install PAT(https://github.com/intel-hadoop/PAT).
 
@@ -12,7 +12,7 @@
 ## SSM ec test
   1. Run `./test_ssm_ec_performance.sh`
   2. A file named ssm.log under this directory will record the time for each round of test. SSM log and PAT data will be collected in ${PAT_HOME}/PAT-collecting-data/results.
-
+  Note: The rule check interval in run_ssm_ec.py was set to a long period, to ensure the rule check was conducted only once during test. So that a large amount of redundant cmdlets can be saved and the execution time becomes more accurate.
 ## HDFS distcp ec test
   1. Yarn should be launched for the test cluster.
   2. Run `./test_distcp_ec.sh`

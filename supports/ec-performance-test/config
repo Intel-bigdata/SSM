@@ -10,11 +10,11 @@ SMART_HOME=
 # PAT home, e.g., PAT_HOME=~/PAT
 PAT_HOME=
 
-# The src cluster hdfs url for sync, e.g., SRC_CLUSTER=hdfs://sr519:9000
-SRC_CLUSTER=hdfs://sr613:9000
+# PAT home, e.g., HADOOP_HOME=~/hadoop
+HADOOP_HOME=
 
-# The dest cluster hdfs url for sync, e.g., DEST_CLUSTER=hdfs://sr518:9000
-DEST_CLUSTER=hdfs://sr613:9000
+# The cluster hdfs url for ec performance test, e.g., SRC_CLUSTER=hdfs://sr613:9000
+SRC_CLUSTER=
 
 # The dest dir to store the data converted to ec by distcp
 DEST_DIR_EC=
@@ -24,9 +24,6 @@ DEST_DIR_REPLICA=
 
 # The namenode's hostname of src cluster
 SRC_NODE=
-
-# The namenode's hostname of dest cluster
-DEST_NODE=
 
 # The namenode's hostname for remote HDFS cluster
 REMOTE_NAMENODE=

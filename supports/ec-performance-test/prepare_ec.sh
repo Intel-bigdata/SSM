@@ -7,8 +7,8 @@ for size in "${!CASES[@]}"; do
     num=${CASES[$size]}
     dir="${size}_${num}"
     # delete historical data
-    ssh ${DEST_NODE} "hdfs dfs -rm -r /${DEST_DIR_EC}/${dir}; hdfs dfs -mkdir /${DEST_DIR_EC}/${dir}"
+    ssh ${SRC_NODE} "hdfs dfs -rm -r /${DEST_DIR_EC}/${dir}; hdfs dfs -mkdir /${DEST_DIR_EC}/${dir}"
     # set ec policy
-    ssh ${DEST_NODE} "hdfs ec -setPolicy -path /${DEST_DIR_EC}/${dir}"   
+    ssh ${SRC_NODE} "hdfs ec -setPolicy -path /${DEST_DIR_EC}/${dir}"
 done
 

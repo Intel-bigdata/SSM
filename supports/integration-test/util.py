@@ -146,53 +146,18 @@ def get_cmdlet(cid):
     """
     get cmdlet json with cid
     """
-    # set the max retries of requests
-    s = requests.Session()
-    a = requests.adapters.HTTPAdapter(max_retries=30)
-    s.mount('http://', a)
-    s.mount('https://', a)
-    resp = s.get(CMDLET_ROOT + "/" + str(cid) + "/info")  
-    # resp = requests.get(CMDLET_ROOT + "/" + str(cid) + "/info")
+    resp = requests.get(CMDLET_ROOT + "/" + str(cid) + "/info")
     return resp.json()["body"]
 
 
-def wait_for_cmdlet(cid, period=60):
-    """
-    wait at most 60 seconds for cmdlet to be done
-    """
-    timeout = time.time() + period
-    while True:
-        cmdlet = get_cmdlet(cid)
-        if cmdlet['state'] == "PENDING" or cmdlet['state'] == "EXECUTING":
-            time.sleep(1)
-        elif cmdlet['state'] == "DONE" or cmdlet['state'] == "FAILED":
-            return cmdlet
-        if time.time() >= timeout:
-            return None
-
-
-def wait_for_cmdlets(cids, period=60):
-    failed_cids = []
-    while len(cids) != 0:
-        cmd = wait_for_cmdlet(cids[0], period)
-        if cmd is None or cmd['state'] == 'FAILED':
-            failed_cids.append(cids[0])
-        cids.pop(0)
-    return failed_cids
-
-
 def wait_cmdlets(cids):
-    num_complete = 0
-    complete = False
-    while not complete:
+    while len(cids) != 0:
         i = 0
         while i < len(cids):
             cmdlet = get_cmdlet(cids[i])
+            time.sleep(.01)
             if cmdlet['state'] == "DONE" or cmdlet['state'] == "FAILED":
-                num_complete += 1
                 cids.pop(i)
-                if len(cids) == 0:
-                    complete = True
             else:
                 i += 1
 
