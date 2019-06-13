@@ -50,6 +50,15 @@
   </property>
 
   <property>
+    <name>smart.tmp.dir</name>
+    <value></value>
+    <description>
+      SSM will only fetch files under the given directories.
+      For more than one directories, they should be separated by ",".
+    </description>
+  </property>
+
+  <property>
     <name>smart.server.rpc.address</name>
     <value>0.0.0.0:7042</value>
     <description>rpc server of SSM</description>

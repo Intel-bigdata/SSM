@@ -81,7 +81,6 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     singleIgnoreList = new ConcurrentHashMap<>(200);
     ignoreAccessEventDirs = ((SmartConf) conf).getIgnoreDir();
     fetchAccessEventDirs = ((SmartConf) conf).getCoverDir();
-
   }
 
   private void checkOpen() throws IOException {

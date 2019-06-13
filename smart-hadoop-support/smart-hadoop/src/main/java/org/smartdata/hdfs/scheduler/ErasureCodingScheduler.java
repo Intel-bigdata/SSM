@@ -48,8 +48,9 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final String listecActionID = "listec";
   public static final List<String> actions =
       Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
-  public static final String EC_DIR = "/system/ssm/ec_tmp/";
-  public static final String EC_TMP = "-ecTmp";
+  public static String EC_DIR;
+  public static final String EC_TMP_DIR = "/ec_tmp/";
+  public static final String EC_TMP = "-ecTmp";git
   public static final String EC_POLICY = "-policy";
   private Set<String> fileLock;
   private SmartConf conf;
@@ -66,6 +67,9 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     if (this.throttleInMb > 0) {
       this.rateLimiter = RateLimiter.create(throttleInMb);
     }
+    String SSM_TMP_DIR = conf.get(
+        SmartConfKeys.SMART_TMP_DIR_KEY, SmartConfKeys.SMART_TMP_DIR_DEFAULT);
+    ErasureCodingScheduler.EC_DIR = SSM_TMP_DIR + EC_TMP_DIR;
   }
 
   public List<String> getSupportedActions() {
