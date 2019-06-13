@@ -150,6 +150,31 @@ def get_cmdlet(cid):
     return resp.json()["body"]
 
 
+def wait_for_cmdlet(cid, period=60):
+    """
+    wait at most 60 seconds for cmdlet to be done
+    """
+    timeout = time.time() + period
+    while True:
+        cmdlet = get_cmdlet(cid)
+        if cmdlet['state'] == "PENDING" or cmdlet['state'] == "EXECUTING":
+            time.sleep(1)
+        elif cmdlet['state'] == "DONE" or cmdlet['state'] == "FAILED":
+            return cmdlet
+        if time.time() >= timeout:
+            return None
+
+
+def wait_for_cmdlets(cids, period=60):
+    failed_cids = []
+    while len(cids) != 0:
+        cmd = wait_for_cmdlet(cids[0], period)
+        if cmd is None or cmd['state'] == 'FAILED':
+            failed_cids.append(cids[0])
+        cids.pop(0)
+    return failed_cids
+
+
 def wait_cmdlets(cids):
     while len(cids) != 0:
         i = 0
