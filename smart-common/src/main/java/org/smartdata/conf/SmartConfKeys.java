@@ -182,7 +182,7 @@ public class SmartConfKeys {
    */
   public static final String SMART_COVER_DIRS_KEY = "smart.cover.dirs";
   public static final String SMART_TMP_DIR_KEY = "smart.tmp.dir";
-  public static final String SMART_TMP_DIR_DEFAULT = "/system/ssm";
+  public static final String SMART_TMP_DIR_DEFAULT = "/system/ssm/";
 
   // Target cluster
   public static final String SMART_STORAGE_INFO_UPDATE_INTERVAL_KEY =

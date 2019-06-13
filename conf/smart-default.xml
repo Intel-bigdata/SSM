@@ -53,8 +53,9 @@
     <name>smart.tmp.dir</name>
     <value></value>
     <description>
-      SSM will only fetch files under the given directories.
-      For more than one directories, they should be separated by ",".
+      This directory is used as a tmp directory for SSM to store tmp files and data.
+      The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
+      No more than one directory can be set as the tmp directory.
     </description>
   </property>
 

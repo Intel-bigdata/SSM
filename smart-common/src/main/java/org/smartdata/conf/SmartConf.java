@@ -57,6 +57,7 @@ public class SmartConf extends Configuration {
     coverList = new ArrayList<>();
     String tmpDir = this.get(
         SmartConfKeys.SMART_TMP_DIR_KEY, SmartConfKeys.SMART_TMP_DIR_DEFAULT);
+    tmpDir = tmpDir + (tmpDir.endsWith("/") ? "" : "/");
     ignoreList.add(tmpDir);
     for (String s : ignoreDirs) {
       ignoreList.add(s + (s.endsWith("/") ? "" : "/"));
