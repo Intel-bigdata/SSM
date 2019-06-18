@@ -25,7 +25,7 @@ for size in "${!CASES[@]}"; do
 	    sh prepare_ec.sh
         cd ${PAT_HOME}/PAT-collecting-data          
         echo "start_time=\`date +%s\`;\
-        hadoop distcp -skipcrccheck -m ${MAPPER_NUM} ${SRC_CLUSTER}/${case}/* ${SRC_CLUSTER}/${DEST_DIR}/${case}/ > results/$case_${MAPPER_NUM}_$i.log 2>&1;\
+        hadoop distcp -skipcrccheck -m ${MAPPER_NUM} ${SRC_CLUSTER}/${case}/* ${SRC_CLUSTER}${DEST_DIR_EC}/${case}/ > results/$case_${MAPPER_NUM}_$i.log 2>&1;\
         end_time=\`date +%s\`;\
         printf \"\$((end_time-start_time))s \" >> ${log}" > cmd.sh
         ./pat run "${case}_"ec"_${MAPPER_NUM}_${i}"
