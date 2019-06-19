@@ -295,6 +295,11 @@ public class NamespaceFetcher {
           throw new IOException();
         }
 
+        if(!status.isDir()) {
+          this.addFileStatus(convertToFileInfo(status, parent));
+          numFilesFetched.incrementAndGet();
+        }
+
         if (status.isDir()) {
           if (startAfter == null) {
             FileInfo internal = convertToFileInfo(status, "");
