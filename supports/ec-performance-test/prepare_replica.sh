@@ -6,6 +6,6 @@
 for size in "${!CASES[@]}"; do
     num=${CASES[$size]}
     dir="${size}_${num}"
-    ssh ${SRC_NODE} "hdfs dfs -rm -r /${DEST_DIR_REPLICA}/${dir}; hdfs dfs -mkdir /${DEST_DIR_REPLICA}/${dir}"
+    ssh ${SRC_NODE} "hdfs dfs -rm -r ${DEST_DIR_REPLICA}/${dir}; hdfs dfs -mkdir ${DEST_DIR_REPLICA}/${dir}"
 done
 
