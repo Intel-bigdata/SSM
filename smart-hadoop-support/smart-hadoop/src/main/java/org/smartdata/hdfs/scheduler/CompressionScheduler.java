@@ -24,6 +24,8 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
@@ -34,6 +36,8 @@ import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.action.ScheduleResult;
+import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.net.URI;
@@ -48,6 +52,10 @@ public class CompressionScheduler extends ActionSchedulerService {
   private final URI nnUri;
   private MetaStore metaStore;
   private static final List<String> actions = Arrays.asList("compress");
+  public static String COMPRESSION_DIR;
+  public static final String COMPRESSION_TMP = "-compressionTmp";
+  public static final String COMPRESSION_TMP_DIR = "compress_tmp/";
+  private SmartConf conf;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CompressionScheduler.class);
@@ -55,8 +63,14 @@ public class CompressionScheduler extends ActionSchedulerService {
   public CompressionScheduler(SmartContext context, MetaStore metaStore)
       throws IOException {
     super(context, metaStore);
+    this.conf = context.getConf();
     this.metaStore = metaStore;
     nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+
+    String ssmTmpDir = conf.get(
+        SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
+    ssmTmpDir = ssmTmpDir + (ssmTmpDir.endsWith("/") ? "" : "/");
+    CompressionScheduler.COMPRESSION_DIR = ssmTmpDir + COMPRESSION_TMP_DIR;
   }
 
   @Override
@@ -134,6 +148,16 @@ public class CompressionScheduler extends ActionSchedulerService {
       LOG.error("Compress action of file " + path + " failed in metastore!", e);
       return false;
     }
+  }
+
+  @Override
+  public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+                                   LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
+    // For compression, add compressionTmp argument
+    String tmpName = createTmpName(action);
+    action.getArgs().put(COMPRESSION_TMP, COMPRESSION_DIR + tmpName);
+    actionInfo.getArgs().put(COMPRESSION_TMP, COMPRESSION_DIR + tmpName);
+    return ScheduleResult.SUCCESS;
   }
 
   @Override

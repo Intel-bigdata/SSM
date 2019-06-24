@@ -63,7 +63,6 @@ public class CompressionAction extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
   private static List<String> compressionImplList = Arrays.asList("Lz4","Bzip2","Zlib","snappy");
-  private static final String COMPRESS_DIR = "/system/ssm/compress_tmp";
 
   private String filePath;
   private Configuration conf;
@@ -77,6 +76,9 @@ public class CompressionAction extends HdfsAction {
 
   private CompressionFileInfo compressionFileInfo;
   private CompressionFileState compressionFileState;
+
+  private String compressionTmpPath;
+  private final String COMPRESSION_TMP = "-compressionTmp";
 
   @Override
   public void init(Map<String, String> args) {
@@ -96,6 +98,11 @@ public class CompressionAction extends HdfsAction {
     }
     if (args.containsKey(COMPRESS_IMPL)) {
       this.compressionImpl = args.get(COMPRESS_IMPL);
+    }
+
+    if (args.containsKey(COMPRESSION_TMP)) {
+      // this is a temp file kept for compressing a file.
+      this.compressionTmpPath = args.get(COMPRESSION_TMP);
     }
   }
 
@@ -120,8 +127,6 @@ public class CompressionAction extends HdfsAction {
     if (srcFile.getLen() == 0) {
       compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
     } else {
-      String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + getActionId() +
-          "_" + System.currentTimeMillis();
       short replication = srcFile.getReplication();
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();
@@ -142,12 +147,12 @@ public class CompressionAction extends HdfsAction {
 
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
 
-      OutputStream compressedOutputStream = dfsClient.create(tempPath,
+      OutputStream compressedOutputStream = dfsClient.create(compressionTmpPath,
           true, replication, blockSize);
       compress(dfsInputStream, compressedOutputStream);
-      HdfsFileStatus destFile = dfsClient.getFileInfo(tempPath);
+      HdfsFileStatus destFile = dfsClient.getFileInfo(compressionTmpPath);
       compressionFileState.setCompressedLength(destFile.getLen());
-      compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
+      compressionFileInfo = new CompressionFileInfo(true, compressionTmpPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
     appendLog("Final compression bufferSize = " + bufferSize);
