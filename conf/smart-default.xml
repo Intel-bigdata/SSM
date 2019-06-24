@@ -51,11 +51,11 @@
 
   <property>
     <name>smart.work.dir</name>
-    <value></value>
+    <value>/system/ssm</value>
     <description>
-      This directory is used as a tmp directory for SSM to store tmp files and data.
-      The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
-      No more than one directory can be set as the tmp directory.
+      This directory is used as a work directory for SSM to store tmp files and data.
+      The default path is "/system/ssm", and SSM will ignore files under the work directory.
+      No more than one directory can be set as the work directory.
     </description>
   </property>
 
