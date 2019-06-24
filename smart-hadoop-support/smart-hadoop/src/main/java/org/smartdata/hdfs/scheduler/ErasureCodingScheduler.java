@@ -68,7 +68,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       this.rateLimiter = RateLimiter.create(throttleInMb);
     }
     String ssmTmpDir = conf.get(
-        SmartConfKeys.SMART_TMP_DIR_KEY, SmartConfKeys.SMART_TMP_DIR_DEFAULT);
+        SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
     ssmTmpDir = ssmTmpDir + (ssmTmpDir.endsWith("/") ? "" : "/");
     ErasureCodingScheduler.EC_DIR = ssmTmpDir + EC_TMP_DIR;
   }

@@ -50,7 +50,7 @@
   </property>
 
   <property>
-    <name>smart.tmp.dir</name>
+    <name>smart.work.dir</name>
     <value></value>
     <description>
       This directory is used as a tmp directory for SSM to store tmp files and data.
