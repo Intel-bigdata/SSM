@@ -121,30 +121,6 @@ SSM uses SQL database as its backend metastore. MySQL is used in our multiple te
 
 **MySQL** : User should deploy MySQL service in advance.
 
-Developers
-------------
-- Wei, Zhou
-- Huafeng, Wang
-- Qiyuan, Gong
-- Yi, Chen
-- Kai, Zheng
-- Jie, Tao
-- Shunyang, Yao
-- Zhiqiang, Zhang
-- Feilong, He
-- Frank, Zeng
-- Tianlun, Zhang
-- Yuxuan, Pan
-- Jiajia, Li
-- Zhen, Du
-- Yao, Chen
-- Chen, Feng
-- Yanping, You
-- Tianlong, Xu
-- Anyang, Wang
-- Conghui, Li
-- Weijun, Pang
-
 How to Contribute
 ------------
 We welcome your feedback and contributions. Please feel free to submit issues or PRs, and we'll respond soon. Note that the project is evolving very fast.
@@ -152,6 +128,12 @@ We welcome your feedback and contributions. Please feel free to submit issues or
 Acknowledgement
 ------------
 This work derives from the discussions in Apache Hadoop JIRA [HDFS-7343](https://issues.apache.org/jira/browse/HDFS-7343). We want to thank not only all the team members of this project, but also all the contributors for their valuable ideas and feedback.
+
+Important Notice and Contact Information
+-------
+a) SSM is developed and open sourced by Intel Data Analytics Technology team. Please reach us via feilong.he@intel.com and jian.zhang@intel.com if you have any question or need help.
+
+b) To help SSM develop further, please become an active member of the community and consider giving back by making contributions.
 
 
 **For any security concern, please visit https://01.org/security.**
