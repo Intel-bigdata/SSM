@@ -79,7 +79,10 @@ limitations under the License.
     <tr>
       <td>compress</td>
       <td>-file $file [-bufSize $bufSize] [-compressImpl $compressImpl]</td>
-      <td>compress $file.</td>
+      <td>Compress $file. If option -bufSize is not given, SSM will use the default value in byte equivalent to 1MB.
+        SSM supports human-readable value for bufSize, e.g., 1KB, 1MB. SSM supports different compression implementations, including Lz4, Bzip2, Zlib and snappy.
+        If option -compressImpl is not given, SSM will use the default Zlib.
+      </td>
     </tr>
     <tr>
       <td>concat</td>
