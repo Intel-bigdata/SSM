@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-
 /**
  * SSM related configurations as well as HDFS configurations.
  */
@@ -53,8 +52,13 @@ public class SmartConf extends Configuration {
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     Collection<String> fetchDirs = this.getTrimmedStringCollection(
         SmartConfKeys.SMART_COVER_DIRS_KEY);
+
     ignoreList = new ArrayList<>();
     coverList = new ArrayList<>();
+    String tmpDir = this.get(
+        SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
+    tmpDir = tmpDir + (tmpDir.endsWith("/") ? "" : "/");
+    ignoreList.add(tmpDir);
     for (String s : ignoreDirs) {
       ignoreList.add(s + (s.endsWith("/") ? "" : "/"));
     }
@@ -86,7 +90,7 @@ public class SmartConf extends Configuration {
     for (String s : ignoreDirs) {
       ignoreList.add(s + (s.endsWith("/") ? "" : "/"));
     }
-}
+  }
 
   public Set<String> init(String fileName, SmartConf conf) {
     String hostName = "";

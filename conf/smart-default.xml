@@ -50,6 +50,16 @@
   </property>
 
   <property>
+    <name>smart.work.dir</name>
+    <value>/system/ssm</value>
+    <description>
+      This directory is used as a work directory for SSM to store tmp files and data.
+      The default path is "/system/ssm", and SSM will ignore files under the work directory.
+      No more than one directory can be set as the work directory.
+    </description>
+  </property>
+
+  <property>
     <name>smart.server.rpc.address</name>
     <value>0.0.0.0:7042</value>
     <description>rpc server of SSM</description>
