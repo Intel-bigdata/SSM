@@ -17,6 +17,7 @@
  */
 package org.smartdata.hdfs.scheduler;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.hadoop.fs.Options;
@@ -113,6 +114,7 @@ public class CompressionScheduler extends ActionSchedulerService {
     return false;
   }
 
+  @VisibleForTesting
   private String createTmpName(LaunchAction action) {
     String path = action.getArgs().get(HdfsAction.FILE_PATH);
     String fileName;

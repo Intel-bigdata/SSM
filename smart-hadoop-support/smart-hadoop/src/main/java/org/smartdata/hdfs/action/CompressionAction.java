@@ -78,7 +78,7 @@ public class CompressionAction extends HdfsAction {
   private CompressionFileState compressionFileState;
 
   private String compressionTmpPath;
-  private final String COMPRESSION_TMP = "-compressionTmp";
+  public static final String COMPRESSION_TMP = "-compressionTmp";
 
   @Override
   public void init(Map<String, String> args) {
