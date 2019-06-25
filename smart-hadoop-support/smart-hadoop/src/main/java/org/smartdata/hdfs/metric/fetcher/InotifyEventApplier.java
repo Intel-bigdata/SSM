@@ -146,6 +146,9 @@ public class InotifyEventApplier {
             ", dest path:" + ((Event.RenameEvent) event).getDstPath());
         return this.getRenameSql((Event.RenameEvent)event);
       case METADATA:
+        // The property dfs.namenode.accesstime.precision in HDFS's configuration controls
+        // the precision of access time. Its default value is 1h. To avoid missing a
+        // MetadataUpdateEvent for updating access time, a smaller value should be set.
         path = ((Event.MetadataUpdateEvent)event).getPath();
         if (shouldIgnore(path)) {
           return Arrays.asList();
