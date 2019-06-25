@@ -47,6 +47,10 @@ public class TestCompressionAction extends MiniClusterHarness {
     Map<String, String> args = new HashMap<>();
     args.put(compressionAction.FILE_PATH, filePath);
     args.put(compressionAction.BUF_SIZE, "" + bufferSize);
+    // set a tmp dir for compression
+    String COMPRESS_DIR = "/system/ssm/compress_tmp";
+    String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + "_" + System.currentTimeMillis();
+    args.put(compressionAction.COMPRESSION_TMP, tempPath);
 //    args.put(CompressionAction.COMPRESS_IMPL, "Lz4");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Zlib");
