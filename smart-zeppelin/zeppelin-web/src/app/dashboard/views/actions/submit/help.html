@@ -77,6 +77,14 @@ limitations under the License.
       <td>compact $file1, $file2, etc. to $containerFile.</td>
     </tr>
     <tr>
+      <td>compress</td>
+      <td>-file $file [-bufSize $bufSize] [-compressImpl $compressImpl]</td>
+      <td>Compress $file. If option -bufSize is not specified, SSM will use the default value in byte equivalent to 1MB.
+        SSM supports human-readable value for bufSize, e.g., 1KB, 1MB. SSM supports different compression implementations, including Lz4, Bzip2, Zlib and snappy.
+        If option -compressImpl is not specified, SSM will use Zlib by default.
+      </td>
+    </tr>
+    <tr>
       <td>concat</td>
       <td>-file $src -dest $dest</td>
       <td>Concatenate the files in $src which lists at least two files
