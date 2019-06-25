@@ -33,6 +33,7 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,15 +92,13 @@ public class CompressionAction extends HdfsAction {
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT,
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT_DEFAULT);
     this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
-
     this.filePath = args.get(FILE_PATH);
-    if (args.containsKey(BUF_SIZE)) {
-      this.UserDefinedbuffersize = Integer.valueOf(args.get(BUF_SIZE));
+    if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
+      this.UserDefinedbuffersize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
     }
     if (args.containsKey(COMPRESS_IMPL)) {
       this.compressionImpl = args.get(COMPRESS_IMPL);
     }
-
     if (args.containsKey(COMPRESSION_TMP)) {
       // this is a temp file kept for compressing a file.
       this.compressionTmpPath = args.get(COMPRESSION_TMP);
