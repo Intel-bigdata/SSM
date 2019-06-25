@@ -33,6 +33,7 @@ import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +64,6 @@ public class CompressionAction extends HdfsAction {
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
   private static List<String> compressionImplList = Arrays.asList("Lz4","Bzip2","Zlib","snappy");
-  private static final String COMPRESS_DIR = "/system/ssm/compress_tmp";
 
   private String filePath;
   private Configuration conf;
@@ -78,6 +78,9 @@ public class CompressionAction extends HdfsAction {
   private CompressionFileInfo compressionFileInfo;
   private CompressionFileState compressionFileState;
 
+  private String compressionTmpPath;
+  public static final String COMPRESSION_TMP = "-compressionTmp";
+
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
@@ -89,13 +92,16 @@ public class CompressionAction extends HdfsAction {
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT,
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT_DEFAULT);
     this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
-
     this.filePath = args.get(FILE_PATH);
-    if (args.containsKey(BUF_SIZE)) {
-      this.UserDefinedbuffersize = Integer.valueOf(args.get(BUF_SIZE));
+    if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
+      this.UserDefinedbuffersize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
     }
     if (args.containsKey(COMPRESS_IMPL)) {
       this.compressionImpl = args.get(COMPRESS_IMPL);
+    }
+    if (args.containsKey(COMPRESSION_TMP)) {
+      // this is a temp file kept for compressing a file.
+      this.compressionTmpPath = args.get(COMPRESSION_TMP);
     }
   }
 
@@ -120,8 +126,6 @@ public class CompressionAction extends HdfsAction {
     if (srcFile.getLen() == 0) {
       compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
     } else {
-      String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + getActionId() +
-          "_" + System.currentTimeMillis();
       short replication = srcFile.getReplication();
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();
@@ -142,12 +146,12 @@ public class CompressionAction extends HdfsAction {
 
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
 
-      OutputStream compressedOutputStream = dfsClient.create(tempPath,
+      OutputStream compressedOutputStream = dfsClient.create(compressionTmpPath,
           true, replication, blockSize);
       compress(dfsInputStream, compressedOutputStream);
-      HdfsFileStatus destFile = dfsClient.getFileInfo(tempPath);
+      HdfsFileStatus destFile = dfsClient.getFileInfo(compressionTmpPath);
       compressionFileState.setCompressedLength(destFile.getLen());
-      compressionFileInfo = new CompressionFileInfo(true, tempPath, compressionFileState);
+      compressionFileInfo = new CompressionFileInfo(true, compressionTmpPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
     appendLog("Final compression bufferSize = " + bufferSize);
