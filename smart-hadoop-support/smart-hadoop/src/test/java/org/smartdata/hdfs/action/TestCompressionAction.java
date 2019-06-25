@@ -40,16 +40,17 @@ public class TestCompressionAction extends MiniClusterHarness {
     super.init();
   }
 
-  protected void compressoin(String filePath, long bufferSize) throws IOException {
+  protected void compression(String filePath, String bufferSize) throws IOException {
     CompressionAction compressionAction = new CompressionAction();
     compressionAction.setDfsClient(dfsClient);
     compressionAction.setContext(smartContext);
     Map<String, String> args = new HashMap<>();
     args.put(compressionAction.FILE_PATH, filePath);
-    args.put(compressionAction.BUF_SIZE, "" + bufferSize);
+    args.put(compressionAction.BUF_SIZE, bufferSize);
     // set a tmp dir for compression
     String COMPRESS_DIR = "/system/ssm/compress_tmp";
-    String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + "_" + System.currentTimeMillis();
+    String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + compressionAction.getActionId()
+        + "_" + System.currentTimeMillis();
     args.put(compressionAction.COMPRESSION_TMP, tempPath);
 //    args.put(CompressionAction.COMPRESS_IMPL, "Lz4");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
@@ -74,16 +75,15 @@ public class TestCompressionAction extends MiniClusterHarness {
 
   @Test
   public void testExecute() throws Exception {
-
     String filePath = "/testCompressFile/fadsfa/213";
     int bufferSize = 1024 * 128;
 //    String compressionImpl = "Lz4";
 //    String compressionImpl = "Bzip2";
 //    String compressionImpl = "Zlib";
     byte[] bytes = TestCompressionAction.BytesGenerator.get(bufferSize);
-
     short replication = 3;
     long blockSize = DEFAULT_BLOCK_SIZE;
+
     // Create HDFS file
     OutputStream outputStream = dfsClient.create(filePath, true,
       replication, blockSize);
@@ -91,7 +91,8 @@ public class TestCompressionAction extends MiniClusterHarness {
     outputStream.close();
 
     // Generate compressed file
-    compressoin(filePath, bufferSize);
+    String bufferSizeForCompression = "10MB";
+    compression(filePath, bufferSizeForCompression);
 
     // Check HdfsFileStatus
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
