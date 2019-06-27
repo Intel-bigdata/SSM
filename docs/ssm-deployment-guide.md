@@ -93,6 +93,17 @@ The access info and other info related to fetched files will be considered. For 
    </property>
    ```
 
+###   Work Dir
+This directory is used as a tmp directory for SSM to store tmp files and data. The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
+No more than one directory can be set as the tmp directory.
+
+  ```xml
+   <property>
+       <name>smart.work.dir</name>
+       <value>/system/ssm</value>
+   </property>
+   ```
+
 ##  **Configure Smart Server**
 
 SSM supports running multiple Smart Servers for high-availability.  Only one of these Smart Servers can be in active state and provides services. One of the standby Smart Servers will take its place if the active Smart Server fails.
