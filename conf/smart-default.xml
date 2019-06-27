@@ -27,7 +27,7 @@
     <name>smart.dfs.enabled</name>
     <value>true</value>
     <description>
-      For SSM, all functions disabled except rpc and RESTApi service if false.
+      By setting false, all SSM functions except rpc and RESTApi service will be disabled.
     </description>
   </property>
 
@@ -35,8 +35,8 @@
     <name>smart.ignore.dirs</name>
     <value></value>
     <description>
-      SSM will completely ignore files under the given directories.
-      For more than one directories, they should be separated by ",".
+      SSM will completely ignore files under the given HDFS directory.
+      For more than one directory, they should be separated by ",".
     </description>
   </property>
 
@@ -44,8 +44,9 @@
     <name>smart.cover.dirs</name>
     <value></value>
     <description>
-      SSM will only fetch files under the given directories.
-      For more than one directories, they should be separated by ",".
+      SSM will only fetch files under the given HDFS directory.
+      For more than one directory, they should be separated by ",".
+      By default, all HDFS files are covered.
     </description>
   </property>
 
@@ -53,9 +54,9 @@
     <name>smart.work.dir</name>
     <value>/system/ssm</value>
     <description>
-      This directory is used as a work directory for SSM to store tmp files and data.
-      The default path is "/system/ssm", and SSM will ignore files under the work directory.
-      No more than one directory can be set as the work directory.
+      This HDFS directory is used as a work directory for SSM to store tmp files.
+      The default path is "/system/ssm", and SSM will ignore HDFS inotify for
+      files under the work directory. Only one directory can be set for this property.
     </description>
   </property>
 
@@ -254,7 +255,7 @@
     <value>false</value>
     <description>
       Skip fetch the entire namespace and only use available iNotify events to update namespace if true.
-      NOTE: This may leads to some unpredictable consequences and should only be used for testing.
+      NOTE: This may leads to some unpredictable consequences and should only be used for test.
     </description>
   </property>
 
@@ -280,7 +281,7 @@
     <name>smart.compression.impl</name>
     <value>Zlib</value>
     <description>
-      Default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
+      The default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
     </description>
   </property>
 </configuration>
