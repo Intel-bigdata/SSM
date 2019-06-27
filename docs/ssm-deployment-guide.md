@@ -80,7 +80,7 @@ Please note that SSM action will not be scheduled for files under ignored direct
    </property>
    ```
 
-###   Fetch Dirs
+###   Cover Dirs
 SSM will fetch the whole HDFS namespace by default when it starts. If you only care about the files under some directory, you can make a modification in smart-default.xml as the following shows.
 SSM will only fetch files under the given directories. For more than one directories, they should be separated by ",".
 
@@ -88,7 +88,7 @@ The access info and other info related to fetched files will be considered. For 
 
   ```xml
    <property>
-       <name>smart.fetch.dirs</name>
+       <name>smart.cover.dirs</name>
        <value>/foodirA,/foodirB</value>
    </property>
    ```
