@@ -36,7 +36,7 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 	mvn clean package -Pdist,web,hadoop-3.1 -DskipTests
 
-A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
+A tar distribution package will be generated under 'smart-dist/target'. Unzip the tar distribution package to ${SMART_HOME} directory, and the configuration files of SSM is under '${SMART_HOME}/conf'.
 For more detailed information, please refer to BUILDING.txt file.
 
 # Configure SSM
@@ -80,7 +80,7 @@ Please note that SSM action will not be scheduled for files under ignored direct
    </property>
    ```
 
-###   Fetch Dirs
+###   Cover Dirs
 SSM will fetch the whole HDFS namespace by default when it starts. If you only care about the files under some directory, you can make a modification in smart-default.xml as the following shows.
 SSM will only fetch files under the given directories. For more than one directories, they should be separated by ",".
 
@@ -88,8 +88,19 @@ The access info and other info related to fetched files will be considered. For 
 
   ```xml
    <property>
-       <name>smart.fetch.dirs</name>
+       <name>smart.cover.dirs</name>
        <value>/foodirA,/foodirB</value>
+   </property>
+   ```
+
+###   Work Dir
+This HDFS directory is used as a tmp directory for SSM to store tmp files and data. The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
+Only one directory can be set for this property.
+
+  ```xml
+   <property>
+       <name>smart.work.dir</name>
+       <value>/system/ssm</value>
    </property>
    ```
 
@@ -408,8 +419,8 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
 
 
 ## Validate the Hadoop Configuration
-     After all these steps, a cluster restart is required. After the restart, try to run some simple test to see if
-the configuration takes effect. For example, you can try to run TestDFSIO workload.
+
+After all these steps, a cluster restart is required. After the restart, try to run some simple test to see if the configuration takes effect. For example, you can try to run TestDFSIO workload.
 
  	* write data
  
