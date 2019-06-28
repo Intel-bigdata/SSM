@@ -36,7 +36,7 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 	mvn clean package -Pdist,web,hadoop-3.1 -DskipTests
 
-A tar distribution package will be generated under 'smart-dist/target'. Unzip the tar distribution package to ${SMART_HOME} directory, and the configuration files of SSM is under '${SMART_HOME}/conf'.
+A tar distribution package will be generated under 'smart-dist/target'. Unzip the tar distribution package to ${SMART_HOME} directory, and SSM configuration files are under '${SMART_HOME}/conf'.
 For more detailed information, please refer to BUILDING.txt file.
 
 # Configure SSM
