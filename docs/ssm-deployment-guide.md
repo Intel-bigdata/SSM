@@ -36,7 +36,7 @@ Download SSM branch from Github https://github.com/Intel-bigdata/SSM/
 
 	mvn clean package -Pdist,web,hadoop-3.1 -DskipTests
 
-A tar distribution package will be generated under 'smart-dist/target'. unzip the tar distribution package to ${SMART_HOME} directory, the configuration files of SSM is under '${SMART_HOME}/conf'.
+A tar distribution package will be generated under 'smart-dist/target'. Unzip the tar distribution package to ${SMART_HOME} directory, and the configuration files of SSM is under '${SMART_HOME}/conf'.
 For more detailed information, please refer to BUILDING.txt file.
 
 # Configure SSM
@@ -94,8 +94,8 @@ The access info and other info related to fetched files will be considered. For 
    ```
 
 ###   Work Dir
-This directory is used as a tmp directory for SSM to store tmp files and data. The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
-No more than one directory can be set as the tmp directory.
+This HDFS directory is used as a tmp directory for SSM to store tmp files and data. The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
+Only one directory can be set for this property.
 
   ```xml
    <property>
@@ -419,8 +419,8 @@ After we switch to the SmartFileSystem from the default HDFS implementation, we 
 
 
 ## Validate the Hadoop Configuration
-     After all these steps, a cluster restart is required. After the restart, try to run some simple test to see if
-the configuration takes effect. For example, you can try to run TestDFSIO workload.
+
+After all these steps, a cluster restart is required. After the restart, try to run some simple test to see if the configuration takes effect. For example, you can try to run TestDFSIO workload.
 
  	* write data
  

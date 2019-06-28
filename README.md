@@ -4,7 +4,7 @@ HDFS Smart Storage Management [![Build Status](https://travis-ci.org/Intel-bigda
 
 **HDFS-SSM** is the major portion of the overall [Smart Data Management Initiative](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/overall-initiative.md).
 
-In big data field, HDFS storage has been facing increasing pressure due to various workloads and demanding performance in recent years. The latest storage devices (Optane Memory, Optane SSD, NVMe SSD, etc.) can be used to improve the storage performance. Meanwhile HDFS provides all kinds of nice methodologies like HDFS Cache, Heterogeneous Storage Management (HSM) and Erasure Coding (EC), but it is a big challenge for users to make full utilization of these high-performance storage devices and HDFS storage options in a dynamic environment.
+In big data field, HDFS storage has been facing increasing pressure due to various workloads and demanding performance requirements in recent years. The latest storage devices (Optane Memory, Optane SSD, NVMe SSD, etc.) can be used to improve the storage performance. Meanwhile HDFS provides all kinds of nice methodologies like HDFS Cache, Heterogeneous Storage Management (HSM) and Erasure Coding (EC), but it is a big challenge for users to make full utilization of these high-performance storage devices and HDFS storage options in a dynamic environment.
 
 To overcome the challenge, we have introduced a comprehensive end-to-end solution, aka Smart Storage Management (SSM) in Apache Hadoop. HDFS operation data and system state information are collected, and based on the collected metrics, SSM can automatically make sophisticated usage of these methodologies to optimize HDFS storage efficiency.
 
