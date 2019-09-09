@@ -19,7 +19,6 @@ package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.ReadOption;
-import org.apache.hadoop.fs.UnresolvedLinkException;
 import org.apache.hadoop.io.ByteBufferPool;
 import org.apache.hadoop.io.compress.Decompressor;
 import org.smartdata.model.CompressionFileState;
@@ -42,7 +41,7 @@ public class SmartCompressionInputStream extends SmartInputStream {
   private CompressionCodec compressionCodec;
 
   SmartCompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-      FileState fileState) throws IOException, UnresolvedLinkException {
+      FileState fileState) throws IOException {
     super(dfsClient, src, verifyChecksum, fileState);
     if (fileState instanceof CompressionFileState) {
       compressionFileState = (CompressionFileState) fileState;

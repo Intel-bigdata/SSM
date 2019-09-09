@@ -40,18 +40,18 @@ import org.smartdata.conf.SmartConf;
  */
 public class CompressionCodec {
   static final Logger LOG = LoggerFactory.getLogger(CompressionCodec.class);
-  private String hadoopnativePath;
+  private String hadoopNativePath;
   SmartConf conf = new SmartConf();
 
   public CompressionCodec() {
-    //hadoopnativePath used to suport Bzip2 compresionImpl 
+    // hadoopNativePath is used to support Bzip2
     if (System.getenv("HADOOP_HOME") != null) {
-      this.hadoopnativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
+      this.hadoopNativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
     } else if (System.getenv("HADOOP_COMMON_HOME") != null){
-      this.hadoopnativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
+      this.hadoopNativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
     }
-    if (hadoopnativePath != null) {
-      System.load(hadoopnativePath);
+    if (hadoopNativePath != null) {
+      System.load(hadoopNativePath);
     }
   }
 
