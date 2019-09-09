@@ -63,7 +63,8 @@ public class CompressionAction extends HdfsAction {
 
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
-  private static List<String> compressionImplList = Arrays.asList("Lz4","Bzip2","Zlib","snappy");
+  private static List<String> compressionImplList =
+      Arrays.asList("Lz4","Bzip2","Zlib","snappy");
 
   private String filePath;
   private Configuration conf;
@@ -71,8 +72,8 @@ public class CompressionAction extends HdfsAction {
   private int bufferSize = 1024 * 1024;
   private int maxSplit;
   private String compressionImpl;
-  private int UserDefinedbuffersize;
-  private int Calculatedbuffersize;
+  private int userDefinedBufferSize;
+  private int calculatedBufferSize;
   private String xAttrName = null;
 
   private CompressionFileInfo compressionFileInfo;
@@ -94,7 +95,7 @@ public class CompressionAction extends HdfsAction {
     this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     this.filePath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
-      this.UserDefinedbuffersize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
+      this.userDefinedBufferSize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
     }
     if (args.containsKey(COMPRESS_IMPL)) {
       this.compressionImpl = args.get(COMPRESS_IMPL);
@@ -111,13 +112,16 @@ public class CompressionAction extends HdfsAction {
       throw new IllegalArgumentException("File parameter is missing.");
     }
     if (!compressionImplList.contains(compressionImpl)) {
-      throw new ActionException("Action fails, this compressionImpl isn't supported!");
+      throw new ActionException(
+          "Compression Action failed due to unsupported compressionImpl: " + compressionImpl);
     }
     appendLog(
-        String.format("Action starts at %s : Read %s", Utils.getFormatedCurrentTime(), filePath));
+        String.format("Compression Action started at %s for %s",
+            Utils.getFormatedCurrentTime(), filePath));
 
     if (!dfsClient.exists(filePath)) {
-      throw new ActionException("ReadFile Action fails, file doesn't exist!");
+      throw new ActionException(
+          "Failed to execute Compression Action: the given file doesn't exist!");
     }
     // Generate compressed file
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
@@ -131,18 +135,20 @@ public class CompressionAction extends HdfsAction {
       long fileSize = srcFile.getLen();
       appendLog("File length: " + fileSize);
       //The capacity of originalPos and compressedPos is maxSplit (3000) in database
-      this.Calculatedbuffersize = (int) (fileSize / maxSplit);
-      appendLog("Calculatedbuffersize: " + Calculatedbuffersize);
+      this.calculatedBufferSize = (int) (fileSize / maxSplit);
+      appendLog("Calculatedbuffersize: " + calculatedBufferSize);
       appendLog("MaxSplit: " + maxSplit);
       //Determine the actual buffersize
-      if (UserDefinedbuffersize < bufferSize || UserDefinedbuffersize < Calculatedbuffersize) {
-        if (bufferSize <= Calculatedbuffersize) {
-          appendLog("User defined buffersize is too small,use the calculated buffersize:" + Calculatedbuffersize);
+      if (userDefinedBufferSize < bufferSize || userDefinedBufferSize < calculatedBufferSize) {
+        if (bufferSize <= calculatedBufferSize) {
+          appendLog("User defined buffersize is too small, use the calculated buffer size:" +
+              calculatedBufferSize);
         } else {
-          appendLog("User defined buffersize is too small,use the default buffersize:" + bufferSize);
+          appendLog("User defined buffersize is too small, use the default buffer size:" +
+              bufferSize);
         }
       }
-      bufferSize = Math.max(Math.max(UserDefinedbuffersize, Calculatedbuffersize), bufferSize);
+      bufferSize = Math.max(Math.max(userDefinedBufferSize, calculatedBufferSize), bufferSize);
 
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
 
@@ -151,7 +157,8 @@ public class CompressionAction extends HdfsAction {
       compress(dfsInputStream, compressedOutputStream);
       HdfsFileStatus destFile = dfsClient.getFileInfo(compressionTmpPath);
       compressionFileState.setCompressedLength(destFile.getLen());
-      compressionFileInfo = new CompressionFileInfo(true, compressionTmpPath, compressionFileState);
+      compressionFileInfo =
+          new CompressionFileInfo(true, compressionTmpPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
     appendLog("Final compression bufferSize = " + bufferSize);
