@@ -63,7 +63,7 @@ public class CompressionAction extends HdfsAction {
 
   public static final String BUF_SIZE = "-bufSize";
   public static final String COMPRESS_IMPL = "-compressImpl";
-  private static List<String> compressionImplList = 
+  private static List<String> compressionImplList =
       Arrays.asList("Lz4","Bzip2","Zlib","snappy");
 
   private String filePath;
