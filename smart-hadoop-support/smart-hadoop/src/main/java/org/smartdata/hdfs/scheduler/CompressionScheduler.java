@@ -153,7 +153,8 @@ public class CompressionScheduler extends ActionSchedulerService {
   @Override
   public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
                                    LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
-    // For compression, add compressionTmp argument
+    // For compression, add compressionTmp argument. This arg is assigned by CompressionScheduler
+    // and persisted to MetaStore for easily debugging.
     String tmpName = createTmpName(action);
     action.getArgs().put(COMPRESSION_TMP, COMPRESSION_DIR + tmpName);
     actionInfo.getArgs().put(COMPRESSION_TMP, COMPRESSION_DIR + tmpName);
