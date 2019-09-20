@@ -282,6 +282,15 @@
     <value>Zlib</value>
     <description>
       The default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
+      User can also specify a codec in action arg, then this default setting will be overridden.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.compression.max.split</name>
+    <value>1000</value>
+    <description>
+      The max number of chunks split for compression.
     </description>
   </property>
 </configuration>

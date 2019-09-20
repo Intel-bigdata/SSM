@@ -91,7 +91,7 @@ public class SmartCompressorStream {
     byte[] buf = new byte[bufferSize];
     while (true) {
       int off = 0;
-      // Compression trunk with trunk size of bufferSize
+      // Compression chunk with chunk size (bufferSize)
       while (off < bufferSize) {
         int len = in.read(buf, off, bufferSize - off);
         // Complete when input stream reaches eof

@@ -69,10 +69,15 @@ public class CompressionAction extends HdfsAction {
   private String filePath;
   private Configuration conf;
 
+  // bufferSize is also chunk size.
+  // This default value limits the minimum buffer size.
   private int bufferSize = 1024 * 1024;
   private int maxSplit;
+  // Can be set in config or action arg.
   private String compressionImpl;
+  // Specified by user in action arg.
   private int userDefinedBufferSize;
+  // Calculated by max number of splits.
   private int calculatedBufferSize;
   private String xAttrName = null;
 
@@ -109,7 +114,10 @@ public class CompressionAction extends HdfsAction {
   @Override
   protected void execute() throws Exception {
     if (filePath == null) {
-      throw new IllegalArgumentException("File parameter is missing.");
+      throw new IllegalArgumentException("File path is missing.");
+    }
+    if (compressionTmpPath == null) {
+      throw new IllegalArgumentException("Compression tmp path is not specified!");
     }
     if (!compressionImplList.contains(compressionImpl)) {
       throw new ActionException(
@@ -134,17 +142,17 @@ public class CompressionAction extends HdfsAction {
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();
       appendLog("File length: " + fileSize);
-      //The capacity of originalPos and compressedPos is maxSplit (3000) in database
+      //The capacity of originalPos and compressedPos is maxSplit (1000, by default) in database
       this.calculatedBufferSize = (int) (fileSize / maxSplit);
-      appendLog("Calculatedbuffersize: " + calculatedBufferSize);
+      appendLog("Calculated buffer size: " + calculatedBufferSize);
       appendLog("MaxSplit: " + maxSplit);
-      //Determine the actual buffersize
+      //Determine the actual buffer size
       if (userDefinedBufferSize < bufferSize || userDefinedBufferSize < calculatedBufferSize) {
         if (bufferSize <= calculatedBufferSize) {
-          appendLog("User defined buffersize is too small, use the calculated buffer size:" +
+          appendLog("User defined buffer size is too small, use the calculated buffer size:" +
               calculatedBufferSize);
         } else {
-          appendLog("User defined buffersize is too small, use the default buffer size:" +
+          appendLog("User defined buffer size is too small, use the default buffer size:" +
               bufferSize);
         }
       }

@@ -28,7 +28,9 @@ limitations under the License.
       <td>addec</td>
       <td>[-policyName $policyName] [-codec $codecName -dataNum $dataNum -parityNum $parityNum -cellSize $cellSize]</td>
       <td>
-        Either conventional policy name or specific policy schema should be given to this action. A typical policy name is RS-6-3-1024k. Or add an EC policy with the given parameters. The cellSize in byte should be divisible by 1024. SSM supports human-readable value for cellSize, e.g., 1KB, 1MB.
+        Either conventional policy name or specific policy schema should be given to this action.
+        A typical policy name is RS-6-3-1024k. Or add an EC policy with the given parameters.
+        The cellSize in byte should be divisible by 1024. SSM supports human-readable value for cellSize, e.g., 1KB, 1MB.
       </td>
     </tr>
     <tr>
@@ -79,9 +81,10 @@ limitations under the License.
     <tr>
       <td>compress</td>
       <td>-file $file [-bufSize $bufSize] [-compressImpl $compressImpl]</td>
-      <td>Compress $file. If option -bufSize is not specified, SSM will use the default value in byte equivalent to 1MB.
-        SSM supports human-readable value for bufSize, e.g., 1KB, 1MB. SSM supports different compression implementations, including Lz4, Bzip2, Zlib and snappy.
-        If option -compressImpl is not specified, SSM will use Zlib by default.
+      <td>Compress $file. If option -bufSize is not specified, SSM will use the value obtained by dividing file size with the max
+        number of splits, configured in smart-default.xml. The least buffer size is 1MB. SSM supports configuring human-readable
+        value for bufSize, e.g., 1MB. SSM supports different compression implementations, including Lz4, Bzip2, Zlib and snappy.
+        If option -compressImpl is not specified, SSM will use the configuration value, Zlib by default, for 'smart.compression.impl'.
       </td>
     </tr>
     <tr>
