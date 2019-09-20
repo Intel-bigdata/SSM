@@ -124,7 +124,7 @@ public class CompressionScheduler extends ActionSchedulerService {
       fileName = path.substring(index + 1, path.length());
     }
     /**
-     * The dest tmp file is under EC_DIR and
+     * The dest tmp file is under COMPRESSION_DIR and
      * named by fileName, aidxxx and current time in millisecond with "_" separated
      */
     String tmpName = fileName + "_" + "aid" + action.getActionId() +
