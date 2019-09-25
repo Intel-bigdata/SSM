@@ -24,7 +24,7 @@ import org.smartdata.conf.SmartConf;
 import java.io.IOException;
 
 /**
- * Hadoop utilities for Smart
+ * Hadoop utilities for Smart.
  */
 public class HadoopUtils {
 
