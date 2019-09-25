@@ -29,7 +29,7 @@ import java.io.IOException;
 public class HadoopUtils {
 
   /**
-   * Get password for druid by Configuration.getPassword()
+   * Get password for druid by Configuration.getPassword().
    */
   public static String getPasswordFromHadoop(String name, SmartConf smartConf)
     throws IOException {
