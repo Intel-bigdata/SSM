@@ -27,9 +27,11 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.DruidPool;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.utils.HadoopUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -508,6 +510,16 @@ public class MetaStoreUtils {
                               name));
             }
           }
+        }
+
+        try {
+          String pw = HadoopUtils
+            .getPasswordFromHadoop(SmartConfKeys.SMART_DRUID_PASSWORD, conf);
+          if (pw != null && pw != "") {
+            p.setProperty("password", pw);
+          }
+        } catch (IOException e) {
+          LOG.info("Can not get password from hadoop, use default set.");
         }
 
         for (String key : p.stringPropertyNames()) {
