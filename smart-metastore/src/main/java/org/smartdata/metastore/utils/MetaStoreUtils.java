@@ -519,8 +519,8 @@ public class MetaStoreUtils {
             p.setProperty("password", pw);
           }
         } catch (IOException e) {
-          LOG.info("Can not get metastore password from hadoop provision credentials," +
-            " use the one configured in druid.xml");
+          LOG.info("Can not get metastore password from hadoop provision credentials,"
+            + " use the one configured in druid.xml");
         }
 
         for (String key : p.stringPropertyNames()) {
