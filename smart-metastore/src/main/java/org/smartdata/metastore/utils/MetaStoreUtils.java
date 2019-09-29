@@ -452,8 +452,6 @@ public class MetaStoreUtils {
   public static boolean supportsBatchUpdates(Connection conn) {
     try {
       return conn.getMetaData().supportsBatchUpdates();
-      
-      
     } catch (Exception e) {
       return false;
     }
