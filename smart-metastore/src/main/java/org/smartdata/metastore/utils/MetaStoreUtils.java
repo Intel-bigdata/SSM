@@ -452,6 +452,8 @@ public class MetaStoreUtils {
   public static boolean supportsBatchUpdates(Connection conn) {
     try {
       return conn.getMetaData().supportsBatchUpdates();
+      
+      
     } catch (Exception e) {
       return false;
     }
@@ -514,12 +516,13 @@ public class MetaStoreUtils {
 
         try {
           String pw = HadoopUtils
-            .getPasswordFromHadoop(SmartConfKeys.SMART_DRUID_PASSWORD, conf);
+            .getPasswordFromHadoop(SmartConfKeys.SMART_METASTORE_PASSWORD, conf);
           if (pw != null && pw != "") {
             p.setProperty("password", pw);
           }
         } catch (IOException e) {
-          LOG.info("Can not get password from hadoop, use default set.");
+          LOG.info("Can not get metastore password from hadoop provision credentials," +
+            " use the one configured in druid.xml");
         }
 
         for (String key : p.stringPropertyNames()) {
