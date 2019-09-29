@@ -61,6 +61,16 @@
   </property>
 
   <property>
+    <name>hadoop.security.credential.provider.path</name>
+    <value></value>
+    <description>
+      The jceks file store password of metastore, and the alias 'smart.metastore.password'
+      must contained within provider.
+      The default path is "", and metastore will use the one configured in druid.xml.
+    </description>
+  </property>
+
+  <property>
     <name>smart.server.rpc.address</name>
     <value>0.0.0.0:7042</value>
     <description>rpc server of SSM</description>
