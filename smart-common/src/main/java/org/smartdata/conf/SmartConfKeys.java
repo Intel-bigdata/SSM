@@ -48,7 +48,6 @@ public class SmartConfKeys {
   public static final String SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_KEY =
       "smart.namespace.fetcher.consumers.num";
   public static final int SMART_NAMESPACE_FETCHER_CONSUMERS_NUM_DEFAULT = 3;
-  public static final String SMART_DRUID_PASSWORD = "smart.druid.password";
 
   // Configure keys for Alluxio
   public static final String SMART_ALLUXIO_MASTER_HOSTNAME_KEY = "smart.alluxio.master.hostname";
@@ -76,6 +75,8 @@ public class SmartConfKeys {
   public static final String SMART_SECURITY_ADMIN_PROTOCOL_ACL =
     "smart.security.admin.protocol.acl";
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
+  // Password which get from hadoop credentialProvider used for metastore connect
+  public static final String SMART_METASTORE_PASSWORD = "smart.metastore.password";
 
   // StatesManager
 
