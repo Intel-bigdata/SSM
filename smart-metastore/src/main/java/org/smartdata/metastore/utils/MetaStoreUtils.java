@@ -520,7 +520,7 @@ public class MetaStoreUtils {
           }
         } catch (IOException e) {
           LOG.info("Can not get metastore password from hadoop provision credentials,"
-            + " use the one configured in druid.xml");
+            + " use the one configured in druid.xml .");
         }
 
         for (String key : p.stringPropertyNames()) {
