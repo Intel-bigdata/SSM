@@ -64,7 +64,7 @@
     <name>hadoop.security.credential.provider.path</name>
     <value></value>
     <description>
-      The jceks file store password of metastore, and the alias 'smart.metastore.password'
+      The jceks file store password of metastore and the alias 'smart.metastore.password'
       must contained within provider.
       The default path is "" and metastore will use the one configured in druid.xml.
     </description>
