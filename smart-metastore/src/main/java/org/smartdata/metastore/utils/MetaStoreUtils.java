@@ -513,8 +513,8 @@ public class MetaStoreUtils {
         }
 
         try {
-          String pw = HadoopUtils
-            .getPasswordFromHadoop(SmartConfKeys.SMART_METASTORE_PASSWORD, conf);
+          String pw = conf
+            .getPasswordFromHadoop(SmartConfKeys.SMART_METASTORE_PASSWORD);
           if (pw != null && pw != "") {
             p.setProperty("password", pw);
           }
