@@ -133,7 +133,7 @@ public class SmartConf extends Configuration {
   }
 
   /**
-   * Get password for druid by Configuration.getPassword()
+   * Get password for druid by Configuration.getPassword().
    */
   public String getPasswordFromHadoop(String name)
     throws IOException {
