@@ -30,6 +30,7 @@ import org.smartdata.metastore.MetaStoreException;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -508,6 +509,17 @@ public class MetaStoreUtils {
                               name));
             }
           }
+        }
+
+        try {
+          String pw = conf
+            .getPasswordFromHadoop(SmartConfKeys.SMART_METASTORE_PASSWORD);
+          if (pw != null && pw != "") {
+            p.setProperty("password", pw);
+          }
+        } catch (IOException e) {
+          LOG.info("Can not get metastore password from hadoop provision credentials,"
+            + " use the one configured in druid.xml .");
         }
 
         for (String key : p.stringPropertyNames()) {

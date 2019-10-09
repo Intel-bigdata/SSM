@@ -132,6 +132,22 @@ public class SmartConf extends Configuration {
     return agentHosts;
   }
 
+  /**
+   * Get password for druid by Configuration.getPassword().
+   */
+  public String getPasswordFromHadoop(String name)
+    throws IOException {
+    try {
+      char[] pw = this.getPassword(name);
+      if (pw == null) {
+        return null;
+      }
+      return new String(pw);
+    } catch (IOException err) {
+      throw new IOException(err.getMessage(), err);
+    }
+  }
+
   public static void main(String[] args) {
     Console console = System.console();
     try {

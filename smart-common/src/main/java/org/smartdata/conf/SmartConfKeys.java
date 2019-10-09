@@ -75,6 +75,8 @@ public class SmartConfKeys {
   public static final String SMART_SECURITY_ADMIN_PROTOCOL_ACL =
     "smart.security.admin.protocol.acl";
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
+  // Password which get from hadoop credentialProvider used for metastore connect
+  public static final String SMART_METASTORE_PASSWORD = "smart.metastore.password";
 
   // StatesManager
 
