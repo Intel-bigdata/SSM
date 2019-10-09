@@ -27,7 +27,6 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.DruidPool;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
-import org.smartdata.utils.HadoopUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
