@@ -64,9 +64,10 @@
     <name>hadoop.security.credential.provider.path</name>
     <value></value>
     <description>
-      The jceks file store password of metastore, and the alias 'smart.metastore.password'
-      must contained within provider.
-      The default path is '', and metastore will use the one configured in druid.xml.
+      This property specifies jceks path which can store password of metastore by
+      using alias 'smart.metastore.password'. An example is jceks://file/root/ssm.jceks.
+      No path is provided by default, then the password configured in druid.xml will be
+      used.
     </description>
   </property>
 
@@ -248,7 +249,8 @@
     <name>smart.status.report.ratio</name>
     <value>0.2</value>
     <description>
-      If the finished actions ratio equals or exceeds this value, status report will be triggered.
+      If the finished actions ratio equals or exceeds this value, status report will
+      be triggered.
     </description>
   </property>
 
@@ -264,8 +266,9 @@
     <name>smart.namespace.fetcher.ignore.unsuccessive.inotify.event</name>
     <value>false</value>
     <description>
-      Skip fetch the entire namespace and only use available iNotify events to update namespace if true.
-      NOTE: This may leads to some unpredictable consequences and should only be used for test.
+      Skip fetch the entire namespace and only use available iNotify events to
+      update namespace if true. NOTE: This may leads to some unpredictable
+      consequences and should only be used for test.
     </description>
   </property>
 
@@ -292,7 +295,8 @@
     <value>Zlib</value>
     <description>
       The default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
-      User can also specify a codec in action arg, then this default setting will be overridden.
+      User can also specify a codec in action arg, then this default setting will
+      be overridden.
     </description>
   </property>
 

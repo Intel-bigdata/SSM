@@ -152,6 +152,24 @@ Please note that security support will be enabled later. Here is an example for 
  
 `ssm` is the database name. User needs to create it manually through MySQL client.
 
+Alternatively, user can configure database password by hadoop credential provider instead making the password configured visibly in druid.xml.
+The below command shows how to set SSM metastore password into a jceks file. Please note the alias name is `smart.metastore.password`.
+
+`hadoop credential create smart.metastore.password -value 123456 -provider jceks://file/root/ssm.jceks`
+
+Then, the above jceks path should be specified in smart-default.xml.
+
+```xml
+  <property>
+    <name>hadoop.security.credential.provider.path</name>
+    <value>jceks://file/root/ssm.jceks</value>
+  </property>
+```
+
+If this property is not set or exception occurs when SSM tries to get metastore password from jceks, SSM will use the one configured in druid.xml.
+
+For getting more details, please refer to https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html.
+
 ## **Configure user account to authenticate to Web UI**
 
 By default, SSM Web UI enables user login with default user "admin" and password "ssm@123".  If user wants to define more user accounts, make modification in conf/shiro.ini file.
