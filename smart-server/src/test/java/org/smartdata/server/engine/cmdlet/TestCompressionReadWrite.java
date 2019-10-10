@@ -109,7 +109,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     Assert.assertArrayEquals("original array not equals compress/decompressed array", input, bytes);
   }
 
-  @Test
+  @Test(timeout = 60000)
   public void testCompressEmptyFile() throws Exception {
     waitTillSSMExitSafeMode();
 
@@ -124,10 +124,14 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
         + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
 
     waitTillActionDone(cmdId);
-    Thread.sleep(10000);
-    // metastore  test
     FileState fileState = metaStore.getFileState(fileName);
-    Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
+    while (!fileState.getFileType().equals(FileState.FileType.COMPRESSION)) {
+      Thread.sleep(200);
+      fileState = metaStore.getFileState(fileName);
+    }
+
+    // metastore  test
+//    Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
     Assert.assertEquals(FileState.FileStage.DONE, fileState.getFileStage());
     Assert.assertTrue(fileState instanceof CompressionFileState);
     CompressionFileState compressionFileState = (CompressionFileState) fileState;
