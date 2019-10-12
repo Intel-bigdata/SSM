@@ -114,7 +114,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     waitTillSSMExitSafeMode();
 
     // initDB();
-    String fileName = "/ssm/compression/file1";
+    String fileName = "/ssm/compression/file2";
     prepareFile(fileName, 0);
     MetaStore metaStore = ssm.getMetaStore();
 
@@ -154,7 +154,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 
     // initDB();
     int arraySize = 1024 * 1024 * 8;
-    String fileName = "/ssm/compression/file1";
+    String fileName = "/ssm/compression/file3";
     byte[] bytes = prepareFile(fileName, arraySize);
 
     int bufSize = 1024 * 1024;
@@ -196,7 +196,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     smartDfs.initialize(dfs.getUri(), ssm.getContext().getConf());
 
     int arraySize = 1024 * 1024 * 8;
-    String fileName = "/ssm/compression/file1";
+    String fileName = "/ssm/compression/file4";
     byte[] bytes = prepareFile(fileName, arraySize);
 
     // For uncompressed file, SmartFileSystem and DistributedFileSystem behave exactly the same
