@@ -173,7 +173,7 @@ public class CompressionScheduler extends ActionSchedulerService {
           // In current implementation, no record in FileState table means the file is normal type.
           metaStore.deleteFileState(actionInfo.getArgs().get("-file"));
         } else {
-        // Action successful
+          // Action successful
           Gson gson = new Gson();
           String compressionInfoJson = actionInfo.getResult();
           CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,

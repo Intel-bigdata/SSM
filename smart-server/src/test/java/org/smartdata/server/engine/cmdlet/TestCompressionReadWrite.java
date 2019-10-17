@@ -109,7 +109,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     Assert.assertArrayEquals("original array not equals compress/decompressed array", input, bytes);
   }
 
-  @Test(timeout = 60000)
+  @Test(timeout = 90000)
   public void testCompressEmptyFile() throws Exception {
     waitTillSSMExitSafeMode();
 
