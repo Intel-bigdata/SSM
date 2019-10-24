@@ -288,7 +288,7 @@ Add property `fs.hdfs.impl` to point to Smart Server which provides "Smart File 
 ```xml
     <property>
         <name>fs.hdfs.impl</name>
-        <value>org.smartdata.hadoop.fileystem.SmartFileSystem</value>
+        <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
         <description>The FileSystem for hdfs URL</description>
     </property>
 ```
