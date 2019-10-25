@@ -332,15 +332,19 @@ Follow the steps to add SSM Jars to classpath
   *  Distribute the jars whose names are prefixed with smart into user-defined directory such as `${SSM_jars}` in each NameNode/DataNode.
   *  Add the SSM jars directory to hadoop classpath in `hadoop-env.sh` as the following shows.
 
-          `export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*`
-  
+          export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_jars}/*
+
+     The libs under SSM home can also be used in the above setting.
+
+          export HADOOP_CLASSPATH=$HADOOP_CLASSPATH:${SSM_HOME}/lib/smart*
+
   *  For YARN and MapReduce, add the following content to the `yarn-site.xml`:
 
 ```xml
     <property>
         <name>yarn.application.classpath</name>
         <value>    
-	$HADOOP_CONF_DIR:$HADOOP_COMMON_HOME/share/hadoop/common/*:$HADOOP_COMMON_HOME/share/hadoop/common/lib/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*:$HADOOP_YARN_HOME/share/hadoop/yarn/*:$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*:${SSM_jars}/*
+	       $HADOOP_CONF_DIR:$HADOOP_COMMON_HOME/share/hadoop/common/*:$HADOOP_COMMON_HOME/share/hadoop/common/lib/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/*:$HADOOP_HDFS_HOME/share/hadoop/hdfs/lib/*:$HADOOP_YARN_HOME/share/hadoop/yarn/*:$HADOOP_YARN_HOME/share/hadoop/yarn/lib/*:${SSM_jars}/*
         </value>
     </property>
 ```
