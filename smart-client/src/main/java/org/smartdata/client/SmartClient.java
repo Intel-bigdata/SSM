@@ -80,7 +80,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         ClientProtocolProtoBuffer.class, VERSION, address, conf);
     server = new ClientProtocolClientSideTranslator(proxy);
 
-    // The below two properties should be configured on HDFS side.
+    // The below two properties should be configured on HDFS side
+    // if its dfsClient is replaced by SmartDfsClient.
     Collection<String> ignoreDirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     Collection<String> coverDirs = conf.getTrimmedStringCollection(
@@ -125,7 +126,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     }
   }
 
-  private boolean shouldIgnore(String path) {
+  public boolean shouldIgnore(String path) {
     if (singleIgnoreList.containsKey(path)) {
       // this report should be ignored
       singleIgnoreList.remove(path);
