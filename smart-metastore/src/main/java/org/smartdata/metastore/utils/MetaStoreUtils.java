@@ -66,6 +66,7 @@ public class MetaStoreUtils {
   public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
   private static boolean tidbInited = false;
+  private static boolean utf8Enable = false;
   public static final String TABLESET[] = new String[]{
             "access_count_table",
             "blank_access_count_info",
@@ -171,20 +172,20 @@ public class MetaStoreUtils {
           "CREATE TABLE blank_access_count_info (\n"
               + "  fid bigint(20) NOT NULL,\n"
               + "  count bigint(20) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE cached_file (\n"
               + "  fid bigint(20) NOT NULL,\n"
               + "  path varchar(1000) NOT NULL,\n"
               + "  from_time bigint(20) NOT NULL,\n"
               + "  last_access_time bigint(20) NOT NULL,\n"
               + "  accessed_num int(11) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE INDEX cached_file_fid_idx ON cached_file (fid);",
           "CREATE INDEX cached_file_path_idx ON cached_file (path);",
           "CREATE TABLE ec_policy (\n"
               + "  id tinyint(1) NOT NULL PRIMARY KEY,\n"
               + "  policy_name varchar(255) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE file (\n"
               + "  path varchar(1000) NOT NULL,\n"
               + "  fid bigint(20) NOT NULL,\n"
@@ -199,7 +200,7 @@ public class MetaStoreUtils {
               + "  owner_group varchar(255) DEFAULT NULL,\n"
               + "  permission smallint(6) DEFAULT NULL,\n"
               + "  ec_policy_id tinyint(1) DEFAULT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE INDEX file_fid_idx ON file (fid);",
           "CREATE INDEX file_path_idx ON file (path);",
           "CREATE TABLE storage (\n"
@@ -207,19 +208,19 @@ public class MetaStoreUtils {
               + "  time_stamp bigint(20) DEFAULT NULL,\n"
               + "  capacity bigint(20) NOT NULL,\n"
               + "  free bigint(20) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE storage_hist (\n" // Keep this compatible with Table 'storage'
               + "  type varchar(64),\n"
               + "  time_stamp bigint(20) DEFAULT NULL,\n"
               + "  capacity bigint(20) NOT NULL,\n"
               + "  free bigint(20) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE INDEX type_idx ON storage_hist (type);",
           "CREATE INDEX time_stamp_idx ON storage_hist (time_stamp);",
           "CREATE TABLE storage_policy (\n"
               + "  sid tinyint(4) PRIMARY KEY,\n"
               + "  policy_name varchar(64) DEFAULT NULL\n"
-              + ") ;",
+              + ");",
           "INSERT INTO storage_policy VALUES ('0', 'UNDEF');",
           "INSERT INTO storage_policy VALUES ('2', 'COLD');",
           "INSERT INTO storage_policy VALUES ('5', 'WARM');",
@@ -232,7 +233,7 @@ public class MetaStoreUtils {
               + "  namespace varchar(255) NOT NULL,\n"
               + "  name varchar(255) NOT NULL,\n"
               + "  value blob NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE INDEX xattr_fid_idx ON xattr (fid);",
           "CREATE TABLE datanode_info (\n"
               + "  uuid varchar(64) PRIMARY KEY,\n"
@@ -242,7 +243,7 @@ public class MetaStoreUtils {
               + "  cache_capacity bigint(20) DEFAULT NULL,\n"
               + "  cache_used bigint(20) DEFAULT NULL,\n"
               + "  location varchar(255) DEFAULT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE datanode_storage_info (\n"
               + "  uuid varchar(64) NOT NULL,\n"
               + "  sid tinyint(4) NOT NULL,\n"
@@ -256,7 +257,7 @@ public class MetaStoreUtils {
               + "  dfs_used bigint(20) DEFAULT NULL,\n"
               + "  remaining bigint(20) DEFAULT NULL,\n"
               + "  block_pool_used bigint(20) DEFAULT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE rule (\n"
               + "  id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
               + "  name varchar(255) DEFAULT NULL,\n"
@@ -266,7 +267,7 @@ public class MetaStoreUtils {
               + "  last_check_time bigint(20) DEFAULT NULL,\n"
               + "  checked_count int(11) NOT NULL,\n"
               + "  generated_cmdlets int(11) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE cmdlet (\n"
               + "  cid INTEGER PRIMARY KEY,\n"
               + "  rid INTEGER NOT NULL,\n"
@@ -275,7 +276,7 @@ public class MetaStoreUtils {
               + "  parameters varchar(4096) NOT NULL,\n"
               + "  generate_time bigint(20) NOT NULL,\n"
               + "  state_changed_time bigint(20) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE action (\n"
               + "  aid INTEGER PRIMARY KEY,\n"
               + "  cid INTEGER NOT NULL,\n"
@@ -289,7 +290,7 @@ public class MetaStoreUtils {
               + "  finish_time bigint(20) NOT NULL,\n"
               + "  exec_host varchar(255),\n"
               + "  progress float NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE file_diff (\n"
               + "  did INTEGER PRIMARY KEY AUTOINCREMENT,\n"
               + "  rid INTEGER NOT NULL,\n"
@@ -298,18 +299,18 @@ public class MetaStoreUtils {
               + "  parameters varchar(4096) NOT NULL,\n"
               + "  state tinyint(4) NOT NULL,\n"
               + "  create_time bigint(20) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE INDEX file_diff_idx ON file_diff (src);",
           "CREATE TABLE global_config (\n"
               + " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
               + " property_name varchar(512) NOT NULL UNIQUE,\n"
               + " property_value varchar(3072) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE cluster_config (\n"
               + " cid INTEGER PRIMARY KEY AUTOINCREMENT,\n"
               + " node_name varchar(512) NOT NULL UNIQUE,\n"
               + " config_path varchar(3072) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE TABLE sys_info (\n"
               + "  property varchar(512) PRIMARY KEY,\n"
               + "  value varchar(4096) NOT NULL\n"
@@ -334,7 +335,7 @@ public class MetaStoreUtils {
               + " src varchar(4096) NOT NULL,\n"
               + " dest varchar(4096) NOT NULL,\n"
               + " period bigint(20) NOT NULL\n"
-              + ") ;",
+              + ");",
           "CREATE INDEX backup_file_rid_idx ON backup_file (rid);",
           "CREATE TABLE file_state (\n"
               + " path varchar(512) PRIMARY KEY,\n"
@@ -416,11 +417,17 @@ public class MetaStoreUtils {
         // Fix index size 767 in mysql 5.6 or previous version
         if (sql.startsWith("CREATE INDEX")
             && (sql.contains("path") || sql.contains("src"))) {
-          // Index longer than 767
-          sql = sql.replace(");", "(749));");
-        } else if (sql.contains("PRIMARY KEY")) {
-          // Primary key longer than 749
-          Pattern p = Pattern.compile("([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}).{2,15}PRIMARY");
+          // Index longer than 767, and 255 when utf8
+          int maxLong = utf8Enable ? 255 : 749;
+          sql = sql.replace(");", "(" + maxLong + "));");
+        } else if (sql.contains("PRIMARY KEY") || sql.contains("UNIQUE")) {
+          // Primary key longer than 749, and 255 when utf8
+          String patternStr = utf8Enable
+            ? "(([1-9]\\d{3,}|2[5][6-9]|2[6-9][0-9]|[3-9]\\d{2}).{2,15}PRIMARY)"
+            + "|"
+            + "(([1-9]\\d{3,}|2[5][6-9]|2[6-9][0-9]|[3-9]\\d{2}).{2,15}UNIQUE)"
+            : "([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}).{2,15}PRIMARY";
+          Pattern p = Pattern.compile(patternStr);
           Matcher m = p.matcher(sql);
           if (m.find()) {
             // Make this table dynamic
@@ -562,6 +569,8 @@ public class MetaStoreUtils {
     for (String key : p.stringPropertyNames()) {
       LOG.info("\t" + key + " = " + p.getProperty(key));
     }
+    utf8Enable = conf.getBoolean(SmartConfKeys.SMART_METASTORE_UTF8_ENABLE,
+      false);
     return new MetaStore(new DruidPool(p));
   }
 

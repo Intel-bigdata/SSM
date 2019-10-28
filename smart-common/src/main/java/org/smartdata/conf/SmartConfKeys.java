@@ -77,6 +77,8 @@ public class SmartConfKeys {
   public static final String SMART_METASTORE_DB_URL_KEY = "smart.metastore.db.url";
   // Password which get from hadoop credentialProvider used for metastore connect
   public static final String SMART_METASTORE_PASSWORD = "smart.metastore.password";
+  // When character have setted utf8 in Mysql5.6, this should true.sc
+  public static final String SMART_METASTORE_UTF8_ENABLE = "smart.metastore.utf8.enable";
 
   // StatesManager
 
