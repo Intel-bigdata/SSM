@@ -21,7 +21,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.client.SmartClient;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.FileState;
