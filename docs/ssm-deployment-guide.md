@@ -301,6 +301,10 @@ Add property `smart.server.rpc.address` to point to the installed Smart Server. 
         <value>ssm-server-ip:rpc-port</value>
     </property>
 ```
+
+The cover dirs or ignore dirs should also be configured in hdfs-site.xml if user wants SSM to only monitor some HDFS dirs or just ignore some other HDFS dirs.
+Please refer to the above Cover Dirs & Ignore Dirs section.
+
 The value for the following property should be modified in hdfs-site.xml. This value is recommended to be set as follows.
 
 value=executors_num*(agents_num+servers_num)*10,
@@ -398,8 +402,11 @@ Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manage
 
     in which executors_num, agents_num and servers_num represent the value of smart.cmdlet.executors, the number of smart agents and the number of smart servers respectively.
 
- 5.    Click the Save Changes button
- 6.    Restart stale Services and re-deploy the client configurations
+ 5. The cover dirs or ignore dirs should also be configured in hdfs-site.xml if user wants SSM to only monitor some HDFS dirs or just ignore some other HDFS dirs.
+    Please refer to the above Cover Dirs & Ignore Dirs section.
+
+ 6.    Click the Save Changes button
+ 7.    Restart stale Services and re-deploy the client configurations
 
 ###  HDFS Storage types
 

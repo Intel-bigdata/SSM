@@ -17,9 +17,12 @@
  */
 package org.smartdata.server;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.client.SmartClient;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
@@ -43,5 +46,19 @@ public class TestSmartClient extends MiniSmartClusterHarness {
     metaStore.insertUpdateFileState(fileState);
     fileState1 = client.getFileState(path);
     Assert.assertEquals(fileState, fileState1);
+  }
+
+  @Test
+  public void testDataIgnoreAndCover() throws Exception {
+    waitTillSSMExitSafeMode();
+    // Configuration can also be used for initializing SmartClient.
+    Configuration conf = new Configuration();
+    conf.set(SmartConfKeys.SMART_IGNORE_DIRS_KEY, "/test1");
+    conf.set(SmartConfKeys.SMART_COVER_DIRS_KEY, "/test2");
+    SmartClient client = new SmartClient(conf);
+    Assert.assertTrue("This test file should be ignored",
+        client.shouldIgnore("/test1/a.txt"));
+    Assert.assertFalse("This test file should not be ignored",
+        client.shouldIgnore("/test2/b.txt"));
   }
 }
