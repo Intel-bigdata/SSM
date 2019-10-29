@@ -63,10 +63,9 @@ public class MetaStoreUtils {
         "performance_schema",
         "PERFORMANCE_SCHEMA"
       };
-  public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
-  private static boolean tidbInited = false;
   private static int characterTakeUpBytes = 1;
+
   public static final String TABLESET[] = new String[]{
             "access_count_table",
             "blank_access_count_info",
@@ -664,29 +663,6 @@ public class MetaStoreUtils {
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }
-  }
-
-  public static void initTidb(String url, String user, String password)
-          throws MetaStoreException {
-    Connection conn;
-    try {
-      conn = createConnection(url, user, "");
-      Statement stat = conn.createStatement();
-      stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", TIDB_DB_NAME));
-      stat.executeQuery(String.format("SET PASSWORD FOR root = PASSWORD('%s')", password));
-    } catch (SQLException ex) {
-      try {
-        conn = createConnection(url, user, password);
-        Statement stat = conn.createStatement();
-        stat.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", TIDB_DB_NAME));
-      } catch (Exception e) {
-        throw new MetaStoreException(ex);
-      }
-    } catch (Exception ex) {
-      throw new MetaStoreException(ex);
-    }
-    tidbInited = true;
-    LOG.info("Tidb is initialized.");
   }
 }
 

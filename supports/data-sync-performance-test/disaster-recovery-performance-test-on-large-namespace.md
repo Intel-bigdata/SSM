@@ -49,7 +49,7 @@ All variables about HDFS, SSM and DistCp, bold as default.
 2. Cmdlet batch size: 100, **200**, 300
 3. Data Sync Check period: **100ms**, 200ms
 4. Data Sync diff batch size: 100, **200**, 300
-5. Database: local mysql, **remote mysql** and TiDB
+5. Database: local mysql, **remote mysql**
 
 Note that lots of variables may effect SSM Data Sync's performance. I think we can fix some variables and focus on main variables.
 
