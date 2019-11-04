@@ -429,7 +429,7 @@ public class MetaStoreUtils {
               // Make this table dynamic
               sql = sql.replace(");", ") ROW_FORMAT=DYNAMIC ENGINE=INNODB;");
               LOG.debug(sql);
-            }  
+            }
           }
         }
       }
