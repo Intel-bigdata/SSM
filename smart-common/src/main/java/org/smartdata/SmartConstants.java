@@ -30,7 +30,8 @@ public class SmartConstants {
         + "org.smartdata.hdfs.scheduler.Copy2S3Scheduler,"
         + "org.smartdata.hdfs.scheduler.SmallFileScheduler,"
         + "org.smartdata.hdfs.scheduler.CompressionScheduler,"
-        + "org.smartdata.hdfs.scheduler.ErasureCodingScheduler";
+        + "org.smartdata.hdfs.scheduler.ErasureCodingScheduler,"
+        + "org.smartdata.hdfs.scheduler.CacheScheduler";
 
   public static final String SMART_HDFS_LAST_INOTIFY_TXID =
     "smart_hadoop_last_inotify_txid";
