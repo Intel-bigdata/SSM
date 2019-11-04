@@ -66,7 +66,7 @@ public class MetaStoreUtils {
   public static final String TIDB_DB_NAME = "ssm";
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
   private static boolean tidbInited = false;
-  private static boolean utf8Enable = false;
+  private static int characterTakeUpBytes = 1;
   public static final String TABLESET[] = new String[]{
             "access_count_table",
             "blank_access_count_info",
@@ -415,24 +415,21 @@ public class MetaStoreUtils {
       // Mysql 5.6 or previous version
       if (mysqlOldRelease) {
         // Fix index size 767 in mysql 5.6 or previous version
+        int maxLong = 767 / characterTakeUpBytes;
         if (sql.startsWith("CREATE INDEX")
             && (sql.contains("path") || sql.contains("src"))) {
-          // Index longer than 767, and 255 when utf8
-          int maxLong = utf8Enable ? 255 : 749;
+          // Index longer than maxLong
           sql = sql.replace(");", "(" + maxLong + "));");
         } else if (sql.contains("PRIMARY KEY") || sql.contains("UNIQUE")) {
-          // Primary key longer than 749, and 255 when utf8
-          String patternStr = utf8Enable
-            ? "(([1-9]\\d{3,}|2[5][6-9]|2[6-9][0-9]|[3-9]\\d{2}).{2,15}PRIMARY)"
-            + "|"
-            + "(([1-9]\\d{3,}|2[5][6-9]|2[6-9][0-9]|[3-9]\\d{2}).{2,15}UNIQUE)"
-            : "([1-9]\\d{3,}|7[5-9][0-9]|[8-9]\\d{2}).{2,15}PRIMARY";
-          Pattern p = Pattern.compile(patternStr);
+          // Primary key longer than maxLong
+          Pattern p = Pattern.compile("(\\d{3,})(.{2,15})(PRIMARY|UNIQUE)");
           Matcher m = p.matcher(sql);
           if (m.find()) {
-            // Make this table dynamic
-            sql = sql.replace(");", ") ROW_FORMAT=DYNAMIC ENGINE=INNODB;");
-            LOG.debug(sql);
+            if (Integer.valueOf(m.group(1)) > maxLong) {
+              // Make this table dynamic
+              sql = sql.replace(");", ") ROW_FORMAT=DYNAMIC ENGINE=INNODB;");
+              LOG.debug(sql);
+            }  
           }
         }
       }
@@ -569,8 +566,8 @@ public class MetaStoreUtils {
     for (String key : p.stringPropertyNames()) {
       LOG.info("\t" + key + " = " + p.getProperty(key));
     }
-    utf8Enable = conf.getBoolean(SmartConfKeys.SMART_METASTORE_UTF8_ENABLE,
-      false);
+    characterTakeUpBytes = conf.getInt(
+      SmartConfKeys.SMART_METASTORE_CHARACTER_TAKEUP_BYTES, 1);
     return new MetaStore(new DruidPool(p));
   }
 
