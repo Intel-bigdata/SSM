@@ -83,7 +83,6 @@ public class CacheFileAction extends HdfsAction {
   }
 
   private void executeCacheAction(String fileName) throws Exception {
-    createCachePool();
     if (isCached(fileName)) {
       return;
     }
@@ -91,17 +90,6 @@ public class CacheFileAction extends HdfsAction {
         String.format(
             "Action starts at %s : cache -> %s", Utils.getFormatedCurrentTime(), fileName));
     addDirective(fileName);
-  }
-
-  private void createCachePool() throws Exception {
-    RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
-    while (poolEntries.hasNext()) {
-      CachePoolEntry poolEntry = poolEntries.next();
-      if (poolEntry.getInfo().getPoolName().equals(SSMPOOL)) {
-        return;
-      }
-    }
-    dfsClient.addCachePool(new CachePoolInfo(SSMPOOL));
   }
 
   public boolean isCached(String fileName) throws Exception {

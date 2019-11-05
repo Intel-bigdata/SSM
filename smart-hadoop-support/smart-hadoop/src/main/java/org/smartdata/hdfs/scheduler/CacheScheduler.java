@@ -22,8 +22,11 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.hdfs.protocol.CachePoolInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.hdfs.action.ErasureCodingAction;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
@@ -40,14 +43,16 @@ import java.util.List;
 import java.util.Set;
 
 public class CacheScheduler extends ActionSchedulerService {
+  private static final Logger LOG =
+      LoggerFactory.getLogger(ErasureCodingAction.class);
 
-  public static final String CACHE_ACTIION = "cache";
-  public static final String UNCACHE_ACTIION = "uncache";
-  public static final List<String> ACTIONS = Arrays.asList(CACHE_ACTIION, UNCACHE_ACTIION);
+  public static final String CACHE_ACTION = "cache";
+  public static final String UNCACHE_ACTION = "uncache";
+  public static final List<String> ACTIONS = Arrays.asList(CACHE_ACTION, UNCACHE_ACTION);
   public static final String SSM_POOL = "SSMPool";
   private Set<String> fileLock;
   private DFSClient dfsClient;
-  private boolean isCachePoolCreated;
+  private static boolean isCachePoolCreated;
 
   public CacheScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -88,8 +93,13 @@ public class CacheScheduler extends ActionSchedulerService {
 
   @Override
   public void init() throws IOException {
-    URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
-    dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    try {
+      URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+      dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    } catch (IOException e) {
+      LOG.warn("Failed to create dfsClient! Cache action will not work!", e);
+      return;
+    }
     if (!isCachePoolCreated) {
       createCachePool();
       isCachePoolCreated = true;

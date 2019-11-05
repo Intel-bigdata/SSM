@@ -35,8 +35,8 @@ import static org.junit.Assert.fail;
 
 public class TestCacheScheduler extends MiniSmartClusterHarness {
 
-  @Test(timeout = 180000)
-  public void testCacheFile() throws Exception {
+  @Test(timeout = 100000)
+  public void testCacheUncacheFile() throws Exception {
     waitTillSSMExitSafeMode();
     String filePath = new String("/testFile");
     FSDataOutputStream out = dfs.create(new Path(filePath));
@@ -62,6 +62,15 @@ public class TestCacheScheduler extends MiniSmartClusterHarness {
     ActionScheduler actionScheduler = cmdletManager.getSchedulers("cache").get(0);
     assertTrue(actionScheduler instanceof CacheScheduler);
     Set<String> fileLock = ((CacheScheduler) actionScheduler).getFileLock();
+    // There is no file locked after the action is finished.
+    assertTrue(fileLock.isEmpty());
+
+    long cid1 = cmdletManager.submitCmdlet("uncache -file " + filePath);
+    while (true) {
+      if (cmdletManager.getCmdletInfo(cid1).getState().equals(CmdletState.DONE)) {
+        break;
+      }
+    }
     // There is no file locked after the action is finished.
     assertTrue(fileLock.isEmpty());
   }
