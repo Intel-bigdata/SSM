@@ -105,6 +105,12 @@ public class CacheScheduler extends ActionSchedulerService {
     }
   }
 
+  /**
+   * For cache acton that going through cache scheduler, SSM cache pool will
+   * be checked and created.
+   * @param dfsClient
+   * @throws IOException
+   */
   public static void createCachePool(DFSClient dfsClient) throws IOException {
     RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
     while (poolEntries.hasNext()) {

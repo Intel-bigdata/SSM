@@ -33,6 +33,7 @@ import org.smartdata.SmartContext;
 import org.smartdata.hdfs.MiniClusterFactory;
 import org.smartdata.hdfs.action.CacheFileAction;
 import org.smartdata.hdfs.action.UncacheFileAction;
+import org.smartdata.hdfs.scheduler.CacheScheduler;
 import org.smartdata.model.CachedFileStatus;
 import org.smartdata.model.FileInfo;
 import org.smartdata.conf.SmartConf;
@@ -126,6 +127,10 @@ public class TestCachedListFetcher extends TestDaoUtil {
       FSDataOutputStream out = dfs.create(new Path(path));
       out.writeChars("testUncache");
       out.close();
+
+      // Create cache pool
+      CacheScheduler.createCachePool(dfsClient);
+
       fileInfos.add(createFileStatus(pathPrefix + fids[i]));
       cacheAction.setContext(smartContext);
       cacheAction.setDfsClient(dfsClient);
