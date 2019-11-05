@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.hdfs.HadoopUtil;
-import org.smartdata.hdfs.action.ErasureCodingAction;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.ActionInfo;
@@ -44,7 +43,7 @@ import java.util.Set;
 
 public class CacheScheduler extends ActionSchedulerService {
   private static final Logger LOG =
-      LoggerFactory.getLogger(ErasureCodingAction.class);
+      LoggerFactory.getLogger(CacheScheduler.class);
 
   public static final String CACHE_ACTION = "cache";
   public static final String UNCACHE_ACTION = "uncache";
@@ -101,12 +100,12 @@ public class CacheScheduler extends ActionSchedulerService {
       return;
     }
     if (!isCachePoolCreated) {
-      createCachePool();
+      createCachePool(this.dfsClient);
       isCachePoolCreated = true;
     }
   }
 
-  private void createCachePool() throws IOException {
+  public static void createCachePool(DFSClient dfsClient) throws IOException {
     RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
     while (poolEntries.hasNext()) {
       CachePoolEntry poolEntry = poolEntries.next();

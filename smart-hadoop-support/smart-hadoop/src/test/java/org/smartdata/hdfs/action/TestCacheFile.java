@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.hdfs.MiniClusterHarness;
+import org.smartdata.hdfs.scheduler.CacheScheduler;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -41,6 +42,9 @@ public class TestCacheFile extends MiniClusterHarness {
     final FSDataOutputStream out = dfs.create(new Path(file));
     out.writeChars("testCache");
     out.close();
+
+    // Create cache pool
+    CacheScheduler.createCachePool(dfsClient);
 
     CacheFileAction cacheAction = new CacheFileAction();
     cacheAction.setContext(smartContext);
