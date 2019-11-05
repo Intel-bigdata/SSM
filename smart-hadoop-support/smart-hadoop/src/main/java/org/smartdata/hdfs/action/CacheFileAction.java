@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.smartdata.action.ActionType;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
+import org.smartdata.hdfs.scheduler.CacheScheduler;
 
 import java.util.EnumSet;
 import java.util.Map;
@@ -40,12 +41,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 @ActionSignature(
   actionId = "cache",
   displayName = "cache",
-  usage = HdfsAction.FILE_PATH + " $file "
+  usage = HdfsAction.FILE_PATH + " $file " + CacheFileAction.REPLICA + " $replica "
 )
 public class CacheFileAction extends HdfsAction {
+  public static final String REPLICA = "-replica";
   private String fileName;
   private LinkedBlockingQueue<String> actionEvents;
-  private final String SSMPOOL = "SSMPool";
   private ActionType actionType;
   private short replication = 0;
 
@@ -60,7 +61,7 @@ public class CacheFileAction extends HdfsAction {
     super.init(args);
     fileName = args.get(FILE_PATH);
     if (args.containsKey("-replica")) {
-      replication = (short) Integer.parseInt(args.get("-replica"));
+      replication = (short) Integer.parseInt(args.get(REPLICA));
     }
   }
 
@@ -83,25 +84,15 @@ public class CacheFileAction extends HdfsAction {
   }
 
   private void executeCacheAction(String fileName) throws Exception {
-    createCachePool();
     if (isCached(fileName)) {
+      this.appendLog("The given file has already been cached, " +
+          "so there is no need to execute this action.");
       return;
     }
     this.appendLog(
         String.format(
             "Action starts at %s : cache -> %s", Utils.getFormatedCurrentTime(), fileName));
     addDirective(fileName);
-  }
-
-  private void createCachePool() throws Exception {
-    RemoteIterator<CachePoolEntry> poolEntries = dfsClient.listCachePools();
-    while (poolEntries.hasNext()) {
-      CachePoolEntry poolEntry = poolEntries.next();
-      if (poolEntry.getInfo().getPoolName().equals(SSMPOOL)) {
-        return;
-      }
-    }
-    dfsClient.addCachePool(new CachePoolInfo(SSMPOOL));
   }
 
   public boolean isCached(String fileName) throws Exception {
@@ -115,7 +106,7 @@ public class CacheFileAction extends HdfsAction {
   private void addDirective(String fileName) throws Exception {
     CacheDirectiveInfo.Builder filterBuilder = new CacheDirectiveInfo.Builder();
     filterBuilder.setPath(new Path(fileName))
-        .setPool(SSMPOOL)
+        .setPool(CacheScheduler.SSM_POOL)
         .setReplication(replication);
     CacheDirectiveInfo filter = filterBuilder.build();
     EnumSet<CacheFlag> flags = EnumSet.noneOf(CacheFlag.class);

@@ -201,6 +201,11 @@ public class CmdletManager extends AbstractService {
     reloadCmdletsInDB();
   }
 
+  @VisibleForTesting
+  public List<ActionScheduler> getSchedulers(String actionName) {
+    return schedulers.get(actionName);
+  }
+
   private void reloadCmdletsInDB() throws IOException{
     LOG.info("reloading the dispatched and pending cmdlets in DB.");
     List<CmdletInfo> cmdletInfos;

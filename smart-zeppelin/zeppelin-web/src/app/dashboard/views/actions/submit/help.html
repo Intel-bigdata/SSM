@@ -55,8 +55,10 @@ limitations under the License.
     </tr>
     <tr>
       <td>cache</td>
-      <td>-file $file</td>
-      <td>Cache $file to HDFS cache.</td>
+      <td>-file $file [-replica $replica_num]</td>
+      <td>Cache $file to HDFS cache. $replica_num is the number of replicas to be cached.
+        If it is not specified, SSM will get replica number for $file from HDFS or use 1
+        in directory case.</td>
     </tr>
     <tr>
       <td>checkec</td>

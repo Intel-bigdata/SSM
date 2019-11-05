@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 import org.smartdata.hdfs.MiniClusterHarness;
+import org.smartdata.hdfs.scheduler.CacheScheduler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +41,9 @@ public class TestUncacheFileAction extends MiniClusterHarness {
     final FSDataOutputStream out = dfs.create(new Path(file));
     out.writeChars("testUncache");
     out.close();
+
+    // Create cache pool
+    CacheScheduler.createCachePool(dfsClient);
 
     CacheFileAction cacheFileAction = new CacheFileAction();
     cacheFileAction.setDfsClient(dfsClient);
@@ -75,6 +79,9 @@ public class TestUncacheFileAction extends MiniClusterHarness {
     final FSDataOutputStream out = dfs.create(new Path(file));
     out.writeChars("testUncache");
     out.close();
+
+    // Create cache pool
+    CacheScheduler.createCachePool(dfsClient);
 
     UncacheFileAction uncacheFileAction = new UncacheFileAction();
     uncacheFileAction.setDfsClient(dfsClient);

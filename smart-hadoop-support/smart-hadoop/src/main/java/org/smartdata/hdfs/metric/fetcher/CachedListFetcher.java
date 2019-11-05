@@ -25,6 +25,7 @@ import org.apache.hadoop.hdfs.protocol.CachePoolEntry;
 import org.apache.hadoop.util.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.hdfs.scheduler.CacheScheduler;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CachedFileStatus;
@@ -140,7 +141,7 @@ public class CachedListFetcher {
       List<CachedFileStatus> cachedFileStatuses = new ArrayList<>();
       try {
         CacheDirectiveInfo.Builder filterBuilder = new CacheDirectiveInfo.Builder();
-        filterBuilder.setPool("SSMPool");
+        filterBuilder.setPool(CacheScheduler.SSM_POOL);
         CacheDirectiveInfo filter = filterBuilder.build();
         RemoteIterator<CacheDirectiveEntry> cacheDirectives =
             dfsClient.listCacheDirectives(filter);
@@ -150,7 +151,7 @@ public class CachedListFetcher {
         long cacheMaxSize = 0;
         while (cachePoolList.hasNext()) {
           CachePoolEntry cachePoolEntry = cachePoolList.next();
-          if (cachePoolEntry.getInfo().getPoolName().equals("SSMPool")) {
+          if (cachePoolEntry.getInfo().getPoolName().equals(CacheScheduler.SSM_POOL)) {
             cacheMaxSize = cachePoolEntry.getInfo().getLimit();
           }
         }
