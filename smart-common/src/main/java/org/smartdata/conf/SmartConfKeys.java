@@ -78,8 +78,9 @@ public class SmartConfKeys {
   // Password which get from hadoop credentialProvider used for metastore connect
   public static final String SMART_METASTORE_PASSWORD = "smart.metastore.password";
   // How many bytes that one character takes up, default value is 1.
-  public static final String SMART_METASTORE_CHARACTER_TAKEUP_BYTES =
+  public static final String SMART_METASTORE_CHARACTER_TAKEUP_BYTES_KEY =
       "smart.metastore.character.takeup.bytes";
+  public static final int SMART_METASTORE_CHARACTER_TAKEUP_BYTES_DEFAULT = 1;
 
   // StatesManager
 
