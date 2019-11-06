@@ -307,4 +307,13 @@
       The max number of chunks split for compression.
     </description>
   </property>
+
+  <property>
+    <name>smart.metastore.character.takeup.bytes</name>
+    <value>1</value>
+    <description>
+      How many bytes that one character takes up, default value is 1.
+      Used to compatible with mysql5.6.
+    </description>
+  </property>
 </configuration>
