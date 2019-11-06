@@ -479,6 +479,10 @@ public class MetaStoreUtils {
     URL pathUrl = ClassLoader.getSystemResource("");
     String path = pathUrl.getPath();
 
+    characterTakeUpBytes = conf.getInt(
+      SmartConfKeys.SMART_METASTORE_CHARACTER_TAKEUP_BYTES_KEY,
+      SmartConfKeys.SMART_METASTORE_CHARACTER_TAKEUP_BYTES_DEFAULT);
+
     String fileName = "druid.xml";
     String expectedCpPath = path + fileName;
     LOG.info("Expected DB connection pool configuration path = "
@@ -566,8 +570,6 @@ public class MetaStoreUtils {
     for (String key : p.stringPropertyNames()) {
       LOG.info("\t" + key + " = " + p.getProperty(key));
     }
-    characterTakeUpBytes = conf.getInt(
-      SmartConfKeys.SMART_METASTORE_CHARACTER_TAKEUP_BYTES, 1);
     return new MetaStore(new DruidPool(p));
   }
 
