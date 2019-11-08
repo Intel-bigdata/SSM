@@ -637,7 +637,17 @@ Note: To make the scripts work, you have to set up SSH password-less connections
 
 3. MySQL related "Specified key was too long; max key length is 767 bytes"
 
-    This problem will occur when MySQL version does not meet the requirement of SSM (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceed 767 bytes. We have submitted several patches for this issue. But the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL).
+    This problem will occur when MySQL version does not meet the requirement of SSM (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceed 767 bytes. We have submitted several patches for this issue.Also note that some character take up more than one byte, such as chinese with utf-8 take up 3 bytes.You can set how many bytes that one character takes up, default value is 1. But the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL).
+```xml
+   <property>
+     <name>smart.metastore.character.takeup.bytes</name>
+     <value>1</value>
+     <description>
+       How many bytes that one character takes up, default value is 1.
+       Used to compatible with mysql5.6.
+     </description>
+   </property>
+```
 
 	 
 Notes
