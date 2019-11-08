@@ -444,7 +444,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
     // Update container file cache, compact file state queue,
     // handling small file cache
-    if (!compactFileStates.isEmpty()) {
+    if (compactFileStates != null && !compactFileStates.isEmpty()) {
       LOG.debug(String.format("Add container file %s into cache.",
           containerFilePath));
       containerFileCache.add(containerFilePath);
