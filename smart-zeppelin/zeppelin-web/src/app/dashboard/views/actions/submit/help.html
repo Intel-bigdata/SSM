@@ -77,8 +77,9 @@ limitations under the License.
     </tr>
     <tr>
       <td>compact</td>
-      <td>-file [$file1,$file2,..] -containerFile $containerFile</td>
-      <td>compact $file1, $file2, etc. to $containerFile.</td>
+      <td>-file ['$file1','$file2',..] -containerFile $containerFile</td>
+      <td>Compact $file1, $file2, etc. to $containerFile. Please note that space is not allowed in the file list. In compact rule,
+          specifying container file is invalid since SSM will assign a container file for small files under same directory.</td>
     </tr>
     <tr>
       <td>compress</td>
@@ -198,7 +199,7 @@ limitations under the License.
     <tr>
       <td>uncompact</td>
       <td>-containerFile $containerFile</td>
-      <td>uncompact $containerFile to original files.</td>
+      <td>Uncompact $containerFile to original files.</td>
     </tr>
     <tr>
       <td>unec</td>

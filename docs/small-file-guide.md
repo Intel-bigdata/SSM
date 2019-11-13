@@ -30,6 +30,11 @@ file: path matches "/small_files/*" and length < 1MB | compact
 This rule means for all the files under `/small_files` directory, SSM will trigger actions
 to compact the files with length less than 1MB into container files.
 
+Please note that there is no need to specify container file in compact rule, since SSM will assign
+a container file for small files under same dir. And the container file is also located in this dir.
+If there is a secondary dir under /small_files, e.g., /small_files/subdir, the small files under
+/small_files/subdir will be compacted to a container file in the same dir.
+
 ## Small file compact action example
 
 ```
