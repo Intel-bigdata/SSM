@@ -55,13 +55,12 @@ limitations under the License.
     <tr>
       <td>file: every 500ms | path matches "/foo/*" | sync -dest hdfs://ip:port/destdir</td>
       <td>The rule is as same as the above one except that the rule will be executed every 500ms (by
-        default the time interval is 5s). In this way, the sync operation becomes more real-time.
-        to real time.</td>
+        default the time interval is 5s). In this way, the sync operation becomes more real-time.</td>
     </tr>
     <tr>
-      <td>file: accessCount(10min) &lt; 2 | uncache; archive</td>
-      <td>If the file has been read for less than 2 times during the last 10 minutes,
-        uncache it from memory and archive it.</td>
+      <td>file: accessCount(10min) &lt; 2 | archive</td>
+      <td>If a file has been read for less than 2 times during the last 10 minutes,
+        archive it.</td>
     </tr>
     </tbody>
   </table>

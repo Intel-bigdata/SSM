@@ -157,7 +157,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       if (checkIfValidSmallFiles(smallFileList)) {
         return true;
       } else {
-        throw new IOException("Illegal small files is invalid.");
+        throw new IOException("Illegal small files are provided.");
       }
     } else {
       return true;
@@ -170,17 +170,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private boolean checkIfValidSmallFiles(List<String> smallFileList) {
     for (String smallFile : smallFileList) {
       if (smallFile == null || smallFile.isEmpty()) {
-        LOG.debug("Illegal small file path: {}", smallFile);
+        LOG.error("Illegal small file path: {}", smallFile);
         return false;
       } else if (compactSmallFileLock.contains(smallFile)) {
-        LOG.debug(String.format("%s is locked.", smallFile));
+        LOG.error(String.format("%s is locked.", smallFile));
         return false;
       } else if (handlingSmallFileCache.contains(smallFile)) {
-        LOG.debug(String.format("%s is being handling.", smallFile));
+        LOG.error(String.format("%s is being handling.", smallFile));
         return false;
       } else if (containerFileCache.contains(smallFile)
           || containerFileLock.contains(smallFile)) {
-        LOG.debug(String.format("%s is container file.", smallFile));
+        LOG.error(String.format("%s is container file.", smallFile));
         return false;
       }
     }
@@ -444,7 +444,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
     // Update container file cache, compact file state queue,
     // handling small file cache
-    if (!compactFileStates.isEmpty()) {
+    if (compactFileStates != null && !compactFileStates.isEmpty()) {
       LOG.debug(String.format("Add container file %s into cache.",
           containerFilePath));
       containerFileCache.add(containerFilePath);

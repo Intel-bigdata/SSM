@@ -85,15 +85,18 @@ Other HDFS operations support
 
 ### 1. Supported operations
 
-In addition to write and read, we also provide many HDFS compatible operations. Some of the operations do not need to get any information from SSM server, while others may need to get file container info from meta store first or require special handling.
+In addition to write and read, we also provide many HDFS compatible operations. Some of the operations do not need to get any information from SSM server,
+while others may need to get file container info from meta store first or require special handling.
 
-i. Now that the original small files are truncated after compact, the meta data are still preserved in the namespace. The below shows the operations which need to get information from namespace.
+i. Now that the original small files are truncated after compact, the meta data are still preserved in the namespace. The below shows the operations
+which need to get information from namespace.
 
 * Get and set extended attributes: getXAttr, getXAttrs, listXAttrs, setXAttr, removeXAttr.
 * Get and check acl info: getAclStatus, checkAccess.
 * Get and set some other meta data: getBlockSize, exists, listPaths, setTimes.
 
-ii. For the file container info (corresponding container file, offset and length) of small files that stored in SSM meta store, some operations need to firstly query SSM server to get the file container info, then use these information to send exact requests to HDFS server.
+ii. For the file container info (corresponding container file, offset and length) of small files that stored in SSM meta store,
+some operations need to firstly query SSM server to get the file container info, then use these information to send exact requests to HDFS server.
 
 * Get block info: getLocatedBlocks, getBlockLocations, getFileBlockLocations.
 * Get file info: getFileInfo, listStatus, listStatusIterator, getFileStatus, isFileClosed.

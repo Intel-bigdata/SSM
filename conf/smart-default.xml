@@ -309,11 +309,27 @@
   </property>
 
   <property>
+    <name>smart.compact.batch.size</name>
+    <value>200</value>
+    <description>
+      The max number of small files to be compacted by per compact action.
+    </description>
+  </property>
+
+  <property>
+    <name>smart.compact.container.file.threshold.mb</name>
+    <value>1024</value>
+    <description>
+      The max size of a container file in MB.
+    </description>
+  </property>
+
+  <property>
     <name>smart.metastore.character.takeup.bytes</name>
     <value>1</value>
     <description>
       How many bytes that one character takes up, default value is 1.
-      Used to compatible with mysql5.6.
+      This property is used to make mysql5.6 compatible with SSM.
     </description>
   </property>
 </configuration>
