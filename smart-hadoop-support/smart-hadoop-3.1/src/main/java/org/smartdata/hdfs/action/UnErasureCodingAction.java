@@ -80,22 +80,22 @@ public class UnErasureCodingAction extends ErasureCodingBase {
     // if ecPolicy is null, it means replication.
     if (srcEcPolicy == null) {
       this.progress = 1.0F;
-      appendResult(MATCH_RESULT);
+      appendLog(MATCH_RESULT);
       return;
     }
     if (fileStatus.isDir()) {
       dfsClient.setErasureCodingPolicy(srcPath, ecPolicyName);
       progress = 1.0F;
-      appendResult(DIR_RESULT);
+      appendLog(DIR_RESULT);
       return;
     }
     try {
       convert(conf, ecPolicyName);
       setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
-      appendResult(CONVERT_RESULT);
-      appendResult(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
-      appendResult(String.format("The current EC policy is %s.", REPLICATION_POLICY_NAME));
+      appendLog(CONVERT_RESULT);
+      appendLog(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
+      appendLog(String.format("The current EC policy is %s.", REPLICATION_POLICY_NAME));
     } catch (ActionException ex) {
       try {
         if (dfsClient.getFileInfo(ecTmpPath) != null) {

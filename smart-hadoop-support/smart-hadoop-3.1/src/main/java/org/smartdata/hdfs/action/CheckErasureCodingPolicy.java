@@ -51,9 +51,9 @@ public class CheckErasureCodingPolicy extends HdfsAction {
         HadoopUtil.getNameNodeUri(conf), conf));
     ErasureCodingPolicy srcEcPolicy = dfsClient.getErasureCodingPolicy(srcPath);
     if (srcEcPolicy == null) {
-      appendResult(RESULT_OF_NULL_EC_POLICY);
+      appendLog(RESULT_OF_NULL_EC_POLICY);
     } else {
-      appendResult(srcEcPolicy.toString());
+      appendLog(srcEcPolicy.toString());
     }
   }
 }

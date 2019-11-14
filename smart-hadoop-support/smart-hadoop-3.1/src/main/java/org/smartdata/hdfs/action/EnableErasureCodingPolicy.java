@@ -48,6 +48,6 @@ public class EnableErasureCodingPolicy extends HdfsAction {
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     dfsClient.enableErasureCodingPolicy(policyName);
-    appendResult(String.format("The EC policy named %s is enabled!", policyName));
+    appendLog(String.format("The EC policy named %s is enabled!", policyName));
   }
 }

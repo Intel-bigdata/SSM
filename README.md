@@ -131,9 +131,9 @@ This work derives from the discussions in Apache Hadoop JIRA [HDFS-7343](https:/
 
 Important Notice and Contact Information
 -------
-a) SSM is developed and open sourced by Intel Data Analytics Technology team. Please reach us via feilong.he@intel.com and jian.zhang@intel.com if you have any question or need help.
+a) SSM is developed and open sourced by Intel Data Analytics Technology team. Please reach us via `feilong.he{at}intel.com` or `jian.zhang{at}intel.com` if you have any question or need help.
 
-b) To help SSM develop further, please become an active member of the community and consider giving back by making contributions.
+b) To help develop SSM further, please become an active member of the community and consider giving back by making contributions.
 
 
 **For any security concern, please visit https://01.org/security.**

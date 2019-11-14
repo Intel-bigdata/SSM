@@ -46,7 +46,7 @@ public class ListErasureCodingPolicy extends HdfsAction {
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     for (ErasureCodingPolicyInfo policyInfo : dfsClient.getErasureCodingPolicies()) {
-      appendResult("{" + policyInfo.toString() + "}");
+      appendLog("{" + policyInfo.toString() + "}");
     }
   }
 }
