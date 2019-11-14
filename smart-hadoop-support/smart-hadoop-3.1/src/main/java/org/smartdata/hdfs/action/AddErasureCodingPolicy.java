@@ -99,10 +99,10 @@ public class AddErasureCodingPolicy extends HdfsAction {
     AddErasureCodingPolicyResponse addEcResponse =
         dfsClient.addErasureCodingPolicies(new ErasureCodingPolicy[]{ecPolicy})[0];
     if (addEcResponse.isSucceed()) {
-      appendResult(String.format("EC policy named %s is added successfully!",
+      appendLog(String.format("EC policy named %s is added successfully!",
           addEcResponse.getPolicy().getName()));
     } else {
-      appendResult(String.format("Failed to add the given EC policy!"));
+      appendLog(String.format("Failed to add the given EC policy!"));
       throw new ActionException(addEcResponse.getErrorMsg());
     }
   }

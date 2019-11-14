@@ -99,14 +99,14 @@ public class ErasureCodingAction extends ErasureCodingBase {
     // if the current ecPolicy is already the target one, no need to convert
     if (srcEcPolicy != null) {
       if (srcEcPolicy.getName().equals(ecPolicyName)) {
-        appendResult(MATCH_RESULT);
+        appendLog(MATCH_RESULT);
         this.progress = 1.0F;
         return;
       }
     } else {
       // if ecPolicy is null, it means replication.
       if (ecPolicyName.equals(REPLICATION_POLICY_NAME)) {
-        appendResult(MATCH_RESULT);
+        appendLog(MATCH_RESULT);
         this.progress = 1.0F;
         return;
       }
@@ -114,7 +114,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
     if (fileStatus.isDir()) {
       dfsClient.setErasureCodingPolicy(srcPath, ecPolicyName);
       this.progress = 1.0F;
-      appendResult(DIR_RESULT);
+      appendLog(DIR_RESULT);
       return;
     }
     HdfsDataOutputStream outputStream = null;
@@ -132,13 +132,13 @@ public class ErasureCodingAction extends ErasureCodingBase {
        */
       setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
-      appendResult(CONVERT_RESULT);
+      appendLog(CONVERT_RESULT);
       if (srcEcPolicy == null) {
-        appendResult("The previous EC policy is replication.");
+        appendLog("The previous EC policy is replication.");
       } else {
-        appendResult(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
+        appendLog(String.format("The previous EC policy is %s.", srcEcPolicy.getName()));
       }
-      appendResult(String.format("The current EC policy is %s.", ecPolicyName));
+      appendLog(String.format("The current EC policy is %s.", ecPolicyName));
     } catch (ActionException ex) {
       try {
         if (dfsClient.getFileInfo(ecTmpPath) != null) {

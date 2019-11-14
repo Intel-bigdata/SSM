@@ -153,10 +153,12 @@ public abstract class SmartAction {
     this.finishTime = System.currentTimeMillis();
   }
 
+  // The result will be shown in each action's summary page.
   protected void appendResult(String result) {
     psResultOs.println(result);
   }
 
+  // The log will be shown in action's submission section and summary page.
   protected void appendLog(String log) {
     psLogOs.println(log);
   }
