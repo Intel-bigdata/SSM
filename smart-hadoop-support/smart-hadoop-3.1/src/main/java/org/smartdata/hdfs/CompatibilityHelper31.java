@@ -21,7 +21,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
+import org.apache.hadoop.hdfs.SmartInputStream;
+import org.apache.hadoop.hdfs.SmartStripedInputStream;
 import org.apache.hadoop.hdfs.inotify.Event;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocol.datatransfer.Sender;
@@ -37,6 +40,7 @@ import org.apache.hadoop.security.token.Token;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.DBlockStriped;
+import org.smartdata.model.FileState;
 
 import java.io.*;
 import java.net.URI;
@@ -296,5 +300,16 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       return ((DBlockStriped) block).getInternalBlock(source);
     }
     return block;
+  }
+
+  @Override
+  public DFSInputStream getNormalInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+      FileState fileState) throws IOException {
+    LocatedBlocks locatedBlocks = dfsClient.getLocatedBlocks(src, 0);
+    ErasureCodingPolicy ecPolicy = locatedBlocks.getErasureCodingPolicy();
+    if (ecPolicy != null) {
+      return new SmartStripedInputStream(dfsClient, src, verifyChecksum, ecPolicy, locatedBlocks, fileState);
+    }
+    return new SmartInputStream(dfsClient, src, verifyChecksum, fileState);
   }
 }

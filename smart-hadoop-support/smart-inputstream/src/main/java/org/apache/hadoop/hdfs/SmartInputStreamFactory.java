@@ -18,6 +18,7 @@
 package org.apache.hadoop.hdfs;
 
 import org.apache.hadoop.fs.UnresolvedLinkException;
+import org.smartdata.hdfs.CompatibilityHelper;
 import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.FileState;
 
@@ -48,7 +49,12 @@ public class SmartInputStreamFactory {
     DFSInputStream inputStream;
     switch (fileState.getFileType()) {
       case NORMAL:
-        inputStream = new SmartInputStream(dfsClient, src, verifyChecksum, fileState);
+        // Instead of using inputStream = new SmartInputStream(dfsClient, src, verifyChecksum, fileState);
+        // EC case should be considered. Please refer DFSClient.open() -> DFSClient.openInternal().
+        // EC data is also viewed as NORMAL. Currently, it is NOT supported to combine EC with SSM compact,
+        // SSM compression etc.
+        inputStream = CompatibilityHelperLoader.getHelper().
+            getNormalInputStream(dfsClient, src, verifyChecksum, fileState);
         break;
       case COMPACT:
         inputStream = new CompactInputStream(dfsClient, verifyChecksum, fileState);

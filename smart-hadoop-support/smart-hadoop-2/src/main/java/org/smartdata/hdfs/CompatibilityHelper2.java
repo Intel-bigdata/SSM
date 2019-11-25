@@ -99,4 +99,9 @@ public abstract class CompatibilityHelper2 implements CompatibilityHelper {
   public DBlock getDBlock(DBlock block, StorageGroup source) {
     return block;
   }
+
+  public DFSInputStream getNormalInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+      FileState fileState) throws IOException {
+    return new SmartInputStream(dfsClient, src, verifyChecksum, fileState);
+  }
 }
