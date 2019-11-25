@@ -31,6 +31,7 @@ public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
   @Test
   public void testEcActionForFile() throws Exception {
     String srcPath = "/ec/test_file";
+    // Small file is not stored in EC way.
     createTestFile(srcPath, 1000);
     dfsClient.setStoragePolicy(srcPath, "COLD");
     HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(srcPath);

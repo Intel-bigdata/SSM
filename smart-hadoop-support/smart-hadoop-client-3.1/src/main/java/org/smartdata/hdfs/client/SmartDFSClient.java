@@ -143,6 +143,19 @@ public class SmartDFSClient extends DFSClient {
     return open(src, 4096, true);
   }
 
+  /**
+   * Functionality: create an InputStream and report access event to SSM server.
+   *
+   * DFSClient is firstly used to get an Inpustream to get file length. The real
+   * InputStream returned is obtained from SmartInputStreamFactory which has some
+   * considerations about compression, compact, S3 etc.
+   *
+   * It is supported that DFSStripedInputstream can be obtained for reading normal
+   * EC data, but it is NOT supported to combine EC with SSM compact, SSM compression
+   * etc. Also, there may lack of consideration on ErasureCoding in some places where
+   * DFSInputStream is used instead of DFSStripedInputStream, which can lead to block
+   * not found exception.
+   */
   @Override
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum) throws IOException {
@@ -166,6 +179,7 @@ public class SmartDFSClient extends DFSClient {
       is = SmartInputStreamFactory.create(this, src,
           verifyChecksum, fileState);
     }
+    // Report access event to smart server.
     reportFileAccessEvent(src);
     return is;
   }
