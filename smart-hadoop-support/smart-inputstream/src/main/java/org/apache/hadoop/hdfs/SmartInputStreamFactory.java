@@ -50,7 +50,7 @@ public class SmartInputStreamFactory {
     switch (fileState.getFileType()) {
       case NORMAL:
         // Instead of using inputStream = new SmartInputStream(dfsClient, src, verifyChecksum, fileState);
-        // EC case should be considered. Please refer DFSClient.open() -> DFSClient.openInternal().
+        // EC case should be considered. Please refer to DFSClient.open() -> DFSClient.openInternal().
         // EC data is also viewed as NORMAL. Currently, it is NOT supported to combine EC with SSM compact,
         // SSM compression etc.
         inputStream = CompatibilityHelperLoader.getHelper().
