@@ -1,5 +1,7 @@
 # SSM Erasure Coding (EC) on HDFS 3.x
 
+SSM EC uses HDFS EC api to write data with a user given EC policy, so SSM EC is as same as HDFS EC, i.e. striped EC. We implemented SSM EC to help user easily manage HDFS EC data
+
 ### 1. SSM EC action
 
 #### ec -file $path \[-policy $policy -bufSize $bufSize\]
@@ -83,8 +85,11 @@ EC can consume large resources, especially network IO. SSM has a throttle to avo
 By default, the throttle is turned off. To make the throttle work, user needs to set a positive value for the property named `smart.action.ec.throttle.mb` in smart-default.xml.
 
 ### 6. Note
-You may see the log similar to the following one from SSM when you run enormous EC tasks. Because by default HDFS enables a strategy that considers each datanode's load when writing data. If some nodes are under high loads, they will be excluded temporarily.
+
+1. You may see the log similar to the following one from SSM when you run enormous EC tasks. Because by default HDFS enables a strategy that considers each datanode's load when writing data. If some nodes are under high loads, they will be excluded temporarily.
 HDFS will recover the corresponding blocks later. To disable this strategy, you need to set the value as `false` for a property named `dfs.namenode.replication.considerLoad` in hdfs-site.xml.
-```
-2018-10-18 14:23:31,212 WARN org.apache.hadoop.hdfs.DFSOutputStream.logCorruptBlocks 1296: Block group <1> failed to write 1 blocks.
-```
+   ```
+   2018-10-18 14:23:31,212 WARN org.apache.hadoop.hdfs.DFSOutputStream.logCorruptBlocks 1296: Block group <1> failed to write 1 blocks.
+   ```
+
+2. It is not supported to combine EC with SSM compression or SSM compact etc. The unsupported combination operations include but not limited to: compact some EC files to a container file, convert a container file to an EC file.

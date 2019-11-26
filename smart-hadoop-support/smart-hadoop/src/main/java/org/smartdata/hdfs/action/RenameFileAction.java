@@ -45,7 +45,7 @@ import java.util.Map;
 )
 public class RenameFileAction extends HdfsAction {
   private static final Logger LOG =
-      LoggerFactory.getLogger(CopyFileAction.class);
+      LoggerFactory.getLogger(RenameFileAction.class);
   public static final String DEST_PATH = "-dest";
   private String srcPath;
   private String destPath;

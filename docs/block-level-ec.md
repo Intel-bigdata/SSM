@@ -1,5 +1,5 @@
-Continuous Block Layout Erasure Coding (EC) 
-============================================
+Continuous Block Layout Erasure Coding (EC) [Unimplemented]
+===========================================================
 
 The default HDFS 3x replication scheme is expensive. It incurs a 200%
 storage space overhead and other resources occupation, such as network bandwidth
