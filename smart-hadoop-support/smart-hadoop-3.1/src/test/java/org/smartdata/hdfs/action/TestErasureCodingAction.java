@@ -31,7 +31,8 @@ public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
   @Test
   public void testEcActionForFile() throws Exception {
     String srcPath = "/ec/test_file";
-    createTestFile(srcPath, 1000);
+    // Small file is not stored in EC way.
+    createTestFile(srcPath, 100000000);
     dfsClient.setStoragePolicy(srcPath, "COLD");
     HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(srcPath);
     // The file is expected to be stored in replication.
@@ -59,6 +60,7 @@ public class TestErasureCodingAction extends TestErasureCodingMiniCluster {
     assertEquals(srcFileStatus.getPermission(), fileStatus.getPermission());
     // UNDEF storage policy makes the converted file's storage type uncertain, so it is excluded.
     if (srcFileStatus.getStoragePolicy() != 0) {
+      // To make sure the consistency of storage policy
       assertEquals(srcFileStatus.getStoragePolicy(), fileStatus.getStoragePolicy());
     }
   }

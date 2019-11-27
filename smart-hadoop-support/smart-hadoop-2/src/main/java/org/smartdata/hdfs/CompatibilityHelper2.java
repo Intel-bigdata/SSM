@@ -21,6 +21,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileEncryptionInfo;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.DFSInputStream;
+import org.apache.hadoop.hdfs.SmartInputStream;
 import org.apache.hadoop.hdfs.protocol.*;
 import org.apache.hadoop.hdfs.protocolPB.PBHelper;
 import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
@@ -31,6 +33,7 @@ import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.StorageMap;
+import org.smartdata.model.FileState;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -98,5 +101,10 @@ public abstract class CompatibilityHelper2 implements CompatibilityHelper {
 
   public DBlock getDBlock(DBlock block, StorageGroup source) {
     return block;
+  }
+
+  public DFSInputStream getNormalInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+      FileState fileState) throws IOException {
+    return new SmartInputStream(dfsClient, src, verifyChecksum, fileState);
   }
 }

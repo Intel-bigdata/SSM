@@ -81,12 +81,13 @@ public class ErasureCodingAction extends ErasureCodingBase {
   @Override
   protected void execute() throws Exception {
     final String MATCH_RESULT =
-        "The current EC policy is matched with the target one.";
+        "The current EC policy is already matched with the target one.";
     final String DIR_RESULT =
         "The EC policy is set successfully for the given directory.";
     final String CONVERT_RESULT =
         "The file is converted successfully with the given or default EC policy.";
 
+    // Make sure DFSClient is used instead of SmartDFSClient.
     this.setDfsClient(HadoopUtil.getDFSClient(
         HadoopUtil.getNameNodeUri(conf), conf));
     // keep attribute consistent

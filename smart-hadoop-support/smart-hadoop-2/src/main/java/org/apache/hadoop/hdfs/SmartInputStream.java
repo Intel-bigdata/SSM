@@ -30,7 +30,7 @@ import java.io.IOException;
 public class SmartInputStream extends DFSInputStream {
   protected final FileState fileState;
 
-  SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
+  public SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
       FileState fileState) throws IOException, UnresolvedLinkException {
     super(dfsClient, src, verifyChecksum);
     this.fileState = fileState;

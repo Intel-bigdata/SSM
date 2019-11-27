@@ -17,23 +17,19 @@
  */
 package org.apache.hadoop.hdfs;
 
+import org.apache.hadoop.hdfs.protocol.ErasureCodingPolicy;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.smartdata.model.FileState;
 
 import java.io.IOException;
 
-/**
- * DFSInputStream for SSM.
- */
-public class SmartInputStream extends DFSInputStream {
-  protected final FileState fileState;
+public class SmartStripedInputStream extends DFSStripedInputStream {
+  FileState fileState;
 
-  public SmartInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
-      FileState fileState) throws IOException {
-    super(dfsClient, src, verifyChecksum, dfsClient.getLocatedBlocks(src, 0));
+  public SmartStripedInputStream(DFSClient dfsClient, String src,
+      boolean verifyChecksum, ErasureCodingPolicy ecPolicy, LocatedBlocks locatedBlocks,
+      FileState fileState)  throws IOException {
+    super(dfsClient, src, verifyChecksum, ecPolicy, locatedBlocks);
     this.fileState = fileState;
-  }
-
-  public FileState.FileType getType() {
-    return fileState.getFileType();
   }
 }
