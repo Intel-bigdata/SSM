@@ -166,6 +166,22 @@ public class CopyScheduler extends ActionSchedulerService {
     if (requireWait(fileDiff)) {
       return ScheduleResult.RETRY;
     }
+
+    // Check whether src is compressed, if so, the syncing length should be original length.
+    // Otherwise, only partial compressed file is copied. The dest file is not compressed.
+    // Using HDFS copy cmd or SSM copy action will not have such issue, since file length
+    // is obtained from SmartDFSClient in that case, where compression is considered.
+    try {
+      FileState fileState = metaStore.getFileState(fileDiff.getSrc());
+      if (fileState instanceof CompressionFileState) {
+        Long length = ((CompressionFileState) fileState).getOriginalLength();
+        fileDiff.getParameters().put("-length", length.toString());
+      }
+    } catch (MetaStoreException e) {
+      LOG.error("Failed to get FileState, the syncing file's length may be " +
+          "incorrect if it is compressed", e);
+    }
+
     switch (fileDiff.getDiffType()) {
       case APPEND:
         action.setActionType("copy");
