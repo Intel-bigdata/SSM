@@ -282,6 +282,7 @@ public class SmartDFSClient extends DFSClient {
     } else {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompressionFileState) {
+        // To make SmartDFSClient return the original length of compressed file.
         long len = ((CompressionFileState) fileState).getOriginalLength();
         return CompatibilityHelperLoader.getHelper().createHdfsFileStatus(len, oldStatus.isDir(), oldStatus.getReplication(),
             oldStatus.getBlockSize(), oldStatus.getModificationTime(), oldStatus.getAccessTime(),
