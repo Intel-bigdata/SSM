@@ -23,7 +23,7 @@ Supporting transparent HDFS data compression. Note that it is not Hadoop compres
 
 High Level Considerations
 ------------
-1. Supports Hadoop 3.x and Hadoop 2.x;
+1. Support Hadoop 3.x and Hadoop 2.x;
 2. The whole work and framework builds on top of HDFS, avoiding modifications when possible;
 3. Compatible HDFS client APIs to support existing applications and computation frameworks;
 4. Provide additional client APIs to allow new applications to benefit from SSM nice facilities;

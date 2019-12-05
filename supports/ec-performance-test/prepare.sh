@@ -11,4 +11,3 @@ for size in "${!CASES[@]}"; do
     ssh ${SRC_NODE} "hdfs dfs -mv /benchmarks/TestDFSIO/io_data/* /"${size}_$num""
     ssh ${SRC_NODE} "hdfs dfs -rm -r /benchmarks"
 done
-

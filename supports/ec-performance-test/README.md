@@ -3,11 +3,11 @@
 ## Requirements
 - Deploy SSM, please refer to /SSM/doc/ssm-deployment-guide.md.
 - Deploy one HDFS cluster and configure its bin in $PATH of OS.
-- Install MySQL for SSM storing Metadata.
+- Install MySQL for SSM storing metadata.
 - Install PAT(https://github.com/intel-hadoop/PAT).
 
 ## Configuration
-  Configure the file named config. For the test case, the corresponding test data should be created in the HDFS cluster beforehand by executing 'prepare.sh'.
+  Configure the file named config. For a test case, the corresponding test data should be created in the HDFS cluster beforehand by executing 'prepare.sh'.
 
 ## SSM EC Test
   1. Run `./test_ssm_ec_performance.sh`
