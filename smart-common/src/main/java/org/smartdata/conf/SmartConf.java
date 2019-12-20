@@ -66,8 +66,13 @@ public class SmartConf extends Configuration {
       coverList.add(s + (s.endsWith("/") ? "" : "/"));
     }
 
-    this.serverHosts = init("servers", this);
-    this.agentHosts = init("agents", this);
+    try {
+      this.serverHosts = parseHost("servers", this);
+      this.agentHosts = parseHost("agents", this);
+    } catch (FileNotFoundException e) {
+      // In some unit test, these files may be not given. So such exception is tolerable.
+      LOG.warn("Could not get file named servers or agents to parse host.");
+    }
   }
 
   public List<String> getCoverDir() {
@@ -92,7 +97,8 @@ public class SmartConf extends Configuration {
     }
   }
 
-  public Set<String> init(String fileName, SmartConf conf) {
+  public Set<String> parseHost(String fileName, SmartConf conf)
+      throws FileNotFoundException {
     String hostName = "";
     try {
       InetAddress address = InetAddress.getLocalHost();
@@ -103,25 +109,20 @@ public class SmartConf extends Configuration {
 
     String filePath = conf.get(SmartConfKeys.SMART_CONF_DIR_KEY,
         SmartConfKeys.SMART_CONF_DIR_DEFAULT) + "/" + fileName;
-    Scanner sc = null;
-    HashSet<String> hosts = new HashSet<>();
-    try {
-      sc = new Scanner(new File(filePath));
-    } catch (FileNotFoundException ex) {
-      ex.printStackTrace();
-    }
-
+    Scanner sc;
+    HashSet<String> hostSet = new HashSet<>();
+    sc = new Scanner(new File(filePath));
     while (sc != null && sc.hasNextLine()) {
-      String host = sc.nextLine().trim();
-      if (!host.startsWith("#") && !host.isEmpty()) {
-        if (host.equals("localhost")) {
-          hosts.add(hostName);
+      String entry = sc.nextLine().trim();
+      if (!entry.startsWith("#") && !entry.isEmpty()) {
+        if (entry.equals("localhost")) {
+          hostSet.add(hostName);
         } else {
-          hosts.add(host);
+          hostSet.add(entry);
         }
       }
     }
-    return hosts;
+    return hostSet;
   }
 
   public Set<String> getServerHosts() {
