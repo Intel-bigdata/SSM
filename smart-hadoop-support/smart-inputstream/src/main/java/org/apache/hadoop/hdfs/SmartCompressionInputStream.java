@@ -38,7 +38,6 @@ public class SmartCompressionInputStream extends SmartInputStream {
 
   private CompressionFileState compressionFileState;
   private final long originalLength;
-  private CompressionCodec compressionCodec;
 
   SmartCompressionInputStream(DFSClient dfsClient, String src, boolean verifyChecksum,
       FileState fileState) throws IOException {
@@ -50,9 +49,9 @@ public class SmartCompressionInputStream extends SmartInputStream {
     }
     originalLength = compressionFileState.getOriginalLength();
     int bufferSize = compressionFileState.getBufferSize();
-    this.compressionCodec = new CompressionCodec();
     this.buffer = new byte[bufferSize];
-    this.decompressor = compressionCodec.creatDecompressor(bufferSize, compressionFileState.getCompressionImpl());
+    this.decompressor = CompressionCodec.creatDecompressor(bufferSize,
+        compressionFileState.getCompressionImpl());
   }
 
   @Override

@@ -3,7 +3,7 @@
 ## Usage
 Basic usage
 ```
-compress –file [file path] -compressImpl [codec]
+compress –file [file path] -codec [codec]
 ```
 
 Optional parameters
@@ -14,7 +14,7 @@ Optional parameters
 ## Compression action example
 
 ```
-compress –file /compress/1.txt -compressImpl snappy
+compress –file /compress/1.txt -codec snappy
 ```
 
 This action means SSM will trigger an action to compress these specified file, i.e., `/compress/1.txt`. The original file will be replaced with compressed file. The compression codec is snappy.
@@ -22,7 +22,7 @@ This action means SSM will trigger an action to compress these specified file, i
 ## Compression rule example
 
 ```
-file: path matches "/compress/*" | compress -compressImpl snappy
+file: path matches "/compress/*" | compress -codec snappy
 ```
 
 This rule means for all files under `/compress` directory, SSM will trigger actions to compress them with snappy. If new files are added to this directory, SSM will also trigger actions to compress these new files.

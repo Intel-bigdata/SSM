@@ -54,15 +54,15 @@ import java.util.Map;
             + " $file "
             + CompressionAction.BUF_SIZE
             + " $size "
-            + CompressionAction.COMPRESS_IMPL
-            + " $impl"
+            + CompressionAction.CODEC
+            + " $codec"
 )
 public class CompressionAction extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CompressionAction.class);
 
   public static final String BUF_SIZE = "-bufSize";
-  public static final String COMPRESS_IMPL = "-compressImpl";
+  public static final String CODEC = "-codec";
   private static List<String> compressionImplList =
       Arrays.asList("Lz4","Bzip2","Zlib","snappy");
 
@@ -74,7 +74,7 @@ public class CompressionAction extends HdfsAction {
   private int bufferSize = 1024 * 1024;
   private int maxSplit;
   // Can be set in config or action arg.
-  private String compressionImpl;
+  private String compressCodec;
   // Specified by user in action arg.
   private int userDefinedBufferSize;
   // Calculated by max number of splits.
@@ -91,7 +91,7 @@ public class CompressionAction extends HdfsAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.conf = getContext().getConf();
-    this.compressionImpl = conf.get(
+    this.compressCodec = conf.get(
         SmartConfKeys.SMART_COMPRESSION_IMPL,
         SmartConfKeys.SMART_COMPRESSION_IMPL_DEFAULT);
     this.maxSplit = conf.getInt(
@@ -102,8 +102,8 @@ public class CompressionAction extends HdfsAction {
     if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
       this.userDefinedBufferSize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
     }
-    if (args.containsKey(COMPRESS_IMPL)) {
-      this.compressionImpl = args.get(COMPRESS_IMPL);
+    if (args.containsKey(CODEC)) {
+      this.compressCodec = args.get(CODEC);
     }
     if (args.containsKey(COMPRESSION_TMP)) {
       // this is a temp file kept for compressing a file.
@@ -119,9 +119,9 @@ public class CompressionAction extends HdfsAction {
     if (compressionTmpPath == null) {
       throw new IllegalArgumentException("Compression tmp path is not specified!");
     }
-    if (!compressionImplList.contains(compressionImpl)) {
+    if (!compressionImplList.contains(compressCodec)) {
       throw new ActionException(
-          "Compression Action failed due to unsupported compressionImpl: " + compressionImpl);
+          "Compression Action failed due to unsupported compressionImpl: " + compressCodec);
     }
     appendLog(
         String.format("Compression Action started at %s for %s",
@@ -133,7 +133,7 @@ public class CompressionAction extends HdfsAction {
     }
     // Generate compressed file
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
-    compressionFileState = new CompressionFileState(filePath, bufferSize, compressionImpl);
+    compressionFileState = new CompressionFileState(filePath, bufferSize, compressCodec);
     compressionFileState.setOriginalLength(srcFile.getLen());
     if (srcFile.getLen() == 0) {
       compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
@@ -169,7 +169,8 @@ public class CompressionAction extends HdfsAction {
           new CompressionFileInfo(true, compressionTmpPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
-    appendLog("Final compression bufferSize = " + bufferSize);
+    appendLog("Compression bufferSize used: " + bufferSize);
+    appendLog("Compression codec used:" + compressCodec);
     String compressionInfoJson = new Gson().toJson(compressionFileInfo);
     appendResult(compressionInfoJson);
     LOG.warn(compressionInfoJson);

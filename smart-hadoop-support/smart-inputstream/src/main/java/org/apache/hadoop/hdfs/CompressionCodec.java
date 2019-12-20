@@ -17,8 +17,10 @@
  */
 package org.apache.hadoop.hdfs;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.Decompressor;
+import org.apache.hadoop.io.compress.Lz4Codec;
 import org.apache.hadoop.io.compress.SnappyCodec;
 import org.apache.hadoop.io.compress.bzip2.Bzip2Compressor;
 import org.apache.hadoop.io.compress.bzip2.Bzip2Decompressor;
@@ -30,43 +32,65 @@ import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibCompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibFactory;
-import org.apache.hadoop.util.NativeCodeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.conf.SmartConf;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * This class decide which compressor type for SmartCompressorStream 
  */
 public class CompressionCodec {
   static final Logger LOG = LoggerFactory.getLogger(CompressionCodec.class);
-  private String hadoopNativePath;
-  SmartConf conf = new SmartConf();
+  public static final String LZ4 = "Lz4";
+  public static final String BZIP2 = "Bzip2";
+  public static final String SNAPPY = "snappy";
+  public static final String ZLIB = "Zlib";
+  public static final List<String> CODEC_LIST = Arrays.asList(LZ4, BZIP2, SNAPPY, ZLIB);
 
-  public CompressionCodec() {
+  private static String hadoopNativePath;
+  private static Configuration conf = new Configuration();
+  private static boolean nativeCodeLoaded = false;
+
+  static {
     // hadoopNativePath is used to support Bzip2
     if (System.getenv("HADOOP_HOME") != null) {
-      this.hadoopNativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
+      hadoopNativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
     } else if (System.getenv("HADOOP_COMMON_HOME") != null){
-      this.hadoopNativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
+      hadoopNativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
+    } else {
+      LOG.warn("$HADOOP_HOME or $HADOOP_COMMON_HOME is not found in your env.");
     }
+
     if (hadoopNativePath != null) {
-      System.load(hadoopNativePath);
+      try {
+        System.load(hadoopNativePath);
+        nativeCodeLoaded = true;
+      } catch (Throwable t) {
+        LOG.warn("Failed to load native library from " + hadoopNativePath);
+      }
+    }
+
+    if (!nativeCodeLoaded) {
+      LOG.warn("Failed to load Hadoop native lib for SSM compression use, " +
+          "only Zlib codec can be used.");
     }
   }
 
   /**
    * Return compression overhead of given codec
-   * @param bufferSize buffSize of codec (int)
-   * @param compressionImpl codec name (String)
+   * @param bufferSize   buffSize of codec (int)
+   * @param codec        codec name (String)
    * @return compression overhead (int)
    */
-  public int compressionOverhead(int bufferSize, String compressionImpl) {
+  public static int compressionOverhead(int bufferSize, String codec) {
     // According to Hadoop 3.0
-    switch (compressionImpl) {
-      case "Lz4":
+    switch (codec) {
+      case LZ4:
         return bufferSize / 255 + 16;
-      case "snappy" :
+      case SNAPPY:
         return bufferSize / 6 + 32;
       default:
         return 18;
@@ -76,88 +100,100 @@ public class CompressionCodec {
   /**
    *  Create a compressor
    */
-  public Compressor createCompressor(int bufferSize, String compressionImpl) {
-    // Sequentially load compressors
-    switch (compressionImpl) {
-      case "Lz4" :
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
-          return new Lz4Compressor(bufferSize);
-        } else {
-          LOG.error("Failed to load/initialize native-lz4 library");
-        }
+  public static Compressor createCompressor(int bufferSize, String codec) throws IOException {
 
-      case "Bzip2" :
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
-          if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
-            return new Bzip2Compressor(Bzip2Factory.getBlockSize(conf),
+    if (!CODEC_LIST.contains(codec)) {
+      throw new IOException("Invalid compression codec, SSM only support: " +
+          CODEC_LIST.toString());
+    }
+
+    if (!codec.equals(ZLIB) && !nativeCodeLoaded) {
+      throw new IOException("Hadoop native lib was not successfully loaded, so " +
+          codec + " is not supported.");
+    }
+
+    // Sequentially load compressors
+    switch (codec) {
+      case LZ4:
+        if (Lz4Codec.isNativeCodeLoaded()) {
+          return new Lz4Compressor(bufferSize);
+        }
+        throw new IOException("Failed to load/initialize native-Lz4 library");
+
+      case BZIP2:
+        if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
+          return new Bzip2Compressor(Bzip2Factory.getBlockSize(conf),
               Bzip2Factory.getWorkFactor(conf),
               bufferSize);
-          } else {
-            LOG.error("Failed to load/initialize native-bzip2 library");
-          }
         }
+        throw new IOException("Failed to load/initialize native-bzip2 library");
 
-      case "snappy" :
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
-          if (SnappyCodec.isNativeCodeLoaded()) {
-            return new SnappyCompressor(bufferSize);
-          } else {
-            LOG.error("Failed to load/initialize native-snappy library");
-          }
+      case SNAPPY:
+        if (SnappyCodec.isNativeCodeLoaded()) {
+          return new SnappyCompressor(bufferSize);
         }
+        throw new IOException("Failed to load/initialize native-snappy library");
 
-      default:
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
+      case ZLIB:
+        if (nativeCodeLoaded) {
           return new ZlibCompressor(ZlibCompressor.CompressionLevel.DEFAULT_COMPRESSION,
               ZlibCompressor.CompressionStrategy.DEFAULT_STRATEGY,
               ZlibCompressor.CompressionHeader.DEFAULT_HEADER,
               bufferSize);
-        } else {
-          // TODO buffer size for build-in zlib codec
-          return ZlibFactory.getZlibCompressor(conf);
         }
+        // TODO buffer size for build-in zlib codec
+        return ZlibFactory.getZlibCompressor(conf);
+
+      default:
+        throw new IOException("unsupported codec: " + codec);
     }
   }
 
   /**
    *  Create a Decompressor
    */
-  public Decompressor creatDecompressor(int bufferSize, String compressionImpl){
+  public static Decompressor creatDecompressor(int bufferSize, String codec) throws IOException {
+
+    if (!CODEC_LIST.contains(codec)) {
+      throw new IOException("Invalid compression codec, SSM only recognize: " +
+          CODEC_LIST.toString());
+    }
+
+    if (!codec.equals(ZLIB) && !nativeCodeLoaded) {
+      throw new IOException("Hadoop native lib was not successfully loaded, so " +
+          codec + " is not supported.");
+    }
+
     // Sequentially load decompressors
-    switch (compressionImpl){
-      case "Lz4" :
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
+    switch (codec) {
+      case LZ4:
+        if (Lz4Codec.isNativeCodeLoaded()) {
           return new Lz4Decompressor(bufferSize);
-        } else {
-          LOG.error("Failed to load/initialize native-lz4 library");
         }
+        throw new IOException("Failed to load/initialize native-Lz4 library");
 
-      case "Bzip2" :
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
-          if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
-            return new Bzip2Decompressor(false, bufferSize);
-          } else {
-            LOG.error("Failed to load/initialize native-bzip2 library");
-          }
+      case BZIP2:
+        if (Bzip2Factory.isNativeBzip2Loaded(conf)) {
+          return new Bzip2Decompressor(false, bufferSize);
         }
+        throw new IOException("Failed to load/initialize native-bzip2 library");
 
-      case "snappy" :
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
-          if (SnappyCodec.isNativeCodeLoaded()) {
-            return new SnappyDecompressor(bufferSize);
-          } else {
-            LOG.error("Failed to load/initialize native-snappy library");
-          }
+      case SNAPPY:
+        if (SnappyCodec.isNativeCodeLoaded()) {
+          return new SnappyDecompressor(bufferSize);
         }
+        throw new IOException("Failed to load/initialize native-snappy library");
 
-      default:
-        if (NativeCodeLoader.isNativeCodeLoaded()) {
+
+      case ZLIB:
+        if (nativeCodeLoaded) {
           return new ZlibDecompressor(
               ZlibDecompressor.CompressionHeader.DEFAULT_HEADER, bufferSize);
-        } else {
-          // TODO buffer size for build-in zlib codec
-          return ZlibFactory.getZlibDecompressor(conf);
         }
+        // TODO buffer size for build-in zlib codec
+        return ZlibFactory.getZlibDecompressor(conf);
+      default:
+        throw new IOException("Unsupported codec: " + codec);
     }
   }
 }
