@@ -33,10 +33,12 @@ Default codec is Zlib (if not given in action or rule), user can set other codec
 * Configure default codec
   ```xml
   <property>
-    <name>smart.compression.impl</name>
+    <name>smart.compression.codec</name>
     <value>Snappy</value>
     <description>
-      Default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
+      The default compression codec for SSM compression (Zlib, Lz4, Bzip2, snappy).
+      User can also specify a codec in action arg, then this default setting will
+      be overridden.
     </description>
   </property>
   ```
@@ -46,7 +48,7 @@ Default codec is Zlib (if not given in action or rule), user can set other codec
 Appending data to compressed file is not supported.
 
 After data is compressed by SSM, user needs to use SmartDFSClient to get the original data instead of DFSClient which returns the raw compressed data. Please see Hadoop Configuration part in ssm-deployment-guide.md
-for replacing DFSClient by SmartDFSClient in Hadoop. SmartDFSClient has override DFSClient's getFileInfo method in order to return the original file's info, for example original length to user. Thus, user can see
+for replacing DFSClient by SmartDFSClient in Hadoop. SmartDFSClient has overridden DFSClient's getFileInfo method in order to return the original file's info, for example original length to user. Thus, user can see
 original length of compressed file by using `hdfs dfs -ls`.
 
 It is supported to sync or copy compressed data to another cluster. But, the data is firstly uncompressed and then transferred to the given cluster, which means SSM compression cannot be used to reduce network IO load

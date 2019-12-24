@@ -211,8 +211,8 @@ public class SmartConfKeys {
   public static final double SMART_STATUS_REPORT_RATIO_DEFAULT = 0.2;
 
   // Compression
-  public static final String SMART_COMPRESSION_IMPL = "smart.compression.impl";
-  public static final String SMART_COMPRESSION_IMPL_DEFAULT = "Zlib";
+  public static final String SMART_COMPRESSION_CODEC = "smart.compression.codec";
+  public static final String SMART_COMPRESSION_CODEC_DEFAULT = "Zlib";
   public static final String SMART_COMPRESSION_MAX_SPLIT = "smart.compression.max.split";
   public static final int SMART_COMPRESSION_MAX_SPLIT_DEFAULT = 1000;
 }

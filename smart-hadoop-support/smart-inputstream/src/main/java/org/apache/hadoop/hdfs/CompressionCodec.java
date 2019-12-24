@@ -75,7 +75,7 @@ public class CompressionCodec {
 
     if (!nativeCodeLoaded) {
       LOG.warn("Failed to load Hadoop native lib for SSM compression use, " +
-          "only Zlib codec can be used.");
+          "only built-in Zlib codec can be used.");
     }
   }
 
@@ -100,13 +100,13 @@ public class CompressionCodec {
   /**
    *  Create a compressor
    */
-  public static Compressor createCompressor(int bufferSize, String codec) throws IOException {
+  public static Compressor createCompressor(int bufferSize, String codec)
+      throws IOException {
 
     if (!CODEC_LIST.contains(codec)) {
       throw new IOException("Invalid compression codec, SSM only support: " +
           CODEC_LIST.toString());
     }
-
     if (!codec.equals(ZLIB) && !nativeCodeLoaded) {
       throw new IOException("Hadoop native lib was not successfully loaded, so " +
           codec + " is not supported.");
@@ -145,7 +145,7 @@ public class CompressionCodec {
         return ZlibFactory.getZlibCompressor(conf);
 
       default:
-        throw new IOException("unsupported codec: " + codec);
+        throw new IOException("Unsupported codec: " + codec);
     }
   }
 
@@ -164,7 +164,7 @@ public class CompressionCodec {
           codec + " is not supported.");
     }
 
-    // Sequentially load decompressors
+    // Sequentially load a decompressor
     switch (codec) {
       case LZ4:
         if (Lz4Codec.isNativeCodeLoaded()) {

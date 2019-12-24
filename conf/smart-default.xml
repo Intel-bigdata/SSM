@@ -291,10 +291,10 @@
   </property>
 
   <property>
-    <name>smart.compression.impl</name>
+    <name>smart.compression.codec</name>
     <value>Zlib</value>
     <description>
-      The default compression codec for SSM compression (Zlib Lz4, Bzip2, snappy).
+      The default compression codec for SSM compression (Zlib, Lz4, Bzip2, snappy).
       User can also specify a codec in action arg, then this default setting will
       be overridden.
     </description>
