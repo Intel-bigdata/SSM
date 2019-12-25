@@ -83,8 +83,8 @@ public class CompressionAction extends HdfsAction {
   private CompressionFileInfo compressionFileInfo;
   private CompressionFileState compressionFileState;
 
-  private String compressionTmpPath;
-  public static final String COMPRESSION_TMP = "-compressionTmp";
+  private String compressTmpPath;
+  public static final String COMPRESS_TMP = "-compressTmp";
 
   @Override
   public void init(Map<String, String> args) {
@@ -101,13 +101,10 @@ public class CompressionAction extends HdfsAction {
     if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
       this.userDefinedBufferSize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
     }
-    if (args.containsKey(CODEC)) {
-      this.compressCodec = args.get(CODEC) != null ? args.get(CODEC) : this.compressCodec;
-    }
-    if (args.containsKey(COMPRESSION_TMP)) {
-      // this is a temp file kept for compressing a file.
-      this.compressionTmpPath = args.get(COMPRESSION_TMP);
-    }
+    this.compressCodec = args.get(CODEC) != null ? args.get(CODEC) : compressCodec;
+    // This is a temp path for compressing a file.
+    this.compressTmpPath = args.containsKey(COMPRESS_TMP) ?
+        args.get(COMPRESS_TMP) : compressTmpPath;
   }
 
   @Override
@@ -115,7 +112,7 @@ public class CompressionAction extends HdfsAction {
     if (filePath == null) {
       throw new IllegalArgumentException("File path is missing.");
     }
-    if (compressionTmpPath == null) {
+    if (compressTmpPath == null) {
       throw new IllegalArgumentException("Compression tmp path is not specified!");
     }
     if (!compressionCodecList.contains(compressCodec)) {
@@ -159,14 +156,14 @@ public class CompressionAction extends HdfsAction {
 
       DFSInputStream dfsInputStream = dfsClient.open(filePath);
 
-      OutputStream compressedOutputStream = dfsClient.create(compressionTmpPath,
+      OutputStream compressedOutputStream = dfsClient.create(compressTmpPath,
           true, replication, blockSize);
       compress(dfsInputStream, compressedOutputStream);
-      HdfsFileStatus destFile = dfsClient.getFileInfo(compressionTmpPath);
+      HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
       compressionFileState.setCompressedLength(destFile.getLen());
       appendLog("Compressed file length: " + destFile.getLen());
       compressionFileInfo =
-          new CompressionFileInfo(true, compressionTmpPath, compressionFileState);
+          new CompressionFileInfo(true, compressTmpPath, compressionFileState);
     }
     compressionFileState.setBufferSize(bufferSize);
     appendLog("Compression buffer size: " + bufferSize);

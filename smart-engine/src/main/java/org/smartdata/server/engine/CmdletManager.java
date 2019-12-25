@@ -188,7 +188,7 @@ public class CmdletManager extends AbstractService {
       recovery();
       LOG.info("Initialized.");
     } catch (MetaStoreException e) {
-      LOG.error("DB Connection error! Get Max CommandId/ActionId fail!", e);
+      LOG.error("DB Connection error! Failed to get Max CmdletId/ActionId!", e);
       throw new IOException(e);
     } catch (IOException e) {
       throw e;

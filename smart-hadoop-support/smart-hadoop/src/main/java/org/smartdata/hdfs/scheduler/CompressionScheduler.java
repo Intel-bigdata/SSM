@@ -27,6 +27,7 @@ import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
+import org.smartdata.hdfs.action.CompressionAction;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -39,6 +40,7 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
@@ -52,9 +54,9 @@ public class CompressionScheduler extends ActionSchedulerService {
   private final URI nnUri;
   private MetaStore metaStore;
   private static final List<String> actions = Arrays.asList("compress");
-  public static String COMPRESSION_DIR;
-  public static final String COMPRESSION_TMP = "-compressionTmp";
-  public static final String COMPRESSION_TMP_DIR = "compress_tmp/";
+  public static String COMPRESS_DIR;
+  public static final String COMPRESS_TMP = CompressionAction.COMPRESS_TMP;
+  public static final String COMPRESS_TMP_DIR = "compress_tmp/";
   private SmartConf conf;
 
   public static final Logger LOG =
@@ -67,10 +69,10 @@ public class CompressionScheduler extends ActionSchedulerService {
     this.metaStore = metaStore;
     nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
 
-    String ssmTmpDir = conf.get(
+    String ssmWorkDir = conf.get(
         SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
-    ssmTmpDir = ssmTmpDir + (ssmTmpDir.endsWith("/") ? "" : "/");
-    CompressionScheduler.COMPRESSION_DIR = ssmTmpDir + COMPRESSION_TMP_DIR;
+    CompressionScheduler.COMPRESS_DIR =
+        new File(ssmWorkDir, COMPRESS_TMP_DIR).getAbsolutePath();
   }
 
   @Override
@@ -153,11 +155,11 @@ public class CompressionScheduler extends ActionSchedulerService {
   @Override
   public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
                                    LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
-    // For compression, add compressionTmp argument. This arg is assigned by CompressionScheduler
+    // For compression, add compressTmp argument. This arg is assigned by CompressionScheduler
     // and persisted to MetaStore for easily debugging.
     String tmpName = createTmpName(action);
-    action.getArgs().put(COMPRESSION_TMP, COMPRESSION_DIR + tmpName);
-    actionInfo.getArgs().put(COMPRESSION_TMP, COMPRESSION_DIR + tmpName);
+    action.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
+    actionInfo.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
     return ScheduleResult.SUCCESS;
   }
 

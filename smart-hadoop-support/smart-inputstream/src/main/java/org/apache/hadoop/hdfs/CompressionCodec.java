@@ -35,6 +35,7 @@ import org.apache.hadoop.io.compress.zlib.ZlibFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -49,17 +50,20 @@ public class CompressionCodec {
   public static final String SNAPPY = "snappy";
   public static final String ZLIB = "Zlib";
   public static final List<String> CODEC_LIST = Arrays.asList(LZ4, BZIP2, SNAPPY, ZLIB);
+  public static final String NATIVE_LIB_CHILD_PATH = "lib/native/libhadoop.so";
 
   private static String hadoopNativePath;
   private static Configuration conf = new Configuration();
   private static boolean nativeCodeLoaded = false;
 
   static {
-    // hadoopNativePath is used to support Bzip2
+    // Load Hadoop native lib to support Lz4, Bzip2, snappy.
     if (System.getenv("HADOOP_HOME") != null) {
-      hadoopNativePath = System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
+      hadoopNativePath = new File(System.getenv("HADOOP_HOME"),
+          NATIVE_LIB_CHILD_PATH).getAbsolutePath();
     } else if (System.getenv("HADOOP_COMMON_HOME") != null){
-      hadoopNativePath = System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
+      hadoopNativePath = new File(System.getenv("HADOOP_COMMON_HOME"),
+          NATIVE_LIB_CHILD_PATH).getAbsolutePath();
     } else {
       LOG.warn("$HADOOP_HOME or $HADOOP_COMMON_HOME is not found in your env.");
     }
@@ -68,6 +72,8 @@ public class CompressionCodec {
       try {
         System.load(hadoopNativePath);
         nativeCodeLoaded = true;
+        LOG.info("Hadoop native lib is loaded successfully from " +
+            hadoopNativePath);
       } catch (Throwable t) {
         LOG.warn("Failed to load native library from " + hadoopNativePath);
       }
