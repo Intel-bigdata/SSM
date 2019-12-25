@@ -45,6 +45,8 @@ Default codec is Zlib (if not given in action or rule), user can set other codec
 
 ## Note
 
+SSM will load Hadoop native lib for supporting some native compression codecs, such as Lz4, Bzip2, snappy. To load the lib, $HADOOP_HOME or $HADOOP_COMMON_HOME should be configured in your environment. Otherwise, only built-in Zlib can be used.
+
 Appending data to compressed file is not supported.
 
 After data is compressed by SSM, user needs to use SmartDFSClient to get the original data instead of DFSClient which returns the raw compressed data. Please see Hadoop Configuration part in ssm-deployment-guide.md

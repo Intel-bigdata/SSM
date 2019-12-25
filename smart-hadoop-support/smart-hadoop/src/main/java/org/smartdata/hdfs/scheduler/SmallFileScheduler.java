@@ -86,9 +86,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private ScheduledExecutorService executorService;
 
   private static final int META_STORE_INSERT_BATCH_SIZE = 200;
-  private static final String COMPACT_ACTION_NAME = "compact";
-  private static final String UNCOMPACT_ACTION_NAME = "uncompact";
-  private static final List<String> ACTIONS = Arrays.asList("compact", "uncompact");
+  public static final String COMPACT_ACTION_NAME = "compact";
+  public static final String UNCOMPACT_ACTION_NAME = "uncompact";
+  public static final List<String> ACTIONS = Arrays.asList(COMPACT_ACTION_NAME, UNCOMPACT_ACTION_NAME);
   public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
 
   public SmallFileScheduler(SmartContext context, MetaStore metaStore) {

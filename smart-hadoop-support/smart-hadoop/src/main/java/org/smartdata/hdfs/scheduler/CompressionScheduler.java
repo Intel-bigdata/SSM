@@ -44,20 +44,27 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * CompressionScheduler.
+ * Compression Scheduler.
+ *
+ * TODO: support uncompress action.
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
   private final URI nnUri;
   private MetaStore metaStore;
-  private static final List<String> actions = Arrays.asList("compress");
+  public static final String COMPRESSION_ACTION_NAME = "compress";
+  public static final List<String> actions =
+      Arrays.asList(COMPRESSION_ACTION_NAME);
   public static String COMPRESS_DIR;
   public static final String COMPRESS_TMP = CompressionAction.COMPRESS_TMP;
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
   private SmartConf conf;
+  private Set<String> fileLock;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CompressionScheduler.class);
@@ -73,6 +80,7 @@ public class CompressionScheduler extends ActionSchedulerService {
         SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
     CompressionScheduler.COMPRESS_DIR =
         new File(ssmWorkDir, COMPRESS_TMP_DIR).getAbsolutePath();
+    this.fileLock = new HashSet<>();
   }
 
   @Override
@@ -136,18 +144,22 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    String path = actionInfo.getArgs().get("-file");
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    if (fileLock.contains(srcPath)) {
+      return false;
+    }
+
     try {
-      if (!supportCompression(path)) {
+      if (!supportCompression(srcPath)) {
         return false;
       }
       // TODO remove this part
-      CompressionFileState fileState = new CompressionFileState(path,
+      CompressionFileState fileState = new CompressionFileState(srcPath,
           FileState.FileStage.PROCESSING);
       metaStore.insertUpdateFileState(fileState);
       return true;
     } catch (MetaStoreException e) {
-      LOG.error("Compress action of file " + path + " failed in metastore!", e);
+      LOG.error("Compress action of file " + srcPath + " failed in metastore!", e);
       return false;
     }
   }
@@ -160,12 +172,14 @@ public class CompressionScheduler extends ActionSchedulerService {
     String tmpName = createTmpName(action);
     action.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
     actionInfo.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
+    fileLock.add(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
     return ScheduleResult.SUCCESS;
   }
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
     if (actionInfo.isFinished()) {
+      String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       try {
         // Action failed
         if (!actionInfo.isSuccessful()) {
@@ -173,7 +187,7 @@ public class CompressionScheduler extends ActionSchedulerService {
           // Currently only converting from normal file to other types is supported, so
           // when action failed, just remove the record of this file from metastore.
           // In current implementation, no record in FileState table means the file is normal type.
-          metaStore.deleteFileState(actionInfo.getArgs().get("-file"));
+          metaStore.deleteFileState(srcPath);
         } else {
           // Action successful
           Gson gson = new Gson();
@@ -182,20 +196,21 @@ public class CompressionScheduler extends ActionSchedulerService {
               new TypeToken<CompressionFileInfo>() {
               }.getType());
           boolean needReplace = compressionFileInfo.needReplace();
-          String path = actionInfo.getArgs().get("-file");
           String tempPath = compressionFileInfo.getTempPath();
           CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
           compressionFileState.setFileStage(FileState.FileStage.DONE);
           // Update metastore and then replace file with compressed one
           metaStore.insertUpdateFileState(compressionFileState);
           if (needReplace) {
-            dfsClient.rename(tempPath, path, Options.Rename.OVERWRITE);
+            dfsClient.rename(tempPath, srcPath, Options.Rename.OVERWRITE);
           }
         }
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
       } catch (Exception e) {
         LOG.error("Compression action error", e);
+      } finally {
+        fileLock.remove(srcPath);
       }
     }
   }
