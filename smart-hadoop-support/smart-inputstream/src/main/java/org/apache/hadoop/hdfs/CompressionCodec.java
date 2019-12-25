@@ -85,6 +85,10 @@ public class CompressionCodec {
     }
   }
 
+  public static boolean getNativeCodeLoaded() {
+    return nativeCodeLoaded;
+  }
+
   /**
    * Return compression overhead of given codec
    * @param bufferSize   buffSize of codec (int)
