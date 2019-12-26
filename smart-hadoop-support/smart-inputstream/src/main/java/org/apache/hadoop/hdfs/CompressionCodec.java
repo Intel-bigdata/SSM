@@ -32,10 +32,10 @@ import org.apache.hadoop.io.compress.snappy.SnappyDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibCompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibDecompressor;
 import org.apache.hadoop.io.compress.zlib.ZlibFactory;
+import org.apache.hadoop.util.NativeCodeLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -50,40 +50,9 @@ public class CompressionCodec {
   public static final String SNAPPY = "snappy";
   public static final String ZLIB = "Zlib";
   public static final List<String> CODEC_LIST = Arrays.asList(LZ4, BZIP2, SNAPPY, ZLIB);
-  public static final String NATIVE_LIB_CHILD_PATH = "lib/native/libhadoop.so";
 
-  private static String hadoopNativePath;
   private static Configuration conf = new Configuration();
-  private static boolean nativeCodeLoaded = false;
-
-  static {
-    // Load Hadoop native lib to support Lz4, Bzip2, snappy.
-    if (System.getenv("HADOOP_HOME") != null) {
-      hadoopNativePath = new File(System.getenv("HADOOP_HOME"),
-          NATIVE_LIB_CHILD_PATH).getAbsolutePath();
-    } else if (System.getenv("HADOOP_COMMON_HOME") != null){
-      hadoopNativePath = new File(System.getenv("HADOOP_COMMON_HOME"),
-          NATIVE_LIB_CHILD_PATH).getAbsolutePath();
-    } else {
-      LOG.warn("$HADOOP_HOME or $HADOOP_COMMON_HOME is not found in your env.");
-    }
-
-    if (hadoopNativePath != null) {
-      try {
-        System.load(hadoopNativePath);
-        nativeCodeLoaded = true;
-        LOG.info("Hadoop native lib is loaded successfully from " +
-            hadoopNativePath);
-      } catch (Throwable t) {
-        LOG.warn("Failed to load native library from " + hadoopNativePath);
-      }
-    }
-
-    if (!nativeCodeLoaded) {
-      LOG.warn("Failed to load Hadoop native lib for SSM compression use, " +
-          "only built-in Zlib codec can be used.");
-    }
-  }
+  private static boolean nativeCodeLoaded = NativeCodeLoader.isNativeCodeLoaded();
 
   public static boolean getNativeCodeLoaded() {
     return nativeCodeLoaded;
@@ -118,8 +87,8 @@ public class CompressionCodec {
           CODEC_LIST.toString());
     }
     if (!codec.equals(ZLIB) && !nativeCodeLoaded) {
-      throw new IOException("Hadoop native lib was not successfully loaded, so " +
-          codec + " is not supported.");
+      throw new IOException(codec + " is not supported, " +
+          " because Hadoop native lib was not successfully loaded");
     }
 
     // Sequentially load compressors
