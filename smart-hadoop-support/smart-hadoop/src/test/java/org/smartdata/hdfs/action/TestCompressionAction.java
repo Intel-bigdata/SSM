@@ -51,7 +51,7 @@ public class TestCompressionAction extends MiniClusterHarness {
     String COMPRESS_DIR = "/system/ssm/compress_tmp";
     String tempPath = COMPRESS_DIR + filePath + "_" + "aid" + compressionAction.getActionId()
         + "_" + System.currentTimeMillis();
-    args.put(compressionAction.COMPRESSION_TMP, tempPath);
+    args.put(compressionAction.COMPRESS_TMP, tempPath);
 //    args.put(CompressionAction.COMPRESS_IMPL, "Lz4");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Bzip2");
 //    args.put(CompressionAction.COMPRESS_IMPL,"Zlib");

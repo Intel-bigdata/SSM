@@ -39,7 +39,6 @@ public class SmartCompressorStream {
   private byte[] buffer;
   private final int bufferSize;
   private CompressionFileState compressionInfo;
-  private CompressionCodec compressionCodec;
 
   private OutputStream out;
   private InputStream in;
@@ -51,22 +50,21 @@ public class SmartCompressorStream {
   private List<Long> compressedPositions = new ArrayList<>();
 
   public SmartCompressorStream(InputStream inputStream, OutputStream outputStream,
-      int bufferSize, CompressionFileState compressionInfo) {
+      int bufferSize, CompressionFileState compressionInfo) throws IOException {
     this.out = outputStream;
     this.in = inputStream;
     this.compressionInfo = compressionInfo;
-    this.compressionCodec = new CompressionCodec();
 
     // This bufferSize is equal to chunk size
     this.bufferSize = bufferSize;
     // Compression overHead, e.g., Snappy's overHead is buffSize/6 + 32
 
-    int overHead = compressionCodec.compressionOverhead(bufferSize,
+    int overHead = CompressionCodec.compressionOverhead(bufferSize,
         compressionInfo.getCompressionImpl());
     // Add overhead to buffer, such that actual buff is larger than bufferSize
     this.maxLength = bufferSize;
     buffer = new byte[bufferSize + overHead];
-    this.compressor = compressionCodec
+    this.compressor = CompressionCodec
         .createCompressor(bufferSize + overHead,
             compressionInfo.getCompressionImpl());
     checkCompressor();
@@ -74,13 +72,13 @@ public class SmartCompressorStream {
 
   private void checkCompressor() {
     if (compressor instanceof ZlibCompressor) {
-      compressionInfo.setCompressionImpl("Zlib");
+      compressionInfo.setCompressionImpl(CompressionCodec.ZLIB);
     } else if (compressor instanceof SnappyCompressor) {
-      compressionInfo.setCompressionImpl("snappy");
+      compressionInfo.setCompressionImpl(CompressionCodec.SNAPPY);
     } else if (compressor instanceof Bzip2Compressor) {
-      compressionInfo.setCompressionImpl("Bzip2");
+      compressionInfo.setCompressionImpl(CompressionCodec.BZIP2);
     } else if (compressor instanceof Lz4Compressor) {
-      compressionInfo.setCompressionImpl("LZ4");
+      compressionInfo.setCompressionImpl(CompressionCodec.LZ4);
     }
   }
 

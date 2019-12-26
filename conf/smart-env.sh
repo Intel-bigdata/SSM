@@ -29,3 +29,6 @@
 
 # Common parameters used to start JVM both for SSM Server and Agent
 #export SSM_JAVA_OPT=
+
+# Set Hadoop native lib path for SSM compression use. Generally, the path is $HADOOP_HOME/lib/native
+# export LD_LIBRARY_PATH=

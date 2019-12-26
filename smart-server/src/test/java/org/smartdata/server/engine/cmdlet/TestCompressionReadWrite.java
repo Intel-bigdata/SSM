@@ -21,11 +21,11 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.hdfs.CompressionCodec;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSTestUtil;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
-import org.apache.hadoop.util.NativeCodeLoader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +38,6 @@ import org.smartdata.model.FileState;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
@@ -57,7 +56,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
 //    this.compressionImpl = "snappy";
 //    this.compressionImpl = "Lz4";
 //    this.compressionImpl = "Bzip2";
-    this.compressionImpl = "Zlib";
+    this.compressionImpl = CompressionCodec.ZLIB;
     smartDFSClient = new SmartDFSClient(ssm.getContext().getConf());
   }
 
@@ -77,7 +76,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024 * 10;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+        + " -bufSize " + bufSize + " -codec " + compressionImpl);
 
     waitTillActionDone(cmdId);
     Thread.sleep(1000);
@@ -160,7 +159,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-      + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+      + " -bufSize " + bufSize + " -codec " + compressionImpl);
 
     waitTillActionDone(cmdId);
 
@@ -219,7 +218,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-      + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+      + " -bufSize " + bufSize + " -codec " + compressionImpl);
     waitTillActionDone(cmdId);
     RemoteIterator<LocatedFileStatus> iter3 = dfs.listLocatedStatus(new Path(fileName));
     LocatedFileStatus stat3 = iter3.next();
@@ -246,7 +245,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     CmdletManager cmdletManager = ssm.getCmdletManager();
     // Compress files
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+        + " -bufSize " + bufSize + " -codec " + compressionImpl);
     waitTillActionDone(cmdId);
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     smartDFSClient.rename("/test/compress_files/file_0",
@@ -272,7 +271,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
     CmdletManager cmdletManager = ssm.getCmdletManager();
     // Compress files
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize + " -compressImpl " + compressionImpl);
+        + " -bufSize " + bufSize + " -codec " + compressionImpl);
     waitTillActionDone(cmdId);
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     // Test unsupported methods on compressed file
@@ -332,25 +331,6 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   }
 
   private boolean loadedNative() {
-    String hadoopNativePath = "";
-    //hadoopnativePath used to suport Bzip2 compresionImpl
-    try {
-      if (!(System.getenv("HADOOP_HOME") == null)) {
-        hadoopNativePath =
-            System.getenv("HADOOP_HOME") + "/lib/native/libhadoop.so";
-      } else {
-        hadoopNativePath =
-            System.getenv("HADOOP_COMMON_HOME") + "/lib/native/libhadoop.so";
-      }
-    } catch (Exception e) {
-      return false;
-    }
-    if (hadoopNativePath.isEmpty() || !new File(hadoopNativePath).isFile()) {
-      return false;
-    }
-    if (!NativeCodeLoader.isNativeCodeLoaded()) {
-      return false;
-    }
-    return true;
+    return CompressionCodec.getNativeCodeLoaded();
   }
 }

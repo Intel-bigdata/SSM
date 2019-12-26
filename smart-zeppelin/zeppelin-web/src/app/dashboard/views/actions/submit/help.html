@@ -83,11 +83,11 @@ limitations under the License.
     </tr>
     <tr>
       <td>compress</td>
-      <td>-file $file [-bufSize $bufSize] [-compressImpl $compressImpl]</td>
+      <td>-file $file [-bufSize $bufSize] [-codec $codec]</td>
       <td>Compress $file. If option -bufSize is not specified, SSM will use the value obtained by dividing file size with the max
         number of splits, configured in smart-default.xml. The least buffer size is 1MB. SSM supports configuring human-readable
         value for bufSize, e.g., 1MB. SSM supports different compression implementations, including Lz4, Bzip2, Zlib and snappy.
-        If option -compressImpl is not specified, SSM will use the configuration value, Zlib by default, for 'smart.compression.impl'.
+        If option -codec is not specified, SSM will use the configuration value, Zlib by default, for 'smart.compression.codec'.
       </td>
     </tr>
     <tr>
