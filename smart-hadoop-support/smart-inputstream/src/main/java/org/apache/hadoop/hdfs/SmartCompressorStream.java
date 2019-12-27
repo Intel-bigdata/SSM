@@ -43,6 +43,7 @@ public class SmartCompressorStream {
   private OutputStream out;
   private InputStream in;
   private final int maxLength;
+  private Float progress;
 
   private long originPos = 0;
   private long compressedPos = 0;
@@ -50,10 +51,11 @@ public class SmartCompressorStream {
   private List<Long> compressedPositions = new ArrayList<>();
 
   public SmartCompressorStream(InputStream inputStream, OutputStream outputStream,
-      int bufferSize, CompressionFileState compressionInfo) throws IOException {
+      int bufferSize, CompressionFileState compressionInfo, Float progress) throws IOException {
     this.out = outputStream;
     this.in = inputStream;
     this.compressionInfo = compressionInfo;
+    this.progress = progress;
 
     // This bufferSize is equal to chunk size
     this.bufferSize = bufferSize;
@@ -105,6 +107,7 @@ public class SmartCompressorStream {
       }
       write(buf, 0, off);
       originPos += off;
+      this.progress = (float) originPos / compressionInfo.getOriginalLength();
     }
   }
 

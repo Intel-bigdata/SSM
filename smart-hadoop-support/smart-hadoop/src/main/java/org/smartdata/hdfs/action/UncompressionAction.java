@@ -40,13 +40,14 @@ import java.util.Map;
     usage = HdfsAction.FILE_PATH
         + " $file "
         + CompressionAction.BUF_SIZE
-        + " $size "
+        + " $bufSize "
 )
 public class UncompressionAction extends HdfsAction {
   public static final Logger LOG =
       LoggerFactory.getLogger(UncompressionAction.class);
   public static final String COMPRESS_TMP = "-compressTmp";
   private Configuration conf;
+  private float progress;
   private String compressTmpPath;
   private String filePath;
   private int buffSize = 64 * 1024;
@@ -59,6 +60,7 @@ public class UncompressionAction extends HdfsAction {
     // This is a temp path for compressing a file.
     this.compressTmpPath = args.containsKey(COMPRESS_TMP) ?
         args.get(COMPRESS_TMP) : compressTmpPath;
+    this.progress = 0.0F;
   }
 
   protected void execute() throws Exception {
@@ -71,7 +73,9 @@ public class UncompressionAction extends HdfsAction {
     }
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     if (!(fileState instanceof CompressionFileState)) {
-      throw new IOException("The given file should already be compressed.");
+      appendLog("The file is already uncompressed!");
+      this.progress = 1.0F;
+      return;
     }
     OutputStream out = null;
     InputStream in = null;
@@ -81,7 +85,8 @@ public class UncompressionAction extends HdfsAction {
       out = dfsClient.create(compressTmpPath, true);
       in = dfsClient.open(filePath);
       long length = dfsClient.getFileInfo(filePath).getLen();
-      createUncompressedFile(in, out, (int) length);
+      outputUncompressedData(in, out, (int) length);
+      // Overwrite the original file with uncompressed data
       dfsClient.rename(compressTmpPath, filePath, Options.Rename.OVERWRITE);
     } catch (IOException e) {
       throw new IOException(e);
@@ -95,7 +100,7 @@ public class UncompressionAction extends HdfsAction {
     }
   }
 
-  private void createUncompressedFile(InputStream in,
+  private void outputUncompressedData(InputStream in,
       OutputStream out, int length)
       throws IOException {
     byte[] buff = new byte[buffSize];
@@ -107,7 +112,13 @@ public class UncompressionAction extends HdfsAction {
         break;
       }
       out.write(buff, 0, copySize);
-      remainSize = length - readSize;
+      remainSize -= readSize;
+      this.progress = (float) (length - remainSize) / length;
     }
+  }
+
+  @Override
+  public float getProgress() {
+    return this.progress;
   }
 }

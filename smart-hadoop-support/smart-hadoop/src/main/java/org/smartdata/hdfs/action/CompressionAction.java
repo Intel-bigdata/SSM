@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This action convert a file to a compressed file.
+ * This action is used to compress a file.
  */
 @ActionSignature(
     actionId = "compress",
@@ -54,7 +54,7 @@ import java.util.Map;
         HdfsAction.FILE_PATH
             + " $file "
             + CompressionAction.BUF_SIZE
-            + " $size "
+            + " $bufSize "
             + CompressionAction.CODEC
             + " $codec"
 )
@@ -68,6 +68,7 @@ public class CompressionAction extends HdfsAction {
 
   private String filePath;
   private Configuration conf;
+  private Float progress;
 
   // bufferSize is also chunk size.
   // This default value limits the minimum buffer size.
@@ -104,6 +105,7 @@ public class CompressionAction extends HdfsAction {
     // This is a temp path for compressing a file.
     this.compressTmpPath = args.containsKey(COMPRESS_TMP) ?
         args.get(COMPRESS_TMP) : compressTmpPath;
+    this.progress = 0.0F;
   }
 
   @Override
@@ -142,8 +144,11 @@ public class CompressionAction extends HdfsAction {
       DFSInputStream in = null;
       OutputStream out = null;
       try {
-        // Need to lock the file to avoid any modification
-        appendOut = dfsClient.append(filePath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
+        // SmartDFSClient will fail to open compressing file with PROCESSING FileStage
+        // set by Compression scheduler. But considering DfsClient may be used, we use
+        // append operation to lock the file to avoid any modification.
+        appendOut = dfsClient.append(filePath, bufferSize, EnumSet.of(CreateFlag.APPEND),
+            null, null);
         in = dfsClient.open(filePath);
         out = dfsClient.create(compressTmpPath,
             true, replication, blockSize);
@@ -188,8 +193,9 @@ public class CompressionAction extends HdfsAction {
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {
+    // We use 'progress' (a percentage) to track compression progress.
     SmartCompressorStream smartCompressorStream = new SmartCompressorStream(
-        inputStream, outputStream, bufferSize, compressionFileState);
+        inputStream, outputStream, bufferSize, compressionFileState, progress);
     smartCompressorStream.convert();
   }
 
@@ -210,5 +216,10 @@ public class CompressionAction extends HdfsAction {
       }
     }
     return Math.max(Math.max(userDefinedBufferSize, calculatedBufferSize), bufferSize);
+  }
+
+  @Override
+  public float getProgress() {
+    return this.progress;
   }
 }
