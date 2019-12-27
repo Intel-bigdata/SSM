@@ -43,7 +43,7 @@ class ResetEnv(unittest.TestCase):
         Each time generate 100K * 2 files (100K io_data and 100K io_control)
         """
         dir_number = 50
-        dfsio_cmd = "hadoop jar $HADOOP_HOME/share/hadoop/mapreduce" + \
+        dfsio_cmd = "hadoop jar $HADOOP_HOME/hadoop-mapreduce" + \
             "/hadoop-mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):
@@ -59,7 +59,7 @@ class ResetEnv(unittest.TestCase):
         Each time generate 100K * 2 files (100K io_data and 100K io_control)
         """
         dir_number = 500
-        dfsio_cmd = "hadoop jar $HADOOP_HOME/share/hadoop/mapreduce" + \
+        dfsio_cmd = "hadoop jar $HADOOP_HOME/hadoop-mapreduce" + \
             "/hadoop-mapreduce-client-jobclient-*-tests.jar TestDFSIO " + \
             "-write -nrFiles 10000 -fileSize 0KB"
         for i in range(dir_number):

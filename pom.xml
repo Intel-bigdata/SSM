@@ -40,7 +40,7 @@
   <properties>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
-    <hadoop.version>2.7.3</hadoop.version>
+    <hadoop.version>3.1.1.3.0.1.0-187</hadoop.version>
     <alluxio.version>1.6.1</alluxio.version>
     <junit.version>4.11</junit.version>
     <scala.version>2.11.8</scala.version>
@@ -95,7 +95,7 @@
         <module>smart-hadoop-support</module>
       </modules>
       <properties>
-        <hadoop.version>3.1.0</hadoop.version>
+        <hadoop.version>3.1.1.3.0.1.0-187</hadoop.version>
       </properties>
       <dependencies>
         <dependency>
