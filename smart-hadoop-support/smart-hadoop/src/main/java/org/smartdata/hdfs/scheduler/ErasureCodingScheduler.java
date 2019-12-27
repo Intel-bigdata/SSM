@@ -43,16 +43,12 @@ import java.util.Set;
 
 public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final Logger LOG = LoggerFactory.getLogger(ErasureCodingScheduler.class);
-  public static final String ecActionID =
-      ErasureCodingAction.class.getAnnotation(ActionSignature.class).actionId();
-  public static final String unecActionID =
-      UnErasureCodingAction.class.getAnnotation(ActionSignature.class).actionId();
-  public static final String checkecActionID =
-      CheckErasureCodingPolicy.class.getAnnotation(ActionSignature.class).actionId();
-  public static final String listecActionID =
-      ListErasureCodingPolicy.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String EC_ACTION_ID = "ec";
+  public static final String UNEC_ACTION_ID = "unec";
+  public static final String CHECK_EC_ACTION_ID = "checkec";
+  public static final String LIST_EC_ACTION_ID = "listec";
   public static final List<String> actions =
-      Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
+      Arrays.asList(EC_ACTION_ID, UNEC_ACTION_ID, CHECK_EC_ACTION_ID, LIST_EC_ACTION_ID);
 
   public static String EC_DIR;
   public static final String EC_TMP_DIR = "ec_tmp/";
@@ -68,8 +64,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
-    this.throttleInMb = conf.getLong(
-        SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_KEY, SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_DEFAULT);
+    this.throttleInMb = conf.getLong(SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_KEY,
+        SmartConfKeys.SMART_ACTION_EC_THROTTLE_MB_DEFAULT);
     if (this.throttleInMb > 0) {
       this.rateLimiter = RateLimiter.create(throttleInMb);
     }
@@ -104,7 +100,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       throw new IOException(actionInfo.getActionName() +
           " is not supported on " + VersionInfo.getVersion());
     }
-    if (actionInfo.getActionName().equals(listecActionID)) {
+    if (actionInfo.getActionName().equals(LIST_EC_ACTION_ID)) {
       return true;
     }
 
@@ -118,8 +114,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       actionInfo.getArgs().put(HdfsAction.FILE_PATH, srcPath);
     }
     // For ec or unec action, check if the file is locked.
-    if (actionInfo.getActionName().equals(ecActionID) ||
-        actionInfo.getActionName().equals(unecActionID)) {
+    if (actionInfo.getActionName().equals(EC_ACTION_ID) ||
+        actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
       if (fileLock.contains(srcPath)) {
         return false;
       }
@@ -139,7 +135,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.SUCCESS;
     }
 
-    if (actionInfo.getActionName().equals(listecActionID)) {
+    if (actionInfo.getActionName().equals(LIST_EC_ACTION_ID)) {
       return ScheduleResult.SUCCESS;
     }
 
@@ -149,13 +145,13 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       return ScheduleResult.FAIL;
     }
 
-    if (actionInfo.getActionName().equals(checkecActionID)) {
+    if (actionInfo.getActionName().equals(CHECK_EC_ACTION_ID)) {
       return ScheduleResult.SUCCESS;
     }
 
     try {
       // use the default EC policy if an ec action has not been given an EC policy
-      if (actionInfo.getActionName().equals(ecActionID)) {
+      if (actionInfo.getActionName().equals(EC_ACTION_ID)) {
         String ecPolicy = actionInfo.getArgs().get(EC_POLICY);
         if (ecPolicy == null || ecPolicy.isEmpty()) {
           String defaultEcPolicy = conf.getTrimmed("dfs.namenode.ec.system.default.policy",
@@ -212,8 +208,8 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    if (actionInfo.getActionName().equals(ecActionID) ||
-        actionInfo.getActionName().equals(unecActionID)) {
+    if (actionInfo.getActionName().equals(EC_ACTION_ID) ||
+        actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
       fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
     }
   }
