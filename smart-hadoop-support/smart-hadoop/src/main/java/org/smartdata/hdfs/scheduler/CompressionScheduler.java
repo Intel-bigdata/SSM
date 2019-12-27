@@ -24,11 +24,13 @@ import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.CompressionAction;
 import org.smartdata.hdfs.action.HdfsAction;
+import org.smartdata.hdfs.action.UncompressionAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -57,9 +59,12 @@ public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
   private final URI nnUri;
   private MetaStore metaStore;
-  public static final String COMPRESSION_ACTION_NAME = "compress";
+  public static final String COMPRESSION_ACTION_ID =
+      CompressionAction.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String UNCOMPRESSION_ACTION_ID =
+      UncompressionAction.class.getAnnotation(ActionSignature.class).actionId();
   public static final List<String> actions =
-      Arrays.asList(COMPRESSION_ACTION_NAME);
+      Arrays.asList(COMPRESSION_ACTION_ID, UNCOMPRESSION_ACTION_ID);
   public static String COMPRESS_DIR;
   public static final String COMPRESS_TMP = CompressionAction.COMPRESS_TMP;
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
@@ -109,7 +114,7 @@ public class CompressionScheduler extends ActionSchedulerService {
    */
   private boolean supportCompression(String path) throws MetaStoreException {
     if (path == null) {
-      LOG.warn("File is not specified.");
+      LOG.warn("File path is not specified.");
       return false;
     }
     // Current implementation: only normal file type supports compression action
@@ -120,6 +125,19 @@ public class CompressionScheduler extends ActionSchedulerService {
     }
     LOG.debug("File " + path + " doesn't support compression action. "
         + "Type: " + fileState.getFileType() + "; Stage: " + fileState.getFileStage());
+    return false;
+  }
+
+  private boolean supportUncompression(String path) throws MetaStoreException {
+    if (path == null) {
+      LOG.warn("File path is not specified!");
+      return false;
+    }
+    FileState fileState = metaStore.getFileState(path);
+    if (fileState instanceof CompressionFileState) {
+      return true;
+    }
+    LOG.warn("A compressed file path should be given!");
     return false;
   }
 
@@ -143,23 +161,32 @@ public class CompressionScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      int actionIndex) {
     String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    if (!actions.contains(actionInfo.getActionName())) {
+      return false;
+    }
     if (fileLock.contains(srcPath)) {
       return false;
     }
-
     try {
-      if (!supportCompression(srcPath)) {
+      if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+          !supportCompression(srcPath)) {
         return false;
       }
+      if (actionInfo.getActionName().equals(UNCOMPRESSION_ACTION_ID) &&
+          !supportUncompression(srcPath)) {
+        return false;
+      }
+
       // TODO remove this part
       CompressionFileState fileState = new CompressionFileState(srcPath,
           FileState.FileStage.PROCESSING);
       metaStore.insertUpdateFileState(fileState);
       return true;
     } catch (MetaStoreException e) {
-      LOG.error("Compress action of file " + srcPath + " failed in metastore!", e);
+      LOG.error("Failed to submit action due to metastore exception!", e);
       return false;
     }
   }

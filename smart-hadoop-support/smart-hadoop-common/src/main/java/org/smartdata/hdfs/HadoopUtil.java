@@ -17,17 +17,22 @@
  */
 package org.smartdata.hdfs;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.apache.hadoop.hdfs.DFSConfigKeys;
 import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
+import org.apache.hadoop.ipc.RemoteException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.model.FileInfo;
+import org.smartdata.model.FileState;
+import org.smartdata.model.NormalFileState;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -310,4 +315,24 @@ public class HadoopUtil {
     return 0;
   }
 
+  /**
+   * Return FileState, like SmartDFSClient#getFileState().
+   * @param   dfsClient
+   * @param   filePath
+   * @return  a FileState
+   * @throws  IOException
+   */
+  public static FileState getFileState(DFSClient dfsClient, String filePath)
+      throws IOException {
+    try {
+      byte[] fileState = dfsClient.getXAttr(filePath,
+          SmartConstants.SMART_FILE_STATE_XATTR_NAME);
+      if (fileState != null) {
+        return (FileState) SerializationUtils.deserialize(fileState);
+      }
+    } catch (RemoteException e) {
+      return new NormalFileState(filePath);
+    }
+    return new NormalFileState(filePath);
+  }
 }

@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package org.smartdata.hdfs.action;
 import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.CompressionCodec;
 import org.apache.hadoop.hdfs.DFSInputStream;
@@ -76,9 +77,8 @@ public class CompressionAction extends HdfsAction {
   private String compressCodec;
   // Specified by user in action arg.
   private int userDefinedBufferSize;
-  // Calculated by max number of splits.
-  private int calculatedBufferSize;
-  private String xAttrName = null;
+  public static final String XATTR_NAME =
+      SmartConstants.SMART_FILE_STATE_XATTR_NAME;
 
   private CompressionFileInfo compressionFileInfo;
   private CompressionFileState compressionFileState;
@@ -96,7 +96,6 @@ public class CompressionAction extends HdfsAction {
     this.maxSplit = conf.getInt(
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT,
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT_DEFAULT);
-    this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     this.filePath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
       this.userDefinedBufferSize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
@@ -138,27 +137,30 @@ public class CompressionAction extends HdfsAction {
       long blockSize = srcFile.getBlockSize();
       long fileSize = srcFile.getLen();
       appendLog("File length: " + fileSize);
-      //The capacity of originalPos and compressedPos is maxSplit (1000, by default) in database
-      this.calculatedBufferSize = (int) (fileSize / maxSplit);
-      LOG.debug("Calculated buffer size: " + calculatedBufferSize);
-      LOG.debug("MaxSplit: " + maxSplit);
-      //Determine the actual buffer size
-      if (userDefinedBufferSize < bufferSize || userDefinedBufferSize < calculatedBufferSize) {
-        if (bufferSize <= calculatedBufferSize) {
-          LOG.debug("User defined buffer size is too small, use the calculated buffer size:" +
-              calculatedBufferSize);
-        } else {
-          LOG.debug("User defined buffer size is too small, use the default buffer size:" +
-              bufferSize);
+      bufferSize = getActualBuffSize(fileSize);
+      OutputStream appendOut = null;
+      DFSInputStream in = null;
+      OutputStream out = null;
+      try {
+        // Need to lock the file to avoid any modification
+        appendOut = dfsClient.append(filePath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
+        in = dfsClient.open(filePath);
+        out = dfsClient.create(compressTmpPath,
+            true, replication, blockSize);
+        compress(in, out);
+      } catch (IOException e) {
+        throw new IOException(e);
+      } finally {
+        if (appendOut != null) {
+          appendOut.close();
+        }
+        if (in != null) {
+          in.close();
+        }
+        if (out != null) {
+          out.close();
         }
       }
-      bufferSize = Math.max(Math.max(userDefinedBufferSize, calculatedBufferSize), bufferSize);
-
-      DFSInputStream dfsInputStream = dfsClient.open(filePath);
-
-      OutputStream compressedOutputStream = dfsClient.create(compressTmpPath,
-          true, replication, blockSize);
-      compress(dfsInputStream, compressedOutputStream);
       HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
       compressionFileState.setCompressedLength(destFile.getLen());
       appendLog("Compressed file length: " + destFile.getLen());
@@ -175,12 +177,12 @@ public class CompressionAction extends HdfsAction {
       // Add to temp path
       // Please make sure content write to Xatte is less than 64K
       dfsClient.setXAttr(compressionFileInfo.getTempPath(),
-          xAttrName, SerializationUtils.serialize(compressionFileState),
+          XATTR_NAME, SerializationUtils.serialize(compressionFileState),
           EnumSet.of(XAttrSetFlag.CREATE));
     } else {
       // Add to raw path
       dfsClient.setXAttr(filePath,
-          xAttrName, SerializationUtils.serialize(compressionFileState),
+          XATTR_NAME, SerializationUtils.serialize(compressionFileState),
           EnumSet.of(XAttrSetFlag.CREATE));
     }
   }
@@ -189,5 +191,24 @@ public class CompressionAction extends HdfsAction {
     SmartCompressorStream smartCompressorStream = new SmartCompressorStream(
         inputStream, outputStream, bufferSize, compressionFileState);
     smartCompressorStream.convert();
+  }
+
+  private int getActualBuffSize(long fileSize) {
+    // The capacity of originalPos and compressedPos is maxSplit (1000, by default) in database
+    // Calculated by max number of splits.
+    int calculatedBufferSize = (int) (fileSize / maxSplit);
+    LOG.debug("Calculated buffer size: " + calculatedBufferSize);
+    LOG.debug("MaxSplit: " + maxSplit);
+    // Determine the actual buffer size
+    if (userDefinedBufferSize < bufferSize || userDefinedBufferSize < calculatedBufferSize) {
+      if (bufferSize <= calculatedBufferSize) {
+        LOG.debug("User defined buffer size is too small, use the calculated buffer size:" +
+            calculatedBufferSize);
+      } else {
+        LOG.debug("User defined buffer size is too small, use the default buffer size:" +
+            bufferSize);
+      }
+    }
+    return Math.max(Math.max(userDefinedBufferSize, calculatedBufferSize), bufferSize);
   }
 }

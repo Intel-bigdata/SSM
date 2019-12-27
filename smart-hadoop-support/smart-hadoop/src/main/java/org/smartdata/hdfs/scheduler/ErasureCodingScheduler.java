@@ -22,6 +22,7 @@ import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.action.*;
@@ -42,12 +43,17 @@ import java.util.Set;
 
 public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final Logger LOG = LoggerFactory.getLogger(ErasureCodingScheduler.class);
-  public static final String ecActionID = "ec";
-  public static final String unecActionID = "unec";
-  public static final String checkecActionID = "checkec";
-  public static final String listecActionID = "listec";
+  public static final String ecActionID =
+      ErasureCodingAction.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String unecActionID =
+      UnErasureCodingAction.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String checkecActionID =
+      CheckErasureCodingPolicy.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String listecActionID =
+      ListErasureCodingPolicy.class.getAnnotation(ActionSignature.class).actionId();
   public static final List<String> actions =
       Arrays.asList(ecActionID, unecActionID, checkecActionID, listecActionID);
+
   public static String EC_DIR;
   public static final String EC_TMP_DIR = "ec_tmp/";
   public static final String EC_TMP = "-ecTmp";
