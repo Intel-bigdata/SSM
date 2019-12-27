@@ -35,16 +35,16 @@ import java.util.Map;
  * This class is used to uncompress file.
  */
 @ActionSignature(
-    actionId = "uncompress",
-    displayName = "uncompress",
+    actionId = "decompress",
+    displayName = "decompress",
     usage = HdfsAction.FILE_PATH
         + " $file "
         + CompressionAction.BUF_SIZE
         + " $bufSize "
 )
-public class UncompressionAction extends HdfsAction {
+public class DecompressionAction extends HdfsAction {
   public static final Logger LOG =
-      LoggerFactory.getLogger(UncompressionAction.class);
+      LoggerFactory.getLogger(DecompressionAction.class);
   public static final String COMPRESS_TMP = "-compressTmp";
   private Configuration conf;
   private float progress;

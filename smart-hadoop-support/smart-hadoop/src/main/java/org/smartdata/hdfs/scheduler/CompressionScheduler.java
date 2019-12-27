@@ -19,7 +19,6 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +29,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.CompressionAction;
 import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.hdfs.action.UncompressionAction;
+import org.smartdata.hdfs.action.DecompressionAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -61,10 +60,10 @@ public class CompressionScheduler extends ActionSchedulerService {
   private MetaStore metaStore;
   public static final String COMPRESSION_ACTION_ID =
       CompressionAction.class.getAnnotation(ActionSignature.class).actionId();
-  public static final String UNCOMPRESSION_ACTION_ID =
-      UncompressionAction.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String DECOMPRESSION_ACTION_ID =
+      DecompressionAction.class.getAnnotation(ActionSignature.class).actionId();
   public static final List<String> actions =
-      Arrays.asList(COMPRESSION_ACTION_ID, UNCOMPRESSION_ACTION_ID);
+      Arrays.asList(COMPRESSION_ACTION_ID, DECOMPRESSION_ACTION_ID);
   public static String COMPRESS_DIR;
   public static final String COMPRESS_TMP = CompressionAction.COMPRESS_TMP;
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
@@ -128,7 +127,7 @@ public class CompressionScheduler extends ActionSchedulerService {
     return false;
   }
 
-  private boolean supportUncompression(String path) throws MetaStoreException {
+  private boolean supportDecompression(String path) throws MetaStoreException {
     if (path == null) {
       LOG.warn("File path is not specified!");
       return false;
@@ -175,8 +174,8 @@ public class CompressionScheduler extends ActionSchedulerService {
           !supportCompression(srcPath)) {
         return false;
       }
-      if (actionInfo.getActionName().equals(UNCOMPRESSION_ACTION_ID) &&
-          !supportUncompression(srcPath)) {
+      if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID) &&
+          !supportDecompression(srcPath)) {
         return false;
       }
 
@@ -221,7 +220,7 @@ public class CompressionScheduler extends ActionSchedulerService {
         if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
           onCompressActionFinished(actionInfo);
         }
-        if (actionInfo.getActionName().equals(UNCOMPRESSION_ACTION_ID)) {
+        if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
           onUncompressActionFinished(actionInfo);
         }
       } catch (MetaStoreException e) {
@@ -253,7 +252,7 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   private void onUncompressActionFinished(ActionInfo actionInfo)
       throws MetaStoreException {
-    if (!actionInfo.getActionName().equals(UNCOMPRESSION_ACTION_ID)) {
+    if (!actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
       return;
     }
     // Delete the record from compression_file table
