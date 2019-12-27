@@ -74,7 +74,6 @@ public class UncompressionAction extends HdfsAction {
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     if (!(fileState instanceof CompressionFileState)) {
       appendLog("The file is already uncompressed!");
-      this.progress = 1.0F;
       return;
     }
     OutputStream out = null;
@@ -88,6 +87,9 @@ public class UncompressionAction extends HdfsAction {
       outputUncompressedData(in, out, (int) length);
       // Overwrite the original file with uncompressed data
       dfsClient.rename(compressTmpPath, filePath, Options.Rename.OVERWRITE);
+      appendLog("The given file is successfully uncompressed by codec: " +
+          ((CompressionFileState) fileState).getCompressionImpl());
+
     } catch (IOException e) {
       throw new IOException(e);
     } finally {

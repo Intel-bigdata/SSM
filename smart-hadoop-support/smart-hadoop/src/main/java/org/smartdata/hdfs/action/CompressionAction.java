@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +21,7 @@ import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.CompressionCodec;
 import org.apache.hadoop.hdfs.DFSInputStream;
@@ -132,18 +133,20 @@ public class CompressionAction extends HdfsAction {
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     compressionFileState = new CompressionFileState(filePath, bufferSize, compressCodec);
     compressionFileState.setOriginalLength(srcFile.getLen());
-    if (srcFile.getLen() == 0) {
-      compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
-    } else {
-      short replication = srcFile.getReplication();
-      long blockSize = srcFile.getBlockSize();
-      long fileSize = srcFile.getLen();
-      appendLog("File length: " + fileSize);
-      bufferSize = getActualBuffSize(fileSize);
-      OutputStream appendOut = null;
-      DFSInputStream in = null;
-      OutputStream out = null;
-      try {
+
+    OutputStream appendOut = null;
+    DFSInputStream in = null;
+    OutputStream out = null;
+    try {
+      if (srcFile.getLen() == 0) {
+        compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
+      } else {
+        short replication = srcFile.getReplication();
+        long blockSize = srcFile.getBlockSize();
+        long fileSize = srcFile.getLen();
+        appendLog("File length: " + fileSize);
+        bufferSize = getActualBuffSize(fileSize);
+
         // SmartDFSClient will fail to open compressing file with PROCESSING FileStage
         // set by Compression scheduler. But considering DfsClient may be used, we use
         // append operation to lock the file to avoid any modification.
@@ -153,42 +156,45 @@ public class CompressionAction extends HdfsAction {
         out = dfsClient.create(compressTmpPath,
             true, replication, blockSize);
         compress(in, out);
-      } catch (IOException e) {
-        throw new IOException(e);
-      } finally {
-        if (appendOut != null) {
-          appendOut.close();
-        }
-        if (in != null) {
-          in.close();
-        }
-        if (out != null) {
-          out.close();
-        }
+        HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
+        compressionFileState.setCompressedLength(destFile.getLen());
+        appendLog("Compressed file length: " + destFile.getLen());
+        compressionFileInfo =
+            new CompressionFileInfo(true, compressTmpPath, compressionFileState);
       }
-      HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
-      compressionFileState.setCompressedLength(destFile.getLen());
-      appendLog("Compressed file length: " + destFile.getLen());
-      compressionFileInfo =
-          new CompressionFileInfo(true, compressTmpPath, compressionFileState);
-    }
-    compressionFileState.setBufferSize(bufferSize);
-    appendLog("Compression buffer size: " + bufferSize);
-    appendLog("Compression codec: " + compressCodec);
-    String compressionInfoJson = new Gson().toJson(compressionFileInfo);
-    appendResult(compressionInfoJson);
-    LOG.warn(compressionInfoJson);
-    if (compressionFileInfo.needReplace()) {
-      // Add to temp path
-      // Please make sure content write to Xatte is less than 64K
-      dfsClient.setXAttr(compressionFileInfo.getTempPath(),
-          XATTR_NAME, SerializationUtils.serialize(compressionFileState),
-          EnumSet.of(XAttrSetFlag.CREATE));
-    } else {
-      // Add to raw path
-      dfsClient.setXAttr(filePath,
-          XATTR_NAME, SerializationUtils.serialize(compressionFileState),
-          EnumSet.of(XAttrSetFlag.CREATE));
+      compressionFileState.setBufferSize(bufferSize);
+      appendLog("Compression buffer size: " + bufferSize);
+      appendLog("Compression codec: " + compressCodec);
+      String compressionInfoJson = new Gson().toJson(compressionFileInfo);
+      appendResult(compressionInfoJson);
+      LOG.warn(compressionInfoJson);
+      if (compressionFileInfo.needReplace()) {
+        // Add to temp path
+        // Please make sure content write to Xatte is less than 64K
+        dfsClient.setXAttr(compressionFileInfo.getTempPath(),
+            XATTR_NAME, SerializationUtils.serialize(compressionFileState),
+            EnumSet.of(XAttrSetFlag.CREATE));
+        // Rename operation is moved from CompressionScheduler.
+        // Thus, modification for original file will be avoided.
+        dfsClient.rename(compressTmpPath, filePath, Options.Rename.OVERWRITE);
+      } else {
+        // Add to raw path
+        dfsClient.setXAttr(filePath,
+            XATTR_NAME, SerializationUtils.serialize(compressionFileState),
+            EnumSet.of(XAttrSetFlag.CREATE));
+      }
+    } catch (IOException e) {
+      throw new IOException(e);
+    } finally {
+      if (appendOut != null) {
+        appendOut.close();
+      }
+      if (in != null) {
+        in.close();
+      }
+      if (out != null) {
+        out.close();
+      }
     }
   }
 

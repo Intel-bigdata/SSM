@@ -215,22 +215,14 @@ public class CompressionScheduler extends ActionSchedulerService {
           // when action failed, just remove the record of this file from metastore.
           // In current implementation, no record in FileState table means the file is normal type.
           metaStore.deleteFileState(srcPath);
-        } else {
-          // Action successful
-          Gson gson = new Gson();
-          String compressionInfoJson = actionInfo.getResult();
-          CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
-              new TypeToken<CompressionFileInfo>() {
-              }.getType());
-          boolean needReplace = compressionFileInfo.needReplace();
-          String tempPath = compressionFileInfo.getTempPath();
-          CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
-          compressionFileState.setFileStage(FileState.FileStage.DONE);
-          // Update metastore and then replace file with compressed one
-          metaStore.insertUpdateFileState(compressionFileState);
-          if (needReplace) {
-            dfsClient.rename(tempPath, srcPath, Options.Rename.OVERWRITE);
-          }
+          return;
+        }
+        // Action execution is successful.
+        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
+          onCompressActionFinished(actionInfo);
+        }
+        if (actionInfo.getActionName().equals(UNCOMPRESSION_ACTION_ID)) {
+          onUncompressActionFinished(actionInfo);
         }
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
@@ -240,5 +232,31 @@ public class CompressionScheduler extends ActionSchedulerService {
         fileLock.remove(srcPath);
       }
     }
+  }
+
+  private void onCompressActionFinished(ActionInfo actionInfo)
+      throws MetaStoreException {
+
+    if (!actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
+      return;
+    }
+    Gson gson = new Gson();
+    String compressionInfoJson = actionInfo.getResult();
+    CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
+        new TypeToken<CompressionFileInfo>() {
+        }.getType());
+    CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
+    compressionFileState.setFileStage(FileState.FileStage.DONE);
+    // Update metastore and then replace file with compressed one
+    metaStore.insertUpdateFileState(compressionFileState);
+  }
+
+  private void onUncompressActionFinished(ActionInfo actionInfo)
+      throws MetaStoreException {
+    if (!actionInfo.getActionName().equals(UNCOMPRESSION_ACTION_ID)) {
+      return;
+    }
+    // Delete the record from compression_file table
+    metaStore.deleteFileState(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
   }
 }
