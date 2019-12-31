@@ -50,9 +50,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Compression Scheduler.
+ * A scheduler for compression/decompression action.
  *
- * TODO: support uncompress action.
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
@@ -221,7 +220,7 @@ public class CompressionScheduler extends ActionSchedulerService {
           onCompressActionFinished(actionInfo);
         }
         if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
-          onUncompressActionFinished(actionInfo);
+          onDecompressActionFinished(actionInfo);
         }
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
@@ -250,7 +249,7 @@ public class CompressionScheduler extends ActionSchedulerService {
     metaStore.insertUpdateFileState(compressionFileState);
   }
 
-  private void onUncompressActionFinished(ActionInfo actionInfo)
+  private void onDecompressActionFinished(ActionInfo actionInfo)
       throws MetaStoreException {
     if (!actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
       return;

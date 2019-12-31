@@ -56,5 +56,5 @@ e.g., export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/hadoop/lib/native/. Otherwis
 for replacing DFSClient by SmartDFSClient in Hadoop. SmartDFSClient has overridden DFSClient's getFileInfo method in order to return the original file's info, for example original length to user. Thus, user can see
 original length of compressed file by using `hdfs dfs -ls`.
 
-* It is supported to sync or copy compressed data to another cluster. But, the data is firstly uncompressed and then transferred to the given cluster, which means SSM compression cannot be used to reduce network IO load
+* It is supported to sync or copy compressed data to another cluster. But, the data is firstly decompressed and then transferred to the given cluster, which means SSM compression cannot be used to reduce network IO load
 in syncing data. Besides, the backup file will not be compressed.

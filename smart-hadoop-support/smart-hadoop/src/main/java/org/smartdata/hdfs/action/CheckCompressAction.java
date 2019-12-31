@@ -19,6 +19,7 @@ package org.smartdata.hdfs.action;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
@@ -29,6 +30,12 @@ import java.util.Map;
 /**
  * This class is used to check compression status for a given file.
  */
+@ActionSignature(
+    actionId = "decompress",
+    displayName = "decompress",
+    usage = HdfsAction.FILE_PATH
+        + " $file "
+)
 public class CheckCompressAction extends HdfsAction {
   private static final Logger LOG =
       LoggerFactory.getLogger(CheckCompressAction.class);

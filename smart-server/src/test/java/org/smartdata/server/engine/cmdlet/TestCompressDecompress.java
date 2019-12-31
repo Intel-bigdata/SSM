@@ -30,6 +30,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.smartdata.hadoop.filesystem.SmartFileSystem;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.CmdletState;
@@ -44,7 +45,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Random;
 
-public class TestCompressionReadWrite extends MiniSmartClusterHarness {
+public class TestCompressDecompress extends MiniSmartClusterHarness {
   private DFSClient smartDFSClient;
   private String compressionImpl;
 
@@ -105,7 +106,8 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
       }
       offset += len;
     }
-    Assert.assertArrayEquals("original array not equals compress/decompressed array", input, bytes);
+    Assert.assertArrayEquals(
+        "original array not equals compress/decompressed array", input, bytes);
   }
 
 //  @Test(timeout = 90000)
@@ -181,6 +183,24 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
       Assert.assertArrayEquals(subBytes, randomReadBuffer);
       Assert.assertEquals(pos + 500, dfsInputStream.getPos());
     }
+  }
+
+  @Test
+  public void testDecompress() throws Exception {
+    int arraySize = 1024 * 1024 * 8;
+    String filePath = "/ssm/compression/file4";
+    prepareFile(filePath, arraySize);
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+    long cmdId = cmdletManager.submitCmdlet(
+        "compress -file " + filePath + " -codec " + compressionImpl);
+    waitTillActionDone(cmdId);
+    FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
+    Assert.assertTrue(fileState instanceof CompressionFileState);
+
+    cmdId = cmdletManager.submitCmdlet("decompress -file " + filePath);
+    waitTillActionDone(cmdId);
+    fileState = HadoopUtil.getFileState(dfsClient, filePath);
+    Assert.assertFalse(fileState instanceof CompressionFileState);
   }
 
   @Test
@@ -306,7 +326,7 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
   }
 
   private byte[] prepareFile(String fileName, int fileSize) throws Exception {
-    byte[] bytes = TestCompressionReadWrite.BytesGenerator.get(fileSize);
+    byte[] bytes = TestCompressDecompress.BytesGenerator.get(fileSize);
 
     // Create HDFS file
     OutputStream outputStream = dfsClient.create(fileName, true);

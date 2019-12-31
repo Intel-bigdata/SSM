@@ -32,7 +32,7 @@ import java.io.OutputStream;
 import java.util.Map;
 
 /**
- * This class is used to uncompress file.
+ * This class is used to decompress file.
  */
 @ActionSignature(
     actionId = "decompress",
@@ -73,7 +73,7 @@ public class DecompressionAction extends HdfsAction {
     }
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     if (!(fileState instanceof CompressionFileState)) {
-      appendLog("The file is already uncompressed!");
+      appendLog("The file is already decompressed!");
       return;
     }
     OutputStream out = null;
@@ -84,10 +84,10 @@ public class DecompressionAction extends HdfsAction {
       out = dfsClient.create(compressTmpPath, true);
       in = dfsClient.open(filePath);
       long length = dfsClient.getFileInfo(filePath).getLen();
-      outputUncompressedData(in, out, (int) length);
-      // Overwrite the original file with uncompressed data
+      outputDecompressedData(in, out, (int) length);
+      // Overwrite the original file with decompressed data
       dfsClient.rename(compressTmpPath, filePath, Options.Rename.OVERWRITE);
-      appendLog("The given file is successfully uncompressed by codec: " +
+      appendLog("The given file is successfully decompressed by codec: " +
           ((CompressionFileState) fileState).getCompressionImpl());
 
     } catch (IOException e) {
@@ -102,7 +102,7 @@ public class DecompressionAction extends HdfsAction {
     }
   }
 
-  private void outputUncompressedData(InputStream in,
+  private void outputDecompressedData(InputStream in,
       OutputStream out, int length)
       throws IOException {
     byte[] buff = new byte[buffSize];
