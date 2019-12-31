@@ -34,6 +34,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.utils.StringUtil;
@@ -150,8 +151,8 @@ public class CompressionAction extends HdfsAction {
         // SmartDFSClient will fail to open compressing file with PROCESSING FileStage
         // set by Compression scheduler. But considering DfsClient may be used, we use
         // append operation to lock the file to avoid any modification.
-        appendOut = dfsClient.append(filePath, bufferSize, EnumSet.of(CreateFlag.APPEND),
-            null, null);
+        appendOut = CompatibilityHelperLoader.getHelper().
+            getDFSClientAppend(dfsClient, filePath, bufferSize);
         in = dfsClient.open(filePath);
         out = dfsClient.create(compressTmpPath,
             true, replication, blockSize);
@@ -187,7 +188,11 @@ public class CompressionAction extends HdfsAction {
       throw new IOException(e);
     } finally {
       if (appendOut != null) {
-        appendOut.close();
+        try {
+          appendOut.close();
+        } catch (IOException e) {
+          // Hide the expected exception that the original file is missing.
+        }
       }
       if (in != null) {
         in.close();

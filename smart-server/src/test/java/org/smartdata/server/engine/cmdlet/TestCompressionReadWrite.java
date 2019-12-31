@@ -295,7 +295,10 @@ public class TestCompressionReadWrite extends MiniSmartClusterHarness {
       if (state == CmdletState.DONE) {
         return;
       } else if (state == CmdletState.FAILED) {
-        Assert.fail("Compression action failed.");
+        // Reasonably assume that there is only one action wrapped by a given cmdlet.
+        long aid = cmdletManager.getCmdletInfo(cmdId).getAids().get(0);
+        Assert.fail(
+            "Compression action failed. " + cmdletManager.getActionInfo(aid).getLog());
       } else {
         System.out.println(state);
       }
