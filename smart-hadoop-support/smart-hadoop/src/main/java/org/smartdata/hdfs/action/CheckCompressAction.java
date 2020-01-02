@@ -31,8 +31,8 @@ import java.util.Map;
  * This class is used to check compression status for a given file.
  */
 @ActionSignature(
-    actionId = "decompress",
-    displayName = "decompress",
+    actionId = "checkcompress",
+    displayName = "checkcompress",
     usage = HdfsAction.FILE_PATH
         + " $file "
 )
