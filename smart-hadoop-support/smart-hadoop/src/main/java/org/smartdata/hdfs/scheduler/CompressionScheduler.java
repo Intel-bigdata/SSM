@@ -111,11 +111,17 @@ public class CompressionScheduler extends ActionSchedulerService {
    * @param path
    * @return true if the file supports compression action, else false
    */
-  public boolean supportCompression(String path) throws MetaStoreException {
+  public boolean supportCompression(String path) throws MetaStoreException, IOException {
     if (path == null) {
       LOG.warn("File path is not specified.");
       return false;
     }
+
+    if (dfsClient.getFileInfo(path).isDir()) {
+      LOG.warn("Compression is not applicable to a directory.");
+      return false;
+    }
+
     // Current implementation: only normal file type supports compression action
     FileState fileState = metaStore.getFileState(path);
     if (fileState.getFileType().equals(FileState.FileType.NORMAL)
@@ -127,11 +133,17 @@ public class CompressionScheduler extends ActionSchedulerService {
     return false;
   }
 
-  public boolean supportDecompression(String path) throws MetaStoreException {
+  public boolean supportDecompression(String path) throws MetaStoreException, IOException {
     if (path == null) {
       LOG.warn("File path is not specified!");
       return false;
     }
+    // Exclude directory case
+    if (dfsClient.getFileInfo(path).isDir()) {
+      LOG.warn("Decompression is not applicable to a directory.");
+      return false;
+    }
+
     FileState fileState = metaStore.getFileState(path);
     if (fileState instanceof CompressionFileState) {
       return true;
@@ -187,6 +199,9 @@ public class CompressionScheduler extends ActionSchedulerService {
       return true;
     } catch (MetaStoreException e) {
       LOG.error("Failed to submit action due to metastore exception!", e);
+      return false;
+    } catch (IOException e) {
+      LOG.error(e.getMessage());
       return false;
     }
   }

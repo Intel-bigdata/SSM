@@ -227,6 +227,25 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
   }
 
   @Test
+  public void testCompressDecompressDir() throws Exception {
+    String dir = "/ssm/compression";
+    dfsClient.mkdirs(dir, null, true);
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+
+    List<ActionScheduler> schedulers = cmdletManager.getSchedulers(
+        "decompress");
+    Assert.assertTrue(schedulers.size() == 1);
+    ActionScheduler scheduler = schedulers.get(0);
+    Assert.assertTrue(scheduler instanceof CompressionScheduler);
+    // Expect that a dir cannot be compressed.
+    Assert.assertFalse(((
+        CompressionScheduler) scheduler).supportCompression(dir));
+    // Expect that a dir cannot be decompressed.
+    Assert.assertFalse(((
+        CompressionScheduler) scheduler).supportDecompression(dir));
+  }
+
+  @Test
   public void testCheckCompressAction() throws Exception {
     int arraySize = 1024 * 1024 * 8;
     String fileDir = "/ssm/compression/";
