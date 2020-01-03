@@ -256,6 +256,7 @@ public class CmdletManager extends AbstractService {
 
   /**
    * Let Scheduler check actioninfo onsubmit and add them to cmdletinfo.
+   * TODO: remove useless actionIndex.
    * @param cmdletInfo
    * @param actionInfos
    * @throws IOException

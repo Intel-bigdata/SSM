@@ -32,10 +32,12 @@ import org.junit.Test;
 import org.smartdata.hadoop.filesystem.SmartFileSystem;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.client.SmartDFSClient;
+import org.smartdata.hdfs.scheduler.CompressionScheduler;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
+import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.server.MiniSmartClusterHarness;
 import org.smartdata.server.engine.CmdletManager;
 
@@ -43,11 +45,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 public class TestCompressDecompress extends MiniSmartClusterHarness {
   private DFSClient smartDFSClient;
-  private String compressionImpl;
+  private String codec;
 
   @Override
   @Before
@@ -57,7 +60,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
 //    this.compressionImpl = "snappy";
 //    this.compressionImpl = "Lz4";
 //    this.compressionImpl = "Bzip2";
-    this.compressionImpl = CompressionCodec.ZLIB;
+    this.codec = CompressionCodec.ZLIB;
     smartDFSClient = new SmartDFSClient(ssm.getContext().getConf());
   }
 
@@ -77,7 +80,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024 * 10;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize + " -codec " + compressionImpl);
+        + " -bufSize " + bufSize + " -codec " + codec);
 
     waitTillActionDone(cmdId);
     Thread.sleep(1000);
@@ -89,7 +92,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     CompressionFileState compressionFileState = (CompressionFileState) fileState;
     Assert.assertEquals(fileName, compressionFileState.getPath());
     Assert.assertEquals(bufSize, compressionFileState.getBufferSize());
-    Assert.assertEquals(compressionImpl, compressionFileState.getCompressionImpl());
+    Assert.assertEquals(codec, compressionFileState.getCompressionImpl());
     Assert.assertEquals(arraySize, compressionFileState.getOriginalLength());
     Assert.assertTrue(compressionFileState.getCompressedLength() > 0);
     Assert.assertTrue(compressionFileState.getCompressedLength()
@@ -161,7 +164,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-      + " -bufSize " + bufSize + " -codec " + compressionImpl);
+      + " -bufSize " + bufSize + " -codec " + codec);
 
     waitTillActionDone(cmdId);
 
@@ -191,16 +194,44 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     String filePath = "/ssm/compression/file4";
     prepareFile(filePath, arraySize);
     CmdletManager cmdletManager = ssm.getCmdletManager();
+
+    // Expect that a common file cannot be decompressed.
+    List<ActionScheduler> schedulers = cmdletManager.getSchedulers("decompress");
+    Assert.assertTrue(schedulers.size() == 1);
+    ActionScheduler scheduler = schedulers.get(0);
+    Assert.assertTrue(scheduler instanceof CompressionScheduler);
+    Assert.assertFalse(((CompressionScheduler)scheduler).supportDecompression(filePath));
+
+    // Compress the given file
     long cmdId = cmdletManager.submitCmdlet(
-        "compress -file " + filePath + " -codec " + compressionImpl);
+        "compress -file " + filePath + " -codec " + codec);
     waitTillActionDone(cmdId);
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     Assert.assertTrue(fileState instanceof CompressionFileState);
 
+    // Try to decompress a compressed file
     cmdId = cmdletManager.submitCmdlet("decompress -file " + filePath);
     waitTillActionDone(cmdId);
     fileState = HadoopUtil.getFileState(dfsClient, filePath);
     Assert.assertFalse(fileState instanceof CompressionFileState);
+  }
+
+  @Test
+  public void testCheckCompressAction() throws Exception {
+    int arraySize = 1024 * 1024 * 8;
+    String fileDir = "/ssm/compression/";
+    String fileName = "file5";
+    String filePath = fileDir + fileName;
+    prepareFile(filePath, arraySize);
+    CmdletManager cmdletManager = ssm.getCmdletManager();
+
+    long cmdId = cmdletManager.submitCmdlet(
+        "checkcompress -file " + filePath);
+    waitTillActionDone(cmdId);
+
+    // Test directory case.
+    cmdId = cmdletManager.submitCmdlet("checkcompress -file " + fileDir);
+    waitTillActionDone(cmdId);
   }
 
   @Test
@@ -238,7 +269,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     int bufSize = 1024 * 1024;
     CmdletManager cmdletManager = ssm.getCmdletManager();
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-      + " -bufSize " + bufSize + " -codec " + compressionImpl);
+      + " -bufSize " + bufSize + " -codec " + codec);
     waitTillActionDone(cmdId);
     RemoteIterator<LocatedFileStatus> iter3 = dfs.listLocatedStatus(new Path(fileName));
     LocatedFileStatus stat3 = iter3.next();
@@ -265,7 +296,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     CmdletManager cmdletManager = ssm.getCmdletManager();
     // Compress files
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize + " -codec " + compressionImpl);
+        + " -bufSize " + bufSize + " -codec " + codec);
     waitTillActionDone(cmdId);
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     smartDFSClient.rename("/test/compress_files/file_0",
@@ -291,7 +322,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     CmdletManager cmdletManager = ssm.getCmdletManager();
     // Compress files
     long cmdId = cmdletManager.submitCmdlet("compress -file " + fileName
-        + " -bufSize " + bufSize + " -codec " + compressionImpl);
+        + " -bufSize " + bufSize + " -codec " + codec);
     waitTillActionDone(cmdId);
     SmartDFSClient smartDFSClient = new SmartDFSClient(smartContext.getConf());
     // Test unsupported methods on compressed file
@@ -308,6 +339,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
   }
 
   private void waitTillActionDone(long cmdId) throws Exception {
+    int n = 0;
     while (true) {
       Thread.sleep(1000);
       CmdletManager cmdletManager = ssm.getCmdletManager();
@@ -322,10 +354,15 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
       } else {
         System.out.println(state);
       }
+      // Wait for 20s.
+      if (++n == 20) {
+        throw new Exception("Time out in waiting for cmdlet: " +
+            cmdletManager.getCmdletInfo(cmdId).toString());
+      }
     }
   }
 
-  private byte[] prepareFile(String fileName, int fileSize) throws Exception {
+  private byte[] prepareFile(String fileName, int fileSize) throws IOException {
     byte[] bytes = TestCompressDecompress.BytesGenerator.get(fileSize);
 
     // Create HDFS file

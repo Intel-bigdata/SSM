@@ -61,8 +61,9 @@ public class CompressionScheduler extends ActionSchedulerService {
       CompressionAction.class.getAnnotation(ActionSignature.class).actionId();
   public static final String DECOMPRESSION_ACTION_ID =
       DecompressionAction.class.getAnnotation(ActionSignature.class).actionId();
-  public static final List<String> actions =
-      Arrays.asList(COMPRESSION_ACTION_ID, DECOMPRESSION_ACTION_ID);
+
+  public static final List<String> actions = Arrays.asList(COMPRESSION_ACTION_ID,
+      DECOMPRESSION_ACTION_ID);
   public static String COMPRESS_DIR;
   public static final String COMPRESS_TMP = CompressionAction.COMPRESS_TMP;
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
@@ -110,7 +111,7 @@ public class CompressionScheduler extends ActionSchedulerService {
    * @param path
    * @return true if the file supports compression action, else false
    */
-  private boolean supportCompression(String path) throws MetaStoreException {
+  public boolean supportCompression(String path) throws MetaStoreException {
     if (path == null) {
       LOG.warn("File path is not specified.");
       return false;
@@ -126,7 +127,7 @@ public class CompressionScheduler extends ActionSchedulerService {
     return false;
   }
 
-  private boolean supportDecompression(String path) throws MetaStoreException {
+  public boolean supportDecompression(String path) throws MetaStoreException {
     if (path == null) {
       LOG.warn("File path is not specified!");
       return false;
@@ -162,6 +163,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo,
       int actionIndex) {
     String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+
     if (!actions.contains(actionInfo.getActionName())) {
       return false;
     }

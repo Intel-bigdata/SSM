@@ -43,13 +43,20 @@ public class CheckCompressAction extends HdfsAction {
 
   @Override
   public void init(Map<String, String> args) {
-    this.srcPath =  args.get(HdfsAction.FILE_PATH);
+    super.init(args);
+    this.srcPath = args.get(HdfsAction.FILE_PATH);
   }
 
   @Override
   protected void execute() throws Exception {
     if (srcPath == null) {
       throw new IOException("File path is not given!");
+    }
+    // Consider directory case.
+    if (dfsClient.getFileInfo(srcPath).isDir()) {
+      appendLog("The given path is a directory, " +
+          "not applicable to checking compression status");
+      return;
     }
     FileState fileState = HadoopUtil.getFileState(dfsClient, srcPath);
     if (fileState instanceof CompressionFileState) {

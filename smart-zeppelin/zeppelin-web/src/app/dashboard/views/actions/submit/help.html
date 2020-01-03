@@ -61,6 +61,11 @@ limitations under the License.
         in directory case.</td>
     </tr>
     <tr>
+      <td>checkcompress</td>
+      <td>-file $file</td>
+      <td>Show the compression status of $file.</td>
+    </tr>
+    <tr>
       <td>checkec</td>
       <td>-file $file</td>
       <td>Show the EC policy of $file. The given $file can be a directory as well.</td>
@@ -105,6 +110,11 @@ limitations under the License.
       <td>copy2s3</td>
       <td>copy2s3 -file $file -dest $s3_dest</td>
       <td>Copy $file to $s3_dest which is on Amazon S3, and $s3_dest is a url starting with s3a://.</td>
+    </tr>
+    <tr>
+      <td>decompress</td>
+      <td>-file $file [-bufSize $size]</td>
+      <td>Decompress $file.</td>
     </tr>
     <tr>
       <td>delete</td>
