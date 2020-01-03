@@ -99,6 +99,7 @@ public class Cmdlet implements Runnable {
         continue;
       }
       // Init Action
+      // TODO: this statement maybe can be removed.
       act.init(act.getArguments());
       act.run();
       if (!act.isSuccessful()) {

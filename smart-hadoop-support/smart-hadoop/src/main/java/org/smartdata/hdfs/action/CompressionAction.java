@@ -19,7 +19,10 @@ package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.mutable.MutableFloat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.CreateFlag;
+import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.CompressionCodec;
 import org.apache.hadoop.hdfs.DFSInputStream;
@@ -32,6 +35,7 @@ import org.smartdata.action.ActionException;
 import org.smartdata.action.Utils;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.model.CompressionFileInfo;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.utils.StringUtil;
@@ -44,7 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This action convert a file to a compressed file.
+ * This action is used to compress a file.
  */
 @ActionSignature(
     actionId = "compress",
@@ -53,7 +57,7 @@ import java.util.Map;
         HdfsAction.FILE_PATH
             + " $file "
             + CompressionAction.BUF_SIZE
-            + " $size "
+            + " $bufSize "
             + CompressionAction.CODEC
             + " $codec"
 )
@@ -67,6 +71,7 @@ public class CompressionAction extends HdfsAction {
 
   private String filePath;
   private Configuration conf;
+  private MutableFloat progress;
 
   // bufferSize is also chunk size.
   // This default value limits the minimum buffer size.
@@ -76,9 +81,8 @@ public class CompressionAction extends HdfsAction {
   private String compressCodec;
   // Specified by user in action arg.
   private int userDefinedBufferSize;
-  // Calculated by max number of splits.
-  private int calculatedBufferSize;
-  private String xAttrName = null;
+  public static final String XATTR_NAME =
+      SmartConstants.SMART_FILE_STATE_XATTR_NAME;
 
   private CompressionFileInfo compressionFileInfo;
   private CompressionFileState compressionFileState;
@@ -96,7 +100,6 @@ public class CompressionAction extends HdfsAction {
     this.maxSplit = conf.getInt(
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT,
         SmartConfKeys.SMART_COMPRESSION_MAX_SPLIT_DEFAULT);
-    this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
     this.filePath = args.get(FILE_PATH);
     if (args.containsKey(BUF_SIZE) && !args.get(BUF_SIZE).isEmpty()) {
       this.userDefinedBufferSize = (int) StringUtil.parseToByte(args.get(BUF_SIZE));
@@ -105,6 +108,7 @@ public class CompressionAction extends HdfsAction {
     // This is a temp path for compressing a file.
     this.compressTmpPath = args.containsKey(COMPRESS_TMP) ?
         args.get(COMPRESS_TMP) : compressTmpPath;
+    this.progress = new MutableFloat(0.0F);
   }
 
   @Override
@@ -127,67 +131,114 @@ public class CompressionAction extends HdfsAction {
       throw new ActionException(
           "Failed to execute Compression Action: the given file doesn't exist!");
     }
+
+    // Consider directory case.
+    if (dfsClient.getFileInfo(filePath).isDir()) {
+      appendLog("Compression is not applicable to a directory.");
+      return;
+    }
+
     // Generate compressed file
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     compressionFileState = new CompressionFileState(filePath, bufferSize, compressCodec);
     compressionFileState.setOriginalLength(srcFile.getLen());
-    if (srcFile.getLen() == 0) {
-      compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
-    } else {
-      short replication = srcFile.getReplication();
-      long blockSize = srcFile.getBlockSize();
-      long fileSize = srcFile.getLen();
-      appendLog("File length: " + fileSize);
-      //The capacity of originalPos and compressedPos is maxSplit (1000, by default) in database
-      this.calculatedBufferSize = (int) (fileSize / maxSplit);
-      LOG.debug("Calculated buffer size: " + calculatedBufferSize);
-      LOG.debug("MaxSplit: " + maxSplit);
-      //Determine the actual buffer size
-      if (userDefinedBufferSize < bufferSize || userDefinedBufferSize < calculatedBufferSize) {
-        if (bufferSize <= calculatedBufferSize) {
-          LOG.debug("User defined buffer size is too small, use the calculated buffer size:" +
-              calculatedBufferSize);
-        } else {
-          LOG.debug("User defined buffer size is too small, use the default buffer size:" +
-              bufferSize);
+
+    OutputStream appendOut = null;
+    DFSInputStream in = null;
+    OutputStream out = null;
+    try {
+      if (srcFile.getLen() == 0) {
+        compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
+      } else {
+        short replication = srcFile.getReplication();
+        long blockSize = srcFile.getBlockSize();
+        long fileSize = srcFile.getLen();
+        appendLog("File length: " + fileSize);
+        bufferSize = getActualBuffSize(fileSize);
+
+        // SmartDFSClient will fail to open compressing file with PROCESSING FileStage
+        // set by Compression scheduler. But considering DfsClient may be used, we use
+        // append operation to lock the file to avoid any modification.
+        appendOut = CompatibilityHelperLoader.getHelper().
+            getDFSClientAppend(dfsClient, filePath, bufferSize);
+        in = dfsClient.open(filePath);
+        out = dfsClient.create(compressTmpPath,
+            true, replication, blockSize);
+        compress(in, out);
+        HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
+        compressionFileState.setCompressedLength(destFile.getLen());
+        appendLog("Compressed file length: " + destFile.getLen());
+        compressionFileInfo =
+            new CompressionFileInfo(true, compressTmpPath, compressionFileState);
+      }
+      compressionFileState.setBufferSize(bufferSize);
+      appendLog("Compression buffer size: " + bufferSize);
+      appendLog("Compression codec: " + compressCodec);
+      String compressionInfoJson = new Gson().toJson(compressionFileInfo);
+      appendResult(compressionInfoJson);
+      LOG.warn(compressionInfoJson);
+      if (compressionFileInfo.needReplace()) {
+        // Add to temp path
+        // Please make sure content write to Xatte is less than 64K
+        dfsClient.setXAttr(compressionFileInfo.getTempPath(),
+            XATTR_NAME, SerializationUtils.serialize(compressionFileState),
+            EnumSet.of(XAttrSetFlag.CREATE));
+        // Rename operation is moved from CompressionScheduler.
+        // Thus, modification for original file will be avoided.
+        dfsClient.rename(compressTmpPath, filePath, Options.Rename.OVERWRITE);
+      } else {
+        // Add to raw path
+        dfsClient.setXAttr(filePath,
+            XATTR_NAME, SerializationUtils.serialize(compressionFileState),
+            EnumSet.of(XAttrSetFlag.CREATE));
+      }
+    } catch (IOException e) {
+      throw new IOException(e);
+    } finally {
+      if (appendOut != null) {
+        try {
+          appendOut.close();
+        } catch (IOException e) {
+          // Hide the expected exception that the original file is missing.
         }
       }
-      bufferSize = Math.max(Math.max(userDefinedBufferSize, calculatedBufferSize), bufferSize);
-
-      DFSInputStream dfsInputStream = dfsClient.open(filePath);
-
-      OutputStream compressedOutputStream = dfsClient.create(compressTmpPath,
-          true, replication, blockSize);
-      compress(dfsInputStream, compressedOutputStream);
-      HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
-      compressionFileState.setCompressedLength(destFile.getLen());
-      appendLog("Compressed file length: " + destFile.getLen());
-      compressionFileInfo =
-          new CompressionFileInfo(true, compressTmpPath, compressionFileState);
-    }
-    compressionFileState.setBufferSize(bufferSize);
-    appendLog("Compression buffer size: " + bufferSize);
-    appendLog("Compression codec: " + compressCodec);
-    String compressionInfoJson = new Gson().toJson(compressionFileInfo);
-    appendResult(compressionInfoJson);
-    LOG.warn(compressionInfoJson);
-    if (compressionFileInfo.needReplace()) {
-      // Add to temp path
-      // Please make sure content write to Xatte is less than 64K
-      dfsClient.setXAttr(compressionFileInfo.getTempPath(),
-          xAttrName, SerializationUtils.serialize(compressionFileState),
-          EnumSet.of(XAttrSetFlag.CREATE));
-    } else {
-      // Add to raw path
-      dfsClient.setXAttr(filePath,
-          xAttrName, SerializationUtils.serialize(compressionFileState),
-          EnumSet.of(XAttrSetFlag.CREATE));
+      if (in != null) {
+        in.close();
+      }
+      if (out != null) {
+        out.close();
+      }
     }
   }
 
   private void compress(InputStream inputStream, OutputStream outputStream) throws IOException {
+    // We use 'progress' (a percentage) to track compression progress.
     SmartCompressorStream smartCompressorStream = new SmartCompressorStream(
-        inputStream, outputStream, bufferSize, compressionFileState);
+        inputStream, outputStream, bufferSize, compressionFileState, progress);
     smartCompressorStream.convert();
+  }
+
+  private int getActualBuffSize(long fileSize) {
+    // The capacity of originalPos and compressedPos is maxSplit (1000, by default) in database
+    // Calculated by max number of splits.
+    int calculatedBufferSize = (int) (fileSize / maxSplit);
+    LOG.debug("Calculated buffer size: " + calculatedBufferSize);
+    LOG.debug("MaxSplit: " + maxSplit);
+    // Determine the actual buffer size
+    if (userDefinedBufferSize < bufferSize || userDefinedBufferSize < calculatedBufferSize) {
+      if (bufferSize <= calculatedBufferSize) {
+        LOG.debug("User defined buffer size is too small, use the calculated buffer size:" +
+            calculatedBufferSize);
+      } else {
+        LOG.debug("User defined buffer size is too small, use the default buffer size:" +
+            bufferSize);
+      }
+    }
+    return Math.max(Math.max(userDefinedBufferSize, calculatedBufferSize), bufferSize);
+  }
+
+  @Override
+  public float getProgress() {
+    return (float) this.progress.getValue();
   }
 }
