@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.action.ActionException;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.model.CompressionFileState;
@@ -71,6 +72,17 @@ public class DecompressionAction extends HdfsAction {
       throw new IllegalArgumentException(
           "Compression tmp path is not specified!");
     }
+
+    if (!dfsClient.exists(filePath)) {
+      throw new ActionException(
+          "Failed to execute Compression Action: the given file doesn't exist!");
+    }
+    // Consider directory case.
+    if (dfsClient.getFileInfo(filePath).isDir()) {
+      appendLog("Decompression is not applicable to a directory.");
+      return;
+    }
+
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     if (!(fileState instanceof CompressionFileState)) {
       appendLog("The file is already decompressed!");

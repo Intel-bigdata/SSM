@@ -55,7 +55,7 @@ public class CheckCompressAction extends HdfsAction {
     // Consider directory case.
     if (dfsClient.getFileInfo(srcPath).isDir()) {
       appendLog("The given path is a directory, " +
-          "not applicable to checking compression status");
+          "not applicable to checking compression status.");
       return;
     }
     FileState fileState = HadoopUtil.getFileState(dfsClient, srcPath);

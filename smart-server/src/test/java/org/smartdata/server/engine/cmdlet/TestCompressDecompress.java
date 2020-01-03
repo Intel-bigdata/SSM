@@ -83,10 +83,20 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
         + " -bufSize " + bufSize + " -codec " + codec);
 
     waitTillActionDone(cmdId);
-    Thread.sleep(1000);
+    FileState fileState = null;
     // metastore  test
-    FileState fileState = metaStore.getFileState(fileName);
-    Assert.assertEquals(FileState.FileType.COMPRESSION, fileState.getFileType());
+    int n = 0;
+    while (true) {
+      fileState = metaStore.getFileState(fileName);
+      if (FileState.FileType.COMPRESSION.equals(fileState.getFileType())) {
+        break;
+      }
+      Thread.sleep(1000);
+      if (n++ >= 20) {
+        throw new Exception("Time out in waiting for getting expect file state.");
+      }
+    }
+
     Assert.assertEquals(FileState.FileStage.DONE, fileState.getFileStage());
     Assert.assertTrue(fileState instanceof CompressionFileState);
     CompressionFileState compressionFileState = (CompressionFileState) fileState;
@@ -350,7 +360,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
         // Reasonably assume that there is only one action wrapped by a given cmdlet.
         long aid = cmdletManager.getCmdletInfo(cmdId).getAids().get(0);
         Assert.fail(
-            "Compression action failed. " + cmdletManager.getActionInfo(aid).getLog());
+            "Action failed. " + cmdletManager.getActionInfo(aid).getLog());
       } else {
         System.out.println(state);
       }

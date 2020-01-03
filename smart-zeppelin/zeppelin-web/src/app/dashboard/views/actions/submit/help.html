@@ -63,7 +63,7 @@ limitations under the License.
     <tr>
       <td>checkcompress</td>
       <td>-file $file</td>
-      <td>Show the compression status of $file.</td>
+      <td>Show the compression status of $file, not applicable to a directory.</td>
     </tr>
     <tr>
       <td>checkec</td>
@@ -89,10 +89,11 @@ limitations under the License.
     <tr>
       <td>compress</td>
       <td>-file $file [-bufSize $bufSize] [-codec $codec]</td>
-      <td>Compress $file. If option -bufSize is not specified, SSM will use the value obtained by dividing file size with the max
-        number of splits, configured in smart-default.xml. The least buffer size is 1MB. SSM supports configuring human-readable
-        value for bufSize, e.g., 1MB. SSM supports different compression implementations, including Lz4, Bzip2, Zlib and snappy.
-        If option -codec is not specified, SSM will use the configuration value, Zlib by default, for 'smart.compression.codec'.
+      <td>Compress $file, not applicable to a directory. If option -bufSize is not specified, SSM will use the value obtained by
+        dividing file size with the max number of splits, configured in smart-default.xml. The least buffer size is 1MB. SSM
+        supports configuring human-readable value for bufSize, e.g., 1MB. SSM supports different compression implementations,
+        including Lz4, Bzip2, Zlib and snappy. If option -codec is not specified, SSM will use the configuration value, Zlib
+        by default, for 'smart.compression.codec'.
       </td>
     </tr>
     <tr>
@@ -114,7 +115,7 @@ limitations under the License.
     <tr>
       <td>decompress</td>
       <td>-file $file [-bufSize $size]</td>
-      <td>Decompress $file.</td>
+      <td>Decompress $file, not applicable to a directory.</td>
     </tr>
     <tr>
       <td>delete</td>

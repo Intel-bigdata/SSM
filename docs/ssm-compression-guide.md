@@ -27,7 +27,7 @@ The above rule means for all files under `/compress` directory, SSM will trigger
 ```
 file: path matches "/decompress/*" | decompress
 ```
-The above rule is used to decompress all compressed files under /decompress.
+The above rule is used to decompress all compressed files under `/decompress`.
 
 ## Configure Compression in SSM (Optional)
 

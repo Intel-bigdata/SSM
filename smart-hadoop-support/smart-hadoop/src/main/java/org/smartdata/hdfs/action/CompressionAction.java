@@ -130,6 +130,13 @@ public class CompressionAction extends HdfsAction {
       throw new ActionException(
           "Failed to execute Compression Action: the given file doesn't exist!");
     }
+
+    // Consider directory case.
+    if (dfsClient.getFileInfo(filePath).isDir()) {
+      appendLog("Compression is not applicable to a directory.");
+      return;
+    }
+
     // Generate compressed file
     HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     compressionFileState = new CompressionFileState(filePath, bufferSize, compressCodec);
