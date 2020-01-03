@@ -19,6 +19,7 @@ package org.smartdata.hdfs.action;
 
 import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.lang.mutable.MutableFloat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.Options;
@@ -70,7 +71,7 @@ public class CompressionAction extends HdfsAction {
 
   private String filePath;
   private Configuration conf;
-  private Float progress;
+  private MutableFloat progress;
 
   // bufferSize is also chunk size.
   // This default value limits the minimum buffer size.
@@ -107,7 +108,7 @@ public class CompressionAction extends HdfsAction {
     // This is a temp path for compressing a file.
     this.compressTmpPath = args.containsKey(COMPRESS_TMP) ?
         args.get(COMPRESS_TMP) : compressTmpPath;
-    this.progress = 0.0F;
+    this.progress = new MutableFloat(0.0F);
   }
 
   @Override
@@ -238,6 +239,6 @@ public class CompressionAction extends HdfsAction {
 
   @Override
   public float getProgress() {
-    return this.progress;
+    return (float) this.progress.getValue();
   }
 }

@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hdfs;
 
+import org.apache.commons.lang.mutable.MutableFloat;
 import org.apache.hadoop.io.compress.Compressor;
 import org.apache.hadoop.io.compress.bzip2.Bzip2Compressor;
 import org.apache.hadoop.io.compress.lz4.Lz4Compressor;
@@ -43,7 +44,7 @@ public class SmartCompressorStream {
   private OutputStream out;
   private InputStream in;
   private final int maxLength;
-  private Float progress;
+  private MutableFloat progress;
 
   private long originPos = 0;
   private long compressedPos = 0;
@@ -51,7 +52,7 @@ public class SmartCompressorStream {
   private List<Long> compressedPositions = new ArrayList<>();
 
   public SmartCompressorStream(InputStream inputStream, OutputStream outputStream,
-      int bufferSize, CompressionFileState compressionInfo, Float progress) throws IOException {
+      int bufferSize, CompressionFileState compressionInfo, MutableFloat progress) throws IOException {
     this.out = outputStream;
     this.in = inputStream;
     this.compressionInfo = compressionInfo;
@@ -107,7 +108,7 @@ public class SmartCompressorStream {
       }
       write(buf, 0, off);
       originPos += off;
-      this.progress = (float) originPos / compressionInfo.getOriginalLength();
+      this.progress.setValue((float) originPos / compressionInfo.getOriginalLength());
     }
   }
 
