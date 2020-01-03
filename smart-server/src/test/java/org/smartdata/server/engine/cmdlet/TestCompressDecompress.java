@@ -200,7 +200,7 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     Assert.assertTrue(schedulers.size() == 1);
     ActionScheduler scheduler = schedulers.get(0);
     Assert.assertTrue(scheduler instanceof CompressionScheduler);
-    Assert.assertFalse(((CompressionScheduler)scheduler).supportDecompression(filePath));
+    Assert.assertFalse(((CompressionScheduler) scheduler).supportDecompression(filePath));
 
     // Compress the given file
     long cmdId = cmdletManager.submitCmdlet(
@@ -356,8 +356,8 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
       }
       // Wait for 20s.
       if (++n == 20) {
-        throw new Exception("Time out in waiting for cmdlet: " +
-            cmdletManager.getCmdletInfo(cmdId).toString());
+        throw new Exception("Time out in waiting for cmdlet: " + cmdletManager.
+            getCmdletInfo(cmdId).toString());
       }
     }
   }
