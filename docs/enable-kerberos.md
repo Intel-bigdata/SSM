@@ -1,6 +1,7 @@
 ## 1. Deploy Kerberos KDC
 
 ### 1.1 Install Kerberos
+
 ```
 yum install -y krb5-server krb5-lib krb5-workstation
 ```
@@ -75,15 +76,16 @@ kadmind
 
 ### 2.1 Add smartserver Kerberos principal to database and export it to keytab.
 ```
-kadmin.local:addprinc -randkey smartserver/{hostname}
-kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab smartserver/{hostname}
+kadmin.local:addprinc -randkey {username}/{hostname}
+kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab {username}/{hostname}
 ```
-Note: replace the hostname with the hostname of the smart server
+**Note:** replace the username with the HDFS user who has the correct permission to execute actions and replace hostname with hostname of the smart server
 
-### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent.
+### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent.Then use 'scp' to copy each keytab file to each agent.
 ```
-kadmin.local:addprinc -randkey smartagent/{hostname}
-kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab smartagent/{hostname}
+kadmin.local:addprinc -randkey {username}/{hostname}
+kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab {username}/{hostname}
+scp /xxx/xxx/smartagent-{hostname}.keytab {hostname}:/xxx/xxx/
 ```
 
 ### 2.3 Add hdfs Kerberos principals to database and export it to keytabs.
@@ -95,6 +97,7 @@ kadmin.local:xst -k /xxx/xxx/hdfs-{hostname}.keytab hdfs/{hostname}
 > Note: please replace {hostname} with the real hostname. The below section should follow the same convention.
 
 ## 3. Update smart-site.xml
+Please update smart-site.xml for each node.Smart agent principal and keytab path for each node are different.
 ```xml
 <!-- hadoop conf dir should be configured -->
 <property>
