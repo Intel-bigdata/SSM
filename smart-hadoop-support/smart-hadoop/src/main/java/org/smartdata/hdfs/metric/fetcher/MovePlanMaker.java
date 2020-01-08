@@ -198,14 +198,14 @@ public class MovePlanMaker {
     }
     boolean needMove = false;
 
-    for (int i = 0; i < diff.existing.size(); i++) {
-      String t = diff.existing.get(i);
-      MLocation ml = locations.get(i);
-      final Source source = storages.getSource(ml);
-      if (ml.getStorageType().equals(t) && source != null) {
-        // try to schedule one replica move.
-        if (scheduleMoveReplica(db, source, Arrays.asList(diff.expected.get(i)))) {
-          needMove = true;
+    for (String t : diff.existing) {
+      for (final MLocation ml : locations) {
+        final Source source = storages.getSource(ml);
+        if (ml.getStorageType() == t && source != null) {
+          // try to schedule one replica move.
+          if (scheduleMoveReplica(db, source, diff.expected)) {
+            needMove = true;
+          }
         }
       }
     }
