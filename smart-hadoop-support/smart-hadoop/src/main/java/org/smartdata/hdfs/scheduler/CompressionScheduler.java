@@ -19,16 +19,17 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
+import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.CompressionAction;
 import org.smartdata.hdfs.action.HdfsAction;
+import org.smartdata.hdfs.action.DecompressionAction;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.ActionInfo;
@@ -49,17 +50,20 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Compression Scheduler.
+ * A scheduler for compression/decompression action.
  *
- * TODO: support uncompress action.
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
   private final URI nnUri;
   private MetaStore metaStore;
-  public static final String COMPRESSION_ACTION_NAME = "compress";
-  public static final List<String> actions =
-      Arrays.asList(COMPRESSION_ACTION_NAME);
+  public static final String COMPRESSION_ACTION_ID =
+      CompressionAction.class.getAnnotation(ActionSignature.class).actionId();
+  public static final String DECOMPRESSION_ACTION_ID =
+      DecompressionAction.class.getAnnotation(ActionSignature.class).actionId();
+
+  public static final List<String> actions = Arrays.asList(COMPRESSION_ACTION_ID,
+      DECOMPRESSION_ACTION_ID);
   public static String COMPRESS_DIR;
   public static final String COMPRESS_TMP = CompressionAction.COMPRESS_TMP;
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
@@ -107,11 +111,17 @@ public class CompressionScheduler extends ActionSchedulerService {
    * @param path
    * @return true if the file supports compression action, else false
    */
-  private boolean supportCompression(String path) throws MetaStoreException {
+  public boolean supportCompression(String path) throws MetaStoreException, IOException {
     if (path == null) {
-      LOG.warn("File is not specified.");
+      LOG.warn("File path is not specified.");
       return false;
     }
+
+    if (dfsClient.getFileInfo(path).isDir()) {
+      LOG.warn("Compression is not applicable to a directory.");
+      return false;
+    }
+
     // Current implementation: only normal file type supports compression action
     FileState fileState = metaStore.getFileState(path);
     if (fileState.getFileType().equals(FileState.FileType.NORMAL)
@@ -120,6 +130,25 @@ public class CompressionScheduler extends ActionSchedulerService {
     }
     LOG.debug("File " + path + " doesn't support compression action. "
         + "Type: " + fileState.getFileType() + "; Stage: " + fileState.getFileStage());
+    return false;
+  }
+
+  public boolean supportDecompression(String path) throws MetaStoreException, IOException {
+    if (path == null) {
+      LOG.warn("File path is not specified!");
+      return false;
+    }
+    // Exclude directory case
+    if (dfsClient.getFileInfo(path).isDir()) {
+      LOG.warn("Decompression is not applicable to a directory.");
+      return false;
+    }
+
+    FileState fileState = metaStore.getFileState(path);
+    if (fileState instanceof CompressionFileState) {
+      return true;
+    }
+    LOG.warn("A compressed file path should be given!");
     return false;
   }
 
@@ -143,23 +172,36 @@ public class CompressionScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      int actionIndex) {
     String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+
+    if (!actions.contains(actionInfo.getActionName())) {
+      return false;
+    }
     if (fileLock.contains(srcPath)) {
       return false;
     }
-
     try {
-      if (!supportCompression(srcPath)) {
+      if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+          !supportCompression(srcPath)) {
         return false;
       }
+      if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID) &&
+          !supportDecompression(srcPath)) {
+        return false;
+      }
+
       // TODO remove this part
       CompressionFileState fileState = new CompressionFileState(srcPath,
           FileState.FileStage.PROCESSING);
       metaStore.insertUpdateFileState(fileState);
       return true;
     } catch (MetaStoreException e) {
-      LOG.error("Compress action of file " + srcPath + " failed in metastore!", e);
+      LOG.error("Failed to submit action due to metastore exception!", e);
+      return false;
+    } catch (IOException e) {
+      LOG.error(e.getMessage());
       return false;
     }
   }
@@ -188,22 +230,14 @@ public class CompressionScheduler extends ActionSchedulerService {
           // when action failed, just remove the record of this file from metastore.
           // In current implementation, no record in FileState table means the file is normal type.
           metaStore.deleteFileState(srcPath);
-        } else {
-          // Action successful
-          Gson gson = new Gson();
-          String compressionInfoJson = actionInfo.getResult();
-          CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
-              new TypeToken<CompressionFileInfo>() {
-              }.getType());
-          boolean needReplace = compressionFileInfo.needReplace();
-          String tempPath = compressionFileInfo.getTempPath();
-          CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
-          compressionFileState.setFileStage(FileState.FileStage.DONE);
-          // Update metastore and then replace file with compressed one
-          metaStore.insertUpdateFileState(compressionFileState);
-          if (needReplace) {
-            dfsClient.rename(tempPath, srcPath, Options.Rename.OVERWRITE);
-          }
+          return;
+        }
+        // Action execution is successful.
+        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
+          onCompressActionFinished(actionInfo);
+        }
+        if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+          onDecompressActionFinished(actionInfo);
         }
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
@@ -213,5 +247,31 @@ public class CompressionScheduler extends ActionSchedulerService {
         fileLock.remove(srcPath);
       }
     }
+  }
+
+  private void onCompressActionFinished(ActionInfo actionInfo)
+      throws MetaStoreException {
+
+    if (!actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
+      return;
+    }
+    Gson gson = new Gson();
+    String compressionInfoJson = actionInfo.getResult();
+    CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
+        new TypeToken<CompressionFileInfo>() {
+        }.getType());
+    CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
+    compressionFileState.setFileStage(FileState.FileStage.DONE);
+    // Update metastore and then replace file with compressed one
+    metaStore.insertUpdateFileState(compressionFileState);
+  }
+
+  private void onDecompressActionFinished(ActionInfo actionInfo)
+      throws MetaStoreException {
+    if (!actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+      return;
+    }
+    // Delete the record from compression_file table
+    metaStore.deleteFileState(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
   }
 }

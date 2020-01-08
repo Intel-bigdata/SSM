@@ -154,7 +154,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
         try {
           outputStream.close();
         } catch (IOException ex) {
-          // IOException may be unnecessarily reported for missing blocks.
+          // Hide the expected exception that the original file is missing.
         }
       }
     }

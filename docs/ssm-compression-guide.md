@@ -1,31 +1,33 @@
-# SSM Compression User Guide
+# SSM Compression Feature User Guide
 
-## Usage
-Basic usage
+## Compression/Decompression Action
+Compression action. This action is used to compress a given file. The below codec and bufSize are optional to be specified.
 ```
-compress –file [file path] -codec [codec]
-```
-
-Optional parameters
-```
--bufSize [buffer size]
+compress –file $path [-codec $codec -bufSize $size]
 ```
 
-## Compression action example
-
+Decompression action. This action is used to decompress a given compressed file.
 ```
-compress –file /compress/1.txt -codec snappy
+decompress -file $path [-bufSize $size]
 ```
 
-This action means SSM will trigger an action to compress these specified file, i.e., `/compress/1.txt`. The original file will be replaced with compressed file. The compression codec is snappy.
+Check compression action. This action is used to check the compression status for a given file.
+```
+checkcompress -file $path
+```
 
-## Compression rule example
+## Compression/Decompression Rule
 
+Example:
 ```
 file: path matches "/compress/*" | compress -codec snappy
 ```
+The above rule means for all files under `/compress` directory, SSM will trigger actions to compress them with snappy. If new files are added to this directory, SSM will also trigger actions to compress these new files.
 
-This rule means for all files under `/compress` directory, SSM will trigger actions to compress them with snappy. If new files are added to this directory, SSM will also trigger actions to compress these new files.
+```
+file: path matches "/decompress/*" | decompress
+```
+The above rule is used to decompress all compressed files under `/decompress`.
 
 ## Configure Compression in SSM (Optional)
 
@@ -56,5 +58,5 @@ e.g., export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/root/hadoop/lib/native/. Otherwis
 for replacing DFSClient by SmartDFSClient in Hadoop. SmartDFSClient has overridden DFSClient's getFileInfo method in order to return the original file's info, for example original length to user. Thus, user can see
 original length of compressed file by using `hdfs dfs -ls`.
 
-* It is supported to sync or copy compressed data to another cluster. But, the data is firstly uncompressed and then transferred to the given cluster, which means SSM compression cannot be used to reduce network IO load
+* It is supported to sync or copy compressed data to another cluster. But, the data is firstly decompressed and then transferred to the given cluster, which means SSM compression cannot be used to reduce network IO load
 in syncing data. Besides, the backup file will not be compressed.
