@@ -223,8 +223,9 @@ public class CompressionScheduler extends ActionSchedulerService {
     if (actionInfo.isFinished()) {
       String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       try {
-        // Action failed
-        if (!actionInfo.isSuccessful()) {
+        // Compression Action failed
+        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+            !actionInfo.isSuccessful()) {
           // TODO: refactor FileState in order to revert to original state if action failed
           // Currently only converting from normal file to other types is supported, so
           // when action failed, just remove the record of this file from metastore.
@@ -244,6 +245,7 @@ public class CompressionScheduler extends ActionSchedulerService {
       } catch (Exception e) {
         LOG.error("Compression action error", e);
       } finally {
+        // Remove the lock
         fileLock.remove(srcPath);
       }
     }
