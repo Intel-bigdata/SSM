@@ -183,7 +183,7 @@ public class MovePlanMaker {
     }
   }
 
-  boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
+  void scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
     final List<MLocation> locations = MLocation.toLocations(lb);
     if (!CompatibilityHelperLoader.getHelper().isLocatedStripedBlock(lb)) {
       Collections.shuffle(locations);
@@ -198,17 +198,27 @@ public class MovePlanMaker {
     }
 
     for (String t : diff.existing) {
-      for (final MLocation ml : locations) {
+//      for (final MLocation ml : locations) {
+//        final Source source = storages.getSource(ml);
+//        if (ml.getStorageType() == t && source != null) {
+//          // try to schedule one replica move.
+//          if (scheduleMoveReplica(db, source, diff.expected)) {
+//            return true;
+//          }
+//        }
+//      }
+      Iterator<MLocation> iter = locations.iterator();
+      while (iter.hasNext()) {
+        MLocation ml = iter.next();
         final Source source = storages.getSource(ml);
         if (ml.getStorageType() == t && source != null) {
-          // try to schedule one replica move.
           if (scheduleMoveReplica(db, source, diff.expected)) {
-            return true;
+            iter.remove();
+            break;
           }
         }
       }
     }
-    return false;
   }
 
   boolean scheduleMoveReplica(DBlock db, Source source,
