@@ -200,7 +200,7 @@ public class MovePlanMaker {
     for (String t : diff.existing) {
       for (final MLocation ml : locations) {
         final Source source = storages.getSource(ml);
-        if (ml.getStorageType().equals(t) && source != null) {
+        if (ml.getStorageType() == t && source != null) {
           // try to schedule one replica move.
           if (scheduleMoveReplica(db, source, diff.expected)) {
             return true;
