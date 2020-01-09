@@ -196,7 +196,6 @@ public class MovePlanMaker {
         db.addLocation(source);
       }
     }
-    boolean needMove = false;
 
     for (String t : diff.existing) {
       for (final MLocation ml : locations) {
@@ -204,12 +203,12 @@ public class MovePlanMaker {
         if (ml.getStorageType().equals(t) && source != null) {
           // try to schedule one replica move.
           if (scheduleMoveReplica(db, source, diff.expected)) {
-            needMove = true;
+            return true;
           }
         }
       }
     }
-    return needMove;
+    return false;
   }
 
   boolean scheduleMoveReplica(DBlock db, Source source,
