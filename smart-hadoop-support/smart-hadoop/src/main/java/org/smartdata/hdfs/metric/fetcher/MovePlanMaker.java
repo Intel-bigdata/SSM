@@ -183,11 +183,15 @@ public class MovePlanMaker {
     }
   }
 
+  /**
+   * TODO: consider failed to move some blocks, i.e., scheduleMoveReplica fails.
+   */
   void scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
     final List<MLocation> locations = MLocation.toLocations(lb);
     if (!CompatibilityHelperLoader.getHelper().isLocatedStripedBlock(lb)) {
       Collections.shuffle(locations);
     }
+    // EC block case is considered.
     final DBlock db =
         CompatibilityHelperLoader.getHelper().newDBlock(lb, status);
     for (MLocation ml : locations) {
@@ -203,10 +207,16 @@ public class MovePlanMaker {
       while (iter.hasNext()) {
         MLocation ml = iter.next();
         final Source source = storages.getSource(ml);
+        // Check whether the replica's storage type equals with the one
+        // in diff's existing list. If so, try to schedule the moving.
         if (ml.getStorageType() == t && source != null) {
+          // Use the corresponding storage type in diff's expected list.
           if (scheduleMoveReplica(db, source,
               Arrays.asList(diff.expected.get(index)))) {
+            // If the replica is successfully scheduled to move.
+            // No need to consider it any more.
             iter.remove();
+            // Tackle the next storage type in diff existing list.
             break;
           }
         }
