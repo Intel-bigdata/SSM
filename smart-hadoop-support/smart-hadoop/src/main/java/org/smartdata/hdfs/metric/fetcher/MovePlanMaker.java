@@ -197,22 +197,15 @@ public class MovePlanMaker {
       }
     }
 
-    for (String t : diff.existing) {
-//      for (final MLocation ml : locations) {
-//        final Source source = storages.getSource(ml);
-//        if (ml.getStorageType() == t && source != null) {
-//          // try to schedule one replica move.
-//          if (scheduleMoveReplica(db, source, diff.expected)) {
-//            return true;
-//          }
-//        }
-//      }
+    for (int index = 0; index < diff.existing.size(); index++) {
+      String t = diff.existing.get(index);
       Iterator<MLocation> iter = locations.iterator();
       while (iter.hasNext()) {
         MLocation ml = iter.next();
         final Source source = storages.getSource(ml);
         if (ml.getStorageType() == t && source != null) {
-          if (scheduleMoveReplica(db, source, diff.expected)) {
+          if (scheduleMoveReplica(db, source,
+              Arrays.asList(diff.expected.get(index)))) {
             iter.remove();
             break;
           }
@@ -221,8 +214,7 @@ public class MovePlanMaker {
     }
   }
 
-  boolean scheduleMoveReplica(DBlock db, Source source,
-                              List<String> targetTypes) {
+  boolean scheduleMoveReplica(DBlock db, Source source, List<String> targetTypes) {
     // Match storage on the same node
     if (chooseTargetInSameNode(db, source, targetTypes)) {
       return true;
