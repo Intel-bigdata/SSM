@@ -184,11 +184,14 @@ public class MovePlanMaker {
   }
 
   /**
-   * TODO: consider failed to move some blocks, i.e., scheduleMoveReplica fails.
+   * TODO: consider the case that fails to move some blocks, i.e., scheduleMoveReplica fails.
    */
   void scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
     final List<MLocation> locations = MLocation.toLocations(lb);
     if (!CompatibilityHelperLoader.getHelper().isLocatedStripedBlock(lb)) {
+      // Shuffle replica locations to make storage medium in balance.
+      // E.g., if three replicas are under ALL_SSD policy, ONE_SSD is the target policy.
+      // With shuffling locations, two randomly picked replicas will be moved to DISK.
       Collections.shuffle(locations);
     }
     // EC block case is considered.
@@ -210,7 +213,8 @@ public class MovePlanMaker {
         // Check whether the replica's storage type equals with the one
         // in diff's existing list. If so, try to schedule the moving.
         if (ml.getStorageType() == t && source != null) {
-          // Use the corresponding storage type in diff's expected list.
+          // Schedule moving a replica on a source location.
+          // The corresponding storage type in diff's expected list is used.
           if (scheduleMoveReplica(db, source,
               Arrays.asList(diff.expected.get(index)))) {
             // If the replica is successfully scheduled to move.
