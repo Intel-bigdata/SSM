@@ -95,7 +95,8 @@ public class MovePlanMaker {
    * @return whether there is still remaining migration work for the next
    * round
    */
-  public synchronized FileMovePlan processNamespace(Path targetPath, String destPolicy) throws IOException {
+  public synchronized FileMovePlan processNamespace(Path targetPath, String destPolicy)
+      throws IOException {
     schedulePlan = new FileMovePlan();
     String filePath = targetPath.toUri().getPath();
     schedulePlan.setFileName(filePath);
@@ -190,8 +191,8 @@ public class MovePlanMaker {
     final List<MLocation> locations = MLocation.toLocations(lb);
     if (!CompatibilityHelperLoader.getHelper().isLocatedStripedBlock(lb)) {
       // Shuffle replica locations to make storage medium in balance.
-      // E.g., if three replicas are under ALL_SSD policy, ONE_SSD is the target policy.
-      // With shuffling locations, two randomly picked replicas will be moved to DISK.
+      // E.g., if three replicas are under ALL_SSD policy and ONE_SSD is the target policy,
+      // with shuffling locations, two randomly picked replicas will be moved to DISK.
       Collections.shuffle(locations);
     }
     // EC block case is considered.

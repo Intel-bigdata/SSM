@@ -262,6 +262,13 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
     if (lb.isStriped()) {
       //TODO: verify the current storage policy (policyID) or the target one
       //TODO: output log for unsupported storage policy for EC block
+      String policyName = policy.getName();
+      // Exclude onessd/onedisk action to be executed on EC block.
+      // EC blocks can only be put on a same storage medium.
+      if (policyName.equalsIgnoreCase("Warm") |
+          policyName.equalsIgnoreCase("One_SSD")) {
+        throw new IOException("onessd or onedisk is not applicable to EC block!");
+      }
       if (ErasureCodingPolicyManager
           .checkStoragePolicySuitableForECStripedMode(policyId)) {
         return chooseStorageTypes(policy, (short) lb.getLocations().length);
