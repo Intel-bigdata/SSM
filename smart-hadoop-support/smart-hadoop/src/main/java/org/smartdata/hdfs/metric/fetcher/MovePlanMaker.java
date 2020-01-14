@@ -19,7 +19,6 @@ package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
@@ -144,7 +143,8 @@ public class MovePlanMaker {
   /**
    * @return true if it is necessary to run another round of migration
    */
-  private void processFile(String fullPath, HdfsLocatedFileStatus status, String destPolicy) {
+  private void processFile(String fullPath, HdfsLocatedFileStatus status,
+      String destPolicy) throws IOException {
     final BlockStoragePolicy policy = mapStoragePolicies.get(destPolicy);
     if (policy == null) {
       LOG.warn("Failed to get the storage policy of file " + fullPath);

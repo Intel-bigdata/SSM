@@ -85,7 +85,8 @@ public abstract class CompatibilityHelper2 implements CompatibilityHelper {
     return null;
   }
 
-  public List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId) {
+  public List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy,
+      byte policyId) throws IOException {
     return null;
   }
 
