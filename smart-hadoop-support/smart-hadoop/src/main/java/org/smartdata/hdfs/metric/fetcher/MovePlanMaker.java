@@ -19,7 +19,6 @@ package org.smartdata.hdfs.metric.fetcher;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.hdfs.protocol.Block;
 import org.apache.hadoop.hdfs.protocol.BlockStoragePolicy;
 import org.apache.hadoop.hdfs.protocol.DatanodeInfo;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
@@ -96,7 +95,8 @@ public class MovePlanMaker {
    * @return whether there is still remaining migration work for the next
    * round
    */
-  public synchronized FileMovePlan processNamespace(Path targetPath, String destPolicy) throws IOException {
+  public synchronized FileMovePlan processNamespace(Path targetPath, String destPolicy)
+      throws IOException {
     schedulePlan = new FileMovePlan();
     String filePath = targetPath.toUri().getPath();
     schedulePlan.setFileName(filePath);
@@ -144,7 +144,8 @@ public class MovePlanMaker {
   /**
    * @return true if it is necessary to run another round of migration
    */
-  private void processFile(String fullPath, HdfsLocatedFileStatus status, String destPolicy) {
+  private void processFile(String fullPath, HdfsLocatedFileStatus status,
+      String destPolicy) throws IOException {
     final BlockStoragePolicy policy = mapStoragePolicies.get(destPolicy);
     if (policy == null) {
       LOG.warn("Failed to get the storage policy of file " + fullPath);
@@ -183,11 +184,18 @@ public class MovePlanMaker {
     }
   }
 
-  boolean scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
+  /**
+   * TODO: consider the case that fails to move some blocks, i.e., scheduleMoveReplica fails.
+   */
+  void scheduleMoveBlock(StorageTypeDiff diff, LocatedBlock lb, HdfsFileStatus status) {
     final List<MLocation> locations = MLocation.toLocations(lb);
     if (!CompatibilityHelperLoader.getHelper().isLocatedStripedBlock(lb)) {
+      // Shuffle replica locations to make storage medium in balance.
+      // E.g., if three replicas are under ALL_SSD policy and ONE_SSD is the target policy,
+      // with shuffling locations, two randomly picked replicas will be moved to DISK.
       Collections.shuffle(locations);
     }
+    // EC block case is considered.
     final DBlock db =
         CompatibilityHelperLoader.getHelper().newDBlock(lb, status);
     for (MLocation ml : locations) {
@@ -196,24 +204,32 @@ public class MovePlanMaker {
         db.addLocation(source);
       }
     }
-    boolean needMove = false;
 
-    for (int i = 0; i < diff.existing.size(); i++) {
-      String t = diff.existing.get(i);
-      MLocation ml = locations.get(i);
-      final Source source = storages.getSource(ml);
-      if (ml.getStorageType().equals(t) && source != null) {
-        // try to schedule one replica move.
-        if (scheduleMoveReplica(db, source, Arrays.asList(diff.expected.get(i)))) {
-          needMove = true;
+    for (int index = 0; index < diff.existing.size(); index++) {
+      String t = diff.existing.get(index);
+      Iterator<MLocation> iter = locations.iterator();
+      while (iter.hasNext()) {
+        MLocation ml = iter.next();
+        final Source source = storages.getSource(ml);
+        // Check whether the replica's storage type equals with the one
+        // in diff's existing list. If so, try to schedule the moving.
+        if (ml.getStorageType() == t && source != null) {
+          // Schedule moving a replica on a source location.
+          // The corresponding storage type in diff's expected list is used.
+          if (scheduleMoveReplica(db, source,
+              Arrays.asList(diff.expected.get(index)))) {
+            // If the replica is successfully scheduled to move.
+            // No need to consider it any more.
+            iter.remove();
+            // Tackle the next storage type in diff existing list.
+            break;
+          }
         }
       }
     }
-    return needMove;
   }
 
-  boolean scheduleMoveReplica(DBlock db, Source source,
-                              List<String> targetTypes) {
+  boolean scheduleMoveReplica(DBlock db, Source source, List<String> targetTypes) {
     // Match storage on the same node
     if (chooseTargetInSameNode(db, source, targetTypes)) {
       return true;

@@ -34,6 +34,7 @@ import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.hdfs.scheduler.CompressionScheduler;
 import org.smartdata.metastore.MetaStore;
+import org.smartdata.model.CmdletInfo;
 import org.smartdata.model.CmdletState;
 import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
@@ -372,7 +373,11 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     while (true) {
       Thread.sleep(1000);
       CmdletManager cmdletManager = ssm.getCmdletManager();
-      CmdletState state = cmdletManager.getCmdletInfo(cmdId).getState();
+      CmdletInfo info = cmdletManager.getCmdletInfo(cmdId);
+      if (info == null) {
+        continue;
+      }
+      CmdletState state = info.getState();
       if (state == CmdletState.DONE) {
         return;
       } else if (state == CmdletState.FAILED) {

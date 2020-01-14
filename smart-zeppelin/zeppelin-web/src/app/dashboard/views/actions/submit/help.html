@@ -165,17 +165,19 @@ limitations under the License.
     <tr>
       <td>onedisk</td>
       <td>-file $file</td>
-      <td>Move one replica of $file to disk.</td>
+      <td>Move one replica of $file to disk. Not applicable to EC block.</td>
     </tr>
     <tr>
       <td>onessd</td>
       <td>-file $file</td>
-      <td>Move one replica of $file to SSD.</td>
+      <td>Move one replica of $file to SSD. Not applicable to EC block.</td>
     </tr>
     <tr>
       <td>ramdisk</td>
       <td>-file $file</td>
-      <td>Move $file to RAM_DISK.</td>
+      <td>Set LAZY_PERSIST storage policy. $file should be a dir path and RAM_DISK is
+        required to be configured beforehand. After the setting, the newly created
+        file under this dir will be lazily persisted.</td>
     </tr>
     <tr>
       <td>read</td>

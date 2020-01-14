@@ -99,7 +99,7 @@ public interface CompatibilityHelper {
 
   Map<Byte, String> getErasureCodingPolicies(DFSClient client) throws IOException;
 
-  List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId);
+  List<String> getStorageTypeForEcBlock(LocatedBlock lb, BlockStoragePolicy policy, byte policyId) throws IOException;
 
   DBlock newDBlock(LocatedBlock lb, HdfsFileStatus status);
 
