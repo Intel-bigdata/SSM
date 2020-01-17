@@ -40,7 +40,9 @@ import org.smartdata.protocol.message.LaunchCmdlet;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -56,6 +58,8 @@ public class MoverScheduler extends ActionSchedulerService {
   private ScheduledFuture updateServiceFuture;
   private long throttleInMb;
   private RateLimiter rateLimiter = null;
+  // Lock file after scheduling
+  private Set<String> fileLock;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(MoverScheduler.class);
@@ -70,6 +74,8 @@ public class MoverScheduler extends ActionSchedulerService {
     if (throttleInMb > 0) {
       rateLimiter = RateLimiter.create(throttleInMb);
     }
+
+    this.fileLock = new HashSet<>();
   }
 
   public void init() throws IOException {
@@ -109,6 +115,22 @@ public class MoverScheduler extends ActionSchedulerService {
       Arrays.asList("allssd", "onessd", "archive", "alldisk", "onedisk", "ramdisk");
   public List<String> getSupportedActions() {
     return actions;
+  }
+
+  @Override
+  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
+      throws IOException {
+    // check args
+    if (actionInfo.getArgs() == null) {
+      throw new IOException("No arguments for the action");
+    }
+
+    if (fileLock.contains(actionInfo.getArgs().get(HdfsAction.FILE_PATH))) {
+      LOG.warn("The file {} is locked by other mover action!",
+          actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -162,6 +184,7 @@ public class MoverScheduler extends ActionSchedulerService {
       }
       plan.setNamenode(nnUri);
       action.getArgs().put(MoveFileAction.MOVE_PLAN, plan.toString());
+      fileLock.add(action.getArgs().get(HdfsAction.FILE_PATH));
       return ScheduleResult.SUCCESS;
     } catch (IOException e) {
       actionInfo.appendLogLine(e.getMessage());
@@ -175,13 +198,9 @@ public class MoverScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
-      throws IOException {
-    // check args
-    if (actionInfo.getArgs() == null) {
-      throw new IOException("No arguments for the action");
-    }
-    return true;
+  public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo,
+      int actionIndex) {
+    fileLock.remove(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
   }
 
   private class UpdateClusterInfoTask implements Runnable {
