@@ -109,7 +109,6 @@ public class CmdletManager extends AbstractService {
   private Map<Long, ActionInfo> idToActions;
   private Map<Long, CmdletInfo> cacheCmd;
   private List<Long> tobeDeletedCmd;
-  private Map<String, Long> fileLocks;
   private ListMultimap<String, ActionScheduler> schedulers = ArrayListMultimap.create();
   private List<ActionSchedulerService> schedulerServices = new ArrayList<>();
 
@@ -138,7 +137,6 @@ public class CmdletManager extends AbstractService {
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
     this.tobeDeletedCmd = new LinkedList<>();
-    this.fileLocks = new ConcurrentHashMap<>();
     this.dispatcher = new CmdletDispatcher(context, this, scheduledCmdlet,
       idToLaunchCmdlet, runningCmdlets, schedulers);
     maxNumPendingCmdlets = context.getConf()
@@ -366,13 +364,13 @@ public class CmdletManager extends AbstractService {
     checkActionNames(cmdletDescriptor);
     // Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
     checkActionsOnSubmit(cmdletInfo, actionInfos);
-    // Insert cmdletinfo and actionInfos to metastore and cache, add locks if necessary
+    // Insert cmdletinfo and actionInfos to metastore and cache.
     syncCmdAction(cmdletInfo, actionInfos);
     return cmdletInfo.getCid();
   }
 
   /**
-   * Insert cmdletinfo and actions to metastore and cache, add locks if necessary.
+   * Insert cmdletinfo and actions to metastore and cache.
    *
    * @param cmdletInfo
    * @param actionInfos
@@ -380,7 +378,6 @@ public class CmdletManager extends AbstractService {
    */
   private void syncCmdAction(CmdletInfo cmdletInfo,
       List<ActionInfo> actionInfos) throws IOException {
-    lockMovefileActionFiles(actionInfos);
     LOG.debug("Cache cmd {}", cmdletInfo);
     for (ActionInfo actionInfo : actionInfos) {
       idToActions.put(actionInfo.getActionId(), actionInfo);
@@ -472,37 +469,6 @@ public class CmdletManager extends AbstractService {
         }
       }
     }
-  }
-
-  private synchronized Set<String> lockMovefileActionFiles(List<ActionInfo> actionInfos)
-    throws IOException {
-    Map<String, Long> filesToLock = new HashMap<>();
-    for (ActionInfo info : actionInfos) {
-      SmartAction action;
-      try {
-        action = ActionRegistry.createAction(info.getActionName());
-      } catch (ActionException e) {
-        throw new IOException("Failed to create '" + info.getActionName()
-          + "' action instance", e);
-      }
-      if (action instanceof AbstractMoveFileAction) {
-        Map<String, String> args = info.getArgs();
-        if (args != null && args.size() > 0) {
-          String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-          if (file != null) {
-            if (fileLocks.containsKey(file)) {
-              LOG.debug("Warning: Other actions are processing {}!", file);
-              throw new IOException("Has conflict actions, submit cmdlet failed.");
-            } else {
-              filesToLock.put(file, info.getActionId());
-            }
-          }
-        }
-      }
-    }
-
-    fileLocks.putAll(filesToLock);
-    return filesToLock.keySet();
   }
 
   private boolean shouldStopSchedule() {
@@ -832,10 +798,6 @@ public class CmdletManager extends AbstractService {
     runningCmdlets.remove(cmdletId);
     idToLaunchCmdlet.remove(cmdletId);
 
-    for (Long aid: cmdletInfo.getAids()) {
-      ActionInfo actionInfo = idToActions.get(aid);
-      unLockFileIfNeeded(actionInfo);
-    }
     flushCmdletInfo(cmdletInfo);
   }
 
@@ -852,27 +814,6 @@ public class CmdletManager extends AbstractService {
         actionInfo.setFinishTime(cmdletInfo.getStateChangedTime());
         actionInfo.setExecHost(ActiveServerInfo.getInstance().getId());
         actionInfo.setSuccessful(success);
-      }
-    }
-  }
-
-  private void unLockFileIfNeeded(ActionInfo actionInfo) {
-    SmartAction action;
-    if (actionInfo == null) {
-      return;
-    }
-    try {
-      action = ActionRegistry.createAction(actionInfo.getActionName());
-    } catch (ActionException e) {
-      return;
-    }
-    if (action instanceof AbstractMoveFileAction) {
-      Map<String, String> args = actionInfo.getArgs();
-      if (args != null && args.size() > 0) {
-        String file = args.get(CmdletDescriptor.HDFS_FILE_PATH);
-        if (file != null && fileLocks.containsKey(file)) {
-          fileLocks.remove(file);
-        }
       }
     }
   }
@@ -1187,7 +1128,6 @@ public class CmdletManager extends AbstractService {
             actionInfo.setFinished(true);
             actionInfo.setCreateTime(status.getStartTime());
             actionInfo.setFinishTime(status.getFinishTime());
-            unLockFileIfNeeded(actionInfo);
             if (status.getThrowable() != null) {
               actionInfo.setSuccessful(false);
             } else {

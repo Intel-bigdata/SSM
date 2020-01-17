@@ -150,17 +150,6 @@ public class TestCmdletManager extends MiniSmartClusterHarness {
   }
 
   @Test
-  public void testFileLock() throws Exception {
-    waitTillSSMExitSafeMode();
-    ssm.getCmdletManager()
-        .submitCmdlet("allssd -file /testMoveFile/file1 ; cache -file /testCacheFile");
-
-    thrown.expect(IOException.class);
-    ssm.getCmdletManager()
-        .submitCmdlet("onessd -file /testMoveFile/file1 ; uncache -file /testCacheFile");
-  }
-
-  @Test
   public void testWithoutCluster() throws MetaStoreException, IOException, InterruptedException {
     long cmdletId = 10;
     long actionId = 101;
