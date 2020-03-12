@@ -81,7 +81,7 @@ kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab {username}/{hostname}
 ```
 **Note:** replace the username with the HDFS user who has the correct permission to execute actions and replace hostname with hostname of the smart server
 
-### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent.Then use 'scp' to copy each keytab file to each agent.
+### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent. Then use 'scp' to copy each keytab file to each agent.
 ```
 kadmin.local:addprinc -randkey {username}/{hostname}
 kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab {username}/{hostname}
@@ -116,7 +116,7 @@ Please update smart-site.xml for each node.Smart agent principal and keytab path
 </property>
 <property>
     <name>smart.server.kerberos.principal</name>
-    <value>smartserver/_HOST@HADOOP.COM</value>
+    <value>{username}/_HOST@HADOOP.COM</value>
 </property>
 <property>
     <name>smart.agent.keytab.file</name>
@@ -124,7 +124,7 @@ Please update smart-site.xml for each node.Smart agent principal and keytab path
 </property>
 <property>
     <name>smart.agent.kerberos.principal</name>
-    <value>smartagent/_HOST@HADOOP.COM</value>
+    <value>{username}/_HOST@HADOOP.COM</value>
 </property>
 ```
 
