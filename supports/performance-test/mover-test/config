@@ -1,0 +1,33 @@
+# These are test cases which specify file size and num. The base sync dir name is "size_num".
+# The files for these case should be created under them in advance.
+
+# Test cases, e.g., declare -A CASES=(["10MB"]="10" ["100MB"]="10")
+declare -A CASES=([]="")
+
+# SSM home, e.g., SMART_HOME=~/smart-data-1.4.0
+SMART_HOME=
+
+# PAT home, e.g., PAT_HOME=~/PAT
+PAT_HOME=
+
+# Hadoop home, e.g., HADOOP_HOME=~/hadoop
+HADOOP_HOME=
+
+# The cluster hdfs url for ec performance test, e.g., SRC_CLUSTER=hdfs://sr613:9000
+SRC_CLUSTER=
+
+# The dest dir to store the data converted to ec by distcp, e.g., DEST_DIR_EC=/dest/ec
+DEST_DIR_EC=
+
+# The dest dir to store the data converted to replica by distcp, e.g., DEST_DIR_REPLICA=/dest/replica
+DEST_DIR_REPLICA=
+
+# The namenode's hostname of src cluster
+SRC_NODE=
+
+# The hosts require dropping cache, e.g., HOSTS="host1 host2"
+HOSTS=
+
+# The number of mapper for distcp, e.g., MAPPER_NUM="30 60 90".
+# For the sake of fair comparison, please make sure this value is consistent with the overall cmdlet executors of SSM.
+MAPPER_NUM=
