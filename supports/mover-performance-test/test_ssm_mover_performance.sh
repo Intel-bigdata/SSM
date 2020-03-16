@@ -41,10 +41,7 @@ for size in "${!CASES[@]}"; do
         cd ${PAT_HOME}/PAT-collecting-data
         # hdfs user will execute the cmd, you can change it to the one in your test env. with execution permission
         echo "export PYTHONPATH=${bin}/../integration-test:${PYTHONPATH};\
-         python ${bin}/run_ssm_mover.py ${size} ${CASES[$size]} ${log} ${action};\
-        su hdfs -c \"hadoop jar ${HADOOP_HOME}/hadoop-mapreduce/hadoop-mapreduce-client-jobclient-*-tests.jar \
-        TestDFSIO -Dtest.build.data=/\"${size}_${CASES[$size]}\" \
-        -read -nrFiles ${CASES[$size]} -size ${size} -resFile /home/hdfs/dfsio_mover_test.log\"" > cmd.sh
+         python ${bin}/run_ssm_mover.py ${size} ${CASES[$size]} ${log} ${action};" > cmd.sh
          chmod 755 cmd.sh
         ./pat run "${case}_${i}_${action}"
         cd ${bin}
@@ -55,10 +52,7 @@ for size in "${!CASES[@]}"; do
         sh drop_cache.sh
         cd ${PAT_HOME}/PAT-collecting-data
         echo "export PYTHONPATH=${bin}/../integration-test:${PYTHONPATH};\
-         python ${bin}/run_ssm_mover.py ${size} ${CASES[$size]} ${log} ${action};\
-         su hdfs -c \"hadoop jar ${HADOOP_HOME}/hadoop-mapreduce/hadoop-mapreduce-client-jobclient-*-tests.jar \
-         TestDFSIO -Dtest.build.data=/\"${size}_${CASES[$size]}\" \
-         -read -nrFiles ${CASES[$size]} -size ${size} -resFile /home/hdfs/dfsio_mover_test.log\"" > cmd.sh
+         python ${bin}/run_ssm_mover.py ${size} ${CASES[$size]} ${log} ${action};" > cmd.sh
         ./pat run "${case}_${i}_${action}"
         cd ${bin}
     done

@@ -8,7 +8,7 @@ num = sys.argv[2]
 #The data dir is named by case. Please see prepare.sh
 case = size + "_" + num
 log = sys.argv[3]
-#Either "ec" or "unec"
+#Either "allssd" or "alldisk"
 action = sys.argv[4]
 
 if action == "allssd":

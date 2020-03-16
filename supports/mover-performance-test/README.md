@@ -1,5 +1,5 @@
 # Performance Test for SSM Mover
-Test the performance of SSM Mover and compare it with HDFS Mover. We user mover to migrate data from all_disk to all_ssd. You can also choose other storage policies to test the mover performance.
+Test the performance of SSM Mover and compare it with HDFS Mover. We use SSM mover & HDFS mover to migrate data from all_disk to all_ssd. You can also choose other storage policies to test the mover performance.
 
 ## Requirements
 - Deploy SSM, please refer to /SSM/doc/ssm-deployment-guide.md.
@@ -15,4 +15,4 @@ Test the performance of SSM Mover and compare it with HDFS Mover. We user mover 
 
 
 ## Notes
-- You should configure `dfs.datanode.data.dir` and HDFS HSM related configuration before you run this test. For example, you can set datanode path as `/hadoop/hdfs/data1,[SSD]/hadoop/hdfs/data2`.
+- You should configure `dfs.datanode.data.dir` and HDFS HSM related configuration before you run this test. For example, you can set the value for dfs.datanode.data.dir with [DISK]/mnt/disk1,[SSD]/mnt/nvme.

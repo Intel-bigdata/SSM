@@ -8,14 +8,14 @@ num = sys.argv[2]
 #The data dir is named by case. Please see prepare.sh
 case = size + "_" + num
 log = sys.argv[3]
-#Either "ec" or "unec"
+#Either "compressDFSIO" or "compressTerasort"
 action = sys.argv[4]
 
 if action == "compressDFSIO":
-    rid = submit_rule("file: path matches \"/" + case + "/*\"| compress -compressImpl Zlib")
+    rid = submit_rule("file: path matches \"/" + case + "/*\"| compress -codec Zlib")
 elif action == "compressTerasort":
     #need config map num and hibench.slave/master to ensure the rule will be stopped in hibench.conf
-    rid = submit_rule("file: path matches \"/HiBench/Terasort/Input/*\"| compress -compressImpl Zlib")
+    rid = submit_rule("file: path matches \"/HiBench/Terasort/Input/*\"| compress -codec Zlib")
 
 start_rule(rid)
 start_time = time.time()

@@ -18,7 +18,7 @@ echo "--------------------------------------------------------"
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
-log="${bin}/ssm.log"
+log="${bin}/hdfs.log"
 # remove historical data in log file
 printf "" > ${log}
 
