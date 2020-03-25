@@ -248,18 +248,21 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
 ##  **Start Smart Agent independently (Optional)**
 
-   If you want to add more agents while keeping the SSM service online, you can run the following command on Smart Server.
+   If you want to scale out SSM cluster while keeping SSM service active, you can run the following command on Smart Server to start more Agents.
 
-   `./bin/start-agent.sh [--host .. --config ..]`
+   `./bin/start-agent.sh [--host $hostname --config $config_dir --debug]`
 
-   `--debug` can be used to debug smart agent.
+   `--host` allows user to specify the hostname of new Smart Agent. If it is not specified, localhost will be used.
 
-   `--help` `-h` Show the usage information.
+   `--config` allows user to specify a config dir for Agent. There is no need to use this option if the default ${SSM_HOME}/conf is used.
 
-   If the host option is not used, localhost is the default one. You should put the hostname specified or localhost in conf/agents.
-   So all SSM services can be killed later.
+   `--debug` can be used to debug Smart Agent, it is just useful for developers.
 
-   Please note that the SSM distribution directory should be under the same directory on the new agent host as that on Smart Server.
+   `--help` or `-h` shows the usage information.
+
+   You should put the hostname specified or localhost in conf/agents. Thus, the newly added Agent can be killed by `stop-ssm.sh`.
+
+   Please note that SSM dist package should be put under the same directory on the new Agent host as that on Smart Server.
 
 ## **Stop SSM server**
    
