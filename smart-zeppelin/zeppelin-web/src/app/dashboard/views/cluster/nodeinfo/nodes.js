@@ -22,7 +22,9 @@ angular.module('zeppelinWebApp')
   NodesCtrl.$inject = ['$scope', '$filter', 'nodes0', 'serverHosts', 'agentHosts'];
   function NodesCtrl($scope, $filter, nodes0, serverHosts, agentHosts) {
     $scope.nodes = nodes0.body;
+    // Smart Server hosts configured in conf/servers, obtained from SmartConf.
     $scope.serverHosts = serverHosts.body;
+    // Smart Server hosts configured in conf/agents, obtained from SmartConf.
     $scope.agentHosts = agentHosts.body;
 
     angular.forEach($scope.nodes, function (data, index) {
@@ -39,6 +41,11 @@ angular.module('zeppelinWebApp')
           data.isLive = true;
           data.type = 'agent';
           $scope.agentHosts.splice(index, 1);
+        } else {
+          // The node host is not added in conf/servers,
+          // but it may be launched after SSM cluster becomes active.
+          data.isLive = true;
+          data.type = 'agent';
         }
       }
     });
