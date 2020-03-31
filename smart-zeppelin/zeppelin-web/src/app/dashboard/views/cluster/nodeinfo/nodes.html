@@ -65,7 +65,7 @@ under the License.
       <td>{{
         isLive
         ? (node.nodeInfo.id)
-        : node.nodeInfo.host + (node.type === "agent" ? "@agent" : "@server")
+        : (node.type === "agent" ? "Agent@" : "Server@") + node.nodeInfo.host
         }}</td>
       <td>{{isLive ? node.registTime : '-'}}</td>
       <td>{{isLive ? node.numExecutors : '-'}}</td>

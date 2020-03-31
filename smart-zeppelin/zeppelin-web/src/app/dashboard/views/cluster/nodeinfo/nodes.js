@@ -22,29 +22,26 @@ angular.module('zeppelinWebApp')
   NodesCtrl.$inject = ['$scope', '$filter', 'nodes0', 'serverHosts', 'agentHosts'];
   function NodesCtrl($scope, $filter, nodes0, serverHosts, agentHosts) {
     $scope.nodes = nodes0.body;
-    // Smart Server hosts configured in conf/servers, obtained from SmartConf.
+    // Smart Server hosts obtained from SmartConf.
     $scope.serverHosts = serverHosts.body;
-    // Smart Server hosts configured in conf/agents, obtained from SmartConf.
+    // Smart Agent hosts obtained from SmartConf.
     $scope.agentHosts = agentHosts.body;
 
     angular.forEach($scope.nodes, function (data, index) {
-      if ('maxInExecution' in data) {
+      if (data.nodeInfo.executorType == "LOCAL" ||
+      data.nodeInfo.executorType == "REMOTE_SSM") {
         let index = $scope.serverHosts.indexOf(data.nodeInfo.host);
         if (index >= 0) {
           data.isLive = true;
-          data.type = 'server';
+          //data.type = 'server';
           $scope.serverHosts.splice(index, 1);
         }
       } else {
         let index = $scope.agentHosts.indexOf(data.nodeInfo.host);
         if (index >= 0) {
           data.isLive = true;
-          data.type = 'agent';
+          //data.type = 'agent';
           $scope.agentHosts.splice(index, 1);
-        } else {
-          // Set the node status even though it is not included in agentHosts.
-          data.isLive = true;
-          data.type = 'agent';
         }
       }
     });
