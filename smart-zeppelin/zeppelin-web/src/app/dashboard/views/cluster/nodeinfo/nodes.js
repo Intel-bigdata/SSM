@@ -42,8 +42,7 @@ angular.module('zeppelinWebApp')
           data.type = 'agent';
           $scope.agentHosts.splice(index, 1);
         } else {
-          // The node host is not added in conf/servers,
-          // but it may be launched after SSM cluster becomes active.
+          // Set the node status even though it is not included in agentHosts.
           data.isLive = true;
           data.type = 'agent';
         }
