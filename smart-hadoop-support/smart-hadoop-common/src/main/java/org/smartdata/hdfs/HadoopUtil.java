@@ -118,7 +118,14 @@ public class HadoopUtil {
     if (hadoopConf != null) {
       for (Map.Entry<String, String> entry : hadoopConf) {
         String key = entry.getKey();
-        conf.set(key, entry.getValue());
+        // Only set the value of key not contained in conf. Hadoop conf can contain
+        // 'smart.server.rpc.address' for reporting access count to smart server.
+        // Its value is the hostname and port of active server. Using this value in
+        // SmartConf can cause process failure when standby server is shifting to
+        // active server.
+        if (conf.get(key) == null) {
+          conf.set(key, entry.getValue());
+        }
       }
     }
   }
