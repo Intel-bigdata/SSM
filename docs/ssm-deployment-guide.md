@@ -252,7 +252,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
    `./bin/start-agent.sh [--host $hostname --config $config_dir --debug]`
 
-   `--host` allows user to specify the hostname of new Smart Agent. If it is not specified, localhost will be used.
+   `--host` allows user to specify the hostname of new Smart Agent. If it is not specified, localhost will be used. You can also specify multiple nodes, e.g., --host "node1 node2".
 
    `--config` allows user to specify a config dir for Agent. There is no need to use this option if the default ${SSM_HOME}/conf is used.
 

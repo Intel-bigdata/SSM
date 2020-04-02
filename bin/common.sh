@@ -317,7 +317,7 @@ function init_command() {
     ;;
     standby)
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
-      SMART_PID_FILE=/tmp/Standby.pid
+      SMART_PID_FILE=/tmp/SmartStandby.pid
       ALLOW_DAEMON_OPT=true
       export SMART_LOG_FILE_NAME=${SMART_STANDBY_LOG_FILE_NAME}
       export SMART_LOG_FILE=${SMART_LOG_DIR}/${SMART_LOG_FILE_NAME}
