@@ -246,13 +246,13 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
    If you meet any problem, please try to find trouble shooting clues in log file smartserver-$hostname-$user.log under ${SMART_HOME}/logs directory. All the trouble shooting clues are there.
 
-##  **Start Smart Agent independently (Optional)**
+##  **Start Smart Agent for active SSM cluster (Optional)**
 
    If you want to scale out SSM cluster while keeping SSM service active, you can run the following command on any node to start more Agents.
 
    `./bin/start-agent.sh [--host $hostname --config $config_dir --debug]`
 
-   `--host` allows user to specify the hostname of new Smart Agent. If it is not specified, localhost will be used. You can also specify multiple nodes, e.g., --host "node1 node2".
+   `--host` allows user to specify the hostname of Smart Agent. If it is not specified, localhost will be used. You can also specify multiple nodes, e.g., --host "node1 node2".
 
    `--config` allows user to specify a config dir for Agent. There is no need to use this option if the default ${SSM_HOME}/conf is used.
 
@@ -263,6 +263,22 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
    You should put the hostname specified or localhost in conf/agents. Thus, the newly added Agent can be killed by `stop-ssm.sh`.
 
    Please note that SSM dist package should be put under the same directory on the new Agent host as that on Smart Server.
+
+##  **Start Standby Smart Server for active SSM cluster (Optional)**
+
+   If you want to launch standby Smart Server while keeping SSM service active, you can run the following command on standby server or any other server.
+
+   `./bin/start-agent.sh [--host $hostname --config $config_dir --debug]`
+
+   `--host` allows user to specify the hostname of standby Smart Server. If it is not specified, localhost will be used. You can also specify multiple nodes, e.g., --host "node1 node2".
+
+   `--config` allows user to specify a config dir. There is no need to use this option if the default ${SSM_HOME}/conf is used.
+
+   `--debug` can be used to debug standby Smart Server, it is just useful for developers.
+
+   `--help` or `-h` shows the usage information.
+
+   You should put the hostname specified or localhost in conf/servers. Thus, the launched standby server can be killed by `stop-ssm.sh`.
 
 ## **Stop SSM server**
    
