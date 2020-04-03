@@ -457,11 +457,19 @@ public class CmdletDispatcher {
   }
 
   public void onNodeMessage(NodeMessage msg, boolean isAdd) {
+
     if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
       return;
     }
 
-    // New agent can be added to an active SSM cluster by executing start-agent.sh.
+    // New standby server can be added to an active SSM cluster by
+    // executing start-standby-server.sh.
+    if (msg.getNodeInfo().getExecutorType() == ExecutorType.REMOTE_SSM) {
+      conf.addServerHosts(msg.getNodeInfo().getHost());
+    }
+
+    // New agent can be added to an active SSM cluster by executing
+    // start-agent.sh.
     if (msg.getNodeInfo().getExecutorType() == ExecutorType.AGENT) {
       conf.addAgentHost(msg.getNodeInfo().getHost());
     }

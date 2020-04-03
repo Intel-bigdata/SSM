@@ -127,6 +127,14 @@ public class SmartConf extends Configuration {
     return hostSet;
   }
 
+  /**
+   * Add host for newly launched standby server after SSM cluster
+   * becomes active.
+   */
+  public boolean addServerHosts(String hostname) {
+    return serverHosts.add(hostname);
+  }
+
   public Set<String> getServerHosts() {
     return serverHosts;
   }
