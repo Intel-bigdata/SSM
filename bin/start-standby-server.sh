@@ -16,14 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Description: Start Smart Agent
-# General Usage: ./start-agent --host "node1, node2"
+# Description: Start standby Smart Server
 #
 
 bin=$(dirname "${BASH_SOURCE-$0}")
 bin=$(cd "${bin}">/dev/null; pwd)
 
-AGENT_HOSTS=
+STANDBY_HOSTS=
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -41,17 +40,17 @@ while [ $# != 0 ]; do
       ;;
     "--host")
       shift
-      AGENT_HOSTS="$1"
+      STANDBY_HOSTS="$1"
       shift
       ;;
     "--debug")
-      DEBUG_OPT_AGENT="$1"
+      DEBUG_OPT_STANDBY="$1"
       shift
       ;;
     "--help" | "-h")
       echo "--help -h Show this usage information"
       echo "--config Specify or overwrite an configure option."
-      echo "--host Specify the host on which Smart Agent will be started by providing its hostname or IP."
+      echo "--host Specify the host on which standby Smart Server will be started by providing its hostname or IP."
       echo "  The default one is localhost."
       shift
       ;;
@@ -61,9 +60,9 @@ while [ $# != 0 ]; do
   esac
 done
 
-# Executing start-agent.sh with no host option will start an agent on localhost.
-if [[ -z "${AGENT_HOSTS}" ]]; then
-  AGENT_HOSTS=localhost
+# Executing start-standby-server.sh with no host option will start a standby server on localhost.
+if [[ -z "${STANDBY_HOSTS}" ]]; then
+  STANDBY_HOSTS=localhost
 fi
 
 . "${bin}/common.sh"
@@ -72,13 +71,13 @@ get_smart_servers
 AGENT_MASTER=${SMARTSERVERS// /,}
 
 AH=
-for i in $AGENT_HOSTS; do if [ "$i" = "localhost" ]; then AH+=" ${HOSTNAME}" ; else AH+=" $i"; fi; done
-  AGENT_HOSTS=${AH/ /}
+for i in $STANDBY_HOSTS; do if [ "$i" = "localhost" ]; then AH+=" ${HOSTNAME}" ; else AH+=" $i"; fi; done
+  STANDBY_HOSTS=${AH/ /}
 
-echo "Starting SmartAgents on [${AGENT_HOSTS}]"
+echo "Starting standby Smart Server on [${STANDBY_HOSTS}]"
 . "${SMART_HOME}/bin/ssm" \
   --remote \
   --config "${SMART_CONF_DIR}" \
-  --hosts "${AGENT_HOSTS}" --hostsend \
-  --daemon start ${DEBUG_OPT_AGENT} \
-  smartagent -D smart.agent.master.address=${AGENT_MASTER}
+  --hosts "${STANDBY_HOSTS}" --hostsend \
+  --daemon start ${DEBUG_OPT_STANDBY} \
+  standby -D smart.agent.master.address=${AGENT_MASTER}

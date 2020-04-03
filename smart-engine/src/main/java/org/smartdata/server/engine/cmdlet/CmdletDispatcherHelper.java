@@ -54,6 +54,10 @@ public class CmdletDispatcherHelper {
     EngineEventBus.register(inst);
   }
 
+  /**The instance will be registered by EngineEventBus.
+   * Node add/remove event will be posted by SmartServer,
+   * standby server and agent master.
+   */
   public static CmdletDispatcherHelper getInst() {
     return inst;
   }

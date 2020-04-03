@@ -108,7 +108,16 @@ public class HadoopUtil {
   }
 
   /**
-   * Load hadoop configure files from path configured in conf and override same key's value.
+   * Load hadoop configure files from path configured in conf and override
+   * same key's value for Hadoop properties.
+   *
+   *  Only set the value of key not belonged to SSM. Hadoop conf can contain
+   * 'smart.server.rpc.address' introduced by user for creating SmartDFSClient.
+   * Its value is the hostname and port of active server. Using this value in
+   * SmartConf can cause process failure when standby server is shifting to
+   * active server. We reasonably assume that all SSM properties should be
+   * determined by SSM's own config. So we exclude all SSM properties when
+   * loading Hadoop conf.
    *
    * @param conf
    */
@@ -118,7 +127,9 @@ public class HadoopUtil {
     if (hadoopConf != null) {
       for (Map.Entry<String, String> entry : hadoopConf) {
         String key = entry.getKey();
-        conf.set(key, entry.getValue());
+        if (!key.startsWith("smart")) {
+          conf.set(key, entry.getValue());
+        }
       }
     }
   }
