@@ -176,6 +176,10 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       String id = getMemberNodeId(member);
       if (masterToWorkers.containsKey(id)) {
         masterToWorkers.get(id).destroy();
+        // Consider a case: standby server crashed and then it was launched again.
+        // If this server is not removed from masterToWorkers, the AddNodeMessage
+        // will not be posted in #memberAdded.
+        masterToWorkers.remove(id);
         members.remove(id);
         EngineEventBus.post(new RemoveNodeMessage(memberToNodeInfo(member)));
       }
