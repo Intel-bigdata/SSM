@@ -86,6 +86,8 @@ public class CmdletDispatcher {
   private List<List<String>> cmdExecSrvNodeIds = new ArrayList<>();
   private String[] completeOn = new String[ExecutorType.values().length];
 
+  private SmartConf conf;
+
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
       List<Long> runningCmdlets, ListMultimap<String, ActionScheduler> schedulers) {
@@ -119,7 +121,7 @@ public class CmdletDispatcher {
       registerExecutorService(exe);
     }
 
-    SmartConf conf = smartContext.getConf();
+    this.conf = smartContext.getConf();
     logDispResult = conf.getBoolean(
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY,
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT);
@@ -455,8 +457,21 @@ public class CmdletDispatcher {
   }
 
   public void onNodeMessage(NodeMessage msg, boolean isAdd) {
+
     if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
       return;
+    }
+
+    // New standby server can be added to an active SSM cluster by
+    // executing start-standby-server.sh.
+    if (msg.getNodeInfo().getExecutorType() == ExecutorType.REMOTE_SSM) {
+      conf.addServerHosts(msg.getNodeInfo().getHost());
+    }
+
+    // New agent can be added to an active SSM cluster by executing
+    // start-agent.sh.
+    if (msg.getNodeInfo().getExecutorType() == ExecutorType.AGENT) {
+      conf.addAgentHost(msg.getNodeInfo().getHost());
     }
 
     synchronized (cmdExecSrvInsts) {

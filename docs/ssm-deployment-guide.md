@@ -248,7 +248,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
 ##  **Start Smart Agent independently (Optional)**
 
-   If you want to scale out SSM cluster while keeping SSM service active, you can run the following command on Smart Server to start more Agents.
+   If you want to scale out SSM cluster while keeping SSM service active, you can run the following command on any node to start more Agents.
 
    `./bin/start-agent.sh [--host $hostname --config $config_dir --debug]`
 

@@ -71,6 +71,8 @@ public class CmdletDispatcherHelper {
   private void onNodeMessage(NodeMessage msg, boolean add) {
     synchronized (msgs) {
       if (dispatcher == null) {
+        // Dispatcher is not registered, but we need to keep message
+        // in msgs and ask dispatcher to tackle in #register later.
         msgs.add(msg);
         opers.add(add);
       } else {

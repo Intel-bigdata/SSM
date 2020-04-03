@@ -65,13 +65,17 @@ under the License.
       <td>{{
         isLive
         ? (node.nodeInfo.id)
-        : node.nodeInfo.host + (node.type === "agent" ? "@agent" : "@server")
+        : (node.type === "agent" ? "Agent@" : "Server@") + node.nodeInfo.host
         }}</td>
       <td>{{isLive ? node.registTime : '-'}}</td>
       <td>{{isLive ? node.numExecutors : '-'}}</td>
       <td>{{isLive ? node.cmdletsInExecution : '-'}}</td>
       <td>{{isLive ? node.cmdletsExecuted : '-'}}</td>
-      <td class="statusPoint-container"><div class="statusPoint {{isLive ? 'btn-success' : 'btn-danger'}}"></div></td>
+      <td>
+        <div class="statusPoint {{isLive ? 'btn-success' : 'btn-danger'}}"
+               style="margin:auto; display:block">
+        </div>
+      </td>
     </tr>
     </tbody>
   </table>

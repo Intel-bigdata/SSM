@@ -41,6 +41,8 @@ public class SmartConf extends Configuration {
   private static final Logger LOG = LoggerFactory.getLogger(SmartConf.class);
   private final List<String> ignoreList;
   private final List<String> coverList;
+  // Include hosts configured in conf/agents and
+  // hosts added dynamically (by `start-agent.sh --host $host`)
   private Set<String> agentHosts;
   private Set<String> serverHosts;
 
@@ -125,8 +127,24 @@ public class SmartConf extends Configuration {
     return hostSet;
   }
 
+  /**
+   * Add host for newly launched standby server after SSM cluster
+   * becomes active.
+   */
+  public boolean addServerHosts(String hostname) {
+    return serverHosts.add(hostname);
+  }
+
   public Set<String> getServerHosts() {
     return serverHosts;
+  }
+
+  /**
+   * Add host for newly launched agents after SSM cluster
+   * becomes active.
+   */
+  public boolean addAgentHost(String hostname) {
+    return agentHosts.add(hostname);
   }
 
   public Set<String> getAgentHosts() {
