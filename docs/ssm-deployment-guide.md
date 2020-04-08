@@ -268,7 +268,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
    If you want to launch standby Smart Server while keeping SSM service active, you can run the following command on standby server or any other server.
 
-   `./bin/start-agent.sh [--host $hostname --config $config_dir --debug]`
+   `./bin/start-standby-server.sh [--host $hostname --config $config_dir --debug]`
 
    `--host` allows user to specify the hostname of standby Smart Server. If it is not specified, localhost will be used. You can also specify multiple nodes, e.g., --host "node1 node2".
 
@@ -278,7 +278,7 @@ Enter ${SMART_HOME} directory for running SSM. You can type `./bin/ssm version` 
 
    `--help` or `-h` shows the usage information.
 
-   You should put the hostname specified or localhost in conf/servers. Thus, the launched standby server can be killed by `stop-ssm.sh`.
+   The general purpose of this script is to start a failed Smart Server that configured in conf/servers beforehand, which may meet most user cases.
 
 ## **Stop SSM server**
    
