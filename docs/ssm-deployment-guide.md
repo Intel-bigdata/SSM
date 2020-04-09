@@ -44,31 +44,31 @@ For more detailed information, please refer to BUILDING.txt file.
 
 ## Configure How to access Hadoop Namenode
 
-   We need to let SSM know where Hadoop Namenode is. There are 2 cases below.
+   We need to let SSM know where Hadoop Namenode is. There are 2 options to user.
    
 ### HA-Namenode
-   open `smart-site.xml`, configure Hadoop cluster NameNode RPC address, and fill the value field with the path of Hadoop configuration directory, for example "file:///etc/hadoop/conf".
+   In `smart-site.xml`, configure `smart.hadoop.conf.path` with specifying the path of Hadoop configuration directory.
    
    ```xml   
    <property>
        <name>smart.hadoop.conf.path</name>
        <value>/conf</value>
-       <description>local file path which holds all hadoop configuration files, such as hdfs-site.xml, core-site.xml</description>
+       <description>Hadoop configuration path. The typical path is $HADOOP_HOME/etc/hadoop</description>
    </property>
    ```
 ###  Single Namenode
    
-   open `smart-site.xml`, and configure Hadoop cluster NameNode RPC address.
+   In `smart-site.xml`, configure Hadoop cluster active NameNode RPC address.
    
  ```xml
    <property>
        <name>smart.dfs.namenode.rpcserver</name>
        <value>hdfs://namenode-ip:rpc-port</value>
-       <description>Hadoop cluster Namenode RPC server address and port</description>
+       <description>Hadoop cluster active Namenode RPC server address and port</description>
    </property>
   ```
 
-###   Ignore Dirs
+###   Ignore Dirs (Optional)
 SSM will fetch the whole HDFS namespace by default when it starts. If you do not care about files under some directory (for example, directory for temporary files), you can make the configuration in smart-default.xml to ignore these directories as the following shows. SSM will completely ignore the corresponding files.
 
 Please note that SSM action will not be scheduled for files under ignored directory even though they are specified in a rule by user.
@@ -80,7 +80,7 @@ Please note that SSM action will not be scheduled for files under ignored direct
    </property>
    ```
 
-###   Cover Dirs
+###   Cover Dirs (Optional)
 SSM will fetch the whole HDFS namespace by default when it starts. If you only care about the files under some directory, you can make a modification in smart-default.xml as the following shows.
 SSM will only fetch files under the given directories. For more than one directories, they should be separated by ",".
 
@@ -93,7 +93,7 @@ The access info and other info related to fetched files will be considered. For 
    </property>
    ```
 
-###   Work Dir
+###   Work Dir (Optional)
 This HDFS directory is used as a tmp directory for SSM to store tmp files and data. The default path is "/system/ssm", and SSM will ignore files under the tmp directory.
 Only one directory can be set for this property.
 
@@ -110,7 +110,7 @@ SSM supports running multiple Smart Servers for high-availability.  Only one of 
 
 SSM also supports running one standby server with master server on a single node.
 
-Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+Open `servers` file under ${SMART_HOME}/conf, put each server's hostname or IP address line by line. Content starts with '#' is treated as comment.
 
 The active Smart Server is the first node in the `servers` file under ${SMART_HOME}/conf. After failover, please use the following command to find new active Smart Server.
      `hadoop fs -cat /system/ssm.id `
@@ -129,7 +129,7 @@ Please note, the configuration should be same on all server hosts.
 
 This step can be skipped if SSM standalone mode is preferred.
   
-Open `agents` file under ${SMART_HOME}/conf, and put each Smart Agent server's hostname or IP address line by line. Lines start with '#' are treated as comments.
+Open `agents` file under ${SMART_HOME}/conf, and put each Smart Agent server's hostname or IP address line by line. Content starts with '#' is treated as comment.
 The start script will access each Smart Agent host via SSH to launch the service.
 So please make sure that login by SSH without password is configured.
 After the configuration, the Smart Agents should be installed in the same path on their respective hosts as that of Smart Server.
@@ -200,23 +200,29 @@ After finishing the SSM configuration, we can start to deploy the SSM package wi
 # Deploy SSM
 ---------------------------------------------------------------------------------
 
-SSM supports two running modes, standalone service and SSM service with multiple Smart Agents. If the performance is not the concern, standalone service mode is enough. If better performance is desired, we recommend deploying one agent on each Datanode.
+SSM supports two running modes, standalone service mode and distributed service mode. If performance is not the concern, standalone service mode is enough. If better performance is desired, we recommend deploying one agent on each Datanode.
 
 To deploy SSM to Smart Server nodes and Smart Agent nodes (if configured), please execute command `./bin/install.sh` in ${SMART_HOME}. You can use --config <config-dir> to specify where SSM's config directory is. ${SMART_HOME}/conf is the default config directory if the config option is not used.
    
-   ## Standalone SSM Service
+## Standalone service mode
 
-For deploying SSM in standalone mode, because only Smart Server needs to be launched,
-you can just distribute `${SMART_HOME}` directory to all Smart Server nodes.
-The default conf directory `${SMART_HOME}/conf`.
+For deploying SSM in standalone service mode, because only Smart Server needs to be launched, you can just distribute `${SMART_HOME}` directory to Smart Server node. The default conf directory `${SMART_HOME}/conf`.
 
-   ## SSM Service with multiple Agents
+## Distributed service mode
 
-Distribute `${SMART_HOME}` directory to each Smart Server node and each Smart Agent node. Smart Agent can coexist with Hadoop HDFS Datanode. For better performance, We recommend deploying one agent on each Datanode. SSM also supports the following two cases. 1) Smart Agent is deployed on a server that does not serve as Datanode.
+Distribute `${SMART_HOME}` directory to each Smart Server node and each Smart Agent node. Smart Agent can coexist with HDFS Datanode or not on a host, so the following kinds of deployment are also workable.
+
+1) Smart Agent is deployed on a server that does not serve as Datanode.
 2) The number of Smart Agents is different from that of Datanodes.
 
-On a SSM server, user can switch to the SSM installation directory to run all SSM services.
+On a SSM server, user can switch to the SSM installation directory to run all SSM services. Please sync the time for each node to make sure consistent time stamp is used for action and database table.
 
+
+## SSM HA
+
+In SSM distributed service mode, SSM HA can be enabled by specifying at least two Smart Servers in `conf/servers`. One will serve as master server and the other(s) will serve as standby server. Standby server can also execute SSM action, like a Smart Agent.
+When master server halts, one standby server will be elected as master and then shift its role from standby to master. You can start a standby service on previous halted master server to resume the original HA deployment.
+Please see [link](#start-standby-smart-server-for-active-ssm-cluster-optional).
 
 # Run SSM
 ---------------------------------------------------------------------------------
