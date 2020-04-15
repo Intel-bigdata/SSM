@@ -77,6 +77,16 @@ public class HazelcastExecutorService extends CmdletExecutorService {
     for (Member worker : HazelcastUtil.getWorkerMembers(instance)) {
       ITopic<Serializable> topic = instance.getTopic(WORKER_TOPIC_PREFIX + worker.getUuid());
       this.masterToWorkers.put(getMemberNodeId(worker), topic);
+
+      // Suppose there are three Smart Server. After one server is down, one of
+      // the remaining server will be elected as master and the other will
+      // continue serve as standby. Obviously, the new master server will not
+      // receive message for adding standby node (i.e., trigger #memberAdded),
+      // so the new master will just know the standby server is a member of hazelcast
+      // service, but not realize that standby node is serving as remote executor.
+      // Thus, we need to call the below method to deliver the message about standby
+      // node to CmdletDispatcherHelper.
+      EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(worker)));
     }
   }
 
