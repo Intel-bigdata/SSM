@@ -86,6 +86,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       // service, but not realize that standby node is serving as remote executor.
       // Thus, we need to call the below method to deliver the message about standby
       // node to CmdletDispatcherHelper.
+      members.put(getMemberNodeId(worker), worker);
       EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(worker)));
     }
   }
