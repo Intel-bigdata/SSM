@@ -115,6 +115,11 @@ mvn package -D skipTests -P dist,web,hadoop-3.1
 
 Then a package named as `smart-data-${version}.tar.gz` will be generated under `smart-dist/target`.
 
+Quick Start
+-----------
+
+Please refer to [SSM deployment guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-deployment-guide.md).
+
 Third-party dependencies
 ------------------------
 SSM uses SQL database as its backend metastore. MySQL is used in our multiple tests and it is recommended in production environment.

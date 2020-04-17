@@ -37,7 +37,6 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.DFSInputStream;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.DistributedFileSystem;
-import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
@@ -73,7 +72,7 @@ import java.util.List;
  *      <description>The FileSystem for hdfs URL</description>
  *    </property>
  *    2. hdfs-site.xml
- *    Add property "smart.server.rpc.adddress" to point to Smart Server.
+ *    Add property "smart.server.rpc.address" to point to Smart Server.
  *    <property>
  *      <name>smart.server.rpc.address</name>
  *      <value>127.0.0.1:7042</value>

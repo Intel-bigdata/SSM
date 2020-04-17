@@ -180,6 +180,13 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
       LOG.error("Unable to create " + MOVER_ID_PATH + " in HDFS. "
           + "Please check the permission or if it is being written by another instance.");
       throw e;
+    } finally {
+      try {
+        moverIdOutputStream.close();
+        moverIdOutputStream = null;
+      } catch (IOException e) {
+        // Ignore this exception
+      }
     }
 
     try {
@@ -191,13 +198,14 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
       LOG.error("Unable to create SSM ID file: " + SmartConstants.SMART_SERVER_ID_FILE
           + " in HDFS. Please check the permission or if it is being written by "
           + "another instance.");
-      try {
-        moverIdOutputStream.close();
-        moverIdOutputStream = null;
-      } catch (IOException ie) {
-        // ignore this one
-      }
       throw e;
+    } finally {
+      try {
+        ssmIdOutputStream.close();
+        ssmIdOutputStream = null;
+      } catch (IOException ie) {
+        // Ignore this exception
+      }
     }
   }
 
