@@ -89,9 +89,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
   /**
    * Keep the new hazelcast member in maps and post the add-member event to
    * CmdletDispatcherHelper. See #removeMember.
-   *
    * The id is firstly checked to avoid repeated message delivery.
-   *
    * It is supposed that #addMember & #removeMember will be called by only
    * one thread.
    *
@@ -127,8 +125,8 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       members.remove(id);
       EngineEventBus.post(new RemoveNodeMessage(memberToNodeInfo(member)));
     } else {
-      LOG.info("It is supposed that the member was not added, " +
-          "maybe no need to remove it: id = ", id);
+      LOG.info("It is supposed that the member was not added, "
+          + "maybe no need to remove it: id = ", id);
       // Todo: recover
     }
   }
