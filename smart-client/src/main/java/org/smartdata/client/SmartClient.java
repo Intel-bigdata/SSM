@@ -130,8 +130,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
           triedServerNum++;
           // If all servers has been tried, interrupt and throw the exception.
           if (triedServerNum == serverQue.size()) {
-            throw new ConnectException("Tried to connect to configured SSM " +
-                "server(s), but failed." + e.getMessage());
+            throw new ConnectException("Tried to connect to configured SSM "
+                + "server(s), but failed." + e.getMessage());
           }
           // Put the first server to last, and will pick the second one to try.
           serverQue.addLast(serverQue.pollFirst());

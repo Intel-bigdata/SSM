@@ -105,12 +105,12 @@ public class SmartFileSystem extends DistributedFileSystem {
             Integer.parseInt(hostAndPort[hostAndPort.length - 1]));
         addrList.add(smartServerAddress);
       } catch (Exception e) {
-        throw new IOException("Incorrect SmartServer address. Please follow the "
+        throw new IOException("Incorrect SmartServer address. Please follow "
             + "IP/Hostname:Port format");
       }
     }
     this.smartDFSClient = new SmartDFSClient(conf,
-        (InetSocketAddress[]) addrList.toArray());
+        addrList.toArray(new InetSocketAddress[addrList.size()]));
   }
 
   @Override
