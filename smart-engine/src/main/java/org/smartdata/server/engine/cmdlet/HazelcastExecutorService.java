@@ -104,7 +104,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       members.put(id, member);
       EngineEventBus.post(new AddNodeMessage(memberToNodeInfo(member)));
     } else {
-      LOG.info("The member is already added: id = " + id);
+      LOG.warn("The member is already added: id = " + id);
     }
   }
 
@@ -125,7 +125,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
       members.remove(id);
       EngineEventBus.post(new RemoveNodeMessage(memberToNodeInfo(member)));
     } else {
-      LOG.info("It is supposed that the member was not added, "
+      LOG.warn("It is supposed that the member was not added, "
           + "maybe no need to remove it: id = ", id);
       // Todo: recover
     }
