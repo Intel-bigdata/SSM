@@ -37,6 +37,12 @@ public class ClusterMembershipListener implements MembershipListener {
   public void memberAdded(MembershipEvent membershipEvent) {
   }
 
+  /**
+   * Every time get the member remove event, need reset smart server rpc address
+   * with master host's name (even though master host doesn't change in some cases).
+   *
+   * @param membershipEvent
+   */
   @Override
   public void memberRemoved(MembershipEvent membershipEvent) {
     String rpcHost = HazelcastUtil
