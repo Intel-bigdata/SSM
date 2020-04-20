@@ -110,7 +110,7 @@ public class SmartDFSClient extends DFSClient {
   }
 
   public SmartDFSClient(Configuration conf,
-      InetSocketAddress smartServerAddress) throws IOException {
+      InetSocketAddress[] smartServerAddress) throws IOException {
     super(conf);
     if (isSmartClientDisabled()) {
       return;

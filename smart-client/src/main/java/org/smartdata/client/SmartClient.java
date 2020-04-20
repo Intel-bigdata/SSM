@@ -33,6 +33,8 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
   private Configuration conf;
-  private SmartClientProtocol server;
+  private Deque<SmartClientProtocol> serverQue;
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
@@ -64,21 +66,30 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       throw new IOException("Incorrect SmartServer address. Please follow the "
           + "IP/Hostname:Port format");
     }
-    initialize(address);
+    initialize(new InetSocketAddress[]{address});
   }
 
   public SmartClient(Configuration conf, InetSocketAddress address)
       throws IOException {
     this.conf = conf;
-    initialize(address);
+    initialize(new InetSocketAddress[]{address});
   }
 
-  private void initialize(InetSocketAddress address) throws IOException {
+  public SmartClient(Configuration conf, InetSocketAddress[] addrs)
+      throws IOException {
+    this.conf = conf;
+    initialize(addrs);
+  }
+
+  private void initialize(InetSocketAddress[] addrs) throws IOException {
+    this.serverQue = new LinkedList<>();
     RPC.setProtocolEngine(conf, ClientProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
-    ClientProtocolProtoBuffer proxy = RPC.getProxy(
-        ClientProtocolProtoBuffer.class, VERSION, address, conf);
-    server = new ClientProtocolClientSideTranslator(proxy);
+    for (InetSocketAddress address : addrs) {
+      ClientProtocolProtoBuffer proxy = RPC.getProxy(
+          ClientProtocolProtoBuffer.class, VERSION, address, conf);
+      serverQue.addLast(new ClientProtocolClientSideTranslator(proxy));
+    }
 
     // The below two properties should be configured on HDFS side
     // if its dfsClient is replaced by SmartDfsClient.
@@ -109,20 +120,48 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       throws IOException {
     if (!shouldIgnore(event.getPath())) {
       checkOpen();
-      server.reportFileAccessEvent(event);
+      int triedServerNum = 0;
+      while (true) {
+        try {
+          SmartClientProtocol server = serverQue.getFirst();
+          server.reportFileAccessEvent(event);
+          break;
+        } catch (ConnectException e) {
+          triedServerNum++;
+          // If all servers has been tried, interrupt and throw the exception.
+          if (triedServerNum == serverQue.size()) {
+            throw new ConnectException("Tried to connect to configured SSM " +
+                "server(s), but failed." + e.getMessage());
+          }
+          // Put the first server to last, and will pick the second one to try.
+          serverQue.addLast(serverQue.pollFirst());
+        }
+      }
     }
   }
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
     checkOpen();
-    try {
-      return server.getFileState(filePath);
-    } catch (ConnectException e) {
-      // client cannot connect to server
-      // don't report access event for this file this time
-      singleIgnoreList.put(filePath, 0);
-      return new NormalFileState(filePath);
+    int triedServerNum = 0;
+    while (true) {
+      try {
+        SmartClientProtocol server = serverQue.getFirst();
+        return server.getFileState(filePath);
+      } catch (ConnectException e) {
+        triedServerNum++;
+        // If all servers has been tried, interrupt and throw the exception.
+        if (triedServerNum == serverQue.size()) {
+          // client cannot connect to server
+          // don't report access event for this file this time
+          singleIgnoreList.put(filePath, 0);
+          // Assume the given file is normal, but serious error can occur if
+          // the file is compacted or compressed by SSM.
+          return new NormalFileState(filePath);
+        }
+        // Put the first server to last, and will pick the second one to try.
+        serverQue.addLast(serverQue.pollFirst());
+      }
     }
   }
 
@@ -153,8 +192,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   public void close() {
     if (running) {
       running = false;
-      RPC.stopProxy(server);
-      server = null;
+      for (SmartClientProtocol server : serverQue) {
+        RPC.stopProxy(server);
+      }
+      serverQue = null;
     }
   }
 }

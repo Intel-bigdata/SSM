@@ -55,6 +55,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -88,23 +89,28 @@ public class SmartFileSystem extends DistributedFileSystem {
   public void initialize(URI uri, Configuration conf) throws IOException {
     super.initialize(uri, conf);
 
-    String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
+    String[] rpcConfValue =
+        conf.getTrimmedStrings(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     if (rpcConfValue == null) {
       throw new IOException("SmartServer address not found. Please configure "
           + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     }
 
-    String[] strings = rpcConfValue.split(":");
-    InetSocketAddress smartServerAddress;
-    try {
-      smartServerAddress = new InetSocketAddress(
-          strings[strings.length - 2],
-          Integer.parseInt(strings[strings.length - 1]));
-    } catch (Exception e) {
-      throw new IOException("Incorrect SmartServer address. Please follow the "
-          + "IP/Hostname:Port format");
+    List<InetSocketAddress> addrList = new LinkedList<>();
+    for (String rpcValue : rpcConfValue) {
+      String[] hostAndPort = rpcValue.split(":");
+      try {
+        InetSocketAddress smartServerAddress = new InetSocketAddress(
+            hostAndPort[hostAndPort.length - 2],
+            Integer.parseInt(hostAndPort[hostAndPort.length - 1]));
+        addrList.add(smartServerAddress);
+      } catch (Exception e) {
+        throw new IOException("Incorrect SmartServer address. Please follow the "
+            + "IP/Hostname:Port format");
+      }
     }
-    this.smartDFSClient = new SmartDFSClient(conf, smartServerAddress);
+    this.smartDFSClient = new SmartDFSClient(conf,
+        (InetSocketAddress[]) addrList.toArray());
   }
 
   @Override
