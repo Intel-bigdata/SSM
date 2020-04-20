@@ -97,7 +97,7 @@ public class HazelcastExecutorService extends CmdletExecutorService {
    */
   public void addMember(Member member) {
     String id = getMemberNodeId(member);
-    if (masterToWorkers.containsKey(id)) {
+    if (!masterToWorkers.containsKey(id)) {
       ITopic<Serializable> topic =
           instance.getTopic(WORKER_TOPIC_PREFIX + member.getUuid());
       this.masterToWorkers.put(id, topic);
