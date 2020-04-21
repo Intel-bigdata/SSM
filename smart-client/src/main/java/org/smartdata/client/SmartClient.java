@@ -43,9 +43,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
   private Configuration conf;
-  /** The server queue keeps server's order according to active status **/
+  /** The server queue keeps server's order according to active status. **/
   private Deque<SmartClientProtocol> serverQue;
-  /** The map from server to its rpc address in "hostname:port" format **/
+  /** The map from server to its rpc address in "hostname:port" format. **/
   private Map<SmartClientProtocol, String> serverToRpcAddr;
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
@@ -130,7 +130,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
    * smart servers can be configured. If fail to connect to one server,
    * this method will pick up the next one from a queue to try again. If
    * all servers cannot be connected, an exception will be thrown.
-   *
+   * <p></p>
    * We assume Configuration generally has only one instance. If active
    * server has been changed found here, Configuration object will reset
    * the value for SMART_SERVER_RPC_ADDRESS_KEY. Thus, next time a
