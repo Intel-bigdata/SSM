@@ -86,12 +86,24 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   public SmartClient(Configuration conf, InetSocketAddress address)
       throws IOException {
     this.conf = conf;
+    this.serverQue = new LinkedList<>();
+    this.serverToRpcAddr = new HashMap<>();
+    this.ignoreAccessEventDirs = new ArrayList<>();
+    this.coverAccessEventDirs = new ArrayList<>();
+    this.singleIgnoreList = new ConcurrentHashMap<>(200);
+
     initialize(new InetSocketAddress[]{address});
   }
 
   public SmartClient(Configuration conf, InetSocketAddress[] addrs)
       throws IOException {
     this.conf = conf;
+    this.serverQue = new LinkedList<>();
+    this.serverToRpcAddr = new HashMap<>();
+    this.ignoreAccessEventDirs = new ArrayList<>();
+    this.coverAccessEventDirs = new ArrayList<>();
+    this.singleIgnoreList = new ConcurrentHashMap<>(200);
+
     initialize(addrs);
   }
 
@@ -133,10 +145,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
    * all servers cannot be connected, an exception will be thrown.
    * <p></p>
    * We assume Configuration generally has only one instance. If active
-   * server has been changed found here, Configuration object will reset
-   * the value for SMART_SERVER_RPC_ADDRESS_KEY. Thus, next time a
-   * SmartClient is created, the active server will be put in the head of
-   * queue and will be picked up firstly.
+   * server has been changed found here, this method will reset the value
+   * for SMART_SERVER_RPC_ADDRESS_KEY in Configuration object. Thus, next
+   * time a SmartClient is created, the active server will be put in the
+   * head of queue and will be picked up firstly.
    *
    * @param event
    * @throws IOException
