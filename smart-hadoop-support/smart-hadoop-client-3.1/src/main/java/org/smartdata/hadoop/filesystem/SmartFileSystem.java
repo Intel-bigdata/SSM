@@ -89,28 +89,7 @@ public class SmartFileSystem extends DistributedFileSystem {
   public void initialize(URI uri, Configuration conf) throws IOException {
     super.initialize(uri, conf);
 
-    String[] rpcConfValue =
-        conf.getTrimmedStrings(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
-    if (rpcConfValue == null) {
-      throw new IOException("SmartServer address not found. Please configure "
-          + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
-    }
-
-    List<InetSocketAddress> addrList = new LinkedList<>();
-    for (String rpcValue : rpcConfValue) {
-      String[] hostAndPort = rpcValue.split(":");
-      try {
-        InetSocketAddress smartServerAddress = new InetSocketAddress(
-            hostAndPort[hostAndPort.length - 2],
-            Integer.parseInt(hostAndPort[hostAndPort.length - 1]));
-        addrList.add(smartServerAddress);
-      } catch (Exception e) {
-        throw new IOException("Incorrect SmartServer address. Please follow "
-            + "IP/Hostname:Port format");
-      }
-    }
-    this.smartDFSClient = new SmartDFSClient(conf,
-        addrList.toArray(new InetSocketAddress[addrList.size()]));
+    this.smartDFSClient = new SmartDFSClient(conf);
   }
 
   @Override
