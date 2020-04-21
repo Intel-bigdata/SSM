@@ -35,6 +35,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,13 +55,18 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
+    this.serverQue = new LinkedList<>();
+    this.serverToRpcAddr = new HashMap<>();
+    this.ignoreAccessEventDirs = new ArrayList<>();
+    this.coverAccessEventDirs = new ArrayList<>();
+    this.singleIgnoreList = new ConcurrentHashMap<>(200);
+
     String[] rpcConfValue =
         conf.getTrimmedStrings(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     if (rpcConfValue == null || rpcConfValue.length == 0) {
       throw new IOException("SmartServer address not found. Please configure "
           + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     }
-
     List<InetSocketAddress> addrList = new LinkedList<>();
     for (String rpcValue : rpcConfValue) {
       String[] hostAndPort = rpcValue.split(":");
@@ -90,7 +96,6 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   private void initialize(InetSocketAddress[] addrs) throws IOException {
-    this.serverQue = new LinkedList<>();
     RPC.setProtocolEngine(conf, ClientProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
     for (InetSocketAddress addr : addrs) {
@@ -107,16 +112,12 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     Collection<String> coverDirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_COVER_DIRS_KEY);
-    ignoreAccessEventDirs = new ArrayList<>();
-    coverAccessEventDirs = new ArrayList<>();
     for (String s : ignoreDirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
     for (String s : coverDirs) {
       coverAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
-
-    singleIgnoreList = new ConcurrentHashMap<>(200);
   }
 
   private void checkOpen() throws IOException {
