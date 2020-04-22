@@ -201,12 +201,38 @@ public class SmartAgent implements StatusReporter {
       unhandled(message);
     }
 
+    /**
+     * Change the context to WaitForFindMaster. Context can be viewed as
+     * a kind of agent status. And the transition from one context to
+     * another one can occur. Under a specific context, some methods are
+     * defined to tell agent what to do.
+     * <p></p>
+     * 1. After agent starts, the context becomes WaitForFindMaster. Under
+     * it, agent try to find agent master (see AgentMaster.java) and defines
+     * #apply method to tackle message from master. After master is found,
+     * the context becomes WaitForRegisterAgent.
+     * <p><p/>
+     * 2. In WaitForRegisterAgent context, agent will send RegisterNewAgent
+     * message to master. And #apply method in WaitForRegisterAgent will
+     * tackle message from master. A unique agent id is contained in the
+     * message of master. After the tackling, the context becomes Serve.
+     * <p><p/>
+     * 3. In Serve context, agent is in normal service to respond to master's
+     * request of executing SSM action wrapped in master's message. In this
+     * context, if agent loses connection with master, the context will go
+     * back to WaitForRegisterAgent. And an agent will go through the above
+     * procedure.
+     */
     @Override
     public void preStart() {
       Cancellable findMaster = findMaster();
       getContext().become(new WaitForFindMaster(findMaster));
     }
 
+    /**
+     * Find master by trying the configured smart servers one by one.
+     * The retry interval value and timeout value are specified above.
+     */
     private Cancellable findMaster() {
       return AgentUtils.repeatActionUntil(getContext().system(),
           Duration.Zero(), RETRY_INTERVAL, TIMEOUT,
@@ -214,6 +240,7 @@ public class SmartAgent implements StatusReporter {
             @Override
             public void run() {
               for (String m : masters) {
+                // Pick up one possible master server and send message to it.
                 final ActorSelection actorSelection = getContext().actorSelection(m);
                 actorSelection.tell(new Identify(null), getSelf());
               }
@@ -293,6 +320,7 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
+            // Go back to WaitForFindMaster context to find new master.
             LOG.warn("Lost contact with master {}. Try registering again...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
