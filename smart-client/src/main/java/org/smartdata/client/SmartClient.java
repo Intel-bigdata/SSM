@@ -144,11 +144,12 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
    * this method will pick up the next one from a queue to try again. If
    * all servers cannot be connected, an exception will be thrown.
    * <p></p>
-   * We assume Configuration generally has only one instance. If active
-   * server has been changed found here, this method will reset the value
-   * for SMART_SERVER_RPC_ADDRESS_KEY in Configuration object. Thus, next
-   * time a SmartClient is created, the active server will be put in the
-   * head of queue and will be picked up firstly.
+   * Generally, Configuration class has only one instance. If this method
+   * finds active server has been changed, it will reset the value for
+   * property SMART_SERVER_RPC_ADDRESS_KEY in Configuration instance. Thus,
+   * next time a SmartClient is created with this Configuration instance,
+   * active server will be put in the head of a queue and it will be picked
+   * up firstly.
    *
    * @param event
    * @throws IOException

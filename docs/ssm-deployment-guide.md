@@ -320,10 +320,11 @@ Add property `fs.hdfs.impl` to point to Smart Server which provides "Smart File 
 ### hdfs-site.xml changes  
 
 Add property `smart.server.rpc.address` to point to the installed Smart Server. Add the following content to the `hdfs-site.xml`. Default Smart Server RPC port is `7042`.
+If SSM HA mode is enabled, more than one Smart Server address can be specified with comma delimited.
 ```xml
     <property>
         <name>smart.server.rpc.address</name>
-        <value>ssm-server-ip:rpc-port</value>
+        <value>smart-server-hostname:rpc-port</value>
     </property>
 ```
 
@@ -408,10 +409,11 @@ Add property `fs.hdfs.impl` to `core-site.xml` using Cloudera Manager to point t
 Add property `smart.server.rpc.address` to `hdfs-site.xml` using Cloudera Manager to point to the installed Smart Server.
  1.    In the Cloudera Manager Admin Console, click the HDFS indicator in the top navigation bar. Click the Configuration button.
  2.    Search `HDFS Service Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, and add the following xml context. The  default Smart Server RPC port is `7042`.
+       If SSM HA mode is enabled, more than one Smart Server address can be specified with comma delimited.
 ```xml
     <property>
         <name>smart.server.rpc.address</name>
-        <value>ssm-server-ip:rpc-port</value>
+        <value>smart-server-hostname:rpc-port</value>
     </property>
 ```
  3.    Search `HDFS Client Advanced Configuration Snippet (Safety Valve) for hdfs-site.xml` configuration, and add the following xml context. The  default Smart Server RPC port is `7042`.
