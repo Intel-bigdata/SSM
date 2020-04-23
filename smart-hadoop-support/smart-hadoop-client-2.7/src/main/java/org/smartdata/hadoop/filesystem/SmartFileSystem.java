@@ -64,7 +64,7 @@ import java.util.List;
  * 2. Copy these jar files to HDFS classpath
  * 3. Reconfigure HDFS
  *    Please do the following configurations,
- *    1. core-site.xml
+ *    1) core-site.xml
  *    Change property "fs.hdfs.impl" value, to point to the Smart Server provided
  *    "Smart File System".
  *    <property>
@@ -72,8 +72,10 @@ import java.util.List;
  *      <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
  *      <description>The FileSystem for hdfs URL</description>
  *    </property>
- *    2. hdfs-site.xml
+ *    2) hdfs-site.xml
  *    Add property "smart.server.rpc.adddress" to point to Smart Server.
+ *    If SSM HA mode is enabled, more than one Smart Server address can
+ *    be specified with comma delimited.
  *    <property>
  *      <name>smart.server.rpc.address</name>
  *      <value>127.0.0.1:7042</value>
@@ -88,24 +90,7 @@ public class SmartFileSystem extends DistributedFileSystem {
   @Override
   public void initialize(URI uri, Configuration conf) throws IOException {
     super.initialize(uri, conf);
-
-    String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
-    if (rpcConfValue == null) {
-      throw new IOException("SmartServer address not found. Please configure "
-          + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
-    }
-
-    String[] strings = rpcConfValue.split(":");
-    InetSocketAddress smartServerAddress;
-    try {
-      smartServerAddress = new InetSocketAddress(
-          strings[strings.length - 2],
-          Integer.parseInt(strings[strings.length - 1]));
-    } catch (Exception e) {
-      throw new IOException("Incorrect SmartServer address. Please follow the "
-          + "IP/Hostname:Port format");
-    }
-    this.smartDFSClient = new SmartDFSClient(conf, smartServerAddress);
+    this.smartDFSClient = new SmartDFSClient(conf);
   }
 
   @Override

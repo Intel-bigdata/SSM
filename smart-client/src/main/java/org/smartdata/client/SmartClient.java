@@ -27,12 +27,16 @@ import org.smartdata.model.NormalFileState;
 import org.smartdata.protocol.SmartClientProtocol;
 import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
+import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +44,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
   private Configuration conf;
-  private SmartClientProtocol server;
+  /** The server queue keeps server's order according to active status. **/
+  private Deque<SmartClientProtocol> serverQue;
+  /** The map from server to its rpc address in "hostname:port" format. **/
+  private Map<SmartClientProtocol, String> serverToRpcAddr;
   private volatile boolean running = true;
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
@@ -48,37 +55,68 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
-    String rpcConfValue = conf.get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
-    if (rpcConfValue == null) {
+    this.serverQue = new LinkedList<>();
+    this.serverToRpcAddr = new HashMap<>();
+    this.ignoreAccessEventDirs = new ArrayList<>();
+    this.coverAccessEventDirs = new ArrayList<>();
+    this.singleIgnoreList = new ConcurrentHashMap<>(200);
+
+    String[] rpcConfValue =
+        conf.getTrimmedStrings(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
+    if (rpcConfValue == null || rpcConfValue.length == 0) {
       throw new IOException("SmartServer address not found. Please configure "
           + "it through " + SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY);
     }
-
-    String[] strings = rpcConfValue.split(":");
-    InetSocketAddress address;
-    try {
-      address = new InetSocketAddress(
-          strings[strings.length - 2],
-          Integer.parseInt(strings[strings.length - 1]));
-    } catch (Exception e) {
-      throw new IOException("Incorrect SmartServer address. Please follow the "
-          + "IP/Hostname:Port format");
+    List<InetSocketAddress> addrList = new LinkedList<>();
+    for (String rpcValue : rpcConfValue) {
+      String[] hostAndPort = rpcValue.split(":");
+      try {
+        InetSocketAddress smartServerAddress = new InetSocketAddress(
+            hostAndPort[hostAndPort.length - 2],
+            Integer.parseInt(hostAndPort[hostAndPort.length - 1]));
+        addrList.add(smartServerAddress);
+      } catch (Exception e) {
+        throw new IOException("Incorrect SmartServer address. Please follow "
+            + "IP/Hostname:Port format");
+      }
     }
-    initialize(address);
+    initialize(addrList.toArray(new InetSocketAddress[addrList.size()]));
   }
 
   public SmartClient(Configuration conf, InetSocketAddress address)
       throws IOException {
     this.conf = conf;
-    initialize(address);
+    this.serverQue = new LinkedList<>();
+    this.serverToRpcAddr = new HashMap<>();
+    this.ignoreAccessEventDirs = new ArrayList<>();
+    this.coverAccessEventDirs = new ArrayList<>();
+    this.singleIgnoreList = new ConcurrentHashMap<>(200);
+
+    initialize(new InetSocketAddress[]{address});
   }
 
-  private void initialize(InetSocketAddress address) throws IOException {
+  public SmartClient(Configuration conf, InetSocketAddress[] addrs)
+      throws IOException {
+    this.conf = conf;
+    this.serverQue = new LinkedList<>();
+    this.serverToRpcAddr = new HashMap<>();
+    this.ignoreAccessEventDirs = new ArrayList<>();
+    this.coverAccessEventDirs = new ArrayList<>();
+    this.singleIgnoreList = new ConcurrentHashMap<>(200);
+
+    initialize(addrs);
+  }
+
+  private void initialize(InetSocketAddress[] addrs) throws IOException {
     RPC.setProtocolEngine(conf, ClientProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
-    ClientProtocolProtoBuffer proxy = RPC.getProxy(
-        ClientProtocolProtoBuffer.class, VERSION, address, conf);
-    server = new ClientProtocolClientSideTranslator(proxy);
+    for (InetSocketAddress addr : addrs) {
+      ClientProtocolProtoBuffer proxy = RPC.getProxy(
+          ClientProtocolProtoBuffer.class, VERSION, addr, conf);
+      SmartClientProtocol server = new ClientProtocolClientSideTranslator(proxy);
+      serverQue.addLast(server);
+      serverToRpcAddr.put(server, addr.toString());
+    }
 
     // The below two properties should be configured on HDFS side
     // if its dfsClient is replaced by SmartDfsClient.
@@ -86,16 +124,12 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
     Collection<String> coverDirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_COVER_DIRS_KEY);
-    ignoreAccessEventDirs = new ArrayList<>();
-    coverAccessEventDirs = new ArrayList<>();
-    for (String s: ignoreDirs) {
+    for (String s : ignoreDirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
-    for (String s: coverDirs) {
+    for (String s : coverDirs) {
       coverAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
-
-    singleIgnoreList = new ConcurrentHashMap<>(200);
   }
 
   private void checkOpen() throws IOException {
@@ -104,25 +138,81 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     }
   }
 
+  /**
+   * Reports access count event to smart server. In SSM HA mode, multiple
+   * smart servers can be configured. If fail to connect to one server,
+   * this method will pick up the next one from a queue to try again. If
+   * all servers cannot be connected, an exception will be thrown.
+   * <p></p>
+   * Generally, Configuration class has only one instance. If this method
+   * finds active server has been changed, it will reset the value for
+   * property SMART_SERVER_RPC_ADDRESS_KEY in Configuration instance. Thus,
+   * next time a SmartClient is created with this Configuration instance,
+   * active server will be put in the head of a queue and it will be picked
+   * up firstly.
+   *
+   * @param event
+   * @throws IOException
+   */
   @Override
   public void reportFileAccessEvent(FileAccessEvent event)
       throws IOException {
     if (!shouldIgnore(event.getPath())) {
       checkOpen();
-      server.reportFileAccessEvent(event);
+      int failedServerNum = 0;
+      while (true) {
+        try {
+          SmartClientProtocol server = serverQue.getFirst();
+          server.reportFileAccessEvent(event);
+
+          // Reset smart server address in conf to reflect
+          // the changes of active smart server.
+          if (failedServerNum != 0) {
+            List<String> rpcAddrs = new LinkedList<>();
+            for (SmartClientProtocol s : serverQue) {
+              rpcAddrs.add(serverToRpcAddr.get(s));
+            }
+            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                StringUtil.join(",", rpcAddrs));
+          }
+          break;
+        } catch (ConnectException e) {
+          failedServerNum++;
+          // If all servers has been tried but still fail,
+          // throw an exception.
+          if (failedServerNum == serverQue.size()) {
+            throw new ConnectException("Tried to connect to configured SSM "
+                + "server(s), but failed." + e.getMessage());
+          }
+          // Move the first server to last.
+          serverQue.addLast(serverQue.pollFirst());
+        }
+      }
     }
   }
 
   @Override
   public FileState getFileState(String filePath) throws IOException {
     checkOpen();
-    try {
-      return server.getFileState(filePath);
-    } catch (ConnectException e) {
-      // client cannot connect to server
-      // don't report access event for this file this time
-      singleIgnoreList.put(filePath, 0);
-      return new NormalFileState(filePath);
+    int triedServerNum = 0;
+    while (true) {
+      try {
+        SmartClientProtocol server = serverQue.getFirst();
+        return server.getFileState(filePath);
+      } catch (ConnectException e) {
+        triedServerNum++;
+        // If all servers has been tried, interrupt and throw the exception.
+        if (triedServerNum == serverQue.size()) {
+          // client cannot connect to server
+          // don't report access event for this file this time
+          singleIgnoreList.put(filePath, 0);
+          // Assume the given file is normal, but serious error can occur if
+          // the file is compacted or compressed by SSM.
+          return new NormalFileState(filePath);
+        }
+        // Put the first server to last, and will pick the second one to try.
+        serverQue.addLast(serverQue.pollFirst());
+      }
     }
   }
 
@@ -153,8 +243,10 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   public void close() {
     if (running) {
       running = false;
-      RPC.stopProxy(server);
-      server = null;
+      for (SmartClientProtocol server : serverQue) {
+        RPC.stopProxy(server);
+      }
+      serverQue = null;
     }
   }
 }
