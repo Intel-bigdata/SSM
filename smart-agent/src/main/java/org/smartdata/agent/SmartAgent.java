@@ -178,6 +178,30 @@ public class SmartAgent implements StatusReporter {
     return "agent-" + UUID.randomUUID().toString();
   }
 
+  /**
+   * Agent Actor behaves like a state machine. It has a concept of context
+   * which can be viewed as a kind of agent status. And one context can be
+   * shifted to another. Under a specific context, some methods are defined
+   * to tell agent what to do.
+   *
+   * <p>1. After agent starts, the context becomes {@code WaitForFindMaster}.
+   * Under this context, agent will try to find agent master (@see AgentMaster)
+   * and {@link WaitForFindMaster#apply apply method} will tackle message
+   * from master. After master is found, the context will be shifted to
+   * {@code WaitForRegisterAgent}.
+   *
+   * <p>2. In {@code WaitForRegisterAgent} context, agent will send {@code
+   * RegisterNewAgent} message to master. And {@link WaitForRegisterAgent#apply
+   * apply method} will tackle message from master. A unique agent id is
+   * contained in the message of master. After the tackling, the context
+   * becomes {@code Serve}.
+   *
+   * <p>3. In {@code Serve} context, agent is in active service to respond
+   * to master's request of executing SSM action wrapped in master's message.
+   * In this context, if agent loses connection with master, the context will
+   * go back to {@code WaitForRegisterAgent}. And an agent will go through the
+   * above procedure again.
+   */
   static class AgentActor extends UntypedActor {
     private static final Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
@@ -207,6 +231,10 @@ public class SmartAgent implements StatusReporter {
       getContext().become(new WaitForFindMaster(findMaster));
     }
 
+    /**
+     * Find master by trying to send message to configured smart servers one
+     * by one. The retry interval value and timeout value are specified above.
+     */
     private Cancellable findMaster() {
       return AgentUtils.repeatActionUntil(getContext().system(),
           Duration.Zero(), RETRY_INTERVAL, TIMEOUT,
@@ -214,6 +242,7 @@ public class SmartAgent implements StatusReporter {
             @Override
             public void run() {
               for (String m : masters) {
+                // Pick up one possible master server and send message to it.
                 final ActorSelection actorSelection = getContext().actorSelection(m);
                 actorSelection.tell(new Identify(null), getSelf());
               }
@@ -293,6 +322,7 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof Terminated) {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
+            // Go back to WaitForFindMaster context to find new master.
             LOG.warn("Lost contact with master {}. Try registering again...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
