@@ -179,26 +179,28 @@ public class SmartAgent implements StatusReporter {
   }
 
   /**
-   * Change the context to WaitForFindMaster. Context can be viewed as
-   * a kind of agent status. And the transition from one context to
-   * another one can occur. Under a specific context, some methods are
-   * defined to tell agent what to do.
-   * <p></p>
-   * 1. After agent starts, the context becomes WaitForFindMaster. Under
-   * it, agent try to find agent master (see AgentMaster.java) and defines
-   * #apply method to tackle message from master. After master is found,
-   * the context becomes WaitForRegisterAgent.
-   * <p><p/>
-   * 2. In WaitForRegisterAgent context, agent will send RegisterNewAgent
-   * message to master. And #apply method in WaitForRegisterAgent will
-   * tackle message from master. A unique agent id is contained in the
-   * message of master. After the tackling, the context becomes Serve.
-   * <p><p/>
-   * 3. In Serve context, agent is in normal service to respond to master's
-   * request of executing SSM action wrapped in master's message. In this
-   * context, if agent loses connection with master, the context will go
-   * back to WaitForRegisterAgent. And an agent will go through the above
-   * procedure.
+   * Agent Actor behaves like a state machine. It has a concept of context
+   * which can be viewed as a kind of agent status. And one context can be
+   * shifted to another. Under a specific context, some methods are defined
+   * to tell agent what to do.
+   *
+   * <p>1. After agent starts, the context becomes {@code WaitForFindMaster}.
+   * Under this context, agent will try to find agent master (@see AgentMaster)
+   * and {@link WaitForFindMaster#apply apply method} will tackle message
+   * from master. After master is found, the context will be shifted to
+   * {@code WaitForRegisterAgent}.
+   *
+   * <p>2. In {@code WaitForRegisterAgent} context, agent will send {@code
+   * RegisterNewAgent} message to master. And {@link WaitForRegisterAgent#apply
+   * apply method} will tackle message from master. A unique agent id is
+   * contained in the message of master. After the tackling, the context
+   * becomes {@code Serve}.
+   *
+   * <p>3. In {@code Serve} context, agent is in active service to respond
+   * to master's request of executing SSM action wrapped in master's message.
+   * In this context, if agent loses connection with master, the context will
+   * go back to {@code WaitForRegisterAgent}. And an agent will go through the
+   * above procedure again.
    */
   static class AgentActor extends UntypedActor {
     private static final Logger LOG = LoggerFactory.getLogger(AgentActor.class);
@@ -230,8 +232,8 @@ public class SmartAgent implements StatusReporter {
     }
 
     /**
-     * Find master by trying the configured smart servers one by one.
-     * The retry interval value and timeout value are specified above.
+     * Find master by trying to send message to configured smart servers one
+     * by one. The retry interval value and timeout value are specified above.
      */
     private Cancellable findMaster() {
       return AgentUtils.repeatActionUntil(getContext().system(),
