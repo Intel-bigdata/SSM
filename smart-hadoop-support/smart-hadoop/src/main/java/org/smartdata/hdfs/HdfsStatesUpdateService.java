@@ -50,7 +50,6 @@ import java.util.concurrent.ScheduledExecutorService;
  * Polls metrics and events from NameNode
  */
 public class HdfsStatesUpdateService extends StatesUpdateService {
-  private static final String MOVER_ID_PATH = "/system/mover.id";
   private volatile boolean inSafeMode;
   private DFSClient client;
   private ScheduledExecutorService executorService;
@@ -174,10 +173,11 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
 
   private void checkAndCreateIdFiles(URI namenodeURI, Configuration conf) throws IOException {
     try {
-      moverIdOutputStream = checkAndMarkRunning(namenodeURI, conf, MOVER_ID_PATH);
-      LOG.info("Mover ID file " + MOVER_ID_PATH + " created successfully.");
+      moverIdOutputStream = checkAndMarkRunning(namenodeURI, conf,
+          SmartConstants.MOVER_ID_PATH);
+      LOG.info("Mover ID file " + SmartConstants.MOVER_ID_PATH + " created successfully.");
     } catch (IOException e) {
-      LOG.error("Unable to create " + MOVER_ID_PATH + " in HDFS. "
+      LOG.error("Unable to create " + SmartConstants.MOVER_ID_PATH + " in HDFS. "
           + "Please check the permission or if it is being written by another instance.");
       throw e;
     } finally {

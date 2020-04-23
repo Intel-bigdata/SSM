@@ -51,7 +51,11 @@ public class SmartConstants {
   public static final String NUMBER_OF_SMART_AGENT =
       "number_of_smart_agent_in_agents_file";
 
-  public static final String SMART_SERVER_ID_FILE = "/system/ssm.id";
+  public static final String SYSTEM_FOLDER = "/system/";
+
+  public static final String SMART_SERVER_ID_FILE = SYSTEM_FOLDER + "ssm.id";
+
+  public static final String MOVER_ID_PATH = SYSTEM_FOLDER + "mover.id";
 
   public static final String SMART_FILE_STATE_XATTR_NAME = "user.ssmFileState";
 

@@ -20,6 +20,7 @@ package org.smartdata.client;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
 import org.smartdata.model.FileState;
@@ -118,15 +119,21 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       serverToRpcAddr.put(server, addr.toString());
     }
 
-    // The below two properties should be configured on HDFS side
-    // if its dfsClient is replaced by SmartDfsClient.
+    // SMART_IGNORE_DIRS_KEY and SMART_WORK_DIR_KEY should be configured on
+    // application side if its dfsClient is replaced by SmartDfsClient.
     Collection<String> ignoreDirs = conf.getTrimmedStringCollection(
         SmartConfKeys.SMART_IGNORE_DIRS_KEY);
-    Collection<String> coverDirs = conf.getTrimmedStringCollection(
-        SmartConfKeys.SMART_COVER_DIRS_KEY);
+    // The system folder and SSM work folder should be ignored to
+    // report access count.
+    ignoreDirs.add(SmartConstants.SYSTEM_FOLDER);
+    ignoreDirs.add(conf.get(SmartConfKeys.SMART_WORK_DIR_KEY,
+        SmartConfKeys.SMART_WORK_DIR_DEFAULT));
     for (String s : ignoreDirs) {
       ignoreAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
+
+    Collection<String> coverDirs = conf.getTrimmedStringCollection(
+        SmartConfKeys.SMART_COVER_DIRS_KEY);
     for (String s : coverDirs) {
       coverAccessEventDirs.add(s + (s.endsWith("/") ? "" : "/"));
     }
