@@ -123,8 +123,7 @@ tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 ARRAY=()
 check_flag=0
 
-for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
-do
+for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents` do
    host=$(echo $host | tr -d  " ")
    if [[ "$host" =~ ^#.* ]];then
         continue
@@ -132,14 +131,14 @@ do
       
       for element in ${ARRAY[@]}
       do
-         if [ "$host" == "$element" ];then
- 	    check_flag=1    
-	    break
-         fi
+        if [ "$host" == "$element" ];then
+           check_flag=1
+	       break
+        fi
       done
 
       if [ $check_flag -eq 1 ];then
-	 check_flag=0         
+	     check_flag=0
          continue
       else
          ARRAY+=("$host")
