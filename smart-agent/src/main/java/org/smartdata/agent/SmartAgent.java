@@ -223,18 +223,7 @@ public class SmartAgent implements StatusReporter {
       this.agent = agent;
       this.masters = masters;
       this.conf =  conf;
-
-      this.supervisorStrategy();this.getContext().parent();
-
     }
-
-    private static SupervisorStrategy strategy =
-        new OneForOneStrategy(
-            DeciderBuilder.match(IllegalArgumentException.class, e -> SupervisorStrategy.resume())
-                .match(ActorInitializationException.class, e -> SupervisorStrategy.stop())
-                .match(Exception.class, e -> SupervisorStrategy.restart())
-                .matchAny(o -> SupervisorStrategy.escalate())
-                .build());
 
     @Override
     public SupervisorStrategy supervisorStrategy() {
