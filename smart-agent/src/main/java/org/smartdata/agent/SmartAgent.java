@@ -18,17 +18,22 @@
 package org.smartdata.agent;
 
 import akka.actor.ActorIdentity;
+import akka.actor.ActorInitializationException;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
 import akka.actor.Identify;
+import akka.actor.OneForOneStrategy;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
+import akka.actor.SupervisorStrategy;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
+import akka.japi.pf.DeciderBuilder;
 import akka.pattern.Patterns;
+import akka.remote.EndpointAssociationException;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -199,7 +204,7 @@ public class SmartAgent implements StatusReporter {
    * <p>3. In {@code Serve} context, agent is in active service to respond
    * to master's request of executing SSM action wrapped in master's message.
    * In this context, if agent loses connection with master, the context will
-   * go back to {@code WaitForRegisterAgent}. And an agent will go through the
+   * go back to {@code WaitForRegisterAgent}. And agent will go through the
    * above procedure again.
    */
   static class AgentActor extends UntypedActor {
@@ -218,6 +223,30 @@ public class SmartAgent implements StatusReporter {
       this.agent = agent;
       this.masters = masters;
       this.conf =  conf;
+
+      this.supervisorStrategy();this.getContext().parent();
+
+    }
+
+    private static SupervisorStrategy strategy =
+        new OneForOneStrategy(
+            DeciderBuilder.match(IllegalArgumentException.class, e -> SupervisorStrategy.resume())
+                .match(ActorInitializationException.class, e -> SupervisorStrategy.stop())
+                .match(Exception.class, e -> SupervisorStrategy.restart())
+                .matchAny(o -> SupervisorStrategy.escalate())
+                .build());
+
+    @Override
+    public SupervisorStrategy supervisorStrategy() {
+      return new OneForOneStrategy(
+          DeciderBuilder.match(IllegalArgumentException.class, e -> SupervisorStrategy.resume())
+              .match(ActorInitializationException.class, e -> SupervisorStrategy.stop())
+              .match(EndpointAssociationException.class, e -> {
+                getContext().become(new WaitForFindMaster(findMaster()));
+                return SupervisorStrategy.resume();})
+              .match(Exception.class, e -> SupervisorStrategy.restart())
+              .matchAny(o -> SupervisorStrategy.escalate())
+              .build());
     }
 
     @Override
