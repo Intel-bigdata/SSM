@@ -388,8 +388,8 @@ public class SmartAgent implements StatusReporter {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
             // Go back to WaitForFindMaster context to find new master.
-            LOG.warn("Lost contact with master {}. Try to register to " +
-                "a new master...", getSender());
+            LOG.warn("Lost contact with master {}. Try to register to "
+                + "a new master...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
         } else if (message instanceof DisassociatedEvent) {
