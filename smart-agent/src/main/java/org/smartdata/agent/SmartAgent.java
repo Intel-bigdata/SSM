@@ -18,24 +18,19 @@
 package org.smartdata.agent;
 
 import akka.actor.ActorIdentity;
-import akka.actor.ActorInitializationException;
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 import akka.actor.Cancellable;
 import akka.actor.Identify;
-import akka.actor.OneForOneStrategy;
 import akka.actor.PoisonPill;
 import akka.actor.Props;
-import akka.actor.SupervisorStrategy;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
-import akka.japi.pf.DeciderBuilder;
 import akka.pattern.Patterns;
 import akka.remote.AssociationErrorEvent;
 import akka.remote.DisassociatedEvent;
-import akka.remote.EndpointAssociationException;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -82,7 +77,8 @@ public class SmartAgent implements StatusReporter {
   public static void main(String[] args) throws IOException {
     SmartAgent agent = new SmartAgent();
 
-    SmartConf conf = (SmartConf) new GenericOptionsParser(new SmartConf(), args).getConfiguration();
+    SmartConf conf = (SmartConf) new GenericOptionsParser(
+        new SmartConf(), args).getConfiguration();
 
     String[] masters = AgentUtils.getMasterAddress(conf);
     if (masters == null) {
@@ -93,13 +89,15 @@ public class SmartAgent implements StatusReporter {
     }
     String agentAddress = AgentUtils.getAgentAddress(conf);
     LOG.info("Agent address: " + agentAddress);
-    RegisterNewAgent.getInstance("SSMAgent@" + agentAddress.replaceAll(":.*$", ""));
+    RegisterNewAgent.getInstance(
+        "SSMAgent@" + agentAddress.replaceAll(":.*$", ""));
 
     HadoopUtil.setSmartConfByHadoop(conf);
     agent.authentication(conf);
 
-    agent.start(AgentUtils.overrideRemoteAddress(ConfigFactory.load(AgentConstants.AKKA_CONF_FILE),
-        agentAddress), AgentUtils.getMasterActorPaths(masters), conf);
+    agent.start(AgentUtils.overrideRemoteAddress(
+        ConfigFactory.load(AgentConstants.AKKA_CONF_FILE), agentAddress),
+        AgentUtils.getMasterActorPaths(masters), conf);
   }
 
   //TODO: remove loadHadoopConf
@@ -120,10 +118,13 @@ public class SmartAgent implements StatusReporter {
 
     UserGroupInformation.setConfiguration(conf);
 
-    String keytabFilename = conf.get(SmartConfKeys.SMART_AGENT_KEYTAB_FILE_KEY);
-    String principalConfig = conf.get(SmartConfKeys.SMART_AGENT_KERBEROS_PRINCIPAL_KEY);
+    String keytabFilename =
+        conf.get(SmartConfKeys.SMART_AGENT_KEYTAB_FILE_KEY);
+    String principalConfig =
+        conf.get(SmartConfKeys.SMART_AGENT_KERBEROS_PRINCIPAL_KEY);
     String principal =
-        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
+        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(
+            principalConfig, (String) null);
 
     SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
@@ -136,8 +137,8 @@ public class SmartAgent implements StatusReporter {
 
   public void start(Config config, String[] masterPath, SmartConf conf) {
     system = ActorSystem.apply(NAME, config);
-    agentActor = system.actorOf(
-            Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
+    agentActor = system.actorOf(Props.create(
+        AgentActor.class, this, masterPath, conf), getAgentName());
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -154,13 +155,17 @@ public class SmartAgent implements StatusReporter {
     Services.start();
 
     AgentCmdletService agentCmdletService =
-            (AgentCmdletService) Services.getService(SmartConstants.AGENT_CMDLET_SERVICE_NAME);
+        (AgentCmdletService) Services.getService(
+            SmartConstants.AGENT_CMDLET_SERVICE_NAME);
     cmdletExecutor = agentCmdletService.getCmdletExecutor();
 
-    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    int reportPeriod = conf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
+    ScheduledExecutorService executorService =
+        Executors.newSingleThreadScheduledExecutor();
+    int reportPeriod =
+        conf.getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
             SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
-    StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, conf);
+    StatusReportTask statusReportTask =
+        new StatusReportTask(this, cmdletExecutor, conf);
     executorService.scheduleAtFixedRate(
             statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
 
@@ -211,8 +216,10 @@ public class SmartAgent implements StatusReporter {
   static class AgentActor extends UntypedActor {
     private static final Logger LOG = LoggerFactory.getLogger(AgentActor.class);
 
-    private static final FiniteDuration TIMEOUT = Duration.create(30, TimeUnit.SECONDS);
-    private static final FiniteDuration RETRY_INTERVAL = Duration.create(2, TimeUnit.SECONDS);
+    private static final FiniteDuration TIMEOUT =
+        Duration.create(30, TimeUnit.SECONDS);
+    private static final FiniteDuration RETRY_INTERVAL =
+        Duration.create(2, TimeUnit.SECONDS);
 
     private MasterToAgent.AgentId id;
     private ActorRef master;
@@ -227,30 +234,23 @@ public class SmartAgent implements StatusReporter {
     }
 
     @Override
-    public SupervisorStrategy supervisorStrategy() {
-      return new OneForOneStrategy(
-          DeciderBuilder.match(IllegalArgumentException.class, e -> SupervisorStrategy.resume())
-              .match(ActorInitializationException.class, e -> SupervisorStrategy.stop())
-              .match(EndpointAssociationException.class, e -> {
-                getContext().become(new WaitForFindMaster(findMaster()));
-                return SupervisorStrategy.resume();
-              })
-              .match(Exception.class, e -> SupervisorStrategy.restart())
-              .matchAny(o -> SupervisorStrategy.escalate())
-              .build());
-    }
-
-    @Override
     public void onReceive(Object message) throws Exception {
       unhandled(message);
     }
 
+    /**
+     * Subscribe two kinds of events: {@code DisassociatedEvent} and
+     * {@code AssociationErrorEvent}. They will be handled in context
+     * {@link WaitForRegisterAgent#apply} and {@link Serve#apply}.
+     */
     @Override
     public void preStart() {
       Cancellable findMaster = findMaster();
       getContext().become(new WaitForFindMaster(findMaster));
-      this.context().system().eventStream().subscribe(self(), DisassociatedEvent.class);
-      this.context().system().eventStream().subscribe(self(), AssociationErrorEvent.class);
+      this.context().system().eventStream().subscribe(
+          self(), DisassociatedEvent.class);
+      this.context().system().eventStream().subscribe(
+          self(), AssociationErrorEvent.class);
     }
 
     /**
@@ -265,7 +265,8 @@ public class SmartAgent implements StatusReporter {
             public void run() {
               for (String m : masters) {
                 // Pick up one possible master server and send message to it.
-                final ActorSelection actorSelection = getContext().actorSelection(m);
+                final ActorSelection actorSelection =
+                    getContext().actorSelection(m);
                 actorSelection.tell(new Identify(null), getSelf());
               }
             }
@@ -293,12 +294,14 @@ public class SmartAgent implements StatusReporter {
                     .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
                             SmartConfKeys.SMART_SERVER_RPC_ADDRESS_DEFAULT)
                     .split(":")[1];
-            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY, rpcHost + ":" + rpcPort);
+            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+                rpcHost + ":" + rpcPort);
 
             Cancellable registerAgent =
-                AgentUtils.repeatActionUntil(getContext().system(), Duration.Zero(),
-                    RETRY_INTERVAL, TIMEOUT,
-                    new SendMessage(master, RegisterNewAgent.getInstance()), new Shutdown(agent));
+                AgentUtils.repeatActionUntil(getContext().system(),
+                    Duration.Zero(), RETRY_INTERVAL, TIMEOUT,
+                    new SendMessage(master, RegisterNewAgent.getInstance()),
+                    new Shutdown(agent));
             LOG.info("Registering to master {}", master);
             getContext().become(new WaitForRegisterAgent(registerAgent));
           }
@@ -313,6 +316,11 @@ public class SmartAgent implements StatusReporter {
         this.registerAgent = registerAgent;
       }
 
+      /**
+       * Disassociation can occur during agent wait for the registry. So if
+       * {@code DisassociatedEvent} or {@code AssociationErrorEvent} is
+       * received, the context will become the preceding one to find master.
+       */
       @Override
       public void apply(Object message) throws Exception {
         if (message instanceof AgentRegistered) {
@@ -324,12 +332,38 @@ public class SmartAgent implements StatusReporter {
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
+        } else if (message instanceof DisassociatedEvent) {
+          DisassociatedEvent disassociEvent = (DisassociatedEvent) message;
+          LOG.warn("Received event: {}, details: {}",
+              disassociEvent.eventName(), disassociEvent.toString());
+          LOG.warn("Go back to the preceding context to find master..");
+          getContext().become(new WaitForFindMaster(findMaster()));
+        } else if (message instanceof AssociationErrorEvent) {
+          AssociationErrorEvent associErrorEvent =
+              (AssociationErrorEvent) message;
+          LOG.warn("Received event: {}, details: {}",
+              associErrorEvent.eventName(), associErrorEvent.toString());
+          LOG.warn("Go back to the preceding context to find master..");
+          getContext().become(new WaitForFindMaster(findMaster()));
+        } else {
+          LOG.warn("Unhandled message: " + message.toString());
         }
       }
     }
 
     private class Serve implements Procedure<Object> {
 
+      /**
+       * If master exits gracefully, for example, using 'kill PID' to make
+       * master precess exit, {@code Terminated} message can be received
+       * immediately. But a more general scenario is that master node crashes
+       * abruptly while agent has dead letters (cmdlet status report), under
+       * this scenario, agent will spend around half an hour to try to
+       * associate with master and deliver letters. So we enable agent
+       * subscribe and listen {@code DisassociatedEvent/AssociationErrorEvent}.
+       * The context will be shifted to find new master if any one of these two
+       * events is received.
+       */
       @Override
       public void apply(Object message) throws Exception {
         if (message instanceof AgentService.Message) {
@@ -345,9 +379,26 @@ public class SmartAgent implements StatusReporter {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
             // Go back to WaitForFindMaster context to find new master.
-            LOG.warn("Lost contact with master {}. Try registering again...", getSender());
+            LOG.warn("Lost contact with master {}. Try to register to " +
+                "a new master...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
+        } else if (message instanceof DisassociatedEvent) {
+          DisassociatedEvent disassociEvent =
+              (DisassociatedEvent) message;
+          LOG.warn("Received event: {}, details: {}",
+              disassociEvent.eventName(), disassociEvent.toString());
+          LOG.warn("Try to register to a new master...");
+          getContext().become(new WaitForFindMaster(findMaster()));
+        } else if (message instanceof AssociationErrorEvent) {
+          AssociationErrorEvent associErrorEvent =
+              (AssociationErrorEvent) message;
+          LOG.warn("Received event: {}, details: {}",
+              associErrorEvent.eventName(), associErrorEvent.toString());
+          LOG.warn("Try to register to a new master...");
+          getContext().become(new WaitForFindMaster(findMaster()));
+        } else {
+          LOG.warn("Unhandled message: " + message.toString());
         }
       }
     }
