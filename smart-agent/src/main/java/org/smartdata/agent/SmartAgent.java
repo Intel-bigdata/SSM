@@ -232,7 +232,8 @@ public class SmartAgent implements StatusReporter {
               .match(ActorInitializationException.class, e -> SupervisorStrategy.stop())
               .match(EndpointAssociationException.class, e -> {
                 getContext().become(new WaitForFindMaster(findMaster()));
-                return SupervisorStrategy.resume();})
+                return SupervisorStrategy.resume();
+              })
               .match(Exception.class, e -> SupervisorStrategy.restart())
               .matchAny(o -> SupervisorStrategy.escalate())
               .build());
