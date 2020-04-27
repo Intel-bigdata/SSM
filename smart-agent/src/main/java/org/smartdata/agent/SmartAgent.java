@@ -33,6 +33,8 @@ import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import akka.japi.pf.DeciderBuilder;
 import akka.pattern.Patterns;
+import akka.remote.AssociationErrorEvent;
+import akka.remote.DisassociatedEvent;
 import akka.remote.EndpointAssociationException;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
@@ -136,7 +138,6 @@ public class SmartAgent implements StatusReporter {
     system = ActorSystem.apply(NAME, config);
     agentActor = system.actorOf(
             Props.create(AgentActor.class, this, masterPath, conf), getAgentName());
-
     final Thread currentThread = Thread.currentThread();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
@@ -248,6 +249,8 @@ public class SmartAgent implements StatusReporter {
     public void preStart() {
       Cancellable findMaster = findMaster();
       getContext().become(new WaitForFindMaster(findMaster));
+      this.context().system().eventStream().subscribe(self(), DisassociatedEvent.class);
+      this.context().system().eventStream().subscribe(self(), AssociationErrorEvent.class);
     }
 
     /**
