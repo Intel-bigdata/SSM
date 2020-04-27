@@ -110,8 +110,9 @@ public class SmartAgent implements StatusReporter {
     try {
       HadoopUtil.loadHadoopConf(conf);
     } catch (IOException e) {
-      LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-              + "Please config smart.hadoop.conf.path property in smart-site.xml.");
+      LOG.info("Running in secure mode, but cannot find Hadoop "
+          + "configuration file. Please config smart.hadoop.conf.path "
+          + "property in smart-site.xml.");
       conf.set("hadoop.security.authentication", "kerberos");
       conf.set("hadoop.security.authorization", "true");
     }
@@ -180,6 +181,10 @@ public class SmartAgent implements StatusReporter {
     }
   }
 
+  /**
+   * Deliver status message to agent actor. The message will be handled by
+   * {@link AgentActor.Serve#apply method}.
+   */
   @Override
   public void report(StatusMessage status) {
     Patterns.ask(agentActor, status, Timeout.apply(5, TimeUnit.SECONDS));
@@ -240,8 +245,9 @@ public class SmartAgent implements StatusReporter {
 
     /**
      * Subscribe two kinds of events: {@code DisassociatedEvent} and
-     * {@code AssociationErrorEvent}. They will be handled in context
-     * {@link WaitForRegisterAgent#apply} and {@link Serve#apply}.
+     * {@code AssociationErrorEvent}. They will be handled by
+     * {@link WaitForRegisterAgent#apply method} and {@link Serve#apply
+     * method}.
      */
     @Override
     public void preStart() {
@@ -289,6 +295,8 @@ public class SmartAgent implements StatusReporter {
           if (master != null) {
             findMaster.cancel();
 
+            // Set smart server rpc address in conf, thus SmartDFSClient
+            // will be instantiated with this address.
             String rpcHost = master.path().address().host().get();
             String rpcPort = conf
                     .get(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
@@ -357,12 +365,13 @@ public class SmartAgent implements StatusReporter {
        * If master exits gracefully, for example, using 'kill PID' to make
        * master precess exit, {@code Terminated} message can be received
        * immediately. But a more general scenario is that master node crashes
-       * abruptly while agent has dead letters (cmdlet status report), under
-       * this scenario, agent will spend around half an hour to try to
-       * associate with master and deliver letters. So we enable agent
-       * subscribe and listen {@code DisassociatedEvent/AssociationErrorEvent}.
-       * The context will be shifted to find new master if any one of these two
-       * events is received.
+       * abruptly (mocked by 'kill -9 PID') while agent has dead letters
+       * (e.g., cmdlet status report). Under this scenario, agent will spend
+       * around 30min to try to associate with master and deliver letters. So
+       * we enable agent subscribe and listen {@code DisassociatedEvent} and
+       * {@code AssociationErrorEvent}. See {@link AgentActor#preStart method
+       * prestart}. The context will be shifted to find new master if any one
+       * of these two events is received.
        */
       @Override
       public void apply(Object message) throws Exception {
