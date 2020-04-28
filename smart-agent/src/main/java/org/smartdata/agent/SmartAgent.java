@@ -342,6 +342,11 @@ public class SmartAgent implements StatusReporter {
           getContext().become(new Serve());
         } else if (message instanceof DisassociatedEvent) {
           DisassociatedEvent disassociEvent = (DisassociatedEvent) message;
+          // Event for failed master can be repeated published. So ignore it.
+          if (!master.path().address().equals(
+              disassociEvent.remoteAddress())) {
+            return;
+          }
           LOG.warn("Received event: {}, details: {}",
               disassociEvent.eventName(), disassociEvent.toString());
           LOG.warn("Go back to the preceding context to find master..");
@@ -349,6 +354,11 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof AssociationErrorEvent) {
           AssociationErrorEvent associErrorEvent =
               (AssociationErrorEvent) message;
+          // Event for failed master can be repeated published. So ignore it.
+          if (!master.path().address().equals(
+              associErrorEvent.remoteAddress())) {
+            return;
+          }
           LOG.warn("Received event: {}, details: {}",
               associErrorEvent.eventName(), associErrorEvent.toString());
           LOG.warn("Go back to the preceding context to find master..");
@@ -395,6 +405,11 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof DisassociatedEvent) {
           DisassociatedEvent disassociEvent =
               (DisassociatedEvent) message;
+          // Event for failed master can be repeated published. So ignore it.
+          if (!master.path().address().equals(
+              disassociEvent.remoteAddress())) {
+            return;
+          }
           LOG.warn("Received event: {}, details: {}",
               disassociEvent.eventName(), disassociEvent.toString());
           LOG.warn("Try to register to a new master...");
@@ -402,6 +417,11 @@ public class SmartAgent implements StatusReporter {
         } else if (message instanceof AssociationErrorEvent) {
           AssociationErrorEvent associErrorEvent =
               (AssociationErrorEvent) message;
+          // Event for failed master can be repeated published. So ignore it.
+          if (!master.path().address().equals(
+              associErrorEvent.remoteAddress())) {
+            return;
+          }
           LOG.warn("Received event: {}, details: {}",
               associErrorEvent.eventName(), associErrorEvent.toString());
           LOG.warn("Try to register to a new master...");
