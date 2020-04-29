@@ -292,8 +292,8 @@ public class AgentMaster {
      * {@code AssociationErrorEvent} is received.
      */
     private boolean handleAssociationEvent(Object message) {
-      if (!(message instanceof DisassociatedEvent) &&
-          !(message instanceof AssociationErrorEvent)) {
+      if (!(message instanceof DisassociatedEvent)
+          && !(message instanceof AssociationErrorEvent)) {
         return false;
       }
 
