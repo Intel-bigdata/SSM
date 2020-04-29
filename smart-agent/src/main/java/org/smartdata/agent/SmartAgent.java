@@ -247,9 +247,8 @@ public class SmartAgent implements StatusReporter {
     }
 
     /**
-     * Subscribe two kinds of events: {@code DisassociatedEvent}. It
-     * will be handled by {@link WaitForRegisterAgent#apply method} and
-     * {@link Serve#apply method}.
+     * Subscribe an event: {@code DisassociatedEvent}. It will be handled by
+     * {@link WaitForRegisterAgent#apply method} and {@link Serve#apply method}.
      */
     @Override
     public void preStart() {
@@ -365,9 +364,8 @@ public class SmartAgent implements StatusReporter {
           registerAgent.cancel();
           getContext().watch(master);
           AgentActor.this.id = registered.getAgentId();
-          LOG.info("SmartAgent {} registered to {}",
-              AgentActor.this.id,
-              AgentUtils.getFullPath(getContext().system(), getSelf().path()));
+          LOG.info("SmartAgent {} registered to master: {}",
+              AgentActor.this.id, master.path().address());
           Serve serveContext = new Serve();
           getContext().become(serveContext);
         } else if (message instanceof DisassociatedEvent) {
@@ -438,7 +436,7 @@ public class SmartAgent implements StatusReporter {
           Terminated terminated = (Terminated) message;
           if (terminated.getActor().equals(master)) {
             // Go back to WaitForFindMaster context to find new master.
-            LOG.warn("Lost contact with master {}. Try to register to "
+            LOG.warn("Lost association with master {}. Try to register to "
                 + "a new master...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
@@ -486,7 +484,7 @@ public class SmartAgent implements StatusReporter {
       @Override
       public void run() {
         getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
-        LOG.info("Failed to find master after {}; Shutting down...", TIMEOUT);
+        LOG.info("Failed to find master after {}, shutting down...", TIMEOUT);
         agent.close();
       }
     }

@@ -215,8 +215,8 @@ public class AgentMaster {
     }
 
     /**
-     * Subscribe two kinds of events: {@code DisassociatedEvent}.
-     * It will be handled by {@link #handleDisassociatedEvent method}.
+     * Subscribe an event: {@code DisassociatedEvent}. It will be
+     * handled by {@link #handleDisassociatedEvent method}.
      */
     @Override
     public void preStart() {
