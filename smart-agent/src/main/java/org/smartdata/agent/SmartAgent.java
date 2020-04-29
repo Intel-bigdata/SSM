@@ -30,6 +30,7 @@ import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import akka.pattern.Patterns;
 import akka.remote.AssociationErrorEvent;
+import akka.remote.AssociationEvent;
 import akka.remote.DisassociatedEvent;
 import akka.util.Timeout;
 import com.typesafe.config.Config;
@@ -340,27 +341,16 @@ public class SmartAgent implements StatusReporter {
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           getContext().become(new Serve());
-        } else if (message instanceof DisassociatedEvent) {
-          DisassociatedEvent disassociEvent = (DisassociatedEvent) message;
+        } else if (message instanceof DisassociatedEvent ||
+            message instanceof AssociationErrorEvent) {
+          AssociationEvent associEvent = (AssociationEvent) message;
           // Event for failed master can be repeated published. So ignore it.
           if (!master.path().address().equals(
-              disassociEvent.remoteAddress())) {
+              associEvent.remoteAddress())) {
             return;
           }
           LOG.warn("Received event: {}, details: {}",
-              disassociEvent.eventName(), disassociEvent.toString());
-          LOG.warn("Go back to the preceding context to find master..");
-          getContext().become(new WaitForFindMaster(findMaster()));
-        } else if (message instanceof AssociationErrorEvent) {
-          AssociationErrorEvent associErrorEvent =
-              (AssociationErrorEvent) message;
-          // Event for failed master can be repeated published. So ignore it.
-          if (!master.path().address().equals(
-              associErrorEvent.remoteAddress())) {
-            return;
-          }
-          LOG.warn("Received event: {}, details: {}",
-              associErrorEvent.eventName(), associErrorEvent.toString());
+              associEvent.eventName(), associEvent.toString());
           LOG.warn("Go back to the preceding context to find master..");
           getContext().become(new WaitForFindMaster(findMaster()));
         } else {
@@ -402,28 +392,16 @@ public class SmartAgent implements StatusReporter {
                 + "a new master...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
-        } else if (message instanceof DisassociatedEvent) {
-          DisassociatedEvent disassociEvent =
-              (DisassociatedEvent) message;
+        } else if (message instanceof DisassociatedEvent ||
+            message instanceof AssociationErrorEvent) {
+          AssociationEvent associEvent = (AssociationEvent) message;
           // Event for failed master can be repeated published. So ignore it.
           if (!master.path().address().equals(
-              disassociEvent.remoteAddress())) {
+              associEvent.remoteAddress())) {
             return;
           }
           LOG.warn("Received event: {}, details: {}",
-              disassociEvent.eventName(), disassociEvent.toString());
-          LOG.warn("Try to register to a new master...");
-          getContext().become(new WaitForFindMaster(findMaster()));
-        } else if (message instanceof AssociationErrorEvent) {
-          AssociationErrorEvent associErrorEvent =
-              (AssociationErrorEvent) message;
-          // Event for failed master can be repeated published. So ignore it.
-          if (!master.path().address().equals(
-              associErrorEvent.remoteAddress())) {
-            return;
-          }
-          LOG.warn("Received event: {}, details: {}",
-              associErrorEvent.eventName(), associErrorEvent.toString());
+              associEvent.eventName(), associEvent.toString());
           LOG.warn("Try to register to a new master...");
           getContext().become(new WaitForFindMaster(findMaster()));
         } else {
