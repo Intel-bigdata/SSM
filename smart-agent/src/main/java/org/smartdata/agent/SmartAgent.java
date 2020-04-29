@@ -60,6 +60,8 @@ import org.smartdata.utils.SecurityUtil;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -232,6 +234,7 @@ public class SmartAgent implements StatusReporter {
     private final SmartAgent agent;
     private final String[] masters;
     private SmartConf conf;
+    private Deque<Object> unhandledMessages = new LinkedList<>();
 
     public AgentActor(SmartAgent agent, String[] masters, SmartConf conf) {
       this.agent = agent;
@@ -288,6 +291,12 @@ public class SmartAgent implements StatusReporter {
         this.findMaster = findMaster;
       }
 
+      /**
+       * If agent disassociated with master, it will go back to this
+       * context to find a new master. But cmdlet report message can
+       * be delivered to it during this procedure. So we keep such
+       * message in {@code unhandledMessages}
+       */
       @Override
       public void apply(Object message) throws Exception {
         if (message instanceof ActorIdentity) {
@@ -314,6 +323,8 @@ public class SmartAgent implements StatusReporter {
             LOG.info("Registering to master {}", master);
             getContext().become(new WaitForRegisterAgent(registerAgent));
           }
+        } else {
+          unhandledMessages.addLast(message);
         }
       }
     }
@@ -329,6 +340,11 @@ public class SmartAgent implements StatusReporter {
        * Disassociation can occur during agent wait for the registry. So if
        * {@code DisassociatedEvent} or {@code AssociationErrorEvent} is
        * received, the context will become the preceding one to find master.
+       *
+       * <p>Since agent may disassociate with master during running SSM tasks,
+       * cmdlet status report can be delivered under this context. Similar to
+       * the last context, use a deque {@code unhandledMessages} to keep such
+       * message.
        */
       @Override
       public void apply(Object message) throws Exception {
@@ -340,7 +356,8 @@ public class SmartAgent implements StatusReporter {
           LOG.info("SmartAgent {} registered to {}",
               AgentActor.this.id,
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
-          getContext().become(new Serve());
+          Serve serveContext = new Serve();
+          getContext().become(serveContext);
         } else if (message instanceof DisassociatedEvent ||
             message instanceof AssociationErrorEvent) {
           AssociationEvent associEvent = (AssociationEvent) message;
@@ -354,12 +371,34 @@ public class SmartAgent implements StatusReporter {
           LOG.warn("Go back to the preceding context to find master..");
           getContext().become(new WaitForFindMaster(findMaster()));
         } else {
-          LOG.warn("Unhandled message: " + message.toString());
+          unhandledMessages.addLast(message);
         }
       }
     }
 
     private class Serve implements Procedure<Object> {
+
+      /**
+       * To handle messages according to the receiving order, the unhandled
+       * messages should be applied firstly. So we do this in the instantiation
+       * of {@code Serve}. And for messages kept in {@code unhandledMessages},
+       * FIFO rule is complied.
+       */
+      public Serve() {
+        applyUnhandledMessage();
+      }
+
+      private void applyUnhandledMessage() {
+        while (unhandledMessages.size() != 0) {
+          Object message = unhandledMessages.pollFirst();
+          try {
+            this.apply(message);
+          } catch (Exception e) {
+            LOG.warn("Failed to handle message: "
+                + message.toString() + "Reason: " + e.getMessage());
+          }
+        }
+      }
 
       /**
        * If master exits gracefully, for example, using 'kill PID' to make
