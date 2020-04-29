@@ -18,6 +18,7 @@
 package org.smartdata.server.engine.cmdlet.agent;
 
 import akka.actor.ActorRef;
+import akka.actor.Address;
 import org.smartdata.server.cluster.NodeInfo;
 import org.smartdata.server.engine.EngineEventBus;
 import org.smartdata.server.engine.cmdlet.agent.messages.MasterToAgent.AgentId;
@@ -78,5 +79,14 @@ public class AgentManager {
 
   AgentId getAgentId(ActorRef agentActorRef) {
     return agents.get(agentActorRef);
+  }
+
+  ActorRef getAgentActorByAddress(Address addr) {
+    for (ActorRef agent : agents.keySet()) {
+      if (agent.path().address().equals(addr)) {
+        return agent;
+      }
+    }
+    return null;
   }
 }

@@ -23,6 +23,9 @@ import akka.actor.Props;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
+import akka.remote.AssociationErrorEvent;
+import akka.remote.AssociationEvent;
+import akka.remote.DisassociatedEvent;
 import akka.util.Timeout;
 import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
@@ -217,7 +220,8 @@ public class AgentMaster {
       Boolean handled =
           handleAgentMessage(message)
               || handleClientMessage(message)
-              || handleTerminatedMessage(message);
+              || handleTerminatedMessage(message)
+              || handleAssociationEvent(message);
       if (!handled) {
         unhandled(message);
       }
@@ -281,6 +285,31 @@ public class AgentMaster {
       } else {
         return false;
       }
+    }
+
+    /**
+     * Remove agent if {@code DisassociatedEvent} or
+     * {@code AssociationErrorEvent} is received.
+     */
+    private boolean handleAssociationEvent(Object message) {
+      if (!(message instanceof DisassociatedEvent) &&
+          !(message instanceof AssociationErrorEvent)) {
+        return false;
+      }
+
+      AssociationEvent associEvent = (AssociationEvent) message;
+      ActorRef agent = agentManager.getAgentActorByAddress(
+          associEvent.getRemoteAddress());
+      // The agent may be already removed. Return true to indicate
+      // the message has been handled.
+      if (agent == null) {
+        return true;
+      }
+      LOG.warn("Received event: {}, details: {}",
+          associEvent.eventName(), associEvent.toString());
+      LOG.warn("Removing the disassociated agent: " + agent.path().address());
+      agentManager.removeAgent(agent);
+      return true;
     }
   }
 }
