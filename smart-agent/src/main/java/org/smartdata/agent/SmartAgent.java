@@ -286,7 +286,7 @@ public class SmartAgent implements StatusReporter {
     /**
      * Cache {@code AgentService.Message} or {@code StatusMessage}.
      *
-     * <p> Association related message can be sent repeatedly. We
+     * <p>Association error message can be sent repeatedly. We
      * only need to cache messages related to SSM.
      */
     public void cacheMessage(Object message) {
