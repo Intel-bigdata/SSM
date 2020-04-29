@@ -283,6 +283,19 @@ public class SmartAgent implements StatusReporter {
           }, new Shutdown(agent));
     }
 
+    /**
+     * Cache {@code AgentService.Message} or {@code StatusMessage}.
+     *
+     * <p> Association related message can be sent repeatedly. We
+     * only need to cache messages related to SSM.
+     */
+    public void cacheMessage(Object message) {
+      if (message instanceof AgentService.Message
+          || message instanceof StatusMessage) {
+        unhandledMessages.addLast(message);
+      }
+    }
+
     private class WaitForFindMaster implements Procedure<Object> {
 
       private final Cancellable findMaster;
@@ -324,7 +337,10 @@ public class SmartAgent implements StatusReporter {
             getContext().become(new WaitForRegisterAgent(registerAgent));
           }
         } else {
-          unhandledMessages.addLast(message);
+          // Association error message can be received when agent is trying to
+          // connect to an unready master. Only messages related to SSM need to
+          // be cached and handled when agent is ready.
+          cacheMessage(message);
         }
       }
     }
@@ -371,7 +387,7 @@ public class SmartAgent implements StatusReporter {
           LOG.warn("Go back to the preceding context to find master..");
           getContext().become(new WaitForFindMaster(findMaster()));
         } else {
-          unhandledMessages.addLast(message);
+          cacheMessage(message);
         }
       }
     }
@@ -392,6 +408,7 @@ public class SmartAgent implements StatusReporter {
         while (unhandledMessages.size() != 0) {
           Object message = unhandledMessages.pollFirst();
           try {
+            LOG.info("Applying cached message: " + message.toString());
             this.apply(message);
           } catch (Exception e) {
             LOG.warn("Failed to handle message: "
