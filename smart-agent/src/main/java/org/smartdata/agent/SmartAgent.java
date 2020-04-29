@@ -358,8 +358,8 @@ public class SmartAgent implements StatusReporter {
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           Serve serveContext = new Serve();
           getContext().become(serveContext);
-        } else if (message instanceof DisassociatedEvent ||
-            message instanceof AssociationErrorEvent) {
+        } else if (message instanceof DisassociatedEvent
+            || message instanceof AssociationErrorEvent) {
           AssociationEvent associEvent = (AssociationEvent) message;
           // Event for failed master can be repeated published. So ignore it.
           if (!master.path().address().equals(
@@ -431,8 +431,8 @@ public class SmartAgent implements StatusReporter {
                 + "a new master...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
-        } else if (message instanceof DisassociatedEvent ||
-            message instanceof AssociationErrorEvent) {
+        } else if (message instanceof DisassociatedEvent
+            || message instanceof AssociationErrorEvent) {
           AssociationEvent associEvent = (AssociationEvent) message;
           // Event for failed master can be repeated published. So ignore it.
           if (!master.path().address().equals(
