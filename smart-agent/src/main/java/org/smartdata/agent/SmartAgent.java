@@ -29,7 +29,6 @@ import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.japi.Procedure;
 import akka.pattern.Patterns;
-import akka.remote.AssociationErrorEvent;
 import akka.remote.AssociationEvent;
 import akka.remote.DisassociatedEvent;
 import akka.util.Timeout;
@@ -248,10 +247,9 @@ public class SmartAgent implements StatusReporter {
     }
 
     /**
-     * Subscribe two kinds of events: {@code DisassociatedEvent} and
-     * {@code AssociationErrorEvent}. They will be handled by
-     * {@link WaitForRegisterAgent#apply method} and {@link Serve#apply
-     * method}.
+     * Subscribe two kinds of events: {@code DisassociatedEvent}. It
+     * will be handled by {@link WaitForRegisterAgent#apply method} and
+     * {@link Serve#apply method}.
      */
     @Override
     public void preStart() {
@@ -259,8 +257,6 @@ public class SmartAgent implements StatusReporter {
       getContext().become(new WaitForFindMaster(findMaster));
       this.context().system().eventStream().subscribe(
           self(), DisassociatedEvent.class);
-      this.context().system().eventStream().subscribe(
-          self(), AssociationErrorEvent.class);
     }
 
     /**
@@ -354,8 +350,8 @@ public class SmartAgent implements StatusReporter {
 
       /**
        * Disassociation can occur during agent wait for the registry. So if
-       * {@code DisassociatedEvent} or {@code AssociationErrorEvent} is
-       * received, the context will become the preceding one to find master.
+       * {@code DisassociatedEvent} is received, the context will become the
+       * preceding one to find master.
        *
        * <p>Since agent may disassociate with master during running SSM tasks,
        * cmdlet status report can be delivered under this context. Similar to
@@ -374,10 +370,9 @@ public class SmartAgent implements StatusReporter {
               AgentUtils.getFullPath(getContext().system(), getSelf().path()));
           Serve serveContext = new Serve();
           getContext().become(serveContext);
-        } else if (message instanceof DisassociatedEvent
-            || message instanceof AssociationErrorEvent) {
+        } else if (message instanceof DisassociatedEvent) {
           AssociationEvent associEvent = (AssociationEvent) message;
-          // Event for failed master can be repeated published. So ignore it.
+          // Event for failed master can be repeated published. We can ignore it.
           if (!master.path().address().equals(
               associEvent.remoteAddress())) {
             return;
@@ -424,10 +419,9 @@ public class SmartAgent implements StatusReporter {
        * abruptly (mocked by 'kill -9 PID') while agent has dead letters
        * (e.g., cmdlet status report). Under this scenario, agent will spend
        * around 30min to try to associate with master and deliver letters. So
-       * we enable agent subscribe and listen {@code DisassociatedEvent} and
-       * {@code AssociationErrorEvent}. See {@link AgentActor#preStart method
-       * prestart}. The context will be shifted to find new master if any one
-       * of these two events is received.
+       * we enable agent subscribe and listen {@code DisassociatedEvent}. See
+       * {@link AgentActor#preStart prestart}. The context will be shifted to
+       * find new master if this event is received.
        */
       @Override
       public void apply(Object message) throws Exception {
@@ -448,8 +442,7 @@ public class SmartAgent implements StatusReporter {
                 + "a new master...", getSender());
             getContext().become(new WaitForFindMaster(findMaster()));
           }
-        } else if (message instanceof DisassociatedEvent
-            || message instanceof AssociationErrorEvent) {
+        } else if (message instanceof DisassociatedEvent) {
           AssociationEvent associEvent = (AssociationEvent) message;
           // Event for failed master can be repeated published. So ignore it.
           if (!master.path().address().equals(

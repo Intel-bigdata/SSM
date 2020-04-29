@@ -23,7 +23,6 @@ import akka.actor.Props;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
-import akka.remote.AssociationErrorEvent;
 import akka.remote.AssociationEvent;
 import akka.remote.DisassociatedEvent;
 import akka.util.Timeout;
@@ -216,16 +215,13 @@ public class AgentMaster {
     }
 
     /**
-     * Subscribe two kinds of events: {@code DisassociatedEvent} and
-     * {@code AssociationErrorEvent}. They will be handled by
-     * {@link #handleAssociationEvent method}.
+     * Subscribe two kinds of events: {@code DisassociatedEvent}.
+     * It will be handled by {@link #handleDisassociatedEvent method}.
      */
     @Override
     public void preStart() {
       this.context().system().eventStream().subscribe(
           self(), DisassociatedEvent.class);
-      this.context().system().eventStream().subscribe(
-          self(), AssociationErrorEvent.class);
     }
 
     @Override
@@ -234,7 +230,7 @@ public class AgentMaster {
           handleAgentMessage(message)
               || handleClientMessage(message)
               || handleTerminatedMessage(message)
-              || handleAssociationEvent(message);
+              || handleDisassociatedEvent(message);
       if (!handled) {
         unhandled(message);
       }
@@ -301,12 +297,10 @@ public class AgentMaster {
     }
 
     /**
-     * Remove agent if {@code DisassociatedEvent} or
-     * {@code AssociationErrorEvent} is received.
+     * Remove agent if {@code DisassociatedEvent} is received.
      */
-    private boolean handleAssociationEvent(Object message) {
-      if (!(message instanceof DisassociatedEvent)
-          && !(message instanceof AssociationErrorEvent)) {
+    private boolean handleDisassociatedEvent(Object message) {
+      if (!(message instanceof DisassociatedEvent)) {
         return false;
       }
 
