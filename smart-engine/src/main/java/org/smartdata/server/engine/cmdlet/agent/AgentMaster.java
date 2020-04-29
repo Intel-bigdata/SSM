@@ -215,6 +215,19 @@ public class AgentMaster {
       this.agentManager = agentManager;
     }
 
+    /**
+     * Subscribe two kinds of events: {@code DisassociatedEvent} and
+     * {@code AssociationErrorEvent}. They will be handled by
+     * {@link #handleAssociationEvent method}.
+     */
+    @Override
+    public void preStart() {
+      this.context().system().eventStream().subscribe(
+          self(), DisassociatedEvent.class);
+      this.context().system().eventStream().subscribe(
+          self(), AssociationErrorEvent.class);
+    }
+
     @Override
     public void onReceive(Object message) throws Exception {
       Boolean handled =
