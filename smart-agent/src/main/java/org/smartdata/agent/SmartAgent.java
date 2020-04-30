@@ -136,7 +136,7 @@ public class SmartAgent implements StatusReporter {
     Runtime.getRuntime().addShutdownHook(new Thread() {
       @Override
       public void run() {
-        close();
+        shutdown();
         try {
           currentThread.join();
         } catch (InterruptedException e) {
@@ -161,7 +161,7 @@ public class SmartAgent implements StatusReporter {
     system.awaitTermination();
   }
 
-  public void close() {
+  public void shutdown() {
     Services.stop();
     if (system != null && !system.isTerminated()) {
       LOG.info("Shutting down system {}", AgentUtils.getSystemAddres(system));
@@ -354,11 +354,16 @@ public class SmartAgent implements StatusReporter {
         this.agent = agent;
       }
 
+      /**
+       * {@link SmartAgent#shutdown() shutdown} will be called before
+       * the program exits.
+       */
       @Override
       public void run() {
         getSelf().tell(PoisonPill.getInstance(), ActorRef.noSender());
         LOG.info("Failed to find master after {}; Shutting down...", TIMEOUT);
-        agent.close();
+        // Now that akka actor will not work, no need to keep program alive.
+        System.exit(-1);
       }
     }
   }
