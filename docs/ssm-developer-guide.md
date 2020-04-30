@@ -50,3 +50,10 @@ socket message to your local computer 8008 port. And you also need to change the
 server host name with your local computer's host name .
 
   `ssh -L 8008:{REMOTE_SERVER}:8008 {USER}@{PROXY_HOST} -N`
+
+
+## **Third-party Lib's Doc Link**
+
+[Hazelcast](https://docs.hazelcast.org/docs/3.7.8/manual/pdf/hazelcast-documentation-3.7.8.pdf)
+
+[Akka](https://doc.akka.io/docs/akka/2.3/AkkaJava.pdf)
