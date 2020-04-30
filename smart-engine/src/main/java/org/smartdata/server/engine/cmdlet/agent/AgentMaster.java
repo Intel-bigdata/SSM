@@ -244,6 +244,7 @@ public class AgentMaster {
       } else if (message instanceof RegisterAgent) {
         RegisterAgent register = (RegisterAgent) message;
         ActorRef agent = getSender();
+        // Watch this agent to listen messages delivered from it.
         getContext().watch(agent);
         AgentId id = register.getId();
         AgentRegistered registered = new AgentRegistered(id);
@@ -289,6 +290,8 @@ public class AgentMaster {
         Terminated terminated = (Terminated) message;
         ActorRef agent = terminated.actor();
         AgentId id = this.agentManager.removeAgent(agent);
+        // Unwatch this agent to avoid trying re-association.
+        this.context().unwatch(agent);
         LOG.warn("SmartAgent ({} {} down", id, agent);
         return true;
       } else {
@@ -303,7 +306,6 @@ public class AgentMaster {
       if (!(message instanceof DisassociatedEvent)) {
         return false;
       }
-
       AssociationEvent associEvent = (AssociationEvent) message;
       ActorRef agent = agentManager.getAgentActorByAddress(
           associEvent.getRemoteAddress());
@@ -316,6 +318,8 @@ public class AgentMaster {
           associEvent.eventName(), associEvent.toString());
       LOG.warn("Removing the disassociated agent: " + agent.path().address());
       agentManager.removeAgent(agent);
+      // Unwatch this agent to avoid trying re-association.
+      this.context().unwatch(agent);
       return true;
     }
   }

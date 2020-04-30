@@ -408,10 +408,14 @@ public class SmartAgent implements StatusReporter {
       }
 
       private void applyUnhandledMessage() {
+        if (unhandledMessages.isEmpty()) {
+          return;
+        }
+        LOG.info("Applying {} unhandled message(s)...",
+            unhandledMessages.size());
         while (unhandledMessages.size() != 0) {
           Object message = unhandledMessages.pollFirst();
           try {
-            LOG.info("Applying cached message: " + message.toString());
             this.apply(message);
           } catch (Exception e) {
             LOG.warn("Failed to handle message: "
