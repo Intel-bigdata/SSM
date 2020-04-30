@@ -261,8 +261,17 @@ public class SmartAgent implements StatusReporter {
     /**
      * Find master by trying to send message to configured smart servers one
      * by one. The retry interval value and timeout value are specified above.
+     *
+     * <p>Agent will find a new master if current master crashes, so before
+     * that, agent need unwatch crashed master to avoid trying re-association.
      */
     private Cancellable findMaster() {
+      if (master != null) {
+        LOG.info("Before finding master, unwatch current master: "
+            + master.path().address());
+        this.context().unwatch(master);
+        master = null;
+      }
       return AgentUtils.repeatActionUntil(getContext().system(),
           Duration.Zero(), RETRY_INTERVAL, TIMEOUT,
           new Runnable() {
@@ -362,6 +371,7 @@ public class SmartAgent implements StatusReporter {
         if (message instanceof AgentRegistered) {
           AgentRegistered registered = (AgentRegistered) message;
           registerAgent.cancel();
+          // Watch master and listen messages delivered from it.
           getContext().watch(master);
           AgentActor.this.id = registered.getAgentId();
           LOG.info("SmartAgent {} registered to master: {}",
