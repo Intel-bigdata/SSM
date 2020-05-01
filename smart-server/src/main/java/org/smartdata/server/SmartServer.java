@@ -392,7 +392,7 @@ public class SmartServer {
       }
     } catch (Exception e) {
       LOG.error("Failed to create SmartServer", e);
-      System.exit(1);
+      errorCode = 1;
     } finally {
       System.exit(errorCode);
     }

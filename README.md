@@ -115,9 +115,11 @@ mvn package -D skipTests -P dist,web,hadoop-3.1
 
 Then a package named as `smart-data-${version}.tar.gz` will be generated under `smart-dist/target`.
 
+For other versions of hadoop, we had no complete tests on them. But if SSM's dfs client version, determined by above build option, is compatible with a version of hadoop, there will be no issue.
+Our incomplete tests showed that SSM built for hadoop-3.1.0 can also support hadoop-3.0.0-cdh6.0.1.
+
 Quick Start
 -----------
-
 Please refer to [SSM deployment guide](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-deployment-guide.md).
 
 Third-party dependencies
