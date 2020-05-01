@@ -23,6 +23,8 @@ import akka.actor.Props;
 import akka.actor.Terminated;
 import akka.actor.UntypedActor;
 import akka.pattern.Patterns;
+import akka.remote.AssociationEvent;
+import akka.remote.DisassociatedEvent;
 import akka.util.Timeout;
 import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
@@ -54,7 +56,8 @@ import scala.concurrent.duration.Duration;
 public class AgentMaster {
 
   private static final Logger LOG = LoggerFactory.getLogger(AgentMaster.class);
-  public static final Timeout TIMEOUT = new Timeout(Duration.create(5, TimeUnit.SECONDS));
+  public static final Timeout TIMEOUT =
+      new Timeout(Duration.create(5, TimeUnit.SECONDS));
 
   private ActorSystem system;
   private ActorRef master;
@@ -83,7 +86,8 @@ public class AgentMaster {
     return getAgentMaster(new SmartConf());
   }
 
-  public static AgentMaster getAgentMaster(SmartConf conf) throws IOException {
+  public static AgentMaster getAgentMaster(SmartConf conf)
+      throws IOException {
     if (agentMaster == null) {
       agentMaster = new AgentMaster(conf);
       return agentMaster;
@@ -105,7 +109,8 @@ public class AgentMaster {
       AgentId agentId = (AgentId) askMaster(launch);
       return agentId.getId();
     } catch (Exception e) {
-      LOG.error("Failed to launch Cmdlet {} due to {}", launch, e.getMessage());
+      LOG.error(
+          "Failed to launch Cmdlet {} due to {}", launch, e.getMessage());
       return null;
     }
   }
@@ -114,27 +119,32 @@ public class AgentMaster {
     try {
       askMaster(new StopCmdlet(cmdletId));
     } catch (Exception e) {
-      LOG.error("Failed to stop Cmdlet {} due to {}", cmdletId, e.getMessage());
+      LOG.error(
+          "Failed to stop Cmdlet {} due to {}", cmdletId, e.getMessage());
     }
   }
 
   public void shutdown() {
     if (system != null && !system.isTerminated()) {
       if (master != null && !master.isTerminated()) {
-        LOG.info("Shutting down master {}...", AgentUtils.getFullPath(system, master.path()));
+        LOG.info("Shutting down master {}...",
+            AgentUtils.getFullPath(system, master.path()));
         system.stop(master);
       }
 
-      LOG.info("Shutting down system {}...", AgentUtils.getSystemAddres(system));
+      LOG.info("Shutting down system {}...",
+          AgentUtils.getSystemAddres(system));
       system.shutdown();
     }
   }
 
   public List<AgentInfo> getAgentInfos() {
     List<AgentInfo> infos = new ArrayList<>();
-    for (Map.Entry<ActorRef, AgentId> entry : agentManager.getAgents().entrySet()) {
+    for (Map.Entry<ActorRef, AgentId> entry :
+        agentManager.getAgents().entrySet()) {
       String location = AgentUtils.getHostPort(entry.getKey());
-      infos.add(new AgentInfo(String.valueOf(entry.getValue().getId()), location));
+      infos.add(new AgentInfo(String.valueOf(
+          entry.getValue().getId()), location));
     }
     return infos;
   }
@@ -165,10 +175,12 @@ public class AgentMaster {
 
     @Override
     public void run() {
-      system = ActorSystem.apply(AgentConstants.MASTER_ACTOR_SYSTEM_NAME, config);
+      system = ActorSystem.apply(
+          AgentConstants.MASTER_ACTOR_SYSTEM_NAME, config);
 
       master = system.actorOf(masterProps, AgentConstants.MASTER_ACTOR_NAME);
-      LOG.info("MasterActor created at {}", AgentUtils.getFullPath(system, master.path()));
+      LOG.info("MasterActor created at {}",
+          AgentUtils.getFullPath(system, master.path()));
       final Thread currentThread = Thread.currentThread();
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
@@ -190,7 +202,8 @@ public class AgentMaster {
     private final Map<Long, ActorRef> dispatches = new HashMap<>();
     private AgentManager agentManager;
 
-    public MasterActor(CmdletManager statusUpdater, AgentManager agentManager) {
+    public MasterActor(CmdletManager statusUpdater,
+        AgentManager agentManager) {
       this(agentManager);
       if (statusUpdater != null) {
         setCmdletManager(statusUpdater);
@@ -201,12 +214,23 @@ public class AgentMaster {
       this.agentManager = agentManager;
     }
 
+    /**
+     * Subscribe an event: {@code DisassociatedEvent}. It will be
+     * handled by {@link #handleDisassociatedEvent method}.
+     */
+    @Override
+    public void preStart() {
+      this.context().system().eventStream().subscribe(
+          self(), DisassociatedEvent.class);
+    }
+
     @Override
     public void onReceive(Object message) throws Exception {
       Boolean handled =
           handleAgentMessage(message)
               || handleClientMessage(message)
-              || handleTerminatedMessage(message);
+              || handleTerminatedMessage(message)
+              || handleDisassociatedEvent(message);
       if (!handled) {
         unhandled(message);
       }
@@ -214,11 +238,13 @@ public class AgentMaster {
 
     private boolean handleAgentMessage(Object message) {
       if (message instanceof RegisterNewAgent) {
-        getSelf().forward(new RegisterAgent(((RegisterNewAgent) message).getId()), getContext());
+        getSelf().forward(new RegisterAgent(
+            ((RegisterNewAgent) message).getId()), getContext());
         return true;
       } else if (message instanceof RegisterAgent) {
         RegisterAgent register = (RegisterAgent) message;
         ActorRef agent = getSender();
+        // Watch this agent to listen messages delivered from it.
         getContext().watch(agent);
         AgentId id = register.getId();
         AgentRegistered registered = new AgentRegistered(id);
@@ -264,11 +290,37 @@ public class AgentMaster {
         Terminated terminated = (Terminated) message;
         ActorRef agent = terminated.actor();
         AgentId id = this.agentManager.removeAgent(agent);
+        // Unwatch this agent to avoid trying re-association.
+        this.context().unwatch(agent);
         LOG.warn("SmartAgent ({} {} down", id, agent);
         return true;
       } else {
         return false;
       }
+    }
+
+    /**
+     * Remove agent if {@code DisassociatedEvent} is received.
+     */
+    private boolean handleDisassociatedEvent(Object message) {
+      if (!(message instanceof DisassociatedEvent)) {
+        return false;
+      }
+      AssociationEvent associEvent = (AssociationEvent) message;
+      ActorRef agent = agentManager.getAgentActorByAddress(
+          associEvent.getRemoteAddress());
+      // The agent may be already removed. Return true to indicate
+      // the message has been handled.
+      if (agent == null) {
+        return true;
+      }
+      LOG.warn("Received event: {}, details: {}",
+          associEvent.eventName(), associEvent.toString());
+      LOG.warn("Removing the disassociated agent: " + agent.path().address());
+      agentManager.removeAgent(agent);
+      // Unwatch this agent to avoid trying re-association.
+      this.context().unwatch(agent);
+      return true;
     }
   }
 }
