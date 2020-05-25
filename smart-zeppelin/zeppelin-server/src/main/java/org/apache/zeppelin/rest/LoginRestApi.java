@@ -185,8 +185,6 @@ public class LoginRestApi {
           LOG.error("Exception in setting password: ", e);
         }
       } else {
-        // TODO: respond to front-point with this message.
-        // TODO: Or, do the validation in front-point.
         LOG.warn("Unmatched password typed in two times, please do it again!");
       }
     }
@@ -224,9 +222,11 @@ public class LoginRestApi {
       return new JsonResponse(Response.Status.NOT_MODIFIED, msg, "").build();
     }
 
-    String password = Hashing.sha512().hashString(adminPassword, StandardCharsets.UTF_8).toString();
+    String password = Hashing.sha512().hashString(
+        adminPassword, StandardCharsets.UTF_8).toString();
     try {
-      boolean hasCredential = engine.getCmdletManager().authentic(new UserInfo(SSM_ADMIN, password));
+      boolean hasCredential = engine.getCmdletManager().authentic(
+          new UserInfo(SSM_ADMIN, password));
       if (hasCredential && currentUser.isAuthenticated()) {
         engine.getCmdletManager().addNewUser(new UserInfo(userName, password1));
       } else {
