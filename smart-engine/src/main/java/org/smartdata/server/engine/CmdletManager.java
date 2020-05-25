@@ -312,6 +312,10 @@ public class CmdletManager extends AbstractService {
     dispatcher.registerExecutorService(executorService);
   }
 
+  public void addNewUser(UserInfo userInfo) throws MetaStoreException {
+    metaStore.insertUserInfo(userInfo);
+  }
+
   public void newPassword(
       UserInfo userInfo) throws MetaStoreException {
     try {
@@ -324,6 +328,10 @@ public class CmdletManager extends AbstractService {
   public boolean authentic (UserInfo userInfo) throws MetaStoreException {
     try {
       UserInfo origin = metaStore.getUserInfoByUserName(userInfo.getUserName());
+      if (origin == null) {
+        LOG.warn("The given user is not registered: " + userInfo.getUserName());
+        return false;
+      }
       return origin.equals(userInfo);
     } catch (Exception e) {
       throw new MetaStoreException(e);

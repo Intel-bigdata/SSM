@@ -48,7 +48,7 @@ public class SecurityUtils {
   private static final String ANONYMOUS = "anonymous";
   private static final HashSet<String> EMPTY_HASHSET = Sets.newHashSet();
   private static boolean isEnabled = false;
-  private static final Logger log = LoggerFactory.getLogger(SecurityUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SecurityUtils.class);
   
   public static void initSecurityManager(String shiroPath) {
     IniSecurityManagerFactory factory = new IniSecurityManagerFactory("file:" + shiroPath);
@@ -77,7 +77,7 @@ public class SecurityUtils {
   }
 
   /**
-   * Return the authenticated user if any otherwise returns "anonymous"
+   * Return the authenticated user if any, otherwise returns "anonymous"
    *
    * @return shiro principal
    */

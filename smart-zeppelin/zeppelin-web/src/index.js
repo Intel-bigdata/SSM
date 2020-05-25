@@ -60,6 +60,7 @@ import './components/saveAs/saveAs.service.js';
 import './components/searchService/search.service.js';
 import './components/login/login.controller.js';
 import './components/newPassword/newPassword.controller.js';
+import './components/adduser/adduser.controller.js';
 import './components/elasticInputCtrl/elasticInput.controller.js';
 import './components/notevarshareService/notevarshare.service.js';
 import './components/helium/helium.service.js';
