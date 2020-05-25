@@ -12,11 +12,11 @@
  * limitations under the License.
  */
 
-angular.module('zeppelinWebApp').controller('addUserCtrl', addUserCtrl);
+angular.module('zeppelinWebApp').controller('addUserCtrl', AddUserCtrl);
 
-addUserCtrl.$inject = ['$scope', '$rootScope', '$http',
+AddUserCtrl.$inject = ['$scope', '$rootScope', '$http',
   '$httpParamSerializer', 'baseUrlSrv', '$location', '$timeout'];
-function addUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, $location, $timeout) {
+function AddUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, $location, $timeout) {
 
   $scope.SigningIn = false;
   $scope.addUserCtrlParams = {};
