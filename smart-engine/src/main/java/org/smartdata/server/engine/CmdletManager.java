@@ -325,6 +325,12 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  /**
+   * Compare userInfo(userName, password) with the one recorded in metastore.
+   * @param userInfo  its password should be encrypted by SHA512.
+   * @return  true if the given user info equals the one recorded in metastore.
+   * @throws MetaStoreException
+   */
   public boolean authentic (UserInfo userInfo) throws MetaStoreException {
     try {
       UserInfo origin = metaStore.getUserInfoByUserName(userInfo.getUserName());

@@ -15,7 +15,7 @@ limitations under the License.
 <div class="container" style="width: 100%;">
   <div class="box" style="margin-top: 100px;width: 650px;margin-left: auto;margin-right: auto;">
     <div class="modal-header">
-      <h2 class="modal-title">Change Password</h2>
+      <h2 class="modal-title">Add New User</h2>
     </div>
     <div class="modal-body">
       <div class="form-group" ng-show="addUserCtrlParams.errorText">
@@ -50,10 +50,10 @@ limitations under the License.
     </div>
     <div class="modal-footer" ng-switch on="SigningIn">
       <div ng-switch-when="true">
-        <button type="button" class="btn btn-default btn-primary" disabled><i class="fa fa-circle-o-notch fa-spin"></i> Updating</button>
+        <button type="button" class="btn btn-default btn-primary" disabled><i class="fa fa-circle-o-notch fa-spin"></i>Updating</button>
       </div>
       <div ng-switch-default>
-        <button type="button" class="btn btn-default btn-primary" ng-click="login()">Update Password</button>
+        <button type="button" class="btn btn-default btn-primary" ng-click="login()">Add New User</button>
       </div>
     </div>
   </div>

@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-angular.module('zeppelinWebApp').controller('addUserCtrl', AddUserCtrl);
+angular.module('zeppelinWebApp').controller('AddUserCtrl', AddUserCtrl);
 
 AddUserCtrl.$inject = ['$scope', '$rootScope', '$http',
   '$httpParamSerializer', 'baseUrlSrv', '$location', '$timeout'];
@@ -36,16 +36,15 @@ function AddUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv
         'password2': $scope.addUserCtrlParams.password2
       })
     }).then(function successCallback(response) {
-      $rootScope.ticket = response.data.body;
-      angular.element('#loginModal').modal('toggle');
+//      $rootScope.ticket = response.data.body;
+//      angular.element('#loginModal').modal('toggle');
       $rootScope.$broadcast('loginSuccess', true);
-      $rootScope.userName = $scope.addUserCtrlParams.userName;
-      $scope.SigningIn = false;
-
-      $location.path('/notebook');
+//      $rootScope.userName = $scope.addUserCtrlParams.userName;
+//      $scope.SigningIn = false;
+//      $location.path('/notebook');
     }, function errorCallback(errorResponse) {
-      $scope.addUserCtrlParams.errorText = 'The username and password that you entered don\'t match.';
-      $scope.SigningIn = false;
+      $scope.addUserCtrlParams.errorText = errorResponse.data.message;
+//      $scope.SigningIn = false;
     });
 
   };

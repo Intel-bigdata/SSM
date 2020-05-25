@@ -16,8 +16,6 @@
  */
 package org.apache.zeppelin.rest;
 
-import com.google.common.hash.Hashing;
-import com.sun.jersey.api.JResponseAsResponse;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.subject.Subject;
 import org.apache.zeppelin.annotation.ZeppelinApi;
@@ -31,13 +29,13 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.UserInfo;
 import org.smartdata.server.SmartEngine;
+import org.smartdata.utils.StringUtil;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -128,7 +126,7 @@ public class LoginRestApi {
     }
     boolean isCorrectCredential = false;
     try {
-      password = Hashing.sha512().hashString(password, StandardCharsets.UTF_8).toString();
+      password = StringUtil.toSHA512String(password);
       isCorrectCredential = engine.getCmdletManager().authentic(new UserInfo(userName, password));
     } catch (Exception e) {
       LOG.error("Exception in login: ", e);
@@ -171,7 +169,7 @@ public class LoginRestApi {
     }
     boolean isCorrectCredential = false;
     try {
-      String password = Hashing.sha512().hashString(oldPassword, StandardCharsets.UTF_8).toString();
+      String password = StringUtil.toSHA512String(oldPassword);
       isCorrectCredential = engine.getCmdletManager().authentic(new UserInfo(userName, password));
     } catch (Exception e) {
       LOG.error("Exception in login: ", e);
@@ -222,8 +220,7 @@ public class LoginRestApi {
       return new JsonResponse(Response.Status.NOT_MODIFIED, msg, "").build();
     }
 
-    String password = Hashing.sha512().hashString(
-        adminPassword, StandardCharsets.UTF_8).toString();
+    String password = StringUtil.toSHA512String(adminPassword);
     try {
       boolean hasCredential = engine.getCmdletManager().authentic(
           new UserInfo(SSM_ADMIN, password));
