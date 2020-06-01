@@ -2228,18 +2228,14 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void insertUserInfo(UserInfo userInfo)
       throws MetaStoreException {
-    try {
-      if (userInfoDao.containsUserName(userInfo.getUserName())) {
-        throw new Exception("The user name already exists");
-      }
-      userInfoDao.insert(userInfo);
-    } catch (Exception e) {
-      throw new MetaStoreException(e);
+    if (userInfoDao.containsUserName(userInfo.getUserName())) {
+      throw new MetaStoreException("The user already exists!");
     }
+    userInfoDao.insert(userInfo);
   }
 
   public void insertUpdateFileState(FileState fileState)
-    throws MetaStoreException {
+      throws MetaStoreException {
     try {
       // Update corresponding tables according to the file state
       fileStateDao.insertUpdate(fileState);

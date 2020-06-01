@@ -44,7 +44,8 @@ function NewPasswordCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUr
 
       $location.path('/notebook');
     }, function errorCallback(errorResponse) {
-      $scope.newPasswordCtrlParams.errorText = 'The username and password that you entered don\'t match.';
+      $scope.newPasswordCtrlParams.errorText =
+      'The username and password that you entered don\'t match.';
       $scope.SigningIn = false;
     });
 
