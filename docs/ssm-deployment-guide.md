@@ -170,13 +170,11 @@ If this property is not set or exception occurs when SSM tries to get metastore 
 
 For getting more details, please refer to https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/CredentialProviderAPI.html.
 
-## **Configure user account to authenticate to web UI**
+## **Configure SSM user account**
 
-By default, SSM Web UI enables admin login with username "admin" and password "ssm@123".  If user wants to define more user accounts, make modification in conf/shiro.ini file.
+By default, SSM Web UI enables admin login with username "admin" and password "ssm@123".
 
-Admin can change the password on SSM web UI (top right corner, admin/Change Password) after login.
-
-After finishing the SSM configuration, we can start to deploy the SSM package with the configuration files to all involved servers.
+Authenticated user can change password on SSM web UI (top right corner, admin/Change Password) after login.
 
 Admin can also add new user on web UI (admin/Add New User). Please note only admin user has this permission.
 
