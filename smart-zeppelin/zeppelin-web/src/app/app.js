@@ -79,6 +79,10 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'components/newPassword/newPassword.html',
         controller: 'NewPasswordCtrl'
       })
+      .when('/adduser', {
+        templateUrl: 'components/adduser/adduser.html',
+        controller: 'AddUserCtrl'
+      })
       .when('/notebook', {
         templateUrl: 'app/notebook/notebook.html',
         controller: 'NotebookCtrl',

@@ -17,7 +17,6 @@
  */
 package org.smartdata.metastore.utils;
 
-import com.google.common.hash.Hashing;
 import com.mysql.jdbc.NonRegisteringDriver;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -27,12 +26,12 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.DruidPool;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
+import org.smartdata.utils.StringUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -65,6 +64,7 @@ public class MetaStoreUtils {
       };
   static final Logger LOG = LoggerFactory.getLogger(MetaStoreUtils.class);
   private static int characterTakeUpBytes = 1;
+  private static final String defaultPassword = "ssm@123";
 
   public static final String TABLESET[] = new String[]{
             "access_count_table",
@@ -160,7 +160,7 @@ public class MetaStoreUtils {
       tableList.add("DROP TABLE IF EXISTS " + table);
     }
     String deleteExistingTables[] = tableList.toArray(new String[tableList.size()]);
-    String password = Hashing.sha512().hashString("ssm@123", StandardCharsets.UTF_8).toString();
+    String password = StringUtil.toSHA512String(defaultPassword);
     String createEmptyTables[] =
         new String[] {
           "CREATE TABLE access_count_table (\n"

@@ -12,51 +12,44 @@
  * limitations under the License.
  */
 
-angular.module('zeppelinWebApp').controller('NewPasswordCtrl', NewPasswordCtrl);
+angular.module('zeppelinWebApp').controller('AddUserCtrl', AddUserCtrl);
 
-NewPasswordCtrl.$inject = ['$scope', '$rootScope', '$http',
+AddUserCtrl.$inject = ['$scope', '$rootScope', '$http',
   '$httpParamSerializer', 'baseUrlSrv', '$location', '$timeout'];
-function NewPasswordCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, $location, $timeout) {
+function AddUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, $location, $timeout) {
 
-  $scope.SigningIn = false;
-  $scope.newPasswordCtrlParams = {};
-  $scope.login = function() {
-
-    $scope.SigningIn = true;
+  $scope.registering = false;
+  $scope.addUserCtrlParams = {};
+  $scope.addUserFunction = function() {
+    $scope.registering = true;
     $http({
       method: 'POST',
-      url: baseUrlSrv.getRestApiBase() + '/login/newPassword',
+      url: baseUrlSrv.getRestApiBase() + '/login/adduser',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       data: $httpParamSerializer({
-        'userName': $scope.newPasswordCtrlParams.userName,
-        'oldPassword': $scope.newPasswordCtrlParams.oldPassword,
-        'newPassword1': $scope.newPasswordCtrlParams.newPassword1,
-        'newPassword2': $scope.newPasswordCtrlParams.newPassword2
+        'adminPassword': $scope.addUserCtrlParams.adminPassword,
+        'userName': $scope.addUserCtrlParams.userName,
+        'password1': $scope.addUserCtrlParams.password1,
+        'password2': $scope.addUserCtrlParams.password2
       })
     }).then(function successCallback(response) {
-      $rootScope.ticket = response.data.body;
-      angular.element('#loginModal').modal('toggle');
-      $rootScope.$broadcast('loginSuccess', true);
-      $rootScope.userName = $scope.newPasswordCtrlParams.userName;
-      $scope.SigningIn = false;
-
-      $location.path('/notebook');
+      $scope.addUserCtrlParams.responseText = 'Successfully registered!';
+      $scope.registering = false;
     }, function errorCallback(errorResponse) {
-      $scope.newPasswordCtrlParams.errorText =
-      'The username and password that you entered don\'t match.';
-      $scope.SigningIn = false;
+      $scope.addUserCtrlParams.responseText = errorResponse.data.message;
+      $scope.registering = false;
     });
 
   };
 
   var initValues = function() {
-    $scope.newPasswordCtrlParams = {
+    $scope.addUserCtrlParams = {
+      adminPassword: '',
       userName: '',
-      oldPassword: '',
-      newPassword1: '',
-      newPassword2: ''
+      password1: '',
+      password2: ''
     };
   };
 
@@ -67,8 +60,8 @@ function NewPasswordCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUr
       $rootScope.ticket = undefined;
 
       setTimeout(function() {
-        $scope.newPasswordCtrlParams = {};
-        $scope.newPasswordCtrlParams.errorText = data.info;
+        $scope.addUserCtrlParams = {};
+        $scope.addUserCtrlParams.responseText = data.info;
         angular.element('.nav-login-btn').click();
       }, 1000);
       var locationPath = $location.path();

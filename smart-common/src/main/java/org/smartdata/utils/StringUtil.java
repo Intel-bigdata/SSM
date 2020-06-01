@@ -19,6 +19,9 @@
  */
 package org.smartdata.utils;
 
+import com.google.common.hash.Hashing;
+
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -253,5 +256,9 @@ public class StringUtil {
     }
     ret = Long.parseLong(str);
     return ret * times;
+  }
+
+  public static String toSHA512String(String password) {
+    return Hashing.sha512().hashString(password, StandardCharsets.UTF_8).toString();
   }
 }

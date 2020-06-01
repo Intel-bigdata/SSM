@@ -21,6 +21,7 @@ import java.util.Objects;
 
 public class UserInfo {
   private final String name;
+  // Needs to be encrypted by sha512 when inserted to Metastore.
   private final String password;
 
   public UserInfo(String name, String password) {

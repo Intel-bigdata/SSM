@@ -17,15 +17,14 @@
  */
 package org.smartdata.metastore.dao;
 
-import com.google.common.hash.Hashing;
 import org.smartdata.model.UserInfo;
+import org.smartdata.utils.StringUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -75,7 +74,8 @@ public class UserInfoDao {
   public void insert(UserInfo userInfo) {
     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(dataSource);
     simpleJdbcInsert.setTableName(TABLE_NAME);
-    simpleJdbcInsert.execute(toMap(userInfo));
+    simpleJdbcInsert.execute(toMap(new UserInfo(userInfo.getUserName(),
+        StringUtil.toSHA512String(userInfo.getUserPassword()))));
   }
 
   public boolean authentic (UserInfo userInfo) {
@@ -86,8 +86,8 @@ public class UserInfoDao {
   public int newPassword(UserInfo userInfo) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "UPDATE " + TABLE_NAME + " SET user_password = ? WHERE user_name = ?";
-    return jdbcTemplate.update(sql, Hashing.sha512().hashString(userInfo.getUserPassword(),
-        StandardCharsets.UTF_8).toString(), userInfo.getUserName());
+    return jdbcTemplate.update(sql, StringUtil.toSHA512String(userInfo.getUserPassword()),
+        userInfo.getUserName());
   }
 
   public void deleteAll() {
