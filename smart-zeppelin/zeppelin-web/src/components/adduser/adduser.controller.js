@@ -18,11 +18,10 @@ AddUserCtrl.$inject = ['$scope', '$rootScope', '$http',
   '$httpParamSerializer', 'baseUrlSrv', '$location', '$timeout'];
 function AddUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv, $location, $timeout) {
 
-  $scope.SigningIn = false;
+  $scope.registering = false;
   $scope.addUserCtrlParams = {};
-  $scope.login = function() {
-
-    $scope.SigningIn = true;
+  $scope.addUserFunction = function() {
+    $scope.registering = true;
     $http({
       method: 'POST',
       url: baseUrlSrv.getRestApiBase() + '/login/adduser',
@@ -36,15 +35,11 @@ function AddUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv
         'password2': $scope.addUserCtrlParams.password2
       })
     }).then(function successCallback(response) {
-//      $rootScope.ticket = response.data.body;
-//      angular.element('#loginModal').modal('toggle');
-      $rootScope.$broadcast('loginSuccess', true);
-//      $rootScope.userName = $scope.addUserCtrlParams.userName;
-//      $scope.SigningIn = false;
-//      $location.path('/notebook');
+      $scope.addUserCtrlParams.responseText = 'Successfully registered!';
+      $scope.registering = false;
     }, function errorCallback(errorResponse) {
-      $scope.addUserCtrlParams.errorText = errorResponse.data.message;
-//      $scope.SigningIn = false;
+      $scope.addUserCtrlParams.responseText = errorResponse.data.message;
+      $scope.registering = false;
     });
 
   };
@@ -66,7 +61,7 @@ function AddUserCtrl($scope, $rootScope, $http, $httpParamSerializer, baseUrlSrv
 
       setTimeout(function() {
         $scope.addUserCtrlParams = {};
-        $scope.addUserCtrlParams.errorText = data.info;
+        $scope.addUserCtrlParams.responseText = data.info;
         angular.element('.nav-login-btn').click();
       }, 1000);
       var locationPath = $location.path();

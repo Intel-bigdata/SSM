@@ -18,8 +18,8 @@ limitations under the License.
       <h2 class="modal-title">Add New User</h2>
     </div>
     <div class="modal-body">
-      <div class="form-group" ng-show="addUserCtrlParams.errorText">
-        <div class="alert alert-danger">{{addUserCtrlParams.errorText}}</div>
+      <div class="form-group" ng-show="addUserCtrlParams.responseText">
+        <div class="alert alert-danger">{{addUserCtrlParams.responseText}}</div>
       </div>
       <div class="form-group">
         <label for="password">Admin Password</label>
@@ -42,18 +42,18 @@ limitations under the License.
       <div class="form-group">
         <label for="password">Confirm New Password</label>
         <input placeholder="New User's Password" type="password" class="form-control" id="password2"
-               ng-enter="login()"
+               ng-enter="addUserFunction()"
                ng-keypress="addUserCtrlParams.errorText = ''"
                ng-model="addUserCtrlParams.password2" />
       </div>
 
     </div>
-    <div class="modal-footer" ng-switch on="SigningIn">
+    <div class="modal-footer" ng-switch on="registering">
       <div ng-switch-when="true">
-        <button type="button" class="btn btn-default btn-primary" disabled><i class="fa fa-circle-o-notch fa-spin"></i>Updating</button>
+        <button type="button" class="btn btn-default btn-primary" disabled><i class="fa fa-circle-o-notch fa-spin"></i>Registering</button>
       </div>
       <div ng-switch-default>
-        <button type="button" class="btn btn-default btn-primary" ng-click="login()">Add New User</button>
+        <button type="button" class="btn btn-default btn-primary" ng-click="addUserFunction()">Add New User</button>
       </div>
     </div>
   </div>

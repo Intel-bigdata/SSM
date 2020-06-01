@@ -170,7 +170,8 @@ public class LoginRestApi {
     boolean isCorrectCredential = false;
     try {
       String password = StringUtil.toSHA512String(oldPassword);
-      isCorrectCredential = engine.getCmdletManager().authentic(new UserInfo(userName, password));
+      isCorrectCredential =
+          engine.getCmdletManager().authentic(new UserInfo(userName, password));
     } catch (Exception e) {
       LOG.error("Exception in login: ", e);
     }
@@ -191,9 +192,9 @@ public class LoginRestApi {
       response = loginWithZeppelinCredential(currentUser);
     }
     if (response == null) {
+      LOG.warn("Incorrect credential for changing password!");
       response = new JsonResponse(Response.Status.FORBIDDEN, "", "");
     }
-    LOG.warn(response.toString());
     return response.build();
   }
 
@@ -215,9 +216,9 @@ public class LoginRestApi {
       @FormParam("password2") String password2) {
     Subject currentUser = org.apache.shiro.SecurityUtils.getSubject();
     if (!password1.equals(password2)) {
-      String msg = "Failed to add new user due to inconsistent password typed in two times!";
+      String msg = "Unmatched password typed in two times!";
       LOG.warn(msg);
-      return new JsonResponse(Response.Status.NOT_MODIFIED, msg, "").build();
+      return new JsonResponse(Response.Status.BAD_REQUEST, msg, "").build();
     }
 
     String password = StringUtil.toSHA512String(adminPassword);
@@ -227,13 +228,16 @@ public class LoginRestApi {
       if (hasCredential && currentUser.isAuthenticated()) {
         engine.getCmdletManager().addNewUser(new UserInfo(userName, password1));
       } else {
-        LOG.warn("Has no permission to add new user!");
-        return new JsonResponse(Response.Status.FORBIDDEN, "", "").build();
+        String msg = "The typed admin password is not correct!";
+        LOG.warn(msg + " Failed to register new user!");
+        return new JsonResponse(Response.Status.FORBIDDEN, msg, "").build();
       }
     } catch (MetaStoreException e) {
       LOG.warn(e.getMessage());
-      return new JsonResponse(Response.Status.NOT_MODIFIED, e.getMessage(), "").build();
+      return new JsonResponse(Response.Status.BAD_REQUEST,
+          e.getMessage(), "").build();
     }
-    return new JsonResponse(Response.Status.ACCEPTED, "", "").build();
+    return new JsonResponse(Response.Status.OK,
+        "", "").build();
   }
 }
