@@ -481,7 +481,7 @@ last 5 minutes, SSM should trigger an action to move the file to SSD. Rule engin
 will evaluate the condition every MAX{5s,5m/20} interval.
 
 
-## **Move to Archive(Cold) rule**
+## **Move to Archive (Cold) rule**
 
 	`file: path matches "/test/*" and age > 5h | archive`
 
@@ -597,21 +597,33 @@ SSM supports concurrently fetching namespace. You can set a large value for each
 ```
 ##  Disable SSM SmartDFSClient
 
-For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+If you do want to disable SmartDFSClients on a specific host from connecting to SSM server for reporting access event, it can be realized by using the following commands.
 
-To disable SmartDFSClients on hosts:
+To disable SmartClient on a host:
+
 `./bin/disable-smartclient.sh --hosts <host names or ips>`
+
 For example: ./bin/disable-smartclient.sh --hosts hostA hostB hostC 192.168.1.1
+
 Or you can write all the host names or ips into a file, one name or ip each line. Then you can use the following command to do the same thing:
+
 `./bin/disable-smartclient.sh --hostsfile <file path>`
 
-After that if you want to re-enable SmartDFSClients, the following commands can be used:
-`./bin/enable-smartclient.sh --hosts <host names or ips>`
-or
-`./bin/enable-smartclient.sh --hostsfile <file path>`
-The arguments are the same as `disable-smartclient.sh`
-Note: To make the scripts work, you have to set up SSH password-less connections between the node that executes these scripts and the rest hosts.
+Then, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
+In essence, /tmp/SMART_CLIENT_DISABLED_ID_FILE is created to tell SmartDFSClient that it should not report access event to Smart Server.
+
+If you want to re-enable SmartDFSClients connect to Smart Server, the following commands can be used:
+
+`./bin/enable-smartclient.sh --hosts <host names or ips>`
+
+or
+
+`./bin/enable-smartclient.sh --hostsfile <file path>`
+
+The arguments are the same as `disable-smartclient.sh`
+
+Note: To make the scripts work, you have to set up SSH password-less connections between the node that executes these scripts and the rest hosts.
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
