@@ -41,7 +41,6 @@ import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
 import org.apache.hadoop.util.Progressable;
-import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.CompactFileState;
 import org.smartdata.model.CompressionFileState;
@@ -55,7 +54,6 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
