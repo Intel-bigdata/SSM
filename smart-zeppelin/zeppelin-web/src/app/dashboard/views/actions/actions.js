@@ -34,6 +34,7 @@ angular.module('zeppelinWebApp')
     $scope.path;
 
     function getActions() {
+    // restapiProtocol is set in smart-zeppelin/zeppelin-web/src/app/app.js. Its value is v1.
       var url = baseUrlSrv.getSmartApiRoot() + conf.restapiProtocol + '/actions/list/'
         + $scope.currentPage + '/' + $scope.pageNumber + '/' + $scope.orderby + '/' + $scope.isDesc;
       setCookie(url, "");
