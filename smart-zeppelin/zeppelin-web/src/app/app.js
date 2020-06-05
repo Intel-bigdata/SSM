@@ -199,6 +199,7 @@ var zeppelinWebApp = angular.module('zeppelinWebApp', [
         templateUrl: 'app/jobmanager/jobmanager.html',
         controller: 'JobmanagerCtrl'
       })
+      // Interpreter is useless currently.
       .when('/interpreter', {
         templateUrl: 'app/interpreter/interpreter.html',
         controller: 'InterpreterCtrl'

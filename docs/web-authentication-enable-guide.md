@@ -4,12 +4,10 @@ Steps to enable authentication on WebUI
 
 2. **conf/zeppeline-site.xml**
    
-   Find property `zeppelin.anonymous.allowed`, change it's value from default  `false` to `true`
+   For property `zeppelin.anonymous.allowed`, change it's value from default `true` to `false`.
    
  
-3. **conf/shiro.ini.template**
-   
-   * rename file to `shiro.ini`
+3. **conf/shiro.ini**
    
    * **[users]** section
    
@@ -28,21 +26,17 @@ Steps to enable authentication on WebUI
    
       ```
       operator = *
-     admin = *    
+      admin = *
      ```
    
    * **[urls]** section
    
-      comment these two lines by putting "#" at the beginning of the line
-      
-      `/api/version = anon`
-      
+      comment the below line by adding "#" to disallow anonymous user access.
+
       `/** = anon`
       
-      uncomment these two lines by removing the heading "#"
-      
-      `/api/interpreter/** = authc, roles[admin]`
-      
+      uncomment the below two lines by removing "#" to only allow authenticated user access.
+
       `/** = authc`
     
 4. **restart SSM service**
@@ -50,17 +44,13 @@ Steps to enable authentication on WebUI
    Visit `http://ssm-server-ip:7045` to open the UI. 
 
 
-
-
-   
 For more information about security configuration, please refer to official document   
    
    `https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html`
    
 or other shiro official documents.
 
-
-
-
-
-   
+Note
+----
+To allow anonymous user login, please do the above setting conversely. Enabling Anonymous user to login
+without authentication can facilitate testing SSM.
