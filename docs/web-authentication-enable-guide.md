@@ -1,6 +1,6 @@
-Steps to enable authentication on WebUI
----------------------------------------------------------------------------------
-1. **Go to the SSM installation directory**
+Enable Web Authentication
+-------------------------
+1. **Go to SSM home directory**
 
 2. **conf/zeppeline-site.xml**
    
@@ -9,35 +9,16 @@ Steps to enable authentication on WebUI
  
 3. **conf/shiro.ini**
    
-   * **[users]** section
-   
-      define supported user name and password. It follows the `username = password, role` format.
-   
-      Here is an example,
-     
-      ```
-      admin = ssm@123, admin
-      ```
-    
-   * **[roles]** section
-   
-      define support roles. Here is an example,
-   
-      ```
-      operator = *
-      admin = *
-     ```
-   
    * **[urls]** section
    
-      comment the below line by adding "#" to disallow anonymous user access.
+      Please comment the below line by adding "#" to disallow anonymous user access all paths.
 
       `/** = anon`
       
-      uncomment the below two lines by removing "#" to only allow authenticated user access.
+      Please uncomment the below two lines by removing "#" to only allow authenticated user access all paths.
 
       `/** = authc`
-    
+
 4. **restart SSM service**
 
    Visit `http://ssm-server-ip:7045` to open the UI. 
