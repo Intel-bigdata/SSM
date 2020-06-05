@@ -399,6 +399,7 @@ public class SmartZeppelinServer {
 
     webApp.setSessionHandler(new SessionHandler());
 
+    // There are two sets of rest api: Zeppelin's and SSM's. They have different path.
     ResourceConfig smartConfig = new ApplicationAdapter(new SmartRestApp());
     ServletHolder smartServletHolder = new ServletHolder(new ServletContainer(smartConfig));
     webApp.addServlet(smartServletHolder, SMART_PATH_SPEC);
@@ -412,9 +413,9 @@ public class SmartZeppelinServer {
       webApp.setInitParameter("shiroConfigLocations",
           new File(shiroIniPath).toURI().toString());
       SecurityUtils.initSecurityManager(shiroIniPath);
-      webApp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
-      webApp.addFilter(ShiroFilter.class, "/smart/api/*", EnumSet.allOf(DispatcherType.class));
-      webApp.addFilter(ShiroFilter.class, "/smart/api/v1/*", EnumSet.allOf(DispatcherType.class));
+      webApp.addFilter(ShiroFilter.class, ZEPPELIN_PATH_SPEC, EnumSet.allOf(DispatcherType.class));
+      // To make shiro configuration (authentication, etc.) take effect for smart rest api as well.
+      webApp.addFilter(ShiroFilter.class, SMART_PATH_SPEC, EnumSet.allOf(DispatcherType.class));
       webApp.addEventListener(new EnvironmentLoaderListener());
     }
   }
