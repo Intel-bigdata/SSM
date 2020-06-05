@@ -48,9 +48,5 @@ function baseUrlSrv() {
 
     return this.getRestApiRoot() + 'api';
   };
-
-  this.getSmartApiRoot = function () {
-    return this.getRestApiRoot() + 'smart/api/';
-  }
 }
 

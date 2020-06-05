@@ -413,6 +413,8 @@ public class SmartZeppelinServer {
           new File(shiroIniPath).toURI().toString());
       SecurityUtils.initSecurityManager(shiroIniPath);
       webApp.addFilter(ShiroFilter.class, "/api/*", EnumSet.allOf(DispatcherType.class));
+      webApp.addFilter(ShiroFilter.class, "/smart/api/*", EnumSet.allOf(DispatcherType.class));
+      webApp.addFilter(ShiroFilter.class, "/smart/api/v1/*", EnumSet.allOf(DispatcherType.class));
       webApp.addEventListener(new EnvironmentLoaderListener());
     }
   }
