@@ -16,8 +16,7 @@ Steps to enable authentication on WebUI
       Here is an example,
      
       ```
-      admin = intel@intel, admin
-      ssmoperator = operator@operation, operator    
+      admin = ssm@123, admin
       ```
     
    * **[roles]** section
@@ -43,14 +42,11 @@ Steps to enable authentication on WebUI
 
    Visit `http://ssm-server-ip:7045` to open the UI. 
 
-
-For more information about security configuration, please refer to official document   
-   
-   `https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html`
-   
-or other shiro official documents.
+For more information about security configuration,
+please refer to [official doc](`https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html`
 
 Note
 ----
-To allow anonymous user login, please do the above setting conversely. Enabling Anonymous user to login
+* If authentication is enabled, by default
+* To allow anonymous user login, please do the above setting conversely. Enabling Anonymous user to login
 without authentication can facilitate testing SSM.
