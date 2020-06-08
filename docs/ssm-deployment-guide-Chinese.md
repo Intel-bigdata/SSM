@@ -133,12 +133,7 @@ SSM需要MySQL来存储元数据，用户需要部署一个MySQL实例，然后�
 
 ## 2.6 配置账号访问Web UI \[可选]
 
-SSM Web UI默认账号密码是`admin/ssm@123`。 如有需要，可编辑`${SMART_HOME}/conf/shiro.ini`文件进行修改：
-
-```
-[users]
-admin = ssm@123, admin
-```
+SSM Web UI默认账号密码是`admin/ssm@123. 可在登录后修改.
 
 ## 2.7 配置Kerberos \[可选]
 

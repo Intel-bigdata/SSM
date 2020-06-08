@@ -172,7 +172,8 @@ For getting more details, please refer to https://hadoop.apache.org/docs/current
 
 ## **Configure SSM user account**
 
-By default, SSM Web UI enables admin login with username "admin" and password "ssm@123".
+By default, anonymous user can login on SSM web UI without authentication. To address security concerns, user can refer to [web-authentication-enable-guide.md](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/web-authentication-enable-guide.md)
+to enable the authentication. After that, please login with the default username and password (admin/ssm@123).
 
 Authenticated user can change password on SSM web UI (top right corner, admin/Change Password) after login.
 
@@ -481,7 +482,7 @@ last 5 minutes, SSM should trigger an action to move the file to SSD. Rule engin
 will evaluate the condition every MAX{5s,5m/20} interval.
 
 
-## **Move to Archive(Cold) rule**
+## **Move to Archive (Cold) rule**
 
 	`file: path matches "/test/*" and age > 5h | archive`
 
@@ -553,7 +554,8 @@ If the current configuration cannot meet your performance requirements, you can 
 ```
 ## Cmdlet history purge in metastore  
 
-SSM will save cmdlet and action execution history in metastore for audit and log purposes. To avoid blowing up the metastore space, SSM supports configuration for periodically purging historical records for cmdlets and actions. Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
+SSM will save cmdlet and action execution history in metastore for audit and log purposes. To avoid blowing up the metastore space, SSM supports configuration for periodically purging historical records for cmdlets and actions.
+Property `smart.cmdlet.hist.max.num.records` and `smart.cmdlet.hist.max.record.lifetime` are supported in smart-site.xml.  When either condition is met, SSM will trigger backend thread to purge the history records.
 ```xml
     <property>
         <name>smart.cmdlet.hist.max.num.records</name>
@@ -597,21 +599,33 @@ SSM supports concurrently fetching namespace. You can set a large value for each
 ```
 ##  Disable SSM SmartDFSClient
 
-For some reasons, if you do want to disable SmartDFSClients on a specific host from contacting SSM server, it can be realized by using the following commands. After that, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
+If you do want to disable SmartDFSClients on a specific host from connecting to SSM server for reporting access event, it can be realized by using the following commands.
 
-To disable SmartDFSClients on hosts:
+To disable SmartClient on a host:
+
 `./bin/disable-smartclient.sh --hosts <host names or ips>`
+
 For example: ./bin/disable-smartclient.sh --hosts hostA hostB hostC 192.168.1.1
+
 Or you can write all the host names or ips into a file, one name or ip each line. Then you can use the following command to do the same thing:
+
 `./bin/disable-smartclient.sh --hostsfile <file path>`
 
-After that if you want to re-enable SmartDFSClients, the following commands can be used:
-`./bin/enable-smartclient.sh --hosts <host names or ips>`
-or
-`./bin/enable-smartclient.sh --hostsfile <file path>`
-The arguments are the same as `disable-smartclient.sh`
-Note: To make the scripts work, you have to set up SSH password-less connections between the node that executes these scripts and the rest hosts.
+Then, newly created SmartDFSClients on that node will not try to connect SSM server while other functions (like HDFS read/write) will remain unaffected.
 
+In essence, /tmp/SMART_CLIENT_DISABLED_ID_FILE is created to tell SmartDFSClient that it should not report access event to Smart Server.
+
+If you want to re-enable SmartDFSClients connect to Smart Server, the following commands can be used:
+
+`./bin/enable-smartclient.sh --hosts <host names or ips>`
+
+or
+
+`./bin/enable-smartclient.sh --hostsfile <file path>`
+
+The arguments are the same as `disable-smartclient.sh`
+
+Note: To make the scripts work, you have to set up SSH password-less connections between the node that executes these scripts and the rest hosts.
 
 # Trouble Shooting
 ---------------------------------------------------------------------------------
@@ -645,7 +659,15 @@ Note: To make the scripts work, you have to set up SSH password-less connections
 
 3. MySQL related "Specified key was too long; max key length is 767 bytes"
 
-    This problem will occur when MySQL version does not meet the requirement of SSM (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceed 767 bytes. We have submitted several patches for this issue.Also note that some character take up more than one byte, such as chinese with utf-8 take up 3 bytes.You can set how many bytes that one character takes up, default value is 1. But the best solution is upgrading your MySQL to a higher version, e.g., 5.7. For more details, please read these articles [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html) and [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL).
+    This problem will occur when MySQL version does not meet the requirement of SSM (MySQL 5.7 or higher is required). Because index length of MySQL version <= 5.6 cannot exceed 767 bytes.
+    We have submitted several patches for this issue.Also note that some character take up more than one byte, such as chinese with utf-8 take up 3 bytes.
+    You can set how many bytes that one character takes up, default value is 1. But the best solution is upgrading your MySQL to a higher version, e.g., 5.7.
+    For more details, please read these articles:
+
+    [Limits on InnoDB Tables](https://dev.mysql.com/doc/refman/5.5/en/innodb-restrictions.html)
+
+    [Maximum Column Size is 767 bytes Constraint in MySQL](https://community.pivotal.io/s/article/Apps-are-down-due-to-the-Maximum-Column-Size-is-767-bytes-Constraint-in-MySQL).
+
 ```xml
    <property>
      <name>smart.metastore.character.takeup.bytes</name>
@@ -657,7 +679,6 @@ Note: To make the scripts work, you have to set up SSH password-less connections
    </property>
 ```
 
-	 
 Notes
 ---------------------------------------------------------------------------------
 1. If there is no SSD or Archive type disk volume configured in DataNodes, "allssd" or "archive" action will fail.

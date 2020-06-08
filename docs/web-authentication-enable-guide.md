@@ -1,66 +1,33 @@
-Steps to enable authentication on WebUI
----------------------------------------------------------------------------------
-1. **Go to the SSM installation directory**
+Enable Web Authentication
+-------------------------
+1. **Go to SSM home directory**
 
 2. **conf/zeppeline-site.xml**
    
-   Find property `zeppelin.anonymous.allowed`, change it's value from default  `false` to `true`
-   
- 
-3. **conf/shiro.ini.template**
-   
-   * rename file to `shiro.ini`
-   
-   * **[users]** section
-   
-      define supported user name and password. It follows the `username = password, role` format.
-   
-      Here is an example,
-     
-      ```
-      admin = intel@intel, admin
-      ssmoperator = operator@operation, operator    
-      ```
-    
-   * **[roles]** section
-   
-      define support roles. Here is an example,
-   
-      ```
-      operator = *
-     admin = *    
-     ```
+   For property `zeppelin.anonymous.allowed`, change it's value from default `true` to `false`.
+
+3. **conf/shiro.ini**
    
    * **[urls]** section
    
-      comment these two lines by putting "#" at the beginning of the line
-      
-      `/api/version = anon`
-      
+      Please comment the below line by adding "#" to disallow anonymous user access all paths.
+
       `/** = anon`
       
-      uncomment these two lines by removing the heading "#"
-      
-      `/api/interpreter/** = authc, roles[admin]`
-      
+      Please uncomment the below two lines by removing "#" to only allow authenticated user access all paths.
+
       `/** = authc`
-    
+
+      Note: this is URL-based security configuration. Here, we enforce all urls to be authenticated.
+
 4. **restart SSM service**
 
    Visit `http://ssm-server-ip:7045` to open the UI. 
 
+For more information about security configuration,
+please refer to [official doc](`https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html`
 
-
-
-   
-For more information about security configuration, please refer to official document   
-   
-   `https://zeppelin.apache.org/docs/0.7.2/security/shiroauthentication.html`
-   
-or other shiro official documents.
-
-
-
-
-
-   
+Note
+----
+* If authentication is enabled, please login with the default credential (admin/ssm@123). We recommend to change the password in the first login.
+* To allow anonymous user login, please do the above setting conversely. Enabling anonymous user to login without authentication can facilitate testing SSM.

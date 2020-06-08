@@ -60,15 +60,18 @@ public class LoginRestApi {
 
   private JsonResponse loginWithZeppelinCredential(Subject currentUser) {
     JsonResponse response = null;
-    // Use the default userName/password to generate a token to login.
+    // Use the default username/password to generate a token to login.
+    // This username/password is consistent with the one in conf/shiro.ini.
     String userName = "admin";
-    String password = "ssm@123";
+    String password = "ssm123";
     try {
       UsernamePasswordToken token = new UsernamePasswordToken(userName, password);
-      //      token.setRememberMe(true);
+      // token.setRememberMe(true);
 
       currentUser.getSession().stop();
       currentUser.getSession(true);
+      // Login will fail if username/password doesn't match with the one
+      // configured in conf/shiro.ini.
       currentUser.login(token);
 
       HashSet<String> roles = SecurityUtils.getRoles();
@@ -105,12 +108,16 @@ public class LoginRestApi {
     return response;
   }
 
-
   /**
    * Post Login
    * Returns userName & password
    * for anonymous access, username is always anonymous.
    * After getting this ticket, access through websockets become safe
+   *
+   * The username/password is managed by SSM in essence, instead of being
+   * managed in conf/shiro.ini. SSM will keep username/password in database
+   * and every time of authentication, SSM will check login username/password
+   * with the one in database
    *
    * @return 200 response
    */
@@ -127,7 +134,8 @@ public class LoginRestApi {
     boolean isCorrectCredential = false;
     try {
       password = StringUtil.toSHA512String(password);
-      isCorrectCredential = engine.getCmdletManager().authentic(new UserInfo(userName, password));
+      isCorrectCredential =
+          engine.getCmdletManager().authentic(new UserInfo(userName, password));
     } catch (Exception e) {
       LOG.error("Exception in login: ", e);
     }
