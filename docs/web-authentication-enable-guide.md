@@ -19,6 +19,8 @@ Enable Web Authentication
 
       `/** = authc`
 
+      Note: this is URL-based security configuration. Here, we enforce all urls to be authenticated.
+
 4. **restart SSM service**
 
    Visit `http://ssm-server-ip:7045` to open the UI. 
@@ -28,6 +30,5 @@ please refer to [official doc](`https://zeppelin.apache.org/docs/0.7.2/security/
 
 Note
 ----
-* If authentication is enabled, by default
-* To allow anonymous user login, please do the above setting conversely. Enabling Anonymous user to login
-without authentication can facilitate testing SSM.
+* If authentication is enabled, please login with the default credential (admin/ssm@123). We recommend to change the password in the first login.
+* To allow anonymous user login, please do the above setting conversely. Enabling Anonymous user to login without authentication can facilitate testing SSM.

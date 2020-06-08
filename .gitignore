@@ -8,6 +8,7 @@
 *.sdf
 *.suo
 *.vcxproj.user
+*.pyc
 .idea
 .svn
 .classpath

@@ -63,7 +63,7 @@ public class LoginRestApi {
     // Use the default username/password to generate a token to login.
     // This username/password is consistent with the one in conf/shiro.ini.
     String userName = "admin";
-    String password = "ssm@123";
+    String password = "ssm123";
     try {
       UsernamePasswordToken token = new UsernamePasswordToken(userName, password);
       // token.setRememberMe(true);
