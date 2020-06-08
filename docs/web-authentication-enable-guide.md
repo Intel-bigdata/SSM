@@ -5,8 +5,7 @@ Enable Web Authentication
 2. **conf/zeppeline-site.xml**
    
    For property `zeppelin.anonymous.allowed`, change it's value from default `true` to `false`.
-   
- 
+
 3. **conf/shiro.ini**
    
    * **[urls]** section
@@ -31,4 +30,4 @@ please refer to [official doc](`https://zeppelin.apache.org/docs/0.7.2/security/
 Note
 ----
 * If authentication is enabled, please login with the default credential (admin/ssm@123). We recommend to change the password in the first login.
-* To allow anonymous user login, please do the above setting conversely. Enabling Anonymous user to login without authentication can facilitate testing SSM.
+* To allow anonymous user login, please do the above setting conversely. Enabling anonymous user to login without authentication can facilitate testing SSM.
