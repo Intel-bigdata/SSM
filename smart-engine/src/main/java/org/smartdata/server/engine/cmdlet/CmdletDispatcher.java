@@ -115,9 +115,11 @@ public class CmdletDispatcher {
     disableLocalExec = smartContext.getConf().getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
-    CmdletExecutorService exe =
-        new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
+    // If local executor is disabled, there is no need to instantiate
+    // LocalCmdletExecutorService with thread pool created.
     if (!disableLocalExec) {
+      CmdletExecutorService exe =
+          new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
       registerExecutorService(exe);
     }
 
@@ -456,9 +458,17 @@ public class CmdletDispatcher {
     }
   }
 
+  /**
+   * Maintain SSM cluster nodes. Add the node if {@code isAdd} is true.
+   * Otherwise, remove the node.
+   * If local executor is disabled, we will not tackle the node message
+   * for active server. And the metrics for it will be set at {@link
+   * #start start}
+   */
   public void onNodeMessage(NodeMessage msg, boolean isAdd) {
-
-    if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
+    // Ignore local executor if it is disabled.
+    if (disableLocalExec && msg.getNodeInfo().getExecutorType()
+        == ExecutorType.LOCAL) {
       return;
     }
 
@@ -488,6 +498,7 @@ public class CmdletDispatcher {
           } else {
             metrics = new NodeCmdletMetrics();
           }
+          // Here, we consider all nodes have same configuration for executorsNum.
           metrics.setNumExecutors(executorsNum);
           metrics.setRegistTime(System.currentTimeMillis());
           metrics.setNodeInfo(msg.getNodeInfo());
@@ -566,7 +577,8 @@ public class CmdletDispatcher {
   public void start() {
     if (disableLocalExec) {
       ActiveServerNodeCmdletMetrics metrics = new ActiveServerNodeCmdletMetrics();
-      metrics.setNumExecutors(executorsNum);
+      // Local executor is disabled, so its executor number is 0.
+      metrics.setNumExecutors(0);
       metrics.setRegistTime(System.currentTimeMillis());
       metrics.setNodeInfo(ActiveServerInfo.getInstance());
       regNodeInfos.put(ActiveServerInfo.getInstance().getId(), metrics);

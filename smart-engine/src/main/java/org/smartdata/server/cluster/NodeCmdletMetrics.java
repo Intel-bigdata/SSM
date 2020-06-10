@@ -30,7 +30,6 @@ public class NodeCmdletMetrics {
   private long cmdletsExecuted;
   private int cmdletsInExecution;
 
-
   public NodeInfo getNodeInfo() {
     return nodeInfo;
   }
