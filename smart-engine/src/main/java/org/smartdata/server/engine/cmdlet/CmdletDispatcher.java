@@ -91,38 +91,33 @@ public class CmdletDispatcher {
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
       List<Long> runningCmdlets, ListMultimap<String, ActionScheduler> schedulers) {
+    this.conf = smartContext.getConf();
     this.cmdletManager = cmdletManager;
     this.pendingCmdlets = scheduledCmdlets;
     this.runningCmdlets = runningCmdlets;
     this.idToLaunchCmdlet = idToLaunchCmdlet;
     this.schedulers = schedulers;
-    this.executorsNum = smartContext.getConf().getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
+    this.executorsNum = conf.getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
         SmartConfKeys.SMART_CMDLET_EXECUTORS_DEFAULT);
-    int delta = smartContext.getConf().getInt(SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY,
+    int delta = conf.getInt(SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY,
         SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_DEFAULT);
-    defaultSlots = executorsNum + delta;
+    this.defaultSlots = executorsNum + delta;
 
     this.cmdExecServices = new CmdletExecutorService[ExecutorType.values().length];
-    cmdExecSrvInsts = new int[ExecutorType.values().length];
-    execSrvSlotsLeft = new AtomicInteger[ExecutorType.values().length];
+    this.cmdExecSrvInsts = new int[ExecutorType.values().length];
+    this.execSrvSlotsLeft = new AtomicInteger[ExecutorType.values().length];
     for (int i = 0; i < execSrvSlotsLeft.length; i++) {
       execSrvSlotsLeft[i] = new AtomicInteger(0);
       cmdExecSrvNodeIds.add(new ArrayList<String>());
     }
-    cmdExecSrvTotalInsts = 0;
-    dispatchedToSrvs = new ConcurrentHashMap<>();
+    this.cmdExecSrvTotalInsts = 0;
+    this.dispatchedToSrvs = new ConcurrentHashMap<>();
 
-    disableLocalExec = smartContext.getConf().getBoolean(
+    this.disableLocalExec = conf.getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
 
-    CmdletExecutorService exe =
-        new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
-    exe.start();
-    registerExecutorService(exe);
-
-    this.conf = smartContext.getConf();
-    logDispResult = conf.getBoolean(
+    this.logDispResult = conf.getBoolean(
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY,
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT);
     int numDisp = conf.getInt(SmartConfKeys.SMART_CMDLET_DISPATCHERS_KEY,
@@ -130,12 +125,12 @@ public class CmdletDispatcher {
     if (numDisp <= 0) {
       numDisp = 1;
     }
-    dispatchTasks = new DispatchTask[numDisp];
+    this.dispatchTasks = new DispatchTask[numDisp];
     for (int i = 0; i < numDisp; i++) {
       dispatchTasks[i] = new DispatchTask(this, i);
     }
-    schExecService = Executors.newScheduledThreadPool(numDisp + 1);
-    outputDispMetricsInterval = conf.getInt(
+    this.schExecService = Executors.newScheduledThreadPool(numDisp + 1);
+    this.outputDispMetricsInterval = conf.getInt(
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_KEY,
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_DEFAULT);
   }
@@ -582,6 +577,12 @@ public class CmdletDispatcher {
   }
 
   public void start() {
+    // Instantiate and register LocalCmdletExecutorService.
+    CmdletExecutorService exe =
+        new LocalCmdletExecutorService(conf, cmdletManager);
+    exe.start();
+    registerExecutorService(exe);
+
     CmdletDispatcherHelper.getInst().register(this);
     int idx = 0;
     for (DispatchTask task : dispatchTasks) {
