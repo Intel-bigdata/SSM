@@ -241,6 +241,9 @@ public class CmdletDispatcher {
       statRound++;
 
       if (cmdExecSrvTotalInsts == 0) {
+        LOG.warn("No available executor service to execute action! " +
+            "This can happen when only one smart server is running and " +
+            "`smart.action.local.execution.disabled` is set to true.");
         return;
       }
 
