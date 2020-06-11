@@ -19,7 +19,8 @@ package org.smartdata.server.cluster;
 
 /**
  * Contains metrics for SSM nodes related with cmdlet execution.
- *
+ * These metrics are not persisted. So after cluster restarts,
+ * they will be re-counted.
  */
 public class NodeCmdletMetrics {
   private NodeInfo nodeInfo;
@@ -29,7 +30,6 @@ public class NodeCmdletMetrics {
 
   private long cmdletsExecuted;
   private int cmdletsInExecution;
-
 
   public NodeInfo getNodeInfo() {
     return nodeInfo;

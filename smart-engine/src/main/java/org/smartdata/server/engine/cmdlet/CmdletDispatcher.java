@@ -91,38 +91,33 @@ public class CmdletDispatcher {
   public CmdletDispatcher(SmartContext smartContext, CmdletManager cmdletManager,
       Queue<Long> scheduledCmdlets, Map<Long, LaunchCmdlet> idToLaunchCmdlet,
       List<Long> runningCmdlets, ListMultimap<String, ActionScheduler> schedulers) {
+    this.conf = smartContext.getConf();
     this.cmdletManager = cmdletManager;
     this.pendingCmdlets = scheduledCmdlets;
     this.runningCmdlets = runningCmdlets;
     this.idToLaunchCmdlet = idToLaunchCmdlet;
     this.schedulers = schedulers;
-    this.executorsNum = smartContext.getConf().getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
+    this.executorsNum = conf.getInt(SmartConfKeys.SMART_CMDLET_EXECUTORS_KEY,
         SmartConfKeys.SMART_CMDLET_EXECUTORS_DEFAULT);
-    int delta = smartContext.getConf().getInt(SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY,
+    int delta = conf.getInt(SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_KEY,
         SmartConfKeys.SMART_DISPATCH_CMDLETS_EXTRA_NUM_DEFAULT);
-    defaultSlots = executorsNum + delta;
+    this.defaultSlots = executorsNum + delta;
 
     this.cmdExecServices = new CmdletExecutorService[ExecutorType.values().length];
-    cmdExecSrvInsts = new int[ExecutorType.values().length];
-    execSrvSlotsLeft = new AtomicInteger[ExecutorType.values().length];
+    this.cmdExecSrvInsts = new int[ExecutorType.values().length];
+    this.execSrvSlotsLeft = new AtomicInteger[ExecutorType.values().length];
     for (int i = 0; i < execSrvSlotsLeft.length; i++) {
       execSrvSlotsLeft[i] = new AtomicInteger(0);
       cmdExecSrvNodeIds.add(new ArrayList<String>());
     }
-    cmdExecSrvTotalInsts = 0;
-    dispatchedToSrvs = new ConcurrentHashMap<>();
+    this.cmdExecSrvTotalInsts = 0;
+    this.dispatchedToSrvs = new ConcurrentHashMap<>();
 
-    disableLocalExec = smartContext.getConf().getBoolean(
+    this.disableLocalExec = conf.getBoolean(
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
         SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT);
-    CmdletExecutorService exe =
-        new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
-    if (!disableLocalExec) {
-      registerExecutorService(exe);
-    }
 
-    this.conf = smartContext.getConf();
-    logDispResult = conf.getBoolean(
+    this.logDispResult = conf.getBoolean(
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_KEY,
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_RESULT_DEFAULT);
     int numDisp = conf.getInt(SmartConfKeys.SMART_CMDLET_DISPATCHERS_KEY,
@@ -130,17 +125,21 @@ public class CmdletDispatcher {
     if (numDisp <= 0) {
       numDisp = 1;
     }
-    dispatchTasks = new DispatchTask[numDisp];
+    this.dispatchTasks = new DispatchTask[numDisp];
     for (int i = 0; i < numDisp; i++) {
       dispatchTasks[i] = new DispatchTask(this, i);
     }
-    schExecService = Executors.newScheduledThreadPool(numDisp + 1);
-    outputDispMetricsInterval = conf.getInt(
+    this.schExecService = Executors.newScheduledThreadPool(numDisp + 1);
+    this.outputDispMetricsInterval = conf.getInt(
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_KEY,
         SmartConfKeys.SMART_CMDLET_DISPATCHER_LOG_DISP_METRICS_INTERVAL_DEFAULT);
   }
 
   public void registerExecutorService(CmdletExecutorService executorService) {
+    // No need to register for disabled local executor service.
+    if (executorService.getExecutorType() == ExecutorType.LOCAL && disableLocalExec) {
+      return;
+    }
     this.cmdExecServices[executorService.getExecutorType().ordinal()] = executorService;
   }
 
@@ -456,12 +455,14 @@ public class CmdletDispatcher {
     }
   }
 
+  /**
+   * Maintain SSM cluster nodes. Add the node if {@code isAdd} is true.
+   * Otherwise, remove the node.
+   * If local executor is disabled, we will not tackle the node message
+   * for active server. And the metrics for it will be set at {@link
+   * #start start}
+   */
   public void onNodeMessage(NodeMessage msg, boolean isAdd) {
-
-    if (disableLocalExec && msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
-      return;
-    }
-
     // New standby server can be added to an active SSM cluster by
     // executing start-standby-server.sh.
     if (msg.getNodeInfo().getExecutorType() == ExecutorType.REMOTE_SSM) {
@@ -480,38 +481,50 @@ public class CmdletDispatcher {
         if (regNodes.containsKey(nodeId)) {
           LOG.warn("Skip duplicate add node for {}", msg.getNodeInfo());
           return;
-        } else {
-          regNodes.put(nodeId, new AtomicInteger(defaultSlots));
-          NodeCmdletMetrics metrics;
-          if (msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL) {
-            metrics = new ActiveServerNodeCmdletMetrics();
-          } else {
-            metrics = new NodeCmdletMetrics();
-          }
-          metrics.setNumExecutors(executorsNum);
-          metrics.setRegistTime(System.currentTimeMillis());
-          metrics.setNodeInfo(msg.getNodeInfo());
-          regNodeInfos.put(nodeId, metrics);
-          cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
         }
+        regNodes.put(nodeId, new AtomicInteger(defaultSlots));
+        NodeCmdletMetrics metrics =
+            msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL
+                ? new ActiveServerNodeCmdletMetrics() : new NodeCmdletMetrics();
+        // Here, we consider all nodes have same configuration for executorsNum.
+        int actualExecutorsNum =
+            metrics instanceof ActiveServerNodeCmdletMetrics && disableLocalExec
+                ? 0 : executorsNum;
+        metrics.setNumExecutors(actualExecutorsNum);
+        metrics.setRegistTime(System.currentTimeMillis());
+        metrics.setNodeInfo(msg.getNodeInfo());
+        regNodeInfos.put(nodeId, metrics);
       } else {
         if (!regNodes.containsKey(nodeId)) {
           LOG.warn("Skip duplicate remove node for {}", msg.getNodeInfo());
           return;
-        } else {
-          regNodes.remove(nodeId);
-          regNodeInfos.remove(nodeId);
-          cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).remove(nodeId);
         }
+        regNodes.remove(nodeId);
+        regNodeInfos.remove(nodeId);
       }
 
+      // Ignore local executor if it is disabled.
+      if (disableLocalExec && msg.getNodeInfo().getExecutorType()
+          == ExecutorType.LOCAL) {
+        return;
+      }
+
+      // Maintain executor service in the below code.
+      if (isAdd) {
+        cmdExecSrvNodeIds.get(
+            msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
+      } else {
+        cmdExecSrvNodeIds.get(
+            msg.getNodeInfo().getExecutorType().ordinal()).remove(nodeId);
+      }
       int v = isAdd ? 1 : -1;
       int idx = msg.getNodeInfo().getExecutorType().ordinal();
       cmdExecSrvInsts[idx] += v;
       cmdExecSrvTotalInsts += v;
       updateSlotsLeft(idx, v * defaultSlots);
     }
-    LOG.info(String.format("Node " + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
+    LOG.info(String.format("Node "
+        + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
   }
 
   private void updateSlotsLeft(int idx, int delta) {
@@ -564,13 +577,12 @@ public class CmdletDispatcher {
   }
 
   public void start() {
-    if (disableLocalExec) {
-      ActiveServerNodeCmdletMetrics metrics = new ActiveServerNodeCmdletMetrics();
-      metrics.setNumExecutors(executorsNum);
-      metrics.setRegistTime(System.currentTimeMillis());
-      metrics.setNodeInfo(ActiveServerInfo.getInstance());
-      regNodeInfos.put(ActiveServerInfo.getInstance().getId(), metrics);
-    }
+    // Instantiate and register LocalCmdletExecutorService.
+    CmdletExecutorService exe =
+        new LocalCmdletExecutorService(conf, cmdletManager);
+    exe.start();
+    registerExecutorService(exe);
+
     CmdletDispatcherHelper.getInst().register(this);
     int idx = 0;
     for (DispatchTask task : dispatchTasks) {

@@ -173,7 +173,11 @@
   <property>
     <name>smart.action.local.execution.disabled</name>
     <value>false</value>
-    <description>Actions will not be executed on SSM server if true.</description>
+    <description>
+      This default means active smart server can also execute actions, like an agent.
+      If it is set to true, actions will not be dispatched to active SSM server.
+      This configuration has no impact on standby smart server.
+    </description>
   </property>
 
   <property>
