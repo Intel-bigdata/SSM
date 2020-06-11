@@ -308,6 +308,9 @@ public class CmdletManager extends AbstractService {
     LOG.info("Stopped.");
   }
 
+  /**
+   * Register agentExecutorService & hazelcastExecutorService.
+   */
   public void registerExecutorService(CmdletExecutorService executorService) {
     dispatcher.registerExecutorService(executorService);
   }

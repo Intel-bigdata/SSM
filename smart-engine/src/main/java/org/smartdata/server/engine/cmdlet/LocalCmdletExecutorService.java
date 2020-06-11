@@ -42,7 +42,6 @@ import java.util.concurrent.TimeUnit;
 
 public class LocalCmdletExecutorService extends CmdletExecutorService implements StatusReporter {
   private static final Logger LOG = LoggerFactory.getLogger(LocalCmdletExecutorService.class);
-  private static final String ACTIVE_SERVER_ID = "ActiveSSMServer@";
   private SmartConf conf;
   private CmdletFactory cmdletFactory;
   private CmdletExecutor cmdletExecutor;
@@ -50,7 +49,16 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
 
   public LocalCmdletExecutorService(SmartConf smartConf, CmdletManager cmdletManager) {
     super(cmdletManager, ExecutorType.LOCAL);
+    ActiveServerInfo.setInstance(getActiveServerAddress());
+    EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
     this.conf = smartConf;
+    // If local executor is disabled, there is no need to instantiate
+    // LocalCmdletExecutorService with thread pool to be created.
+    if (conf.getBoolean(SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_KEY,
+        SmartConfKeys.SMART_ACTION_LOCAL_EXECUTION_DISABLED_DEFAULT)) {
+      return;
+    }
+
     this.cmdletFactory = new CmdletFactory(cmdletManager.getContext(), this);
     this.cmdletExecutor = new CmdletExecutor(smartConf);
     this.executorService = Executors.newSingleThreadScheduledExecutor();
@@ -60,10 +68,6 @@ public class LocalCmdletExecutorService extends CmdletExecutorService implements
     StatusReportTask statusReportTask = new StatusReportTask(this, cmdletExecutor, smartConf);
     this.executorService.scheduleAtFixedRate(
         statusReportTask, 1000, reportPeriod, TimeUnit.MILLISECONDS);
-
-    ActiveServerInfo.setInstance(ACTIVE_SERVER_ID + getActiveServerAddress(),
-        getActiveServerAddress());
-    EngineEventBus.post(new AddNodeMessage(ActiveServerInfo.getInstance()));
   }
 
   @Override

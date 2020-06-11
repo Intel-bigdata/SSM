@@ -21,6 +21,7 @@ import org.smartdata.model.ExecutorType;
 import org.smartdata.server.cluster.NodeInfo;
 
 public class ActiveServerInfo extends NodeInfo {
+  private static final String ACTIVE_SERVER_ID = "ActiveSSMServer@";
   private static ActiveServerInfo inst;
 
   private ActiveServerInfo(String id, String location) {
@@ -32,7 +33,7 @@ public class ActiveServerInfo extends NodeInfo {
     return inst;
   }
 
-  public static void setInstance(String id, String location) {
-    inst = new ActiveServerInfo(id, location);
+  public static void setInstance(String location) {
+    inst = new ActiveServerInfo(ACTIVE_SERVER_ID + location, location);
   }
 }
