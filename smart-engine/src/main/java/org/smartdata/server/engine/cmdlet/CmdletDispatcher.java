@@ -488,12 +488,12 @@ public class CmdletDispatcher {
         }
         regNodes.put(nodeId, new AtomicInteger(defaultSlots));
         NodeCmdletMetrics metrics =
-            msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL ?
-                new ActiveServerNodeCmdletMetrics() : new NodeCmdletMetrics();
+            msg.getNodeInfo().getExecutorType() == ExecutorType.LOCAL
+                ? new ActiveServerNodeCmdletMetrics() : new NodeCmdletMetrics();
         // Here, we consider all nodes have same configuration for executorsNum.
         int actualExecutorsNum =
-            metrics instanceof ActiveServerNodeCmdletMetrics && disableLocalExec ?
-                0 : executorsNum;
+            metrics instanceof ActiveServerNodeCmdletMetrics && disableLocalExec
+                ? 0 : executorsNum;
         metrics.setNumExecutors(actualExecutorsNum);
         metrics.setRegistTime(System.currentTimeMillis());
         metrics.setNodeInfo(msg.getNodeInfo());
@@ -515,9 +515,11 @@ public class CmdletDispatcher {
 
       // Maintain executor service in the below code.
       if (isAdd) {
-        cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
+        cmdExecSrvNodeIds.get(
+            msg.getNodeInfo().getExecutorType().ordinal()).add(nodeId);
       } else {
-        cmdExecSrvNodeIds.get(msg.getNodeInfo().getExecutorType().ordinal()).remove(nodeId);
+        cmdExecSrvNodeIds.get(
+            msg.getNodeInfo().getExecutorType().ordinal()).remove(nodeId);
       }
       int v = isAdd ? 1 : -1;
       int idx = msg.getNodeInfo().getExecutorType().ordinal();
@@ -525,7 +527,8 @@ public class CmdletDispatcher {
       cmdExecSrvTotalInsts += v;
       updateSlotsLeft(idx, v * defaultSlots);
     }
-    LOG.info(String.format("Node " + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
+    LOG.info(String.format("Node "
+        + msg.getNodeInfo() + (isAdd ? " added." : " removed.")));
   }
 
   private void updateSlotsLeft(int idx, int delta) {
