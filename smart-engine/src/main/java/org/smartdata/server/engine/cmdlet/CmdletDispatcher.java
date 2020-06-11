@@ -118,6 +118,7 @@ public class CmdletDispatcher {
 
     CmdletExecutorService exe =
         new LocalCmdletExecutorService(smartContext.getConf(), cmdletManager);
+    exe.start();
     registerExecutorService(exe);
 
     this.conf = smartContext.getConf();

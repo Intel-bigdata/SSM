@@ -33,6 +33,9 @@ public abstract class CmdletExecutorService {
     this.executorType = executorType;
   }
 
+  public void start() {
+  }
+
   public abstract boolean canAcceptMore();
 
   // TODO: to be refined
