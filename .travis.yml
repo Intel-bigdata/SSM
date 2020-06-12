@@ -29,5 +29,10 @@ install:
   - mvn install $PROFILE -DskipTests=true -Dmaven.javadoc.skip=true -B -V
 
 script:
-  - mvn test $PROFILE
+  - mvn clean test $PROFILE
+  - mvn clean test $PROFILE
+  - mvn clean test $PROFILE
+  - mvn clean test $PROFILE
+  - mvn clean test $PROFILE
+  
 group: deprecated-2017Q4
