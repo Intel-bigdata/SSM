@@ -47,6 +47,9 @@ function NotebookCtrl($scope, ngToast, rules0, $rootScope) {
   /** Init the new controller */
   var initNotebook = function() {
     $scope.note = $rootScope.note;
+    if(!$scope.note){
+      $rootScope.getNoteInfo();
+    }
   };
 
   initNotebook();

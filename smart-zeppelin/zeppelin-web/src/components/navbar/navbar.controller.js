@@ -79,6 +79,7 @@ function NavCtrl($scope, $rootScope, $http, $routeParams, $location,
     }
     getNoteInfo();
     getZeppelinVersion();
+    $rootScope.getNoteInfo = getNoteInfo;
   }
 
   function isFilterNote(note) {
