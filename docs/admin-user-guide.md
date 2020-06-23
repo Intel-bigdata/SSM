@@ -40,41 +40,41 @@ has the following format,
 
 <img src="./image/rule-syntax.png" width="481" height="208" />
 
-A rule contains four parts, object to manipulate, trigger, conditions
-and commands. “:” and “|” are used as the separator to separate
+A rule contains four parts: object, check time, conditions
+and actions. “:” and “|” are used as the separator to separate
 different rule parts.
 
 Detailed information for each rule part is listed in the following tables.
 
-Table - 1 Objects to manipulate
+Table - 1 Objects
 
-| Object  | Description       | Example                            |
-|---------|-------------------|------------------------------------|
-| file    | Files             | *file with path matches "/fooA/\*.dat"* |
+| Object  | Description          | Example                            |
+|---------|----------------------|------------------------------------|
+| file    | files to be managed  | *file with path matches "/fooA/\*.dat"* |
 
-Table - 2 Triggers
+Table - 2 Check Time
 
-| Format                                | Description                                             | Example                               |
-|---------------------------------------|---------------------------------------------------------|---------------------------------------|
-| at &lt;time&gt;                       | Execute the rule at the given time                      | - at “2017-07-29 23:00:00” <br> -   at now |
-| every &lt;time interval&gt;           | Execute the rule at the given frequency                 | - every 1min                            |
-| from &lt;time&gt; \[To &lt;time&gt;\] | Along with ‘every’ expression to specify the time scope | - every 1day from now <br>  -   every 1min from now to now + 7day  |
+| Format                                | Description                                                                                 | Example                               |
+|---------------------------------------|---------------------------------------------------------------------------------------------|---------------------------------------|
+| at &lt;Time&gt;                       | Check the rule condition at the given time. See below "Time" ingredient.                    | at “2017-07-29 23:00:00” <br> -   at now |
+| every &lt;Time Interval&gt;           | Check the rule condition at the given time interval. See below "Time Interval" ingredient.  | every 1min                            |
+| from &lt;Time&gt; \[To &lt;Time&gt;\] | Along with ‘every’ expression to specify the time scope                                     | every 1day from now <br>  -   every 1min from now to now + 7day  |
 
 
-Table – 3 Conditions
+Table – 3 Ingredient
 
-| Ingredient       | Description                                                                              | Example                                  |
-|------------------|------------------------------------------------------------------------------------------|------------------------------------------|
-| Object property  | Object property as condition subject, refer to table-4 to supported object property list | - length &gt; 5MB                          |
-| Time             | - “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval           | - “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
-| Time Interval    | - Digital + unit <br> -   Time – Time <br> -   Time Interval + Time Interval             | - 5ms, 5sec, 5min, 5hour, 5day <br>  -   now - “2016-03-19 23:00:00” <br>  -   5hour + 5min           |
-| File Size        | - Digital + unit                                                                         | - 5B, 5kb, 5MB, 5GB, 5TB, 5PB              |
-| String           | Start and ends with “, support escapes                                                   | - “abc”, “123”, “Hello world\\n”           |
-| Logical operator | and, or, not                                                                             |                                          |
-| Digital operator | +, -, \*, /, %                                                                           |                                          |
-| Compare          | &gt;, &gt;=, &lt;, &lt;=, ==, !=                                                         |                                          |
+| Ingredient       | Description                                                                                        | Example                                  |
+|------------------|----------------------------------------------------------------------------------------------------|------------------------------------------|
+| Object property  | Object property as condition subject, refer to table-4.                                            | length &gt; 5MB                          |
+| Time             | “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval                       | “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
+| Time Interval    | Digital + unit <br>Time – Time <br>Time Interval + Time Interval                                   | 5ms, 5sec, 5min, 5hour, 5day <br>now - “2016-03-19 23:00:00” <br>5hour + 5min           |
+| Length           | Bytes (KB, MB, GB, etc). Currently, only pure digital is supported, which indicates bytes number.  | 10000                                    |
+| String           | Start and ends with “, support escapes. This can be used to filter file name, etc.                 | “abc”, “123”, “Hello world\\n”           |
+| Logical operator | and, or, not                                                                                       |                                          |
+| Digital operator | +, -, \*, /, %                                                                                     |                                          |
+| Compare          | &gt;, &gt;=, &lt;, &lt;=, ==, !=                                                                   |                                          |
 
-Table – 4 Object properties
+Table – 4 Object Properties
 
 | Object   | Property                         | Description                                                                     | 
 |----------|----------------------------------|---------------------------------------------------------------------------------|                                 
@@ -94,9 +94,9 @@ Table – 4 Object properties
 |          | accessCountTopOnStoragePolicy(interval,N,$StoragePolicy")    | The topmost N for access counts with regard to a storage policy.The supported HDFS storage policies are COLD,WARM,HOT,ONE_SSD,ALL_SSD,LAZY_PERSIST |
 |          | accessCountBottomOnStoragePolicy(interval,N,$StoragePolicy") | The bottommost N for access counts with regard to a storage policy during the last time interval |
 
-Table – 5 Commands
+Table – 5 Actions
 
-| Command(case insensitive) |  Description                                                                                                      |
+| Action (case sensitive)   |  Description                                                                                                      |
 |---------------------------|-------------------------------------------------------------------------------------------------------------------|
 |  allssd                   |  Move $file to SSD storage                                                                                        |
 |  alldisk                  |  Move $file to disk storage                                                                                       |
@@ -127,7 +127,8 @@ Table – 5 Commands
 |  user defined actions     |  Interface defined for user to implement their own actions                                                        |
 
 
-Here is a rule example,
+Rule Example
+------------
 
 *file with path matches "/fooA/\*.dat": age &gt; 30day | archive*
 
@@ -138,6 +139,10 @@ days then move the file to archive storage. The rule can be rewritten in the fol
 *file : path matches "/fooA/\*.dat" and age &gt; 30day | archive*
 
 The boolean expression can also be placed in condition expression.
+
+`file: at now+30s | path matches "/src1/*" | sync -dest /dest1`
+`file: at "2020-06-23 14:30:00" | path matches "/src2/*" | sync -dest /dest2`
+`file: every 5s | path matches "/src3/*" and length>9999 | sync -dest /dest3`
 
 For those who are not sure if the rule is defined correctly or not, an API
 is provided to check whether the rule is valid or not. Please refer to
@@ -185,7 +190,7 @@ Rule Management API
 -------------------
 
 Rule management API is provided for both the RPC and RESTful HTTP interfaces.
-Here is the RPC interface definition. RESTFull HTTP interface will be
+Here is the RPC interface definition. RESTful HTTP interface will be
 updated later.
 
  
