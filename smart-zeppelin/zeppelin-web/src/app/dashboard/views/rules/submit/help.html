@@ -62,6 +62,22 @@ limitations under the License.
       <td>If a file has been read for less than 2 times during the last 10 minutes,
         archive it.</td>
     </tr>
+
+    <tr>
+      <td>file: at now+30s | path matches "/src1/*" | sync -dest /dest1</td>
+      <td>After 30s from now, for files under /src1, sync them to /dest1.</td>
+    </tr>
+
+    <tr>
+      <td>file: at "2020-06-23 14:30:00" | path matches "/src2/*" | sync -dest /dest2</td>
+      <td>At 2020-06-23 14:30:00, for files under /src2, sync them to /dest2.</td>
+    </tr>
+
+    <tr>
+      <td>file: every 5s | path matches "/src3/*" and length &lt; 1000 | sync -dest /dest3</td>
+      <td>Every 5s to check the rule, for files under /src3 and whose length is smaller than 1000 bytes, sync them to /dest3/.</td>
+    </tr>
+
     </tbody>
   </table>
   <br/>
@@ -98,18 +114,41 @@ limitations under the License.
     <tbody>
     <tr>
       <td>at &lt;time&gt;</td>
-      <td>Execute the rule at the given time. See "Time" ingredient in the below table.</td>
-      <td>at "2017-07-29 23:00:00"<br/>-at now</td>
+      <td>Execute the rule at the given time. See the below Time table.</td>
+      <td>at "2017-07-29 23:00:00"<br/>at now</td>
     </tr>
     <tr>
       <td>every &lt;Time Interval&gt;</td>
-      <td>Execute the rule at the given frequency. See "Time Ingredient" in the below table.</td>
+      <td>Execute the rule at the given frequency. See the below time table.</td>
       <td>every 1min</td>
     </tr>
     <tr>
       <td>from &lt;Time&gt;[To &lt;Time&gt;]</td>
-      <td>Along with 'every' expression to specify the time scope. See "Time" ingredient in the below table.</td>
+      <td>Along with 'every' expression to specify the time scope. See the below time table.</td>
       <td>every 1day from now<br/>every 1min from now to now+7day</td>
+    </tr>
+    </tbody>
+  </table>
+  <br/>
+  <table class="table table-bordered">
+    <caption class="text-left">Time</caption>
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Example</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>Time</td>
+      <td>"yyyy-MM-dd HH:mm:ss:ms"<br/>Time + TimeInterval</td>
+      <td>"2017-07-29 23:00:00"<br/>now<br/>now+7day</td>
+    </tr>
+    <tr>
+      <td>Time Interval</td>
+      <td>Digital + unit<br/>Time - Time</td>
+      <td>5sec, 5min, 5hour, 5day<br/>now - "2016-03-19 23:00:00"</td>
     </tr>
     </tbody>
   </table>
@@ -128,26 +167,6 @@ limitations under the License.
       <td>Object Property</td>
       <td>Object property as subject of condition. Refer to the above object property list.</td>
       <td>length &gt; 5MB</td>
-    </tr>
-    <tr>
-      <td>Time</td>
-      <td>"yyyy-MM-dd HH:mm:ss:ms"<br/>Time + TimeInterval</td>
-      <td>"2017-07-29 23:00:00"<br/>now<br/>now+7day</td>
-    </tr>
-    <tr>
-      <td>Time Interval</td>
-      <td>Digital + unit<br/>Time - Time</td>
-      <td>5sec, 5min, 5hour, 5day<br/>now - "2016-03-19 23:00:00"</td>
-    </tr>
-    <tr>
-      <td>Length</td>
-      <td>Bytes (KB, MB, GB, etc). Currently, only pure digital is supported, which indicates the number of bytes.</td>
-      <td>5B, 5KB, 5MB, 5GB, 5TB, 5PB.</td>
-    </tr>
-    <tr>
-      <td>String</td>
-      <td>Start and end with ", and escapes are supported. This can be used to filter file name, etc.</td>
-      <td>path matches "abc"</td>
     </tr>
     <tr>
       <td>Logical operator</td>
@@ -238,7 +257,8 @@ limitations under the License.
     <tr>
       <td>length</td>
       <td>-</td>
-      <td>Length of the file.</td>
+      <td>Length of the file. Bytes (KB, MB, GB, etc). Currently, only pure digital is supported,
+        which indicates the number of bytes.</td>
     </tr>
     <tr>
       <td>mtime</td>

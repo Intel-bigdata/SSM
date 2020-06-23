@@ -40,63 +40,65 @@ has the following format,
 
 <img src="./image/rule-syntax.png" width="481" height="208" />
 
-A rule contains four parts: object, check time, conditions
-and actions. “:” and “|” are used as the separator to separate
-different rule parts.
+A rule contains four parts: Object, Trigger (Check Time), conditions
+and commands (Actions). “:” and “|” are used as the separator to separate
+different rule parts, as the above picture shows.
 
 Detailed information for each rule part is listed in the following tables.
 
-Table - 1 Objects
+Table-1 Objects
 
-| Object  | Description          | Example                            |
-|---------|----------------------|------------------------------------|
-| file    | files to be managed  | *file with path matches "/fooA/\*.dat"* |
+| Object  | Description          | Example                             |
+|---------|----------------------|-------------------------------------|
+| file    | files to be managed  | *file: path matches "/fooA/\*.dat"* |
 
-Table - 2 Check Time
+Table-2 Trigger (Check Time)
 
 | Format                                | Description                                                                                 | Example                               |
 |---------------------------------------|---------------------------------------------------------------------------------------------|---------------------------------------|
-| at &lt;Time&gt;                       | Check the rule condition at the given time. See below "Time" ingredient.                    | at “2017-07-29 23:00:00” <br> -   at now |
-| every &lt;Time Interval&gt;           | Check the rule condition at the given time interval. See below "Time Interval" ingredient.  | every 1min                            |
-| from &lt;Time&gt; \[To &lt;Time&gt;\] | Along with ‘every’ expression to specify the time scope                                     | every 1day from now <br>  -   every 1min from now to now + 7day  |
+| at &lt;Time&gt;                       | Check the rule condition at the given time. See the below "Time" table.                     | * at “2017-07-29 23:00:00” <br>* at now   |
+| every &lt;Time Interval&gt;           | Check the rule condition at the given time interval. See the below "Time" table.            | * every 1min                            |
+| from &lt;Time&gt; \[To &lt;Time&gt;\] | Along with ‘every’ expression to specify the time scope.                                    | * every 1day from now <br>* every 1min from now to now + 7day  |
 
+Table-3 Time
 
-Table – 3 Ingredient
+| Ingredient       | Description                                                                                        | Example                                               |
+|------------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| Time             | “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval                       | * “2017-07-29 23:00:00” <br>* now  <br>* now + 7day         |
+| Time Interval    | Digital + unit <br>Time – Time <br>Time Interval + Time Interval                                   | * 5ms, 5sec, 5min, 5hour, 5day <br>* now - “2016-03-19 23:00:00” <br>* 5hour + 5min           |
+
+Table-4 Condition Ingredient
 
 | Ingredient       | Description                                                                                        | Example                                  |
 |------------------|----------------------------------------------------------------------------------------------------|------------------------------------------|
-| Object property  | Object property as condition subject, refer to table-4.                                            | length &gt; 5MB                          |
-| Time             | “yyyy-MM-dd HH:mm:ss:ms” <br>  -   Predefined <br>  -   Time + Time Interval                       | “2017-07-29 23:00:00” <br>  -   now  <br>  -   now + 7day  |
-| Time Interval    | Digital + unit <br>Time – Time <br>Time Interval + Time Interval                                   | 5ms, 5sec, 5min, 5hour, 5day <br>now - “2016-03-19 23:00:00” <br>5hour + 5min           |
-| Length           | Bytes (KB, MB, GB, etc). Currently, only pure digital is supported, which indicates bytes number.  | 10000                                    |
-| String           | Start and ends with “, support escapes. This can be used to filter file name, etc.                 | “abc”, “123”, “Hello world\\n”           |
+| Object property  | Object property as condition subject, refer to table-5.                                            | length &gt; 5MB                          |
 | Logical operator | and, or, not                                                                                       |                                          |
 | Digital operator | +, -, \*, /, %                                                                                     |                                          |
 | Compare          | &gt;, &gt;=, &lt;, &lt;=, ==, !=                                                                   |                                          |
 
-Table – 4 Object Properties
+Table-5 Object Properties
 
-| Object   | Property                         | Description                                                                     | 
-|----------|----------------------------------|---------------------------------------------------------------------------------|                                 
-|          | age                              | The time span from last modification moment to now                              |              
-|          | atime                            | The last access time                                                            |
-|          | blocksize                        | The block size of the file                                                      |  
-|          | inCache                          | The file is in cache storage                                                    |
-|          | isDir                            | The file is a directory                                                         |
-|          | length                           | Length of the file                                                              |
-|   file   | path                             | The file path in HDFS                                                           |
-|          | mtime                            | The last modification time of the file                                          |
-|          | unsynced                         | The file is not synced                                                          |
-|          | storagePolicy                    | Storage policy of file                                                          |
-|          | accessCount(Time Interval)       | The access counts during the last time interval                                 |
-|          | accessCountTop(interval,N )      | The topmost N for access counts during the last time interval                   |
-|          | accessCountBottom(interval,N)    | The bottommost N for access counts during the last time interval                |
+| Object   | Property                         | Description                                                                                 |
+|----------|----------------------------------|---------------------------------------------------------------------------------------------|
+|          | age                              | The time span from last modification moment to now                                          |
+|          | atime                            | The last access time                                                                        |
+|          | blocksize                        | The block size of the file                                                                  |
+|          | inCache                          | The file is in cache storage                                                                |
+|          | isDir                            | The file is a directory                                                                     |
+|          | length                           | Length of the file. Currently, only pure digital is supported, which indicates bytes number.|
+|   file   | path                             | The file path in HDFS                                                                       |
+|          | mtime                            | The last modification time of the file                                                      |
+|          | unsynced                         | The file is not synced                                                                      |
+|          | storagePolicy                    | Storage policy of file                                                                      |
+|          | accessCount(Time Interval)       | The access counts during the last time interval                                             |
+|          | accessCountTop(interval,N )      | The topmost N for access counts during the last time interval                               |
+|          | accessCountBottom(interval,N)    | The bottommost N for access counts during the last time interval                            |
 |          | accessCountTopOnStoragePolicy(interval,N,$StoragePolicy")    | The topmost N for access counts with regard to a storage policy.The supported HDFS storage policies are COLD,WARM,HOT,ONE_SSD,ALL_SSD,LAZY_PERSIST |
 |          | accessCountBottomOnStoragePolicy(interval,N,$StoragePolicy") | The bottommost N for access counts with regard to a storage policy during the last time interval |
 
-Table – 5 Actions
+Table-6 Commands
 
-| Action (case sensitive)   |  Description                                                                                                      |
+| Command (case sensitive)  |  Description                                                                                                      |
 |---------------------------|-------------------------------------------------------------------------------------------------------------------|
 |  allssd                   |  Move $file to SSD storage                                                                                        |
 |  alldisk                  |  Move $file to disk storage                                                                                       |
@@ -130,19 +132,21 @@ Table – 5 Actions
 Rule Example
 ------------
 
-*file with path matches "/fooA/\*.dat": age &gt; 30day | archive*
+*`file with path matches "/fooA/\*.dat": age &gt; 30day | archive`*
 
 This example defines a rule that for each file (specified before key word 'with') whose path matches regular
 expression “/fooA/\*.dat”, if the file has been created for more than 30
 days then move the file to archive storage. The rule can be rewritten in the following way:
 
-*file : path matches "/fooA/\*.dat" and age &gt; 30day | archive*
+*`file : path matches "/fooA/\*.dat" and age &gt; 30day | archive`*
 
 The boolean expression can also be placed in condition expression.
 
-`file: at now+30s | path matches "/src1/*" | sync -dest /dest1`
-`file: at "2020-06-23 14:30:00" | path matches "/src2/*" | sync -dest /dest2`
-`file: every 5s | path matches "/src3/*" and length>9999 | sync -dest /dest3`
+*`file: at now+30s | path matches "/src1/*" | sync -dest /dest1`*
+
+*`file: at "2020-06-23 14:30:00" | path matches "/src2/*" | sync -dest /dest2`*
+
+*`file: every 5s | path matches "/src3/*" and length>9999 | sync -dest /dest3`*
 
 For those who are not sure if the rule is defined correctly or not, an API
 is provided to check whether the rule is valid or not. Please refer to
