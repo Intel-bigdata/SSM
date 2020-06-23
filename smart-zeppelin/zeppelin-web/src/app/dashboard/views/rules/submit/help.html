@@ -24,7 +24,7 @@ limitations under the License.
     The format is as follows.
     <br/>
     <br/>
-    Objects_to_manipulate :  Trigger | Conditions | Commands
+    Objects:  Check Time | Condition(s) | Action(s)
     <br/>
     <br/>
     Trigger part is optional.  “:” and “|” are used to separate different
@@ -62,14 +62,30 @@ limitations under the License.
       <td>If a file has been read for less than 2 times during the last 10 minutes,
         archive it.</td>
     </tr>
+
+    <tr>
+      <td>file: at now+30s | path matches "/src1/*" | sync -dest /dest1</td>
+      <td>After 30s from now, for files under /src1, sync them to /dest1.</td>
+    </tr>
+
+    <tr>
+      <td>file: at "2020-06-23 14:30:00" | path matches "/src2/*" | sync -dest /dest2</td>
+      <td>At 2020-06-23 14:30:00, for files under /src2, sync them to /dest2.</td>
+    </tr>
+
+    <tr>
+      <td>file: every 5s | path matches "/src3/*" and length &lt; 1000 | sync -dest /dest3</td>
+      <td>Every 5s to check the rule, for files under /src3 and whose length is smaller than 1000 bytes, sync them to /dest3/.</td>
+    </tr>
+
     </tbody>
   </table>
   <br/>
   <p>
-    The following table lists detailed information of each rule part.
+    The following tables show detailed information about how to customize a SSM rule.
   </p>
   <table class="table table-bordered">
-    <caption class="text-left">Table-1 Objects to manipulate</caption>
+    <caption class="text-left">Objects</caption>
     <thead>
     <tr>
       <th>Object</th>
@@ -80,14 +96,14 @@ limitations under the License.
     <tbody>
     <tr>
       <td>file</td>
-      <td>Files</td>
-      <td>file.path matches "/fooA/*.dat"</td>
+      <td>Specify files. The most common used object is "file" to filter and manage data.</td>
+      <td>path matches "/fooA/*.dat"</td>
     </tr>
     </tbody>
   </table>
   <br/>
   <table class="table table-bordered">
-    <caption class="text-left">Table-2 Triggers</caption>
+    <caption class="text-left">Check Time</caption>
     <thead>
     <tr>
       <th>Format</th>
@@ -97,25 +113,48 @@ limitations under the License.
     </thead>
     <tbody>
     <tr>
-      <td>at&lt;time&gt;</td>
-      <td>Execute the rule at the given time</td>
-      <td>-at "2017-07-29 23:00:00"<br/>-at now</td>
+      <td>at &lt;time&gt;</td>
+      <td>Execute the rule at the given time. See the below Time table.</td>
+      <td>at "2017-07-29 23:00:00"<br/>at now</td>
     </tr>
     <tr>
-      <td>every&lt;time interval&gt;</td>
-      <td>Execute the rule at the given frequency</td>
-      <td>-every 1min</td>
+      <td>every &lt;Time Interval&gt;</td>
+      <td>Execute the rule at the given frequency. See the below time table.</td>
+      <td>every 1min</td>
     </tr>
     <tr>
-      <td>from&lt;time&gt;[To &lt;time&gt;]</td>
-      <td>Along with 'every' expression to specify the time scope</td>
-      <td>-every 1day from now<br/>-every 1min from now to now+7day</td>
+      <td>from &lt;Time&gt;[To &lt;Time&gt;]</td>
+      <td>Along with 'every' expression to specify the time scope. See the below time table.</td>
+      <td>every 1day from now<br/>every 1min from now to now+7day</td>
     </tr>
     </tbody>
   </table>
   <br/>
   <table class="table table-bordered">
-    <caption class="text-left">Table-3 Conditions</caption>
+    <caption class="text-left">Time</caption>
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+      <th>Example</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+      <td>Time</td>
+      <td>"yyyy-MM-dd HH:mm:ss:ms"<br/>Time + TimeInterval</td>
+      <td>"2017-07-29 23:00:00"<br/>now<br/>now+7day</td>
+    </tr>
+    <tr>
+      <td>Time Interval</td>
+      <td>Digital + unit<br/>Time - Time</td>
+      <td>5sec, 5min, 5hour, 5day<br/>now - "2016-03-19 23:00:00"</td>
+    </tr>
+    </tbody>
+  </table>
+  <br/>
+  <table class="table table-bordered">
+    <caption class="text-left">Condition Ingredient</caption>
     <thead>
     <tr>
       <th>Ingredient</th>
@@ -125,29 +164,9 @@ limitations under the License.
     </thead>
     <tbody>
     <tr>
-      <td>Object property</td>
-      <td>Object property as subject of condition. Refer to table4 for supported object property list</td>
-      <td>-length &gt; 5MB</td>
-    </tr>
-    <tr>
-      <td>Time</td>
-      <td>-"yyyy-MM-dd HH:mm:ss:ms"<br/>-Predefined<br/>-Time + TimeInterval</td>
-      <td>-"2017-07-29 23:00:00"<br/>-now<br/>-now+7day</td>
-    </tr>
-    <tr>
-      <td>Time Interval</td>
-      <td>-Digital + unit<br/>-Time - Time</td>
-      <td>-5sec, 5min, 5hour, 5day<br/>-now - "2016-03-19 23:00:00"</td>
-    </tr>
-    <tr>
-      <td>File Size</td>
-      <td>-Digital + unit</td>
-      <td>-5B, 5kb, 5MB, 5GB, 5TB, 5PB</td>
-    </tr>
-    <tr>
-      <td>String</td>
-      <td>Start and end with ", and escapes are supported</td>
-      <td>-"abc", "123", "Hello word\n"</td>
+      <td>Object Property</td>
+      <td>Object property as subject of condition. Refer to the above object property list.</td>
+      <td>length &gt; 5MB</td>
     </tr>
     <tr>
       <td>Logical operator</td>
@@ -168,7 +187,7 @@ limitations under the License.
   </table>
   <br/>
   <table class="table table-bordered" width="100%">
-    <caption class="text-left">Table-4 Object properties</caption>
+    <caption class="text-left">Object properties</caption>
     <thead>
     <tr>
       <th>Object</th>
@@ -197,7 +216,8 @@ limitations under the License.
     <tr>
       <td>accessCountTopOnStoragePolicy(interval, N, "$StoragePolicy")</td>
       <td>acTopSp</td>
-      <td>The topmost N for access counts with regard to a storage policy. The supported HDFS storage policies are COLD, WARM, HOT, ONE_SSD, ALL_SSD, LAZY_PERSIST.</td>
+      <td>The topmost N for access counts with regard to a storage policy.
+        The supported HDFS storage policies are COLD, WARM, HOT, ONE_SSD, ALL_SSD, LAZY_PERSIST.</td>
     </tr>
     <tr>
       <td>accessCountBottomOnStoragePolicy(interval,N, "$StoragePolicy")</td>
@@ -237,7 +257,8 @@ limitations under the License.
     <tr>
       <td>length</td>
       <td>-</td>
-      <td>Length of the file.</td>
+      <td>Length of the file. Bytes (KB, MB, GB, etc). Currently, only pure digital is supported,
+        which indicates the number of bytes.</td>
     </tr>
     <tr>
       <td>mtime</td>
@@ -263,17 +284,16 @@ limitations under the License.
   </table>
   <br/>
   <table class="table table-bordered">
-    <caption class="text-left">Table-5 Commands</caption>
+    <caption class="text-left">Actions</caption>
     <thead>
     <tr>
-      <th>SSM Action (case sensitive)</th>
+      <th>SSM Action</th>
     </tr>
     </thead>
     <tbody>
     <tr>
       <td>All SSM actions can be used in SSM rule. Please refer to Action Usage page.</td>
     </tr>
-
     </tbody>
   </table>
 </div>
