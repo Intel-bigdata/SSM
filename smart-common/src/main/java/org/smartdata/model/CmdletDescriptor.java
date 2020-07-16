@@ -72,6 +72,8 @@ public class CmdletDescriptor {
 
   public void setCmdletParameter(String key, String value) {
     actionCommon.put(key, value);
+    // After the setting, the cmdlet string should be changed.
+    this.cmdletString = toCmdletString();
   }
 
   public String getCmdletParameter(String key) {
