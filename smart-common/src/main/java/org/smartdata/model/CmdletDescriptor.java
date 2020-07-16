@@ -197,7 +197,7 @@ public class CmdletDescriptor {
   }
 
   /**
-   * To judge whether a same cmdlet is being tackled by SSM, we override
+   * To judge whether a same task is being tackled by SSM, we override
    * #hashCode and #equals to give this logical equal meaning: one ojbect
    * equals another if they have the same rule ID and same cmdlet string.
    */
@@ -214,7 +214,7 @@ public class CmdletDescriptor {
     if (this == o) {
       return true;
     }
-    CmdletDescriptor another = (CmdletDescriptor)o;
+    CmdletDescriptor another = (CmdletDescriptor) o;
     return this.getRuleId() == another.getRuleId()
         && this.getCmdletString().equals(another.getCmdletString());
   }

@@ -106,8 +106,8 @@ public class CmdletManager extends AbstractService {
   private Map<Long, LaunchCmdlet> idToLaunchCmdlet;
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
-  // Maintain the tackling CmdletDescriptor from the submission to
-  // the persistence to DB after finished.
+  // Track a CmdletDescriptor from the submission to
+  // the finish.
   private Set<CmdletDescriptor> tacklingCmdDespts;
   private Map<Long, ActionInfo> idToActions;
   private Map<Long, CmdletInfo> cacheCmd;
@@ -367,7 +367,8 @@ public class CmdletManager extends AbstractService {
   }
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
-    // To avoid repeatedly submitting cmdlet.
+    // To avoid repeatedly submitting task. If the set contains one CmdletDescriptor
+    // with the same rule id and cmdlet string, return -1.
     if (tacklingCmdDespts.contains(cmdletDescriptor)) {
       return -1;
     }
