@@ -815,7 +815,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
         detailedRuleInfo
           .setBaseProgress(cmdletInfos.size() - currPos);
         detailedRuleInfo.setRunningProgress(countRunning);
-        detailedRuleInfos.add(detailedRuleInfo);
+        if (detailedRuleInfo.getState() != RuleState.DELETED){
+          detailedRuleInfos.add(detailedRuleInfo);
+        }
       }
     }
     return detailedRuleInfos;
@@ -848,7 +850,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
             .setBaseProgress(0);
           detailedRuleInfo.setRunningProgress(0);
         }
-        detailedRuleInfos.add(detailedRuleInfo);
+        if (detailedRuleInfo.getState() != RuleState.DELETED){
+          detailedRuleInfos.add(detailedRuleInfo);
+        }
       }
     }
     return detailedRuleInfos;
