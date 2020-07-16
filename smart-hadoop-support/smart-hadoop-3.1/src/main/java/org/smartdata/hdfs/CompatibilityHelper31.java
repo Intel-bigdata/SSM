@@ -266,8 +266,9 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       // Exclude onessd/onedisk action to be executed on EC block.
       // EC blocks can only be put on a same storage medium.
       if (policyName.equalsIgnoreCase("Warm") |
-          policyName.equalsIgnoreCase("One_SSD")) {
-        throw new IOException("onessd or onedisk is not applicable to EC block!");
+          policyName.equalsIgnoreCase("One_SSD") |
+          policyName.equalsIgnoreCase("Lazy_Persist")) {
+        throw new IOException("onessd/onedisk/ramdisk is not applicable to EC block!");
       }
       if (ErasureCodingPolicyManager
           .checkStoragePolicySuitableForECStripedMode(policyId)) {
