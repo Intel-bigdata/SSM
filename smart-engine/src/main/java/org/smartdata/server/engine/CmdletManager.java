@@ -106,6 +106,9 @@ public class CmdletManager extends AbstractService {
   private Map<Long, LaunchCmdlet> idToLaunchCmdlet;
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
+  // Maintain the tackling CmdletDescriptor from the submission to
+  // the persistence to DB after finished.
+  private Set<CmdletDescriptor> tacklingCmdDespts;
   private Map<Long, ActionInfo> idToActions;
   private Map<Long, CmdletInfo> cacheCmd;
   private List<Long> tobeDeletedCmd;
@@ -134,6 +137,7 @@ public class CmdletManager extends AbstractService {
     this.scheduledCmdlet = new LinkedBlockingQueue<>();
     this.idToLaunchCmdlet = new ConcurrentHashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
+    this.tacklingCmdDespts = new HashSet<>();
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
     this.tobeDeletedCmd = new LinkedList<>();
@@ -303,7 +307,11 @@ public class CmdletManager extends AbstractService {
     }
     executorService.shutdown();
     cacheCmdTh = Integer.MAX_VALUE;
-    batchSyncCmdAction();
+    try {
+      batchSyncCmdAction();
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
     dispatcher.shutDownExcutorServices();
     LOG.info("Stopped.");
   }
@@ -359,6 +367,10 @@ public class CmdletManager extends AbstractService {
   }
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
+    // To avoid repeatedly submitting cmdlet.
+    if (tacklingCmdDespts.contains(cmdletDescriptor)) {
+      return -1;
+    }
     if (LOG.isDebugEnabled()) {
       LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
     }
@@ -383,6 +395,7 @@ public class CmdletManager extends AbstractService {
     checkActionsOnSubmit(cmdletInfo, actionInfos);
     // Insert cmdletinfo and actionInfos to metastore and cache.
     syncCmdAction(cmdletInfo, actionInfos);
+    tacklingCmdDespts.add(cmdletDescriptor);
     return cmdletInfo.getCid();
   }
 
@@ -414,7 +427,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void batchSyncCmdAction() {
+  private void batchSyncCmdAction() throws Exception {
     if (cacheCmd.size() == 0 && tobeDeletedCmd.size() == 0) {
       return;
     }
@@ -451,6 +464,8 @@ public class CmdletManager extends AbstractService {
 
       for (CmdletInfo cmdletInfo : cmdletFinished) {
         idToCmdlets.remove(cmdletInfo.getCid());
+        tacklingCmdDespts.remove(
+            new CmdletDescriptor(cmdletInfo.getParameters(), cmdletInfo.getRid()));
         for (Long aid : cmdletInfo.getAids()) {
           idToActions.remove(aid);
         }

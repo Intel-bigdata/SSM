@@ -449,8 +449,11 @@ public class RuleExecutor implements Runnable {
           for (RuleExecutorPlugin plugin : plugins) {
             cmd = plugin.preSubmitCmdletDescriptor(ruleInfo, tr, cmd);
           }
-          ruleManager.getCmdletManager().submitCmdlet(cmd);
-          nSubmitted++;
+          long cid = ruleManager.getCmdletManager().submitCmdlet(cmd);
+          // Not really submitted if cid is -1.
+          if (cid != -1) {
+            nSubmitted++;
+          }
         } catch (QueueFullException e) {
           break;
         } catch (IOException e) {

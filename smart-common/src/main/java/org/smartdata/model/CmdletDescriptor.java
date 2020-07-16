@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * CmdletDescriptor describes a cmdlet by parsing out action names and their
@@ -193,6 +194,29 @@ public class CmdletDescriptor {
         "CmdletDescriptor{actionCommon=%s, actionNames=%s, "
             + "actionArgs=%s, cmdletString=\'%s\'}",
         actionCommon, actionNames, actionArgs, cmdletString);
+  }
+
+  /**
+   * To judge whether a same cmdlet is being tackled by SSM, we override
+   * #hashCode and #equals to give this logical equal meaning: one ojbect
+   * equals another if they have the same rule ID and same cmdlet string.
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hash(getRuleId(), getCmdletString());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || this.getClass() != o.getClass()) {
+      return false;
+    }
+    if (this == o) {
+      return true;
+    }
+    CmdletDescriptor another = (CmdletDescriptor)o;
+    return this.getRuleId() == another.getRuleId()
+        && this.getCmdletString().equals(another.getCmdletString());
   }
 
   private void parseCmdletString(String cmdlet)
