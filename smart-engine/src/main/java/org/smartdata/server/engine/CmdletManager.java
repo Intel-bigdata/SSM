@@ -137,7 +137,7 @@ public class CmdletManager extends AbstractService {
     this.scheduledCmdlet = new LinkedBlockingQueue<>();
     this.idToLaunchCmdlet = new ConcurrentHashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
-    this.tacklingCmdDespts = new HashSet<>();
+    this.tacklingCmdDespts = ConcurrentHashMap.newKeySet();
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
     this.tobeDeletedCmd = new LinkedList<>();
