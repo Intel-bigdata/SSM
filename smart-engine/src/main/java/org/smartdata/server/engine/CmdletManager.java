@@ -188,7 +188,7 @@ public class CmdletManager extends AbstractService {
           schedulers.put(a, s);
         }
       }
-      recovery();
+      recover();
       LOG.info("Initialized.");
     } catch (MetaStoreException e) {
       LOG.error("DB Connection error! Failed to get Max CmdletId/ActionId!", e);
@@ -200,7 +200,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void recovery() throws IOException {
+  private void recover() throws IOException {
     reloadCmdletsInDB();
   }
 
@@ -371,7 +371,7 @@ public class CmdletManager extends AbstractService {
     // To avoid repeatedly submitting task. If tracker contains one CmdletDescriptor
     // with the same rule id and cmdlet string, return -1.
     if (tracker.contains(cmdletDescriptor)) {
-      LOG.debug("Refuse to repeatedly submit Cmdlet for [{}]", cmdletDescriptor);
+      LOG.debug("Refuse to repeatedly submit Cmdlet for {}", cmdletDescriptor);
       return -1;
     }
     if (LOG.isDebugEnabled()) {
@@ -391,13 +391,16 @@ public class CmdletManager extends AbstractService {
         submitTime,
         submitTime,
         submitTime + cmdletDescriptor.getDeferIntervalMs());
-    List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
+    List<ActionInfo> actionInfos =
+        createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     // Check action names
     checkActionNames(cmdletDescriptor);
     // Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
     checkActionsOnSubmit(cmdletInfo, actionInfos);
     // Insert cmdletinfo and actionInfos to metastore and cache.
     syncCmdAction(cmdletInfo, actionInfos);
+    // Track in the submission portal. For cmdlets recovered from DB
+    // (see #recover), they will be not be tracked.
     tracker.track(cmdletInfo.getCid(), cmdletDescriptor);
     return cmdletInfo.getCid();
   }
