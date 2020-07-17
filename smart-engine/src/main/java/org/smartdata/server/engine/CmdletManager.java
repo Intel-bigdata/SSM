@@ -53,6 +53,7 @@ import org.smartdata.server.cluster.ActiveServerNodeCmdletMetrics;
 import org.smartdata.server.cluster.NodeCmdletMetrics;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
+import org.smartdata.server.engine.cmdlet.TaskTracker;
 import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
@@ -108,7 +109,7 @@ public class CmdletManager extends AbstractService {
   private Map<Long, CmdletInfo> idToCmdlets;
   // Track a CmdletDescriptor from the submission to
   // the finish.
-  private Set<CmdletDescriptor> tacklingCmdDespts;
+  private TaskTracker tracker;
   private Map<Long, ActionInfo> idToActions;
   private Map<Long, CmdletInfo> cacheCmd;
   private List<Long> tobeDeletedCmd;
@@ -137,7 +138,7 @@ public class CmdletManager extends AbstractService {
     this.scheduledCmdlet = new LinkedBlockingQueue<>();
     this.idToLaunchCmdlet = new ConcurrentHashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
-    this.tacklingCmdDespts = ConcurrentHashMap.newKeySet();
+    this.tracker = new TaskTracker();
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
     this.tobeDeletedCmd = new LinkedList<>();
@@ -367,9 +368,10 @@ public class CmdletManager extends AbstractService {
   }
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
-    // To avoid repeatedly submitting task. If the set contains one CmdletDescriptor
+    // To avoid repeatedly submitting task. If tracker contains one CmdletDescriptor
     // with the same rule id and cmdlet string, return -1.
-    if (tacklingCmdDespts.contains(cmdletDescriptor)) {
+    if (tracker.contains(cmdletDescriptor)) {
+      LOG.debug("Refuse to repeatedly submit Cmdlet for [{}]", cmdletDescriptor);
       return -1;
     }
     if (LOG.isDebugEnabled()) {
@@ -396,7 +398,7 @@ public class CmdletManager extends AbstractService {
     checkActionsOnSubmit(cmdletInfo, actionInfos);
     // Insert cmdletinfo and actionInfos to metastore and cache.
     syncCmdAction(cmdletInfo, actionInfos);
-    tacklingCmdDespts.add(cmdletDescriptor);
+    tracker.track(cmdletInfo.getCid(), cmdletDescriptor);
     return cmdletInfo.getCid();
   }
 
@@ -465,8 +467,7 @@ public class CmdletManager extends AbstractService {
 
       for (CmdletInfo cmdletInfo : cmdletFinished) {
         idToCmdlets.remove(cmdletInfo.getCid());
-        tacklingCmdDespts.remove(
-            new CmdletDescriptor(cmdletInfo.getParameters(), cmdletInfo.getRid()));
+        tracker.untrack(cmdletInfo.getCid());
         for (Long aid : cmdletInfo.getAids()) {
           idToActions.remove(aid);
         }
