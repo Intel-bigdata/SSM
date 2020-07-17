@@ -53,6 +53,7 @@ import org.smartdata.server.cluster.ActiveServerNodeCmdletMetrics;
 import org.smartdata.server.cluster.NodeCmdletMetrics;
 import org.smartdata.server.engine.cmdlet.CmdletDispatcher;
 import org.smartdata.server.engine.cmdlet.CmdletExecutorService;
+import org.smartdata.server.engine.cmdlet.TaskTracker;
 import org.smartdata.utils.StringUtil;
 
 import java.io.IOException;
@@ -106,6 +107,9 @@ public class CmdletManager extends AbstractService {
   private Map<Long, LaunchCmdlet> idToLaunchCmdlet;
   private List<Long> runningCmdlets;
   private Map<Long, CmdletInfo> idToCmdlets;
+  // Track a CmdletDescriptor from the submission to
+  // the finish.
+  private TaskTracker tracker;
   private Map<Long, ActionInfo> idToActions;
   private Map<Long, CmdletInfo> cacheCmd;
   private List<Long> tobeDeletedCmd;
@@ -134,6 +138,7 @@ public class CmdletManager extends AbstractService {
     this.scheduledCmdlet = new LinkedBlockingQueue<>();
     this.idToLaunchCmdlet = new ConcurrentHashMap<>();
     this.idToCmdlets = new ConcurrentHashMap<>();
+    this.tracker = new TaskTracker();
     this.idToActions = new ConcurrentHashMap<>();
     this.cacheCmd = new ConcurrentHashMap<>();
     this.tobeDeletedCmd = new LinkedList<>();
@@ -183,7 +188,7 @@ public class CmdletManager extends AbstractService {
           schedulers.put(a, s);
         }
       }
-      recovery();
+      recover();
       LOG.info("Initialized.");
     } catch (MetaStoreException e) {
       LOG.error("DB Connection error! Failed to get Max CmdletId/ActionId!", e);
@@ -195,7 +200,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void recovery() throws IOException {
+  private void recover() throws IOException {
     reloadCmdletsInDB();
   }
 
@@ -303,7 +308,11 @@ public class CmdletManager extends AbstractService {
     }
     executorService.shutdown();
     cacheCmdTh = Integer.MAX_VALUE;
-    batchSyncCmdAction();
+    try {
+      batchSyncCmdAction();
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
     dispatcher.shutDownExcutorServices();
     LOG.info("Stopped.");
   }
@@ -359,6 +368,12 @@ public class CmdletManager extends AbstractService {
   }
 
   public long submitCmdlet(CmdletDescriptor cmdletDescriptor) throws IOException {
+    // To avoid repeatedly submitting task. If tracker contains one CmdletDescriptor
+    // with the same rule id and cmdlet string, return -1.
+    if (tracker.contains(cmdletDescriptor)) {
+      LOG.debug("Refuse to repeatedly submit Cmdlet for {}", cmdletDescriptor);
+      return -1;
+    }
     if (LOG.isDebugEnabled()) {
       LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdletDescriptor.getCmdletString()));
     }
@@ -376,13 +391,17 @@ public class CmdletManager extends AbstractService {
         submitTime,
         submitTime,
         submitTime + cmdletDescriptor.getDeferIntervalMs());
-    List<ActionInfo> actionInfos = createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
+    List<ActionInfo> actionInfos =
+        createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     // Check action names
     checkActionNames(cmdletDescriptor);
     // Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
     checkActionsOnSubmit(cmdletInfo, actionInfos);
     // Insert cmdletinfo and actionInfos to metastore and cache.
     syncCmdAction(cmdletInfo, actionInfos);
+    // Track in the submission portal. For cmdlets recovered from DB
+    // (see #recover), they will be not be tracked.
+    tracker.track(cmdletInfo.getCid(), cmdletDescriptor);
     return cmdletInfo.getCid();
   }
 
@@ -414,7 +433,7 @@ public class CmdletManager extends AbstractService {
     }
   }
 
-  private void batchSyncCmdAction() {
+  private void batchSyncCmdAction() throws Exception {
     if (cacheCmd.size() == 0 && tobeDeletedCmd.size() == 0) {
       return;
     }
@@ -451,6 +470,7 @@ public class CmdletManager extends AbstractService {
 
       for (CmdletInfo cmdletInfo : cmdletFinished) {
         idToCmdlets.remove(cmdletInfo.getCid());
+        tracker.untrack(cmdletInfo.getCid());
         for (Long aid : cmdletInfo.getAids()) {
           idToActions.remove(aid);
         }
