@@ -256,6 +256,7 @@ public class CompressionScheduler extends ActionSchedulerService {
         if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
           onDecompressActionFinished(actionInfo);
         }
+        // Take over access count after successful execution.
         takeOverAccessCount(srcPath);
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
@@ -271,7 +272,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   /**
    * In rename case, the fid of renamed file is not changed. But sometimes, we need
    * to keep old file's access count and let new file takes over this metric. E.g.,
-   * with EC/Compress action, a new file will overwrite the old file.
+   * with (un)EC/(un)Compress/(un)Compact action, a new file will overwrite the old file.
    */
   public void takeOverAccessCount(String filePath) {
     try {

@@ -197,6 +197,10 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
+  /**
+   * For EC/UnEC action, the src file will be locked and
+   * the old file id is kept in a map.
+   */
   public void afterSchedule(String srcPath) {
     // lock the file only if ec or unec action is scheduled
     fileLock.add(srcPath);
@@ -236,6 +240,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       if (!actionInfo.isSuccessful()) {
         return;
       }
+      // Task over access count after successful execution.
       takeOverAccessCount(filePath);
     }
   }
@@ -243,7 +248,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   /**
    * In rename case, the fid of renamed file is not changed. But sometimes, we need
    * to keep old file's access count and let new file takes over this metric. E.g.,
-   * with EC/Compress action, a new file will overwrite the old file.
+   * with (un)EC/(un)Compress/(un)Compact action, a new file will overwrite the old file.
    */
   public void takeOverAccessCount(String filePath) {
     try {
