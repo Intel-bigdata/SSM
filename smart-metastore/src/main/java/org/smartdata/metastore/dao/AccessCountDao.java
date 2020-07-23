@@ -169,6 +169,15 @@ public class AccessCountDao {
     jdbcTemplate.execute(sql);
   }
 
+  public void updateFid(long fidSrc, long fidDest) {
+    JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+    for (AccessCountTable table : getAllSortedTables()) {
+      String sql = String.format("update %s set %s=%s where %s=%s", table,
+          AccessCountDao.FILE_FIELD, fidDest, AccessCountDao.FILE_FIELD, fidSrc);
+      jdbcTemplate.execute(sql);
+    }
+  }
+
   private Map<String, Object> toMap(AccessCountTable accessCountTable) {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("table_name", accessCountTable.getTableName());

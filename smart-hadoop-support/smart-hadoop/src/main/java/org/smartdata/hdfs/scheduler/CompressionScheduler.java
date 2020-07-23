@@ -45,8 +45,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -69,6 +71,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
   private SmartConf conf;
   private Set<String> fileLock;
+  private Map<String, Long> filePathToOldFid;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CompressionScheduler.class);
@@ -85,6 +88,7 @@ public class CompressionScheduler extends ActionSchedulerService {
     CompressionScheduler.COMPRESS_DIR =
         new File(ssmWorkDir, COMPRESS_TMP_DIR).getAbsolutePath();
     this.fileLock = new HashSet<>();
+    this.filePathToOldFid = new HashMap<>();
   }
 
   @Override
@@ -214,8 +218,20 @@ public class CompressionScheduler extends ActionSchedulerService {
     String tmpName = createTmpName(action);
     action.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
     actionInfo.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
-    fileLock.add(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    afterSchedule(srcPath);
     return ScheduleResult.SUCCESS;
+  }
+
+  public void afterSchedule(String srcPath) {
+    // lock the file only if ec or unec action is scheduled
+    fileLock.add(srcPath);
+    try {
+      filePathToOldFid.put(srcPath, metaStore.getFile(srcPath).getFileId());
+    } catch (MetaStoreException e) {
+      // We think it may not be a big issue, so just warn user this issue.
+      LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
+    }
   }
 
   @Override
@@ -240,6 +256,7 @@ public class CompressionScheduler extends ActionSchedulerService {
         if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
           onDecompressActionFinished(actionInfo);
         }
+        takeOverAccessCount(srcPath);
       } catch (MetaStoreException e) {
         LOG.error("Compression action failed in metastore!", e);
       } catch (Exception e) {
@@ -248,6 +265,24 @@ public class CompressionScheduler extends ActionSchedulerService {
         // Remove the lock
         fileLock.remove(srcPath);
       }
+    }
+  }
+
+  /**
+   * In rename case, the fid of renamed file is not changed. But sometimes, we need
+   * to keep old file's access count and let new file takes over this metric. E.g.,
+   * with EC/Compress action, a new file will overwrite the old file.
+   */
+  public void takeOverAccessCount(String filePath) {
+    try {
+      long oldFid = filePathToOldFid.get(filePath);
+      // The new fid may have not been updated in metastore, so
+      // we get it from dfs client.
+      long newFid = dfsClient.getFileInfo(filePath).getFileId();
+      metaStore.updateAccessCountTableFid(oldFid, newFid);
+    } catch (Exception e) {
+      LOG.warn("Faided to take over file access count, which can make the " +
+          "measure for data temperature inaccurate!");
     }
   }
 
