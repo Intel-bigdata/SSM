@@ -519,15 +519,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
     } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       handleUncompactActionResult(actionInfo);
     }
-    // As long as the action is finished, regardless of success or not.
-    for (String filePath : getSmallFileList(actionInfo)) {
-      filePathToOldFid.remove(filePath);
-    }
-
     if (actionInfo.isSuccessful()) {
       // For uncompact action, the small file list cannot be obtained from metastore,
       // since the record can be deleted because container file was deleted.
       takeOverAccessCount(getSmallFileList(actionInfo));
+    }
+    // As long as the action is finished, regardless of success or not.
+    for (String filePath : getSmallFileList(actionInfo)) {
+      filePathToOldFid.remove(filePath);
     }
   }
 
