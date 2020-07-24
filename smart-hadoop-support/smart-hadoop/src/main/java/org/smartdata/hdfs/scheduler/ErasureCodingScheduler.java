@@ -248,7 +248,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   /**
    * In rename case, the fid of renamed file is not changed. But sometimes, we need
    * to keep old file's access count and let new file takes over this metric. E.g.,
-   * with (un)EC/(un)Compress/(un)Compact action, a new file will overwrite the old file.
+   * with (un)EC/(de)Compress/(un)Compact action, a new file will overwrite the old file.
    */
   public void takeOverAccessCount(String filePath) {
     try {
@@ -258,7 +258,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       long newFid = dfsClient.getFileInfo(filePath).getFileId();
       metaStore.updateAccessCountTableFid(oldFid, newFid);
     } catch (Exception e) {
-      LOG.warn("Faided to take over file access count, which can make the " +
+      LOG.warn("Failed to take over file access count, which can make the " +
           "measure for data temperature inaccurate!");
     }
   }
