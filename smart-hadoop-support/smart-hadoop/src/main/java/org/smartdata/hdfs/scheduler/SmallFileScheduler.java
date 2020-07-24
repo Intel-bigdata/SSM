@@ -507,40 +507,34 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    if (actionInfo.isFinished()) {
-      if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-        handleCompactActionResult(actionInfo);
-        takeOverAccessCount(getSmallFileList(actionInfo));
-      } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-        handleUncompactActionResult(actionInfo);
-        takeOverAccessCount(getSmallFileList(actionInfo));
-      }
+    if (!actionInfo.getActionName().equals(COMPACT_ACTION_NAME) ||
+        !actionInfo.getActionName().equals(UNCOMPACT_ACTION_NAME)) {
+      return;
+    }
+    if (!actionInfo.isFinished()) {
+      return;
+    }
+    if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+      handleCompactActionResult(actionInfo);
+    } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+      handleUncompactActionResult(actionInfo);
+    }
+    // As long as the action is finished, regardless of success or not.
+    for (String filePath : getSmallFileList(actionInfo)) {
+      filePathToOldFid.remove(filePath);
+    }
+
+    if (actionInfo.isSuccessful()) {
+      // For uncompact action, the small file list cannot be obtained from metastore,
+      // since the record can be deleted because container file was deleted.
+      takeOverAccessCount(getSmallFileList(actionInfo));
     }
   }
 
   public List<String> getSmallFileList(ActionInfo actionInfo) {
-    if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-      ArrayList<String> smallFileList = new Gson().fromJson(
-          actionInfo.getArgs().get(HdfsAction.FILE_PATH),
-          new TypeToken<ArrayList<String>>() {
-          }.getType());
-      return smallFileList;
-    }
-    if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-      String containerFilePath = actionInfo.getArgs().get(
-          SmallFileCompactAction.CONTAINER_FILE);
-      List<String> smallFileList;
-      try {
-        smallFileList =
-            metaStore.getSmallFilesByContainerFile(containerFilePath);
-      } catch (MetaStoreException e) {
-        LOG.warn("Failed to get small file list to take over original small " +
-            "files' data temperature.");
-        return new ArrayList<>();
-      }
-      return smallFileList;
-    }
-    return new ArrayList<>();
+    return new Gson().fromJson(actionInfo.getArgs().get(HdfsAction.FILE_PATH),
+        new TypeToken<ArrayList<String>>() {
+        }.getType());
   }
 
   /**

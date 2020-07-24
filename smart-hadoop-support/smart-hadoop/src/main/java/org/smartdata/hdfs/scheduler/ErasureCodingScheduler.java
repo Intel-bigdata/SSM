@@ -233,15 +233,27 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
+    if (!actionInfo.isFinished()) {
+      return;
+    }
     if (actionInfo.getActionName().equals(EC_ACTION_ID) ||
         actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
-      String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      fileLock.remove(filePath);
-      if (!actionInfo.isSuccessful()) {
-        return;
+      String filePath = null;
+      try {
+        if (!actionInfo.isSuccessful()) {
+          return;
+        }
+        filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+        // Task over access count after successful execution.
+        takeOverAccessCount(filePath);
+      } finally {
+        // As long as the action is finished, regardless of success or not,
+        // we should remove the corresponding record from fileLock & filePathToOldFid.
+        if (filePath != null) {
+          fileLock.remove(filePath);
+          filePathToOldFid.remove(filePath);
+        }
       }
-      // Task over access count after successful execution.
-      takeOverAccessCount(filePath);
     }
   }
 

@@ -236,36 +236,38 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    if (actionInfo.isFinished()) {
-      String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      try {
-        // Compression Action failed
-        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
-            !actionInfo.isSuccessful()) {
-          // TODO: refactor FileState in order to revert to original state if action failed
-          // Currently only converting from normal file to other types is supported, so
-          // when action failed, just remove the record of this file from metastore.
-          // In current implementation, no record in FileState table means the file is normal type.
-          metaStore.deleteFileState(srcPath);
-          return;
-        }
-        // Action execution is successful.
-        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
-          onCompressActionFinished(actionInfo);
-        }
-        if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
-          onDecompressActionFinished(actionInfo);
-        }
-        // Take over access count after successful execution.
-        takeOverAccessCount(srcPath);
-      } catch (MetaStoreException e) {
-        LOG.error("Compression action failed in metastore!", e);
-      } catch (Exception e) {
-        LOG.error("Compression action error", e);
-      } finally {
-        // Remove the lock
-        fileLock.remove(srcPath);
+    if (!actionInfo.isFinished()) {
+      return;
+    }
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    try {
+      // Compression Action failed
+      if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+          !actionInfo.isSuccessful()) {
+        // TODO: refactor FileState in order to revert to original state if action failed
+        // Currently only converting from normal file to other types is supported, so
+        // when action failed, just remove the record of this file from metastore.
+        // In current implementation, no record in FileState table means the file is normal type.
+        metaStore.deleteFileState(srcPath);
+        return;
       }
+      // Action execution is successful.
+      if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
+        onCompressActionFinished(actionInfo);
+      }
+      if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+        onDecompressActionFinished(actionInfo);
+      }
+      // Take over access count after successful execution.
+      takeOverAccessCount(srcPath);
+    } catch (MetaStoreException e) {
+      LOG.error("Compression action failed in metastore!", e);
+    } catch (Exception e) {
+      LOG.error("Compression action error", e);
+    } finally {
+      // Remove the record as long as the action is finished.
+      fileLock.remove(srcPath);
+      filePathToOldFid.remove(srcPath);
     }
   }
 
