@@ -507,7 +507,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    if (!actionInfo.getActionName().equals(COMPACT_ACTION_NAME) ||
+    if (!actionInfo.getActionName().equals(COMPACT_ACTION_NAME) &&
         !actionInfo.getActionName().equals(UNCOMPACT_ACTION_NAME)) {
       return;
     }

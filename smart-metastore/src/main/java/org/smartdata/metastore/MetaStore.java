@@ -389,6 +389,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    */
   public void updateAccessCountTableFid(long fidSrc, long fidDest)
       throws MetaStoreException {
+    if (fidSrc == fidDest) {
+      LOG.warn("No need to update fid for access count table "
+          + "with same fid: " + fidDest);
+      return;
+    }
     try {
       accessCountDao.updateFid(fidSrc, fidDest);
     } catch (Exception e) {
