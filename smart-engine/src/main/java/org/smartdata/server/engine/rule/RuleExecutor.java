@@ -358,7 +358,9 @@ public class RuleExecutor implements Runnable {
       if (!scheduleInfo.isOnce() && scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER) {
         boolean befExit = false;
         if (scheduleInfo.isOneShot()) {
-          if (scheduleInfo.getSubScheduleTime() > scheduleInfo.getStartTime()) {
+          // One shot rule should be at least checked (scheduled) once.
+          // The exit condition was decoupled with start time & subSchedule time.
+          if (scheduleInfo.isOneShotScheduled()) {
             befExit = true;
           }
         } else if (startCheckTime - scheduleInfo.getEndTime() > 0) {
@@ -404,6 +406,7 @@ public class RuleExecutor implements Runnable {
       }
 
       if (scheduleInfo.isOneShot()) {
+        scheduleInfo.scheduledOneShot();
         ruleManager.updateRuleInfo(rid, RuleState.FINISHED, startCheckTime, 0, 0);
         exitSchedule();
       }

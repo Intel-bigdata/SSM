@@ -23,8 +23,10 @@ public class TimeBasedScheduleInfo {
   private long endTime;
   private long[] every;
   private long subScheduleTime;
-
   private long firstCheckTime;
+  // For one shot rule, once it is scheduled, this flag will be
+  // marked as true.
+  private boolean isOneShotScheduled = false;
 
   public TimeBasedScheduleInfo() {
     every = new long[1];
@@ -98,5 +100,13 @@ public class TimeBasedScheduleInfo {
 
   public boolean isExecutable(long now) {
     return every.length <= 1 || every[0] == 0 || (now - firstCheckTime) % every[0] < every[1] + 50;
+  }
+
+  public void scheduledOneShot() {
+    this.isOneShotScheduled = true;
+  }
+
+  public boolean isOneShotScheduled() {
+    return isOneShotScheduled;
   }
 }
