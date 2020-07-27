@@ -50,9 +50,6 @@ public class TimeBasedScheduleInfo {
   }
 
   public long getStartTime() {
-    if (startTime == -1L) {
-      startTime = System.currentTimeMillis();
-    }
     return startTime;
   }
 
