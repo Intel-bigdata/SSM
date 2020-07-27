@@ -57,7 +57,6 @@ import java.util.Set;
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
-  private final URI nnUri;
   private MetaStore metaStore;
   public static final String COMPRESSION_ACTION_ID =
       CompressionAction.class.getAnnotation(ActionSignature.class).actionId();
@@ -81,7 +80,6 @@ public class CompressionScheduler extends ActionSchedulerService {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
-    nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
 
     String ssmWorkDir = conf.get(
         SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
@@ -93,7 +91,12 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public void init() throws IOException {
-    dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    try {
+      final URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+      dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    } catch (IOException e) {
+      LOG.warn("Failed to create dfsClient.");
+    }
   }
 
   @Override

@@ -90,8 +90,12 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   public void init() throws IOException {
     fileLock.clear();
     filePathToOldFid.clear();
-    URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
-    dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    try {
+      final URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+      dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    } catch (IOException e) {
+      LOG.warn("Failed to create dfsClient.");
+    }
   }
 
   @Override
