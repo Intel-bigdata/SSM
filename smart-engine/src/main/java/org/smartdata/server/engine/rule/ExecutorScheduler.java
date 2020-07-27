@@ -39,6 +39,7 @@ public class ExecutorScheduler {
     TimeBasedScheduleInfo si = re.getTranslateResult().getTbScheduleInfo();
     long now = System.currentTimeMillis();
     si.setSubScheduleTime(now);
+    // The start time should not earlier than subSchedule time.
     long startDelay = si.getStartTime() - now;
     if (startDelay < 0) {
       startDelay = 0;

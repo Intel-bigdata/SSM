@@ -19,14 +19,13 @@ package org.smartdata.model.rule;
 
 public class TimeBasedScheduleInfo {
   public static final long FOR_EVER = Long.MAX_VALUE;
+  // If "at now" is used, start time is set to -1 in the parsing.
+  // And it will be reset in trigger time.
   private long startTime;
   private long endTime;
   private long[] every;
   private long subScheduleTime;
   private long firstCheckTime;
-  // For one shot rule, once it is scheduled, this flag will be
-  // marked as true.
-  private boolean isOneShotScheduled = false;
 
   public TimeBasedScheduleInfo() {
     every = new long[1];
@@ -51,6 +50,9 @@ public class TimeBasedScheduleInfo {
   }
 
   public long getStartTime() {
+    if (startTime == -1L) {
+      startTime = System.currentTimeMillis();
+    }
     return startTime;
   }
 
@@ -100,13 +102,5 @@ public class TimeBasedScheduleInfo {
 
   public boolean isExecutable(long now) {
     return every.length <= 1 || every[0] == 0 || (now - firstCheckTime) % every[0] < every[1] + 50;
-  }
-
-  public void scheduledOneShot() {
-    this.isOneShotScheduled = true;
-  }
-
-  public boolean isOneShotScheduled() {
-    return isOneShotScheduled;
   }
 }

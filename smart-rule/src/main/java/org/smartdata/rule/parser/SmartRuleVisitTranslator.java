@@ -109,6 +109,12 @@ public class SmartRuleVisitTranslator extends SmartRuleBaseVisitor<TreeNode> {
     TreeNode tr = visit(ctx.timepointexpr());
     try {
       long tm = (Long) (tr.eval().getValue());
+      // "now" should not be parsed as the current time in the parsing.
+      // We set it to -1 and its value will be set after the rule is triggered.
+      // See TimeBasedScheduleInfo#getStartTime.
+      if (ctx.timepointexpr().getStart().getText().equalsIgnoreCase("now")) {
+        tm  = -1L;
+      }
       timeBasedScheduleInfo.setStartTime(tm);
       timeBasedScheduleInfo.setEndTime(tm);
       return null;
