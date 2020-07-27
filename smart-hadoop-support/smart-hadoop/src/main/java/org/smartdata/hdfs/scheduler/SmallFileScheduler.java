@@ -451,9 +451,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
   public void afterSchedule(List<String> smallFileList) {
     try {
       for (String filePath : smallFileList) {
-        filePathToOldFid.put(filePath, metaStore.getFile(filePath).getFileId());
+        filePathToOldFid.put(filePath, dfsClient.getFileInfo(filePath).getFileId());
       }
-    } catch (MetaStoreException e) {
+    } catch (Throwable t) {
       // We think it may not be a big issue, so just warn user this issue.
       LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
     }

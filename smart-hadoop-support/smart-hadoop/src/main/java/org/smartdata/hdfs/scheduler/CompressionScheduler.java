@@ -230,8 +230,8 @@ public class CompressionScheduler extends ActionSchedulerService {
     // lock the file only if ec or unec action is scheduled
     fileLock.add(srcPath);
     try {
-      filePathToOldFid.put(srcPath, metaStore.getFile(srcPath).getFileId());
-    } catch (MetaStoreException e) {
+      filePathToOldFid.put(srcPath, dfsClient.getFileInfo(srcPath).getFileId());
+    } catch (Throwable t) {
       // We think it may not be a big issue, so just warn user this issue.
       LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
     }
