@@ -217,9 +217,8 @@ public class RuleInfoRepo {
     } catch (MetaStoreException e) {
       throw new IOException(ruleInfo.toString(), e);
     }
-
-    throw new IOException("Rule state transition " + oldState
-        + " -> " + newState + " is not supported");  // TODO: unsupported
+    throw new IOException("This rule state transition is not supported: "
+        + oldState.name() + " -> " + newState.name());  // TODO: unsupported
   }
 
   private void lockWrite() {
