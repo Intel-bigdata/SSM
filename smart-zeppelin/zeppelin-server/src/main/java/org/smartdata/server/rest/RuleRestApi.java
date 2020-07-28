@@ -88,7 +88,7 @@ public class RuleRestApi {
       smartEngine.getRuleManager().activateRule(intNumber);
       return new JsonResponse<>(Response.Status.OK).build();
     } catch (Exception e) {
-      logger.error("Exception in RuleRestApi while starting rule ", e);
+      logger.error("Exception in RuleRestApi while starting rule: " + e.getMessage());
       return new JsonResponse<>(Response.Status.INTERNAL_SERVER_ERROR,
           e.getMessage(), ExceptionUtils.getStackTrace(e)).build();
     }
