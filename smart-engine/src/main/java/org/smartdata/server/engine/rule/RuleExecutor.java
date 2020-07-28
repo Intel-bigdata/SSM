@@ -358,7 +358,8 @@ public class RuleExecutor implements Runnable {
       if (!scheduleInfo.isOnce() && scheduleInfo.getEndTime() != TimeBasedScheduleInfo.FOR_EVER) {
         boolean befExit = false;
         if (scheduleInfo.isOneShot()) {
-          if (scheduleInfo.getSubScheduleTime() > scheduleInfo.getStartTime()) {
+          // The subScheduleTime is set in triggering time.
+          if (scheduleInfo.getSubScheduleTime() > scheduleInfo.getEndTime()) {
             befExit = true;
           }
         } else if (startCheckTime - scheduleInfo.getEndTime() > 0) {

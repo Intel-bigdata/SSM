@@ -19,11 +19,12 @@ package org.smartdata.model.rule;
 
 public class TimeBasedScheduleInfo {
   public static final long FOR_EVER = Long.MAX_VALUE;
+  // If "at now" is used, start time is set to -1 in the parsing.
+  // And it will be reset in trigger time.
   private long startTime;
   private long endTime;
   private long[] every;
   private long subScheduleTime;
-
   private long firstCheckTime;
 
   public TimeBasedScheduleInfo() {
