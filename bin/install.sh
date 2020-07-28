@@ -60,8 +60,7 @@ echo -e "SSM will be installed on the below hosts \033[33m(empty means\
  there is no host configured)\033[0m"
 
 IFS=$'\n'
-for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
-do
+for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`; do
    host=$(echo $host | tr -d  " ")
    if [[ "$host" =~ ^#.* ]];then
         continue
@@ -106,8 +105,7 @@ fi
 TARGET=""
 FLAG=0
 ip_or_hostname=0
-for TARGET in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
-do
+for TARGET in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`; do
    TARGET=$(echo $TARGET | tr -d  " ")
    for ip_or_hostname in `echo $(hostname -A;hostname -I) | sed 's/ /\n/g';
    echo "localhost"; echo "$HOSTNAME"; echo "127.0.1.1";echo "127.0.0.1"`
@@ -128,7 +126,7 @@ tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 ARRAY=()
 check_flag=0
 
-for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents` do
+for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`; do
    host=$(echo $host | tr -d  " ")
    if [[ "$host" =~ ^#.* ]];then
         continue
