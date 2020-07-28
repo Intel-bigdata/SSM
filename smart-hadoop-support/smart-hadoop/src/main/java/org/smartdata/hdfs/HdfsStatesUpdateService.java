@@ -88,8 +88,6 @@ public class HdfsStatesUpdateService extends StatesUpdateService {
     }
     final URI nnUri = HadoopUtil.getNameNodeUri(context.getConf());
     LOG.debug("Final Namenode URL:" + nnUri.toString());
-
-
     client = HadoopUtil.getDFSClient(nnUri, conf);
     checkAndCreateIdFiles(nnUri, context.getConf());
     this.executorService = Executors.newScheduledThreadPool(4);

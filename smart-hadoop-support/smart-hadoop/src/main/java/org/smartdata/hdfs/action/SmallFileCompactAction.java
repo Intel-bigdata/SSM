@@ -183,6 +183,8 @@ public class SmallFileCompactAction extends HdfsAction {
 
   /**
    * Truncate small file and set XAttr contains file container info.
+   * To truncate the file length to zero, we delete the original file, then
+   * create a new empty file with a different fid.
    */
   private void truncateAndSetXAttr(String path, CompactFileState compactFileState)
       throws IOException {

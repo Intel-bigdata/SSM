@@ -19,10 +19,12 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.hadoop.hdfs.DFSClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.SmartFilePermission;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
 import org.smartdata.hdfs.action.SmallFileUncompactAction;
@@ -37,7 +39,9 @@ import org.smartdata.model.LaunchAction;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
 
+import javax.swing.*;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -51,6 +55,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class SmallFileScheduler extends ActionSchedulerService {
   private MetaStore metaStore;
@@ -85,11 +90,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private ScheduledExecutorService executorService;
 
+  private Map<String, Long> filePathToOldFid;
+
   private static final int META_STORE_INSERT_BATCH_SIZE = 200;
   public static final String COMPACT_ACTION_NAME = "compact";
   public static final String UNCOMPACT_ACTION_NAME = "uncompact";
   public static final List<String> ACTIONS = Arrays.asList(COMPACT_ACTION_NAME, UNCOMPACT_ACTION_NAME);
-  public static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
+  private DFSClient dfsClient;
+  private static final Logger LOG = LoggerFactory.getLogger(SmallFileScheduler.class);
 
   public SmallFileScheduler(SmartContext context, MetaStore metaStore) {
     super(context, metaStore);
@@ -97,13 +105,20 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
-  public void init() {
+  public void init() throws IOException {
     this.containerFileLock = Collections.synchronizedSet(new HashSet<String>());
     this.compactSmallFileLock = Collections.synchronizedSet(new HashSet<String>());
     this.containerFileCache = Collections.synchronizedSet(new HashSet<String>());
     this.handlingSmallFileCache = Collections.synchronizedSet(new HashSet<String>());
     this.compactFileStateQueue = new ConcurrentLinkedQueue<>();
     this.executorService = Executors.newSingleThreadScheduledExecutor();
+    this.filePathToOldFid = new HashMap<>();
+    try {
+      final URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+      dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    } catch (IOException e) {
+      LOG.warn("Failed to create dfsClient.");
+    }
   }
 
   @Override
@@ -351,6 +366,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       // Lock container file and small files
       containerFileLock.add(containerFilePath);
       compactSmallFileLock.addAll(smallFileList);
+      afterSchedule(smallFileList);
       return ScheduleResult.SUCCESS;
     }
   }
@@ -401,6 +417,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
             actionInfo.getArgs().get(SmallFileUncompactAction.CONTAINER_FILE));
         action.setArgs(args);
         actionInfo.setArgs(args);
+        afterSchedule(smallFileList);
         return ScheduleResult.SUCCESS;
       } else {
         actionInfo.setResult("All the small files of" +
@@ -423,6 +440,22 @@ public class SmallFileScheduler extends ActionSchedulerService {
       return getUncompactScheduleResult(actionInfo, action);
     } else {
       return ScheduleResult.SUCCESS;
+    }
+  }
+
+  /**
+   * For compact/uncompact action, the original small file will be replaced by
+   * other file with new fid. We need to keep the original file's id let new
+   * file take over its data temperature metric.
+   */
+  public void afterSchedule(List<String> smallFileList) {
+    try {
+      for (String filePath : smallFileList) {
+        filePathToOldFid.put(filePath, dfsClient.getFileInfo(filePath).getFileId());
+      }
+    } catch (Throwable t) {
+      // We think it may not be a big issue, so just warn user this issue.
+      LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
     }
   }
 
@@ -477,12 +510,52 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    if (actionInfo.isFinished()) {
-      if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-        handleCompactActionResult(actionInfo);
-      } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-        handleUncompactActionResult(actionInfo);
+    if (!actionInfo.getActionName().equals(COMPACT_ACTION_NAME) &&
+        !actionInfo.getActionName().equals(UNCOMPACT_ACTION_NAME)) {
+      return;
+    }
+    if (!actionInfo.isFinished()) {
+      return;
+    }
+    if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+      handleCompactActionResult(actionInfo);
+    } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
+      handleUncompactActionResult(actionInfo);
+    }
+    if (actionInfo.isSuccessful()) {
+      // For uncompact action, the small file list cannot be obtained from metastore,
+      // since the record can be deleted because container file was deleted.
+      takeOverAccessCount(getSmallFileList(actionInfo));
+    }
+    // As long as the action is finished, regardless of success or not.
+    for (String filePath : getSmallFileList(actionInfo)) {
+      filePathToOldFid.remove(filePath);
+    }
+  }
+
+  public List<String> getSmallFileList(ActionInfo actionInfo) {
+    return new Gson().fromJson(actionInfo.getArgs().get(HdfsAction.FILE_PATH),
+        new TypeToken<ArrayList<String>>() {
+        }.getType());
+  }
+
+  /**
+   * In rename case, the fid of renamed file is not changed. But sometimes, we need
+   * to keep old file's access count and let new file takes over this metric. E.g.,
+   * with (un)EC/(de)Compress/(un)Compact action, a new file will overwrite the old file.
+   */
+  public void takeOverAccessCount(List<String> smallFiles) {
+    try {
+      for (String filePath : smallFiles) {
+        long oldFid = filePathToOldFid.get(filePath);
+        // The new fid may have not been updated in metastore, so
+        // we get it from dfs client.
+        long newFid = dfsClient.getFileInfo(filePath).getFileId();
+        metaStore.updateAccessCountTableFid(oldFid, newFid);
       }
+    } catch (Exception e) {
+      LOG.warn("Failed to take over file access count, which can make the " +
+          "measure for data temperature inaccurate!");
     }
   }
 

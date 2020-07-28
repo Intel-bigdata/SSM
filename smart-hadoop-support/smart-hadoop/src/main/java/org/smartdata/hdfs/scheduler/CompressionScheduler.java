@@ -45,8 +45,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -55,7 +57,6 @@ import java.util.Set;
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
-  private final URI nnUri;
   private MetaStore metaStore;
   public static final String COMPRESSION_ACTION_ID =
       CompressionAction.class.getAnnotation(ActionSignature.class).actionId();
@@ -69,6 +70,7 @@ public class CompressionScheduler extends ActionSchedulerService {
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
   private SmartConf conf;
   private Set<String> fileLock;
+  private Map<String, Long> filePathToOldFid;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CompressionScheduler.class);
@@ -78,18 +80,23 @@ public class CompressionScheduler extends ActionSchedulerService {
     super(context, metaStore);
     this.conf = context.getConf();
     this.metaStore = metaStore;
-    nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
 
     String ssmWorkDir = conf.get(
         SmartConfKeys.SMART_WORK_DIR_KEY, SmartConfKeys.SMART_WORK_DIR_DEFAULT);
     CompressionScheduler.COMPRESS_DIR =
         new File(ssmWorkDir, COMPRESS_TMP_DIR).getAbsolutePath();
     this.fileLock = new HashSet<>();
+    this.filePathToOldFid = new HashMap<>();
   }
 
   @Override
   public void init() throws IOException {
-    dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    try {
+      final URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
+      dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
+    } catch (IOException e) {
+      LOG.warn("Failed to create dfsClient.");
+    }
   }
 
   @Override
@@ -214,40 +221,74 @@ public class CompressionScheduler extends ActionSchedulerService {
     String tmpName = createTmpName(action);
     action.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
     actionInfo.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
-    fileLock.add(actionInfo.getArgs().get(HdfsAction.FILE_PATH));
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    afterSchedule(srcPath);
     return ScheduleResult.SUCCESS;
+  }
+
+  public void afterSchedule(String srcPath) {
+    // lock the file only if ec or unec action is scheduled
+    fileLock.add(srcPath);
+    try {
+      filePathToOldFid.put(srcPath, dfsClient.getFileInfo(srcPath).getFileId());
+    } catch (Throwable t) {
+      // We think it may not be a big issue, so just warn user this issue.
+      LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
+    }
   }
 
   @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
-    if (actionInfo.isFinished()) {
-      String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      try {
-        // Compression Action failed
-        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
-            !actionInfo.isSuccessful()) {
-          // TODO: refactor FileState in order to revert to original state if action failed
-          // Currently only converting from normal file to other types is supported, so
-          // when action failed, just remove the record of this file from metastore.
-          // In current implementation, no record in FileState table means the file is normal type.
-          metaStore.deleteFileState(srcPath);
-          return;
-        }
-        // Action execution is successful.
-        if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
-          onCompressActionFinished(actionInfo);
-        }
-        if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
-          onDecompressActionFinished(actionInfo);
-        }
-      } catch (MetaStoreException e) {
-        LOG.error("Compression action failed in metastore!", e);
-      } catch (Exception e) {
-        LOG.error("Compression action error", e);
-      } finally {
-        // Remove the lock
-        fileLock.remove(srcPath);
+    if (!actionInfo.isFinished()) {
+      return;
+    }
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    try {
+      // Compression Action failed
+      if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+          !actionInfo.isSuccessful()) {
+        // TODO: refactor FileState in order to revert to original state if action failed
+        // Currently only converting from normal file to other types is supported, so
+        // when action failed, just remove the record of this file from metastore.
+        // In current implementation, no record in FileState table means the file is normal type.
+        metaStore.deleteFileState(srcPath);
+        return;
       }
+      // Action execution is successful.
+      if (actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
+        onCompressActionFinished(actionInfo);
+      }
+      if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+        onDecompressActionFinished(actionInfo);
+      }
+      // Take over access count after successful execution.
+      takeOverAccessCount(srcPath);
+    } catch (MetaStoreException e) {
+      LOG.error("Compression action failed in metastore!", e);
+    } catch (Exception e) {
+      LOG.error("Compression action error", e);
+    } finally {
+      // Remove the record as long as the action is finished.
+      fileLock.remove(srcPath);
+      filePathToOldFid.remove(srcPath);
+    }
+  }
+
+  /**
+   * In rename case, the fid of renamed file is not changed. But sometimes, we need
+   * to keep old file's access count and let new file takes over this metric. E.g.,
+   * with (un)EC/(de)Compress/(un)Compact action, a new file will overwrite the old file.
+   */
+  public void takeOverAccessCount(String filePath) {
+    try {
+      long oldFid = filePathToOldFid.get(filePath);
+      // The new fid may have not been updated in metastore, so
+      // we get it from dfs client.
+      long newFid = dfsClient.getFileInfo(filePath).getFileId();
+      metaStore.updateAccessCountTableFid(oldFid, newFid);
+    } catch (Exception e) {
+      LOG.warn("Failed to take over file access count, which can make the " +
+          "measure for data temperature inaccurate!");
     }
   }
 

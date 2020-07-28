@@ -263,43 +263,10 @@ public class InotifyEventApplier {
     List<String> ret = new ArrayList<>();
     HdfsFileStatus status = client.getFileInfo(dest);
     FileInfo info = metaStore.getFile(src);
-    // TODO: consider src or dest is ignored by SSM
-    if (inBackup(src)) {
-      // rename the file if the renamed file is still under the backup src dir
-      // if not, insert a delete file diff
-      if (inBackup(dest)) {
-        FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
-        fileDiff.setSrc(src);
-        fileDiff.getParameters().put("-dest", dest);
-        metaStore.insertFileDiff(fileDiff);
-      } else {
-        insertDeleteDiff(src, info.isdir());
-      }
-    } else if (inBackup(dest)) {
-      // tackle such case: rename file from outside into backup dir
-      if (!info.isdir()) {
-        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
-        fileDiff.setSrc(dest);
-        fileDiff.getParameters().put("-offset", String.valueOf(0));
-        fileDiff.getParameters()
-            .put("-length", String.valueOf(info.getLength()));
-        metaStore.insertFileDiff(fileDiff);
-      } else {
-        List<FileInfo> fileInfos = metaStore.getFilesByPrefix(src.endsWith("/") ? src : src + "/");
-        for (FileInfo fileInfo : fileInfos) {
-          // TODO: cover subdir with no file case
-          if (fileInfo.isdir()) {
-            continue;
-          }
-          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
-          fileDiff.setSrc(fileInfo.getPath().replaceFirst(src, dest));
-          fileDiff.getParameters().put("-offset", String.valueOf(0));
-          fileDiff.getParameters()
-              .put("-length", String.valueOf(fileInfo.getLength()));
-          metaStore.insertFileDiff(fileDiff);
-        }
-      }
-    }
+
+    // For backup data to use.
+    generateFileDiff(renameEvent);
+
     if (status == null) {
       LOG.debug("Get rename dest status failed, {} -> {}", src, dest);
     }
@@ -358,6 +325,50 @@ public class InotifyEventApplier {
       }
     }
     return ret;
+  }
+
+  private void generateFileDiff(Event.RenameEvent renameEvent)
+      throws MetaStoreException {
+    String src = renameEvent.getSrcPath();
+    String dest = renameEvent.getDstPath();
+    FileInfo info = metaStore.getFile(src);
+    // TODO: consider src or dest is ignored by SSM
+    if (inBackup(src)) {
+      // rename the file if the renamed file is still under the backup src dir
+      // if not, insert a delete file diff
+      if (inBackup(dest)) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.RENAME);
+        fileDiff.setSrc(src);
+        fileDiff.getParameters().put("-dest", dest);
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        insertDeleteDiff(src, info.isdir());
+      }
+    } else if (inBackup(dest)) {
+      // tackle such case: rename file from outside into backup dir
+      if (!info.isdir()) {
+        FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+        fileDiff.setSrc(dest);
+        fileDiff.getParameters().put("-offset", String.valueOf(0));
+        fileDiff.getParameters()
+            .put("-length", String.valueOf(info.getLength()));
+        metaStore.insertFileDiff(fileDiff);
+      } else {
+        List<FileInfo> fileInfos = metaStore.getFilesByPrefix(src.endsWith("/") ? src : src + "/");
+        for (FileInfo fileInfo : fileInfos) {
+          // TODO: cover subdir with no file case
+          if (fileInfo.isdir()) {
+            continue;
+          }
+          FileDiff fileDiff = new FileDiff(FileDiffType.APPEND);
+          fileDiff.setSrc(fileInfo.getPath().replaceFirst(src, dest));
+          fileDiff.getParameters().put("-offset", String.valueOf(0));
+          fileDiff.getParameters()
+              .put("-length", String.valueOf(fileInfo.getLength()));
+          metaStore.insertFileDiff(fileDiff);
+        }
+      }
+    }
   }
 
   private String getMetaDataUpdateSql(Event.MetadataUpdateEvent metadataUpdateEvent) throws MetaStoreException {
