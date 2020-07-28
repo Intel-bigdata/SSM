@@ -24,12 +24,19 @@
 
 <configuration>
   <property>
-    <name>smart.dfs.enabled</name>
-    <value>true</value>
-    <description>
-      By setting false, all SSM functions except rpc and RESTApi service will be disabled.
-    </description>
+    <name>smart.server.rpc.address</name>
+    <value>0.0.0.0:7042</value>
+    <description>rpc server of SSM</description>
   </property>
+<!--
+  For client side configuration, real hostname or IP is required.
+  And if SSM HA mode is enabled, more than one Smart Server address
+  can be specified with comma delimited.
+  <property>
+    <name>smart.server.rpc.address</name>
+    <value>smart-server-hostname:rpc-port</value>
+  </property>
+-->
 
   <property>
     <name>smart.ignore.dirs</name>
@@ -60,6 +67,23 @@
     </description>
   </property>
 
+  <!--
+  The above properties can take effect in SSM, and they can also be configured on
+  client side for Smart Client to use, e.g., you can make the above configuration
+  in $HADOOP_HOME/etc/hadoop/hdfs-site.xml.
+  -->
+
+  <!--
+  The below properties can ONLY take effect in SSM.
+  -->
+  <property>
+    <name>smart.dfs.enabled</name>
+    <value>true</value>
+    <description>
+      By setting false, all SSM functions except rpc and RESTApi service will be disabled.
+    </description>
+  </property>
+
   <property>
     <name>hadoop.security.credential.provider.path</name>
     <value></value>
@@ -69,12 +93,6 @@
       No path is provided by default, then the password configured in druid.xml will be
       used.
     </description>
-  </property>
-
-  <property>
-    <name>smart.server.rpc.address</name>
-    <value>0.0.0.0:7042</value>
-    <description>rpc server of SSM</description>
   </property>
 
   <property>
