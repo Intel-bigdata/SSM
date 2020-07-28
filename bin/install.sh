@@ -25,7 +25,9 @@ HOSTNAME=`hostname`
 
 cd $SSM_HOME/../;
 
-#config option is used to specify SSM's conf directory, e.g. "./install.sh --config ". If not given, the default conf is $SSM_HOME/config.
+#config option is used to specify SSM's conf directory, e.g.
+# "./install.sh --config ". If not given, the default conf
+# is $SSM_HOME/config.
 while [ $# != 0 ]; do
   case "$1" in
     "--config")
@@ -54,7 +56,8 @@ if [ $? = 1 ];then
  exit 1
 fi
 
-echo -e "SSM will be installed on the below hosts \033[33m(empty means there is no host configured)\033[0m"
+echo -e "SSM will be installed on the below hosts \033[33m(empty means\
+ there is no host configured)\033[0m"
 
 IFS=$'\n'
 for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
@@ -80,7 +83,8 @@ read -p  "Do you want to continue installing? Please type [Y|y] or [N|n]:
 "  yn
 case $yn in
         [Yy]* )
-        read -p "$(echo -e "Please type in the path where you want to install SSM \033[33m(empty means using default path '$DEFAULT_PATH')\033[0m":)
+        read -p "$(echo -e "Please type in the path where you want to install\
+ SSM \033[33m(empty means using default path '$DEFAULT_PATH')\033[0m":)
 " INSTALL_PATH
         break;;
         [Nn]* ) exit 1;;
@@ -101,14 +105,15 @@ fi
 
 TARGET=""
 FLAG=0
-ipOrHost=0
+ip_or_hostname=0
 for TARGET in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
 do
    TARGET=$(echo $TARGET | tr -d  " ")
-   for ipOrHost in `echo $(hostname -A;hostname -I) | sed 's/ /\n/g';echo "localhost";echo "$HOSTNAME";echo "127.0.1.1";echo "127.0.0.1"`
+   for ip_or_hostname in `echo $(hostname -A;hostname -I) | sed 's/ /\n/g';
+   echo "localhost"; echo "$HOSTNAME"; echo "127.0.1.1";echo "127.0.0.1"`
    do
-        ipOrHost=$(echo $ipOrHost | tr -d  " ")
-        if [[ "$TARGET" == "$ipOrHost" ]];then
+        ip_or_hostname=$(echo $ip_or_hostname | tr -d  " ")
+        if [[ "$TARGET" == "$ip_or_hostname" ]];then
             FLAG=1
             break
         fi
@@ -123,8 +128,7 @@ tar cf "${SSM_NAME}.tar" ${SSM_NAME}
 ARRAY=()
 check_flag=0
 
-for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents`
-do
+for host in `cat $CONF_DIR/servers;echo '';cat $CONF_DIR/agents` do
    host=$(echo $host | tr -d  " ")
    if [[ "$host" =~ ^#.* ]];then
         continue
@@ -132,14 +136,14 @@ do
       
       for element in ${ARRAY[@]}
       do
-         if [ "$host" == "$element" ];then
- 	    check_flag=1    
-	    break
-         fi
+        if [ "$host" == "$element" ];then
+           check_flag=1
+	       break
+        fi
       done
 
       if [ $check_flag -eq 1 ];then
-	 check_flag=0         
+	     check_flag=0
          continue
       else
          ARRAY+=("$host")
@@ -147,7 +151,8 @@ do
 
       #Before install on a host, delete ssm home directory if there exists
       if [[ "$host" != "$TARGET" ]];then
-         ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
+         ssh $host "if [ -d ${INSTALL_PATH}${SSM_NAME} ];\
+         then rm -rf ${INSTALL_PATH}${SSM_NAME};fi"
       else
          SSM_UP_HOME=${SSM_HOME%/*}/
          if [[ "$SSM_UP_HOME" != "${INSTALL_PATH}" ]];then
