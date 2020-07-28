@@ -159,26 +159,14 @@ public class SmartDFSClient extends DFSClient {
   @Override
   public DFSInputStream open(String src, int buffersize,
       boolean verifyChecksum) throws IOException {
-    DFSInputStream is = super.open(src, buffersize, verifyChecksum);
-    if (is.getFileLength() == 0) {
-      is.close();
-      FileState fileState = getFileState(src);
-      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
-        throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
-            + fileState.getFileType());
-      }
-      is = SmartInputStreamFactory.create(this, src,
-          verifyChecksum, fileState);
-    } else {
-      is.close();
-      FileState fileState = getFileState(src);
-      if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
-        throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
-            + fileState.getFileType());
-      }
-      is = SmartInputStreamFactory.create(this, src,
-          verifyChecksum, fileState);
+    DFSInputStream is;
+    FileState fileState = getFileState(src);
+    if (fileState.getFileStage().equals(FileState.FileStage.PROCESSING)) {
+      throw new IOException("Cannot open " + src + " when it is under PROCESSING to "
+          + fileState.getFileType());
     }
+    is = SmartInputStreamFactory.create(this, src,
+        verifyChecksum, fileState);
     // Report access event to smart server.
     reportFileAccessEvent(src);
     return is;
