@@ -164,6 +164,13 @@ public class CompressionAction extends HdfsAction {
         in = dfsClient.open(filePath);
         out = dfsClient.create(compressTmpPath,
             true, replication, blockSize);
+
+        // Keep storage policy unchanged.
+        String storagePolicyName = dfsClient.getStoragePolicy(filePath).getName();
+        if (!storagePolicyName.equals("UNDEF")) {
+          dfsClient.setStoragePolicy(compressTmpPath, storagePolicyName);
+        }
+
         compress(in, out);
         HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
         compressionFileState.setCompressedLength(destFile.getLen());

@@ -94,6 +94,13 @@ public class DecompressionAction extends HdfsAction {
       // No need to lock the file by append operation,
       // since compressed file cannot be modified.
       out = dfsClient.create(compressTmpPath, true);
+
+      // Keep storage policy unchanged.
+      String storagePolicyName = dfsClient.getStoragePolicy(filePath).getName();
+      if (!storagePolicyName.equals("UNDEF")) {
+        dfsClient.setStoragePolicy(compressTmpPath, storagePolicyName);
+      }
+
       in = dfsClient.open(filePath);
       long length = dfsClient.getFileInfo(filePath).getLen();
       outputDecompressedData(in, out, (int) length);

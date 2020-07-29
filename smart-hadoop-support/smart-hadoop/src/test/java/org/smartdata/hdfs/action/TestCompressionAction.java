@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestCompressionAction extends MiniClusterHarness {
 
   @Override
@@ -89,6 +91,8 @@ public class TestCompressionAction extends MiniClusterHarness {
       replication, blockSize);
     outputStream.write(bytes);
     outputStream.close();
+    dfsClient.setStoragePolicy(filePath, "COLD");
+    HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(filePath);
 
     // Generate compressed file
     String bufferSizeForCompression = "10MB";
@@ -98,6 +102,12 @@ public class TestCompressionAction extends MiniClusterHarness {
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
     Assert.assertEquals(replication, fileStatus.getReplication());
     Assert.assertEquals(blockSize, fileStatus.getBlockSize());
+
+    if (srcFileStatus.getStoragePolicy() != 0) {
+      // To make sure the consistency of storage policy
+      assertEquals(srcFileStatus.getStoragePolicy(),
+          fileStatus.getStoragePolicy());
+    }
   }
 
   static final class BytesGenerator {

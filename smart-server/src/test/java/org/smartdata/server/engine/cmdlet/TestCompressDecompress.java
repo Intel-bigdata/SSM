@@ -49,6 +49,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
+
 public class TestCompressDecompress extends MiniSmartClusterHarness {
   private DFSClient smartDFSClient;
   private String codec;
@@ -204,8 +206,10 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     int arraySize = 1024 * 1024 * 8;
     String filePath = "/ssm/compression/file4";
     prepareFile(filePath, arraySize);
-    CmdletManager cmdletManager = ssm.getCmdletManager();
+    dfsClient.setStoragePolicy(filePath, "COLD");
+    HdfsFileStatus fileStatusBefore = dfsClient.getFileInfo(filePath);
 
+    CmdletManager cmdletManager = ssm.getCmdletManager();
     // Expect that a common file cannot be decompressed.
     List<ActionScheduler> schedulers = cmdletManager.getSchedulers("decompress");
     Assert.assertTrue(schedulers.size() == 1);
@@ -220,11 +224,25 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     Assert.assertTrue(fileState instanceof CompressionFileState);
 
+    HdfsFileStatus fileStatusAfterCompress = dfsClient.getFileInfo(filePath);
+    if (fileStatusBefore.getStoragePolicy() != 0) {
+      // To make sure the consistency of storage policy
+      assertEquals(fileStatusBefore.getStoragePolicy(),
+          fileStatusAfterCompress.getStoragePolicy());
+    }
+
     // Try to decompress a compressed file
     cmdId = cmdletManager.submitCmdlet("decompress -file " + filePath);
     waitTillActionDone(cmdId);
     fileState = HadoopUtil.getFileState(dfsClient, filePath);
     Assert.assertFalse(fileState instanceof CompressionFileState);
+
+    HdfsFileStatus fileStatusAfterDeCompress = dfsClient.getFileInfo(filePath);
+    if (fileStatusBefore.getStoragePolicy() != 0) {
+      // To make sure the consistency of storage policy
+      assertEquals(fileStatusBefore.getStoragePolicy(),
+          fileStatusAfterDeCompress.getStoragePolicy());
+    }
   }
 
   @Test
