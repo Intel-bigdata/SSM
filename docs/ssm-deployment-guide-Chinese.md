@@ -2,21 +2,21 @@
 
 #### {Fangbin Sun, Jie Tao}@China Mobile, {Feilong He, Jian Zhang}@Intel
 
-# 简介
+## 简介
 
 Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDFS数据的智能管理方案。SSM有如下几个重要的功能。
 
-- SSM mover，用于冷热数据分层管理。根据用户定制的SSM规则，SSM区分出冷热数据，将冷热数据分别迁移到合适的存储介质上，合理利用不同的存储设备。
+- SSM Mover，用于冷热数据分层管理。根据用户定制的SSM规则，SSM区分出冷热数据，将冷热数据分别迁移到合适的存储介质上，合理利用不同的存储设备。
 - SSM小文件优化，能将HDFS小文件合并成一个大文件，在合并后，仍然支持对小文件透明的读操作。
-- SSM data sync，能够将一个HDFS集群中的数据自动同步到另一个集群上。
+- SSM Data Sync，能够将一个HDFS集群中的数据自动同步到另一个集群上。
 - SSM EC (Erasure Coding)，可将HDFS数据转化成某个EC策略下的数据，能够显著减少占用的存储空间。
-- SSM compression，可按照指定的压缩算法，将HDFS文件压缩。
+- SSM Compression，可按照指定的压缩算法，将HDFS文件压缩。
 
 项目代码链接：https://github.com/Intel-bigdata/SSM/
 
 本文概括了SSM的基本配置与部署步骤。
 
-# 1. 编译安装包
+## 1. 编译安装包
 
 从SSM代码仓库下载SSM源码，针对不同的Hadoop版本，采用如下不同的编译命令。
 
@@ -32,11 +32,11 @@ Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDF
 
     mvn clean package -Pdist,web,hadoop-3.1 -DskipTests
 
-编译好的安装包smart-data-*.tar.gz位于SSM/smart-dist/target下，可将其传到server节点，并解压，得到smart-data-*为${SMART_HOME}
+编译好的安装包smart-data-*.tar.gz位于SSM/smart-dist/target下，可将其传到server节点，并解压，得到smart-data-*为${SMART_HOME}.
 
-# 2. 配置SSM
+## 2. 配置SSM
 
-## 2.1 配置访问Namenode
+### 2.1 配置访问Namenode
 
 1) 生产集群HDFS通常开启namenode-HA模式，该场景下配置SSM如下：
    编辑${SMART_HOME}/conf/smart-site.xml文件，配置Hadoop的conf目录，如下：
@@ -60,9 +60,9 @@ Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDF
     </property>
     ```
 
-## 2.2 配置忽略HDFS数据目录 \[可选]
+### 2.2 配置忽略HDFS数据目录 \[可选]
 
-默认情况下，SSM启动时将获取整个HDFS命名空间。若不关心某些目录下的文件，那么可修改如下配置来忽略这些文件，并且提交的rule也不会触发与这些文件相关的actions：
+默认情况下，SSM启动时将获取整个HDFS命名空间。若不关心某些HDFS目录下的文件，那么可修改如下配置来忽略这些文件，并且提交的rule也不会触发与这些文件相关的actions：
 
 编辑${SMART_HOME}/conf/smart-default.xml文件，以忽略/foo-dirA，/foo-dirB为例，修改如下：
 
@@ -73,7 +73,19 @@ Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDF
 </property>
 ```
 
-## 2.3 配置Smart Server \[可选]
+### 2.3 配置覆盖HDFS数据目录 \[可选]
+
+某些场景下,用户可能只愿意让SSM管理某些HDFS数据目录,通过以下配置可以实现.
+编辑${SMART_HOME}/conf/smart-default.xml文件，以只覆盖/foo-dirA，/foo-dirB为例，修改如下：
+
+```xml
+  <property>
+    <name>smart.cover.dirs</name>
+    <value>/foo-dirA,/foo-dirB</value>
+  </property>
+```
+
+### 2.4 配置Smart Server \[可选]
 
 SSM支持运行一个或多个Smart Server。多个Smart Server用来保证HA，其中只有一个Smart Server处于active状态并提供相应服务，当active Smart Server失败时，standby Smart Server将变成active状态。
 * SSM默认只配置了一个Smart Server，即localhost，如需SSM HA模式，可操作如下。
@@ -99,7 +111,7 @@ SSM支持运行一个或多个Smart Server。多个Smart Server用来保证HA，
     export SSM_SERVER_JAVA_OPT="-XX:MaxHeapSize=6g"
     ```
 
-## 2.4 配置Smart Agent \[可选]
+### 2.5 配置Smart Agent \[可选]
 
 * 编辑`${SMART_HOME}/conf/agents`文件，添加主机名或IP：
 
@@ -116,7 +128,7 @@ SSM支持运行一个或多个Smart Server。多个Smart Server用来保证HA，
 
 > 注：Smart Agent可以同Smart Server部署到一个节点上。
 
-## 2.5 配置Database
+### 2.6 配置Database
 
 SSM需要MySQL来存储元数据，用户需要部署一个MySQL实例，然后编辑${SMART_HOME}/conf/druid.xml文件，配置示例如下：
 
@@ -131,11 +143,17 @@ SSM需要MySQL来存储元数据，用户需要部署一个MySQL实例，然后�
 
 > 注：推荐使用`MySQL  5.7.18+`版本，否则可能会报建表索引过长的异常.
 
-## 2.6 配置账号访问Web UI \[可选]
+### 2.7 配置账号访问Web UI \[可选]
 
-SSM Web UI默认账号密码是`admin/ssm@123. 可在登录后修改.
+默认配置下,Web UI不需要认证即可使用.如要开启认证,需更改$SMART_HOME/conf/shiro.ini,见如下所示.
 
-## 2.7 配置Kerberos \[可选]
+#/** = anon
+
+/** = authc
+
+开启认证后,SSM Web UI默认账号密码是`admin/ssm@123`. 可在登录后修改(主页右上角admin -> Change Password).
+
+### 2.8 配置Kerberos \[可选]
 
 若Hadoop集群开启Kerberos，则SSM也需要开启Kerberos以访问安全的集群，编辑`${SMART_HOME}/conf/smart-site.xml`文件，添加以下配置：
 
@@ -164,7 +182,7 @@ SSM Web UI默认账号密码是`admin/ssm@123. 可在登录后修改.
 
 > 注：SSM需要启动用户具有HDFS超级用户权限来访问一些HDFS namenode api，由于集群开启了Kerberos，为了简便，Smart Server和Smart Agent的keytab文件均采用`hdfs.keytab`，对应的principal为`hdfs`（具有超级用户权限），因此可使用root用户运行SSM。
 
-## 2.8 权限配置 \[可选]
+### 2.9 权限配置 \[可选]
 
 * SSM需要HDFS超级用户权限来访问一些Namenode Api，因此需确保启动SSM的用户账号有此特权。
 
@@ -188,7 +206,35 @@ SSM Web UI默认账号密码是`admin/ssm@123. 可在登录后修改.
 
 * SSM启动过程需要用户能够免密SSH到本地主机和所有Agent节点。
 
-# 3. 部署SSM
+## 3. 在应用端配置Client \[可选]
+
+SSM引入了SmartDFSClient来代替DFSClient访问HDFS上的数据,如果需要用到SSM Compact, SSM Compression功能,或者让SSM统计数据热度,则必须在访问HDFS的应用端作如下配置.
+
+以下以Apache Hadoop为例.
+
+#### 更改Hadoop core-site.xml
+
+添加如下配置:
+
+    ```xml
+        <property>
+            <name>fs.hdfs.impl</name>
+            <value>org.smartdata.hadoop.filesystem.SmartFileSystem</value>
+            <description>The FileSystem for hdfs URL</description>
+        </property>
+    ```
+#### 更改Hadoop hdfs-site.xml
+
+添加smart server rpc address, 用于将数据访问事件汇报给SSM Server. 如果开启了SSM HA,可以在这里配置多个SSM Server地址,不同的地址之间用逗号分隔.
+
+    ```xml
+        <property>
+            <name>smart.server.rpc.address</name>
+            <value>smart-server-hostname:rpc-port</value>
+        </property>
+    ```
+
+## 4. 部署SSM
 
 只要配置一个Smart Server，SSM就可以工作。但如果追求更好的性能，建议在每个datanode上部署一个Smart Agent。
 
@@ -202,9 +248,9 @@ $ bin/install.sh
 
 > 注：Smart Sever需要能免密SSH到所有Smart Agent节点，Smart Agents将会安装到同Smart Sever一样的路径下。
 
-# 4. 运行SSM
+## 5. 运行SSM
 
-## 4.1 启动SSM
+### 5.1 启动SSM
 
 运行`${SMART_HOME}/bin/start-ssm.sh`脚本：
 
@@ -213,7 +259,7 @@ $ bin/start-ssm.sh
 ```
 
 > `-format`选项用于启动SSM时格式化数据库，会删掉`druid.xml`中配置数据库中的所有表，并创建SSM需要的所有表；
-`--config <config-dir> `选项可指定SSM配置目录，若不指定则默认`${SMART_HOME}/conf`。
+`--config <config-dir> `选项可指定SSM配置目录，若不指定则默认为`${SMART_HOME}/conf`。
 
 SSM启动成功后，可通过以下WEB UI访问：
 
@@ -223,7 +269,7 @@ http://Active_SSM_Server_IP:7045
 
 如启动失败,可通过查看${SMART_HOME}/log下面的日志文件,获取错误信息来排查问题。
 
-## 4.2 停止SSM
+### 5.2 停止SSM
 
 运行`${SMART_HOME}/bin/stop-ssm.sh`脚本：
 
@@ -232,7 +278,7 @@ $ bin/stop-ssm.sh
 ```
 
 
-参考文档：
+## 参考文档：
 * https://github.com/Intel-bigdata/SSM/blob/trunk/docs/ssm-deployment-guide.md
 * https://github.com/Intel-bigdata/SSM/blob/trunk/docs/enable-kerberos.md
 * https://github.com/Intel-bigdata/SSM/blob/trunk/docs/admin-user-guide.md
