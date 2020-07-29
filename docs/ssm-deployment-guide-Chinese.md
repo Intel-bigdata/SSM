@@ -62,7 +62,7 @@ Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDF
 
 ### 2.2 配置忽略HDFS数据目录 \[可选]
 
-默认情况下，SSM启动时将获取整个HDFS命名空间。若不关心某些目录下的文件，那么可修改如下配置来忽略这些文件，并且提交的rule也不会触发与这些文件相关的actions：
+默认情况下，SSM启动时将获取整个HDFS命名空间。若不关心某些HDFS目录下的文件，那么可修改如下配置来忽略这些文件，并且提交的rule也不会触发与这些文件相关的actions：
 
 编辑${SMART_HOME}/conf/smart-default.xml文件，以忽略/foo-dirA，/foo-dirB为例，修改如下：
 
@@ -75,7 +75,7 @@ Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDF
 
 ### 2.3 配置覆盖HDFS数据目录 \[可选]
 
-某些场景下,用户可能只愿意让SSM管理某些数据目录,通过以下配置可以实现.
+某些场景下,用户可能只愿意让SSM管理某些HDFS数据目录,通过以下配置可以实现.
 编辑${SMART_HOME}/conf/smart-default.xml文件，以只覆盖/foo-dirA，/foo-dirB为例，修改如下：
 
 ```xml
@@ -151,7 +151,7 @@ SSM需要MySQL来存储元数据，用户需要部署一个MySQL实例，然后�
 
 /** = authc
 
-开启认证后,SSM Web UI默认账号密码是`admin/ssm@123. 可在登录后修改(主页右上角admin -> Change Password).
+开启认证后,SSM Web UI默认账号密码是`admin/ssm@123`. 可在登录后修改(主页右上角admin -> Change Password).
 
 ### 2.8 配置Kerberos \[可选]
 
@@ -225,7 +225,7 @@ SSM引入了SmartDFSClient来代替DFSClient访问HDFS上的数据,如果需要�
     ```
 #### 更改Hadoop hdfs-site.xml
 
-添加smart server rpc address, 用于将数据访问时间汇报给SSM Server. 如果开启了SSM HA,可以在这里配置多个SSM Server地址,不同的地址之间用逗号分隔.
+添加smart server rpc address, 用于将数据访问事件汇报给SSM Server. 如果开启了SSM HA,可以在这里配置多个SSM Server地址,不同的地址之间用逗号分隔.
 
     ```xml
         <property>
@@ -259,7 +259,7 @@ $ bin/start-ssm.sh
 ```
 
 > `-format`选项用于启动SSM时格式化数据库，会删掉`druid.xml`中配置数据库中的所有表，并创建SSM需要的所有表；
-`--config <config-dir> `选项可指定SSM配置目录，若不指定则默认`${SMART_HOME}/conf`。
+`--config <config-dir> `选项可指定SSM配置目录，若不指定则默认为`${SMART_HOME}/conf`。
 
 SSM启动成功后，可通过以下WEB UI访问：
 
