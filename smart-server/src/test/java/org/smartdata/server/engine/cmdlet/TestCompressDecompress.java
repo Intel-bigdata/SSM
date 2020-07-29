@@ -49,8 +49,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-
 public class TestCompressDecompress extends MiniSmartClusterHarness {
   private DFSClient smartDFSClient;
   private String codec;
@@ -224,10 +222,11 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     FileState fileState = HadoopUtil.getFileState(dfsClient, filePath);
     Assert.assertTrue(fileState instanceof CompressionFileState);
 
+    // The storage policy should not be changed
     HdfsFileStatus fileStatusAfterCompress = dfsClient.getFileInfo(filePath);
     if (fileStatusBefore.getStoragePolicy() != 0) {
       // To make sure the consistency of storage policy
-      assertEquals(fileStatusBefore.getStoragePolicy(),
+      Assert.assertEquals(fileStatusBefore.getStoragePolicy(),
           fileStatusAfterCompress.getStoragePolicy());
     }
 
@@ -237,10 +236,11 @@ public class TestCompressDecompress extends MiniSmartClusterHarness {
     fileState = HadoopUtil.getFileState(dfsClient, filePath);
     Assert.assertFalse(fileState instanceof CompressionFileState);
 
+    // The storage policy should not be changed.
     HdfsFileStatus fileStatusAfterDeCompress = dfsClient.getFileInfo(filePath);
     if (fileStatusBefore.getStoragePolicy() != 0) {
       // To make sure the consistency of storage policy
-      assertEquals(fileStatusBefore.getStoragePolicy(),
+      Assert.assertEquals(fileStatusBefore.getStoragePolicy(),
           fileStatusAfterDeCompress.getStoragePolicy());
     }
   }

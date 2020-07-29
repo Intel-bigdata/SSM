@@ -21,7 +21,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -30,8 +29,6 @@ import java.lang.reflect.Array;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestCompressionAction extends MiniClusterHarness {
 
@@ -105,7 +102,7 @@ public class TestCompressionAction extends MiniClusterHarness {
 
     if (srcFileStatus.getStoragePolicy() != 0) {
       // To make sure the consistency of storage policy
-      assertEquals(srcFileStatus.getStoragePolicy(),
+      Assert.assertEquals(srcFileStatus.getStoragePolicy(),
           fileStatus.getStoragePolicy());
     }
   }
