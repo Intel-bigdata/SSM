@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.smartdata.SmartConstants;
 import org.smartdata.action.ActionException;
 import org.smartdata.action.annotation.ActionSignature;
 import org.smartdata.hdfs.HadoopUtil;
@@ -94,6 +95,16 @@ public class DecompressionAction extends HdfsAction {
       // No need to lock the file by append operation,
       // since compressed file cannot be modified.
       out = dfsClient.create(compressTmpPath, true);
+
+      // Keep storage policy consistent.
+      // The below statement is not supported on Hadoop-2.7.3 or CDH-5.10.1
+      // String storagePolicyName = dfsClient.getStoragePolicy(filePath).getName();
+      byte storagePolicyId = dfsClient.getFileInfo(filePath).getStoragePolicy();
+      String storagePolicyName = SmartConstants.STORAGE_POLICY_MAP.get(storagePolicyId);
+      if (!storagePolicyName.equals("UNDEF")) {
+        dfsClient.setStoragePolicy(compressTmpPath, storagePolicyName);
+      }
+
       in = dfsClient.open(filePath);
       long length = dfsClient.getFileInfo(filePath).getLen();
       outputDecompressedData(in, out, (int) length);

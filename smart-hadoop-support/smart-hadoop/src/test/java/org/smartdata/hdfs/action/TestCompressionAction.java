@@ -21,7 +21,6 @@ import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.smartdata.action.MockActionStatusReporter;
 import org.smartdata.hdfs.MiniClusterHarness;
 
 import java.io.IOException;
@@ -89,6 +88,8 @@ public class TestCompressionAction extends MiniClusterHarness {
       replication, blockSize);
     outputStream.write(bytes);
     outputStream.close();
+    dfsClient.setStoragePolicy(filePath, "COLD");
+    HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(filePath);
 
     // Generate compressed file
     String bufferSizeForCompression = "10MB";
@@ -98,6 +99,13 @@ public class TestCompressionAction extends MiniClusterHarness {
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(filePath);
     Assert.assertEquals(replication, fileStatus.getReplication());
     Assert.assertEquals(blockSize, fileStatus.getBlockSize());
+
+    // 0 means unspecified.
+    if (srcFileStatus.getStoragePolicy() != 0) {
+      // To make sure the consistency of storage policy
+      Assert.assertEquals(srcFileStatus.getStoragePolicy(),
+          fileStatus.getStoragePolicy());
+    }
   }
 
   static final class BytesGenerator {

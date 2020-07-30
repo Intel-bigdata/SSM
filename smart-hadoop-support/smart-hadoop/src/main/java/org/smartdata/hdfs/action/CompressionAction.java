@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.mutable.MutableFloat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.Options;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.hdfs.CompressionCodec;
@@ -164,6 +163,16 @@ public class CompressionAction extends HdfsAction {
         in = dfsClient.open(filePath);
         out = dfsClient.create(compressTmpPath,
             true, replication, blockSize);
+
+        // Keep storage policy consistent.
+        // The below statement is not supported on Hadoop-2.7.3 or CDH-5.10.1
+        // String storagePolicyName = dfsClient.getStoragePolicy(filePath).getName();
+        byte storagePolicyId = dfsClient.getFileInfo(filePath).getStoragePolicy();
+        String storagePolicyName = SmartConstants.STORAGE_POLICY_MAP.get(storagePolicyId);
+        if (!storagePolicyName.equals("UNDEF")) {
+          dfsClient.setStoragePolicy(compressTmpPath, storagePolicyName);
+        }
+
         compress(in, out);
         HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
         compressionFileState.setCompressedLength(destFile.getLen());
