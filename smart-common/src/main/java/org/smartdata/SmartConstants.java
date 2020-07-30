@@ -17,6 +17,9 @@
  */
 package org.smartdata;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class SmartConstants {
   public static final String SMART_HDFS_STATES_UPDATE_SERVICE_IMPL =
     "org.smartdata.hdfs.HdfsStatesUpdateService";
@@ -60,4 +63,37 @@ public class SmartConstants {
   public static final String SMART_FILE_STATE_XATTR_NAME = "user.ssmFileState";
 
   public static final String AGENT_CMDLET_SERVICE_NAME = "AgentCmdletService";
+
+  public static final byte STORAGE_POLICY_UNDEF_ID = 0;
+  public static final String STORAGE_POLICY_UNDEF_NAME = "UNDEF";
+
+  public static final byte STORAGE_POLICY_COLD_ID = 2;
+  public static final String STORAGE_POLICY_COLD_NAME = "COLD";
+
+  public static final byte STORAGE_POLICY_WARM_ID = 5;
+  public static final String STORAGE_POLICY_WARM_NAME = "WARM";
+
+  public static final byte STORAGE_POLICY_HOT_ID = 7;
+  public static final String STORAGE_POLICY_HOT_NAME = "HOT";
+
+  public static final byte STORAGE_POLICY_ONE_SSD_ID = 10;
+  public static final String STORAGE_POLICY_ONE_SSD_NAME = "ONE_SSD";
+
+  public static final byte STORAGE_POLICY_ALL_SSD_ID = 12;
+  public static final String STORAGE_POLICY_ALL_SSD_NAME = "ALL_SSD";
+
+  public static final byte STORAGE_POLICY_LAZY_PERSIST_ID = 15;
+  public static final String STORAGE_POLICY_LAZY_PERSIST_NAME = "LAZY_PERSIST";
+
+  public static final Map<Byte, String> STORAGE_POLICY_MAP = new HashMap<>();
+
+  static {
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_UNDEF_ID, STORAGE_POLICY_UNDEF_NAME);
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_COLD_ID, STORAGE_POLICY_COLD_NAME);
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_WARM_ID, STORAGE_POLICY_WARM_NAME);
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_HOT_ID, STORAGE_POLICY_HOT_NAME);
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_ONE_SSD_ID, STORAGE_POLICY_ONE_SSD_NAME);
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_ALL_SSD_ID, STORAGE_POLICY_ALL_SSD_NAME);
+    STORAGE_POLICY_MAP.put(STORAGE_POLICY_LAZY_PERSIST_ID, STORAGE_POLICY_LAZY_PERSIST_NAME);
+  }
 }

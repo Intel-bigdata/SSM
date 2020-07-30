@@ -100,6 +100,7 @@ public class TestCompressionAction extends MiniClusterHarness {
     Assert.assertEquals(replication, fileStatus.getReplication());
     Assert.assertEquals(blockSize, fileStatus.getBlockSize());
 
+    // 0 means unspecified.
     if (srcFileStatus.getStoragePolicy() != 0) {
       // To make sure the consistency of storage policy
       Assert.assertEquals(srcFileStatus.getStoragePolicy(),
