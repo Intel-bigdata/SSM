@@ -87,7 +87,8 @@ Intel<sup>®</sup> Smart Storage Management (SSM) 项目致力于提供针对HDF
 
 ### 2.4 配置Smart Server \[可选]
 
-SSM支持运行一个或多个Smart Server。多个Smart Server用来保证HA，其中只有一个Smart Server处于active状态并提供相应服务，当active Smart Server失败时，standby Smart Server将变成active状态。
+SSM支持运行一个或多个Smart Server。多个Smart Server用来保证HA，其中只有一个Smart Server处于active状态并提供相应服务，当active Smart Server失败时，
+standby Smart Server将变成active状态。
 * SSM默认只配置了一个Smart Server，即localhost，如需SSM HA模式，可操作如下。
 
     编辑`${SMART_HOME}/conf/servers`文件，添加主机名或IP：
@@ -155,7 +156,7 @@ SSM需要MySQL来存储元数据，用户需要部署一个MySQL实例，然后�
 
 ### 2.8 配置Kerberos \[可选]
 
-若Hadoop集群开启Kerberos，则SSM也需要开启Kerberos以访问安全的集群，编辑`${SMART_HOME}/conf/smart-site.xml`文件，添加以下配置：
+若Hadoop集群开启Kerberos，则SSM也需要开启Kerberos以访问安全的集群，编辑`${SMART_HOME}/conf/smart-site.xml`文件，添加kerberos相关配置,示例如下：
 
 ```xml
 <property>
@@ -180,7 +181,9 @@ SSM需要MySQL来存储元数据，用户需要部署一个MySQL实例，然后�
 </property>
 ```
 
-> 注：SSM需要启动用户具有HDFS超级用户权限来访问一些HDFS namenode api，由于集群开启了Kerberos，为了简便，Smart Server和Smart Agent的keytab文件均采用`hdfs.keytab`，对应的principal为`hdfs`（具有超级用户权限），因此可使用root用户运行SSM。
+> 注：SSM需要启动用户具有HDFS超级用户权限来访问一些HDFS namenode api，由于集群开启了Kerberos，为了简便，Smart Server和Smart Agent的
+keytab文件均采用`hdfs.keytab`，对应的principal为`hdfs`（具有超级用户权限），因此可使用root用户运行SSM。具体配置请参考
+[enable-kerberos.md](https://github.com/Intel-bigdata/SSM/blob/trunk/docs/enable-kerberos.md).
 
 ### 2.9 权限配置 \[可选]
 
