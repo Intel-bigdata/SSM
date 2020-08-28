@@ -1,3 +1,5 @@
+## Kerberos Enabling Guide
+
 ## 1. Deploy Kerberos KDC
 
 ### 1.1 Install Kerberos
@@ -72,7 +74,7 @@ krb5kdc
 kadmind
 ```
 
-## 2. Export the keytabs
+## 2. Export keytabs
 
 ### 2.1 Add smartserver Kerberos principal to database and export it to keytab.
 ```
@@ -96,7 +98,7 @@ kadmin.local:xst -k /xxx/xxx/hdfs-{hostname}.keytab hdfs/{hostname}
 
 > Note: please replace {hostname} with the real hostname. The below section should follow the same convention.
 
-## 3. Update smart-site.xml
+## 3. Configure SSM
 Please update smart-site.xml for each node.Smart agent principal and keytab path for each node are different.
 ```xml
 <!-- hadoop conf dir should be configured -->
@@ -131,7 +133,7 @@ Please update smart-site.xml for each node.Smart agent principal and keytab path
 > Note: _HOST will be converted to the real hostname by program. But if it is not correctly mapped to the hostname you used for adding principle,
 _HOST should be replaced by the expected hostname. This convention should also be followed in the below sections.
 
-## 4. Update hadoop configuration files
+## 4. Configure HDFS
  
 ### 4.1 Update core-site.xml
 Add the following properties:
@@ -145,6 +147,7 @@ Add the following properties:
     <value>kerberos</value>
 </property>
 ```
+
 ### 4.2 Update hdfs-site.xml
 Add the following properties:
 ```xml
@@ -197,8 +200,7 @@ Add the following properties:
   <value>false</value>
 </property>
 
-
-<!-- Configuration for dataNode security, should not be added on namenode -->
+<!-- Configuration for datanode security, should not be added on namenode -->
 <property>
     <name>dfs.datanode.data.dir.perm</name>
     <value>700</value>
@@ -211,9 +213,17 @@ Add the following properties:
     <name>dfs.datanode.kerberos.principal</name>
     <value>hdfs/_HOST@HADOOP.COM</value>
 </property>
+
+<!-- Config for SmartClient, if SmartFileSystem is configured for HDFS,
+we should make the below config for all HDFS (or other HDFS application)
+cluster nodes. -->
+<property>
+    <name>smart.server.kerberos.principal</name>
+    <value>{username}/{smart_server_host}@HADOOP.COM</value>
+</property>
 ```
 
-## 5. Deploy jsvc [Alternative to HTTPS]
+## 5. Install jsvc
 
 You can configure jsvc instead of HTTPS through the following steps.
 
@@ -240,7 +250,10 @@ Please add the following statements in hadoop-env.sh for hadoop.
     <value>0.0.0.0:1006</value>
 </property>
 ```
-## 6. Deploy HTTPS [Alternative to jsvc]
+
+## 6. Enable HTTPS [Alternative]
+
+**Please ignore this step if 5th step is used.**
 
 You can configure HTTPS instead of jsvc through the following steps.
 
@@ -282,21 +295,6 @@ keytool -list -v -keystore {trustAll}
 ```
 
 ### 6.7. Edit the Configuration files
-> Deploy {keystore} and {trustAll} files and config /etc/has/ssl-server.conf for HAS server
-```
-ssl.server.keystore.location = {path to keystore}
-ssl.server.keystore.password = {keystore password set in step 1}
-ssl.server.keystore.keypassword = {keypassword set in step 1}
-ssl.server.truststore.reload.interval = 1000
-ssl.server.truststore.location = {path to trustAll}
-ssl.server.truststore.password = {trustAll password set in step 2}
-```
-
-> Config /etc/has/ssl-client.conf for HAS client
-```
-ssl.client.truststore.location = {path to trustAll}
-ssl.client.truststore.password = {trustAll password}
-```
 
 > Config $HADOOP_HOME/etc/hadoop/ssl-server.xml for Hadoop
 ```xml
