@@ -1,14 +1,14 @@
 ## Kerberos Enabling Guide
 
-## 1. Deploy Kerberos KDC
+### 1. Deploy Kerberos KDC
 
-### 1.1 Install Kerberos
+#### 1.1 Install Kerberos
 
 ```
 yum install -y krb5-server krb5-lib krb5-workstation
 ```
 
-### 1.2 Config kdc.conf
+#### 1.2 Config kdc.conf
 Exmaple:
 ```
 [kdcdefaults]
@@ -31,7 +31,7 @@ export KRB5_KDC_PROFILE=/yourdir/kdc.conf
 ```
 
 
-### 1.3 Config krb5.conf
+#### 1.3 Config krb5.conf
 Example:
 ```
  [libdefaults]
@@ -61,36 +61,36 @@ Set KRB5_CONFIG environment variables to point to the krb5.conf. For example:
 export KRB5_CONFIG=/yourdir/krb5.conf
 ```
 
-### 1.4 Create the KDC database
+#### 1.4 Create the KDC database
 The following is an example of how to create a Kerberos database and stash file on the master KDC, using the kdb5_util command. Replace HADOOP.COM with the name of your Kerberos realm.
 ```
 kdb5_util create -r HADOOP.COM -s
 ```
 This will create five files in LOCALSTATEDIR/krb5kdc (or at the locations specified in kdc.conf):
 
-### Start the Kerberos daemons on the master KDC
+#### 1.5 Start Kerberos daemons on master KDC
 ```
 krb5kdc
 kadmind
 ```
 
-## 2. Export keytabs
+### 2. Export keytabs
 
-### 2.1 Add smartserver Kerberos principal to database and export it to keytab.
+#### 2.1 Add smartserver Kerberos principal to database and export it to keytab.
 ```
 kadmin.local:addprinc -randkey {username}/{hostname}
 kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab {username}/{hostname}
 ```
 **Note:** replace the username with the HDFS user who has the correct permission to execute actions and replace hostname with hostname of the smart server
 
-### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent. Then use 'scp' to copy each keytab file to each agent.
+#### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent. Then use 'scp' to copy each keytab file to each agent.
 ```
 kadmin.local:addprinc -randkey {username}/{hostname}
 kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab {username}/{hostname}
 scp /xxx/xxx/smartagent-{hostname}.keytab {hostname}:/xxx/xxx/
 ```
 
-### 2.3 Add hdfs Kerberos principals to database and export it to keytabs.
+#### 2.3 Add hdfs Kerberos principals to database and export it to keytabs.
 ```
 kadmin.local:addprinc -randkey hdfs/{hostname}
 kadmin.local:xst -k /xxx/xxx/hdfs-{hostname}.keytab hdfs/{hostname}
@@ -98,8 +98,10 @@ kadmin.local:xst -k /xxx/xxx/hdfs-{hostname}.keytab hdfs/{hostname}
 
 > Note: please replace {hostname} with the real hostname. The below section should follow the same convention.
 
-## 3. Configure SSM
-Please update smart-site.xml for each node.Smart agent principal and keytab path for each node are different.
+### 3. Configure SSM
+
+Please update smart-site.xml for each node. Smart agent principal and keytab path for each node are different.
+
 ```xml
 <!-- hadoop conf dir should be configured -->
 <property>
@@ -133,9 +135,9 @@ Please update smart-site.xml for each node.Smart agent principal and keytab path
 > Note: _HOST will be converted to the real hostname by program. But if it is not correctly mapped to the hostname you used for adding principle,
 _HOST should be replaced by the expected hostname. This convention should also be followed in the below sections.
 
-## 4. Configure HDFS
+### 4. Configure HDFS
  
-### 4.1 Update core-site.xml
+#### 4.1 Update core-site.xml
 Add the following properties:
 ```xml
 <property>
@@ -148,7 +150,7 @@ Add the following properties:
 </property>
 ```
 
-### 4.2 Update hdfs-site.xml
+#### 4.2 Update hdfs-site.xml
 Add the following properties:
 ```xml
 <!-- General HDFS security config -->
@@ -223,11 +225,11 @@ cluster nodes. -->
 </property>
 ```
 
-## 5. Install jsvc
+### 5. Install jsvc
 
 You can configure jsvc instead of HTTPS through the following steps.
 
-### 5.1 Install jsvc
+#### 5.1 Install jsvc
 
 jsvc should be installed on each datanode.
 
@@ -239,7 +241,7 @@ Please add the following statements in hadoop-env.sh for hadoop.
 
 `export JSVC_HOME=/usr/bin`
 
-### 5.2 Additional modification in hdfs-site.xml
+#### 5.2 Additional modification in hdfs-site.xml
 ```xml
 <property>
     <name>dfs.datanode.address</name>
@@ -251,13 +253,13 @@ Please add the following statements in hadoop-env.sh for hadoop.
 </property>
 ```
 
-## 6. Enable HTTPS [Alternative]
+### 6. Enable HTTPS [Alternative]
 
 **Please ignore this step if 5th step is used.**
 
 You can configure HTTPS instead of jsvc through the following steps.
 
-### 6.1 Create a keystore file for each host
+#### 6.1 Create a keystore file for each host
 
 > keystore: the keystore file that stores the certificate.
 > validity: the valid time of the certificate in days.
@@ -267,19 +269,19 @@ keytool -alias {hostname} -keystore {keystore} -validity {validity} -genkey
 
 > The keytool will ask for more details such as the keystore password, keypassword and CN(hostname).
 
-### 6.2 Export the certificate public key to a certificate file for each host
+#### 6.2 Export the certificate public key to a certificate file for each host
 ```
 keytool -export -alias {hostname} -keystore {keystore} -rfc -file {cert-file}
 ```
 
-### 6.3 Create a common truststore file (trustAll)
+#### 6.3 Create a common truststore file (trustAll)
 The truststore file contains the public key from all certificates. If you assume a 2-node cluster with node1 and node2,
 login to node1 and import the truststore file for node1.
 ```
 keytool -import -alias {hostname} -keystore {trustAll} -file {cert-file}
 ```
 
-### 6.4 Update the common truststore file
+#### 6.4 Update the common truststore file
 * Move {trustAll} from node1 to node2 ({trustAll} already has the certificate entry of node1), and repeat Step 3.
 
 * Move the updated {trustAll} from node2 to node1. Repeat these steps for each node in the cluster.
@@ -287,14 +289,14 @@ When you finish, the {trustAll} file will have the certificates from all nodes.
 
 > Note: these work could be done on the same node, just notice the hostname.
 
-### 6.5 Copy {trustAll} from node1 to all of the other nodes
+#### 6.5 Copy {trustAll} from node1 to all of the other nodes
 
-### 6.6. Validate the common truststore file
+#### 6.6. Validate the common truststore file
 ```
 keytool -list -v -keystore {trustAll}
 ```
 
-### 6.7. Edit the Configuration files
+#### 6.7. Edit the Configuration files
 
 > Config $HADOOP_HOME/etc/hadoop/ssl-server.xml for Hadoop
 ```xml
@@ -369,7 +371,7 @@ keytool -list -v -keystore {trustAll}
 </property>
 ```
 
-## Trouble Shooting
+### Trouble Shooting
 
 - If each machine's time is not synchronized visibly, the following error may occur. You need sync the time.
 
