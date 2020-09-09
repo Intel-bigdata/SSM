@@ -451,7 +451,8 @@ public class SmartDFSClient extends DFSClient {
     if (ret.getChecksumOpt().getBytesPerChecksum() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
-        throw new IOException(getExceptionMsg("Get file checksum", "SSM Small File"));
+//        throw new IOException(getExceptionMsg("Get file checksum", "SSM Small File"));
+        return new MD5MD5CRC32FileChecksum();
       }
     }
     return ret;
