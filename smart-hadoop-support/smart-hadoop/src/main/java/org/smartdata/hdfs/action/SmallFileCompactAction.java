@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.XAttrSetFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.client.HdfsDataOutputStream;
@@ -191,6 +190,7 @@ public class SmallFileCompactAction extends HdfsAction {
     // Save original metadata of small file
     HdfsFileStatus fileStatus = dfsClient.getFileInfo(path);
     Map<String, byte[]> xAttr = dfsClient.getXAttrs(path);
+    byte[] checksumBytes = getCheckSumByteArray(path, fileStatus.getLen());
 
     // Delete file
     dfsClient.delete(path, false);
@@ -218,6 +218,13 @@ public class SmallFileCompactAction extends HdfsAction {
     dfsClient.setXAttr(path,
         xAttrName, SerializationUtils.serialize(compactFileState),
         EnumSet.of(XAttrSetFlag.CREATE));
+    dfsClient.setXAttr(path, SmartConstants.SMART_FILE_CHECKSUM_XATTR_NAME,
+        checksumBytes, EnumSet.of(XAttrSetFlag.CREATE));
+  }
+
+  private byte[] getCheckSumByteArray(String path, long length)
+      throws IOException {
+    return dfsClient.getFileChecksum(path, length).getBytes();
   }
 
   @Override
