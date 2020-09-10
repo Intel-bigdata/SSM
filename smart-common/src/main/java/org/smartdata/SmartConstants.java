@@ -97,5 +97,5 @@ public class SmartConstants {
     STORAGE_POLICY_MAP.put(STORAGE_POLICY_LAZY_PERSIST_ID, STORAGE_POLICY_LAZY_PERSIST_NAME);
   }
 
-  public static final String SMART_FILE_CHECKSUM_XATTR_NAME = "original-checksum";
+  public static final String SMART_FILE_CHECKSUM_XATTR_NAME = "user.checksum";
 }
