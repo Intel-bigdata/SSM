@@ -459,8 +459,8 @@ public class SmartDFSClient extends DFSClient {
           ret = new MD5MD5CRC32FileChecksum();
           ret.readFields(new DataInputStream(new ByteArrayInputStream(bytes)));
         } catch (IOException e) {
-          throw new IOException(getExceptionMsg("Get file checksum",
-              "SSM Small File"));
+          throw new IOException("Failed to get checksum for SSM Small File: "
+              + e.getMessage());
         }
       }
     }

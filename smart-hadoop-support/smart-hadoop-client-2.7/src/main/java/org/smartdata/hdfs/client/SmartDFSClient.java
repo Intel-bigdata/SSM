@@ -501,7 +501,15 @@ public class SmartDFSClient extends DFSClient {
     if (ret.getChecksumOpt().getBytesPerChecksum() == 0) {
       FileState fileState = getFileState(src);
       if (fileState instanceof CompactFileState) {
-        throw new IOException(getExceptionMsg("Get file checksum", "SSM Small File"));
+        try {
+          // Get original checksum for small file.
+          byte[] bytes = getXAttr(src, SmartConstants.SMART_FILE_CHECKSUM_XATTR_NAME);
+          ret = new MD5MD5CRC32FileChecksum();
+          ret.readFields(new DataInputStream(new ByteArrayInputStream(bytes)));
+        } catch (IOException e) {
+          throw new IOException("Failed to get checksum for SSM Small File: "
+              + e.getMessage());
+        }
       }
     }
     return ret;
