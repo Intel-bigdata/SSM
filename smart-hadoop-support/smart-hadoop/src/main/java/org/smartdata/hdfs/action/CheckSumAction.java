@@ -50,18 +50,20 @@ public class CheckSumAction extends HdfsAction {
 
   @Override
   protected void execute() throws Exception {
-
-    this.setDfsClient(HadoopUtil.getDFSClient(HadoopUtil.getNameNodeUri(conf), conf));
-
+    // Use pre-set SmartDFSClient.
+    // this.setDfsClient(HadoopUtil.getDFSClient(
+    //    HadoopUtil.getNameNodeUri(conf), conf));
     if (fileName == null) {
-      throw new IllegalArgumentException("File src is missing.");
+      throw new IllegalArgumentException("Please specify file path!");
     }
 
     if (fileName.charAt(fileName.length() - 1) == '*') {
-      DirectoryListing listing = dfsClient.listPaths(fileName.substring(0, fileName.length() - 1), HdfsFileStatus.EMPTY_NAME);
+      DirectoryListing listing = dfsClient.listPaths(fileName.substring(0,
+          fileName.length() - 1), HdfsFileStatus.EMPTY_NAME);
       HdfsFileStatus[] fileList = listing.getPartialListing();
       for (HdfsFileStatus fileStatus : fileList) {
-        String file1 = fileStatus.getFullPath(new Path(fileName.substring(0, fileName.length() - 1))).toString();
+        String file1 = fileStatus.getFullPath(new Path(
+            fileName.substring(0, fileName.length() - 1))).toString();
         HdfsFileStatus fileStatus1 = dfsClient.getFileInfo(file1);
         long length = fileStatus1.getLen();
         MD5MD5CRC32FileChecksum md5 = dfsClient.getFileChecksum(file1, length);
@@ -110,7 +112,8 @@ public class CheckSumAction extends HdfsAction {
       return null;
     }
     char[] chars = new char[bytes.length * 2];
-    final char hexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    final char hexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8',
+        '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     for (int i = 0, j = 0; i < bytes.length; i++) {
       chars[j++] = hexDigits[bytes[i] >> 4 & 0x0f];
       chars[j++] = hexDigits[bytes[i] & 0x0f];
