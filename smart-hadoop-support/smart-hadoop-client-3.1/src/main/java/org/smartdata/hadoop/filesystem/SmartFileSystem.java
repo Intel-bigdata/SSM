@@ -40,6 +40,7 @@ import org.apache.hadoop.hdfs.DistributedFileSystem;
 import org.apache.hadoop.hdfs.protocol.DirectoryListing;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.HdfsLocatedFileStatus;
+import org.apache.hadoop.hdfs.protocol.HdfsNamedFileStatus;
 import org.apache.hadoop.util.Progressable;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.CompactFileState;
@@ -55,6 +56,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * SmartFileSystem Deploy Guide
@@ -618,25 +620,7 @@ public class SmartFileSystem extends DistributedFileSystem {
           } else {
             FileState fileState = smartDFSClient.getFileState(fileName);
             if (fileState instanceof CompressionFileState) {
-              CompressionFileState compressionFileState = (CompressionFileState) fileState;
-              long fileLen = compressionFileState.getOriginalLength();
-              BlockLocation[] blockLocations =
-                  ((LocatedFileStatus)next).getBlockLocations();
-              for (BlockLocation blockLocation : blockLocations) {
-                convertBlockLocation(blockLocation, compressionFileState);
-              }
-              next = (T) new LocatedFileStatus(fileLen,
-                  next.isDirectory(),
-                  next.getReplication(),
-                  next.getBlockSize(),
-                  next.getModificationTime(),
-                  next.getAccessTime(),
-                  next.getPermission(),
-                  next.getOwner(),
-                  next.getGroup(),
-                  next.isSymlink() ? next.getSymlink() : null,
-                  next.getPath(),
-                  blockLocations);
+              next = getCompressedFileStatus(fileState, next);
             }
           }
         } else {
@@ -664,25 +648,7 @@ public class SmartFileSystem extends DistributedFileSystem {
           } else {
             FileState fileState = smartDFSClient.getFileState(fileName);
             if (fileState instanceof CompressionFileState) {
-              CompressionFileState compressionFileState = (CompressionFileState) fileState;
-              long fileLen = compressionFileState.getOriginalLength();
-              BlockLocation[] blockLocations =
-                  ((LocatedFileStatus)next).getBlockLocations();
-              for (BlockLocation blockLocation : blockLocations) {
-                convertBlockLocation(blockLocation, compressionFileState);
-              }
-              next = (T) new LocatedFileStatus(fileLen,
-                  next.isDirectory(),
-                  next.getReplication(),
-                  next.getBlockSize(),
-                  next.getModificationTime(),
-                  next.getAccessTime(),
-                  next.getPermission(),
-                  next.getOwner(),
-                  next.getGroup(),
-                  next.isSymlink() ? next.getSymlink() : null,
-                  next.getPath(),
-                  blockLocations);
+              next = getCompressedFileStatus(fileState, next);
             }
           }
         }
@@ -693,6 +659,75 @@ public class SmartFileSystem extends DistributedFileSystem {
         }
       }
       return curStat != null;
+    }
+
+    private T getCompressedFileStatus(FileState fileState, T next) throws IOException {
+      CompressionFileState compressionFileState = (CompressionFileState) fileState;
+      long fileLen = compressionFileState.getOriginalLength();
+      if (next instanceof HdfsNamedFileStatus) {
+        Set<FileStatus.AttrFlags> flags = next.attributes(next.hasAcl(), next.isEncrypted(),
+            next.isErasureCoded(), next.isSnapshotEnabled());
+        HdfsNamedFileStatus nextHdfsNamed = (HdfsNamedFileStatus) next;
+        HdfsFileStatus.Builder builder = new HdfsFileStatus.Builder();
+        return (T) builder.atime(next.getAccessTime())
+            .blocksize(next.getBlockSize())
+            .children(nextHdfsNamed.getChildrenNum())
+            .ecPolicy(nextHdfsNamed.getErasureCodingPolicy())
+            .fileId(nextHdfsNamed.getFileId())
+            .feInfo(nextHdfsNamed.getFileEncryptionInfo())
+            .flags(convert(flags))
+            .group(next.getGroup())
+            .isdir(next.isDirectory())
+            .length(fileLen)
+            .locations(null)
+            .mtime(next.getModificationTime())
+            .owner(next.getOwner())
+            .path(nextHdfsNamed.getLocalNameInBytes())
+            .perm(next.getPermission())
+            .replication(next.getReplication())
+            .storagePolicy(nextHdfsNamed.getStoragePolicy())
+            .symlink(nextHdfsNamed.getSymlinkInBytes())
+            .build();
+      }
+      BlockLocation[] blockLocations =
+          ((LocatedFileStatus)next).getBlockLocations();
+      for (BlockLocation blockLocation : blockLocations) {
+        convertBlockLocation(blockLocation, compressionFileState);
+      }
+      return  (T) new LocatedFileStatus(fileLen,
+          next.isDirectory(),
+          next.getReplication(),
+          next.getBlockSize(),
+          next.getModificationTime(),
+          next.getAccessTime(),
+          next.getPermission(),
+          next.getOwner(),
+          next.getGroup(),
+          next.isSymlink() ? next.getSymlink() : null,
+          next.getPath(),
+          blockLocations);
+    }
+
+    public EnumSet<HdfsFileStatus.Flags> convert(Set<FileStatus.AttrFlags> e) {
+      EnumSet<HdfsFileStatus.Flags> result = EnumSet.noneOf(HdfsFileStatus.Flags.class);
+      if (e == null || e.isEmpty()) {
+        return result;
+      }
+      for (FileStatus.AttrFlags af : e) {
+        if (af == FileStatus.AttrFlags.HAS_ACL) {
+          result.add(HdfsFileStatus.Flags.HAS_ACL);
+        }
+        if (af == FileStatus.AttrFlags.HAS_CRYPT) {
+          result.add(HdfsFileStatus.Flags.HAS_CRYPT);
+        }
+        if (af == FileStatus.AttrFlags.HAS_EC) {
+          result.add(HdfsFileStatus.Flags.HAS_EC);
+        }
+        if (af == FileStatus.AttrFlags.SNAPSHOT_ENABLED) {
+          result.add(HdfsFileStatus.Flags.SNAPSHOT_ENABLED);
+        }
+      }
+      return result;
     }
 
     // Definitions:
