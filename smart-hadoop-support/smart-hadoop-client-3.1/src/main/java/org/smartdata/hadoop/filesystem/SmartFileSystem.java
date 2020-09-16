@@ -669,7 +669,7 @@ public class SmartFileSystem extends DistributedFileSystem {
             next.isErasureCoded(), next.isSnapshotEnabled());
         HdfsNamedFileStatus nextHdfsNamed = (HdfsNamedFileStatus) next;
         HdfsFileStatus.Builder builder = new HdfsFileStatus.Builder();
-        return (T) builder.atime(next.getAccessTime())
+        return  (T) builder.atime(next.getAccessTime())
             .blocksize(next.getBlockSize())
             .children(nextHdfsNamed.getChildrenNum())
             .ecPolicy(nextHdfsNamed.getErasureCodingPolicy())
@@ -687,7 +687,8 @@ public class SmartFileSystem extends DistributedFileSystem {
             .replication(next.getReplication())
             .storagePolicy(nextHdfsNamed.getStoragePolicy())
             .symlink(nextHdfsNamed.getSymlinkInBytes())
-            .build();
+            .build()
+            .makeQualified(getUri(), next.getPath());
       }
       BlockLocation[] blockLocations =
           ((LocatedFileStatus)next).getBlockLocations();
