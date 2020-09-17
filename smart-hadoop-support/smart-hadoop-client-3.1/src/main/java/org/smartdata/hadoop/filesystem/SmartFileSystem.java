@@ -669,7 +669,7 @@ public class SmartFileSystem extends DistributedFileSystem {
             next.isErasureCoded(), next.isSnapshotEnabled());
         HdfsNamedFileStatus nextHdfsNamed = (HdfsNamedFileStatus) next;
         HdfsFileStatus.Builder builder = new HdfsFileStatus.Builder();
-        return  (T) builder.atime(next.getAccessTime())
+        return (T) builder.atime(next.getAccessTime())
             .blocksize(next.getBlockSize())
             .children(nextHdfsNamed.getChildrenNum())
             .ecPolicy(nextHdfsNamed.getErasureCodingPolicy())
@@ -691,11 +691,11 @@ public class SmartFileSystem extends DistributedFileSystem {
             .makeQualified(getUri(), next.getPath());
       }
       BlockLocation[] blockLocations =
-          ((LocatedFileStatus)next).getBlockLocations();
+          ((LocatedFileStatus) next).getBlockLocations();
       for (BlockLocation blockLocation : blockLocations) {
         convertBlockLocation(blockLocation, compressionFileState);
       }
-      return  (T) new LocatedFileStatus(fileLen,
+      return (T) new LocatedFileStatus(fileLen,
           next.isDirectory(),
           next.getReplication(),
           next.getBlockSize(),
