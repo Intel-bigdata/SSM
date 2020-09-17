@@ -48,6 +48,8 @@ import org.smartdata.model.CompressionFileState;
 import org.smartdata.model.FileState;
 import org.smartdata.model.NormalFileState;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
