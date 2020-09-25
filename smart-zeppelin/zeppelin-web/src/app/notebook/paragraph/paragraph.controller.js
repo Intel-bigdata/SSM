@@ -96,9 +96,11 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     } else {
       results.code = "ERROR";
       $scope.paragraph.status = "ERROR";
-      result.data = response.error;
+      results.data = response.message;
+      msg.push(result);
+      result.mag = msg;
+      $scope.paragraph.results = results;
     }
-
   };
 
   var getActionInfo = function (actionId) {
@@ -184,6 +186,14 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
   };
 
   $scope.runParagraph = function(data) {
+    if(/^s+$/.test(data) || data === ''){
+      BootstrapDialog.show({
+        title: 'Error',
+        message: 'The input cannot be empty or all spaces!',
+        type: 'type-danger'
+      })
+      return;
+    }
     var submitFn;
     $scope.paragraph.config.enabled = false;
     $scope.paragraph.results = null;
