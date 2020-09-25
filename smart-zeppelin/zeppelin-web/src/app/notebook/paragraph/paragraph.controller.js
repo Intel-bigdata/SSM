@@ -192,6 +192,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
         message: 'The input cannot be empty or all spaces!',
         type: 'type-danger'
       })
+      return;
     }
     var submitFn;
     $scope.paragraph.config.enabled = false;
