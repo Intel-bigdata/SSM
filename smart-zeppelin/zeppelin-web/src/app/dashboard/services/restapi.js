@@ -125,7 +125,7 @@ angular.module('zeppelinWebApp')
             }
           }, function (response) {
             if (onComplete) {
-              onComplete(decodeErrorResponse(response.data));
+              onComplete(response.data);
             }
           });
         },
@@ -147,7 +147,7 @@ angular.module('zeppelinWebApp')
             }
           }, function (response) {
             if (onComplete) {
-              onComplete(decodeErrorResponse(response.data));
+              onComplete(response.data);
             }
           });
         },

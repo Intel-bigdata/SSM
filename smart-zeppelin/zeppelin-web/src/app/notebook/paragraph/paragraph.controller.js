@@ -96,9 +96,11 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     } else {
       results.code = "ERROR";
       $scope.paragraph.status = "ERROR";
-      result.data = response.error;
+      results.data = response.message;
+      msg.push(result);
+      result.mag = msg;
+      $scope.paragraph.results = results;
     }
-
   };
 
   var getActionInfo = function (actionId) {
