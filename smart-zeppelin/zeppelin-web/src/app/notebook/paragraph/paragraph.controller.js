@@ -186,6 +186,13 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
   };
 
   $scope.runParagraph = function(data) {
+    if(/^s+$/.test(data) || data === ''){
+      BootstrapDialog.show({
+        title: 'Error',
+        message: 'The input cannot be empty or all spaces!',
+        type: 'type-danger'
+      })
+    }
     var submitFn;
     $scope.paragraph.config.enabled = false;
     $scope.paragraph.results = null;
