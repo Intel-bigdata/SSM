@@ -810,12 +810,16 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     List<RuleInfo> ruleInfos = getRuleInfo();
     List<DetailedRuleInfo> detailedRuleInfos = new ArrayList<>();
     for (RuleInfo ruleInfo : ruleInfos) {
-      if (ruleInfo.getRuleText().contains("allssd")
-        || ruleInfo.getRuleText().contains("onessd")
-        || ruleInfo.getRuleText().contains("archive")
-        || ruleInfo.getRuleText().contains("alldisk")
-        || ruleInfo.getRuleText().contains("onedisk")
-        || ruleInfo.getRuleText().contains("ramdisk")) {
+      int lastIndex = ruleInfo.getRuleText().lastIndexOf("|");
+      String lastPart = ruleInfo.getRuleText().substring(lastIndex + 1);
+      if (lastPart.contains("sync")) {
+        continue;
+      } else if (lastPart.contains("allssd")
+              || lastPart.contains("onessd")
+              || lastPart.contains("archive")
+              || lastPart.contains("alldisk")
+              || lastPart.contains("onedisk")
+              || lastPart.contains("ramdisk")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add mover progress
         List<CmdletInfo> cmdletInfos = cmdletDao.getByRid(ruleInfo.getId());
@@ -851,7 +855,9 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       if (ruleInfo.getState() == RuleState.DELETED) {
         continue;
       }
-      if (ruleInfo.getRuleText().contains("sync")) {
+      int lastIndex = ruleInfo.getRuleText().lastIndexOf("|");
+      String lastPart = ruleInfo.getRuleText().substring(lastIndex + 1);
+      if (lastPart.contains("sync")) {
         DetailedRuleInfo detailedRuleInfo = new DetailedRuleInfo(ruleInfo);
         // Add sync progress
         BackUpInfo backUpInfo = getBackUpInfo(ruleInfo.getId());
