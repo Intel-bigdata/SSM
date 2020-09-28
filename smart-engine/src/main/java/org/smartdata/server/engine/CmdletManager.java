@@ -41,6 +41,7 @@ import org.smartdata.model.CmdletState;
 import org.smartdata.model.DetailedFileAction;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.model.UserInfo;
+import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionStatus;
@@ -395,6 +396,8 @@ public class CmdletManager extends AbstractService {
         createActionInfos(cmdletDescriptor, cmdletInfo.getCid());
     // Check action names
     checkActionNames(cmdletDescriptor);
+    // Check if action path is in whitelist
+    checkWhitelist(cmdletDescriptor);
     // Let Scheduler check actioninfo onsubmit and add them to cmdletinfo
     checkActionsOnSubmit(cmdletInfo, actionInfos);
     // Insert cmdletinfo and actionInfos to metastore and cache.
@@ -403,6 +406,29 @@ public class CmdletManager extends AbstractService {
     // (see #recover), they will be not be tracked.
     tracker.track(cmdletInfo.getCid(), cmdletDescriptor);
     return cmdletInfo.getCid();
+  }
+
+  public void checkWhitelist(CmdletDescriptor cmdletDescriptor) {
+    SmartConf conf = new SmartConf();
+    WhitelistHelper helper = new WhitelistHelper();
+    if (!helper.isEnabled(conf)) {
+      return;
+    }
+    int size = cmdletDescriptor.getActionSize();
+    for (int index = 0; index < size; index++) {
+      String actionName = cmdletDescriptor.getActionName(index);
+      Map<String, String> args = cmdletDescriptor.getActionArgs(index);
+      //check in the SmallFileScheduler for small file action
+      if (actionName.equals("compact") || actionName.equals("uncompact")) {
+        continue;
+      } else if (args.containsKey(CmdletDescriptor.HDFS_FILE_PATH)) {
+        String filePath = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+        LOG.debug("WhiteList helper is checking path: " + filePath);
+        helper.checkPath(filePath, conf);
+      } else {
+        LOG.debug("This action text doesn't contain file path.");
+      }
+    }
   }
 
   /**

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.SmartFilePermission;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
@@ -36,6 +37,7 @@ import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
 
@@ -168,6 +170,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
         throw new IOException("Illegal small files list: " + smallFileList);
       }
 
+      // Check whitelist
+      checkWhiteList(smallFileList);
+
       // Check if the small file list is valid
       if (checkIfValidSmallFiles(smallFileList)) {
         return true;
@@ -176,6 +181,17 @@ public class SmallFileScheduler extends ActionSchedulerService {
       }
     } else {
       return true;
+    }
+  }
+
+  private void checkWhiteList(List<String> smallFileList) {
+    WhitelistHelper helper = new WhitelistHelper();
+    SmartConf conf = getContext().getConf();
+    if (!helper.isEnabled(conf)) {
+      return;
+    }
+    for (String filePath : smallFileList) {
+      helper.checkPath(filePath, conf);
     }
   }
 

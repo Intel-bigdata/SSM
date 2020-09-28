@@ -22,12 +22,14 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.action.ActionRegistry;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.conf.SmartConf;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.RulePluginManager;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
@@ -116,6 +118,11 @@ public class RuleManager extends AbstractService {
     TranslateResult tr = doCheckRule(rule, null);
     doCheckActions(tr.getCmdDescriptor());
 
+    //check whitelist
+    for (String path : tr.getGlobPathCheck()) {
+      checkWhitelist(path);
+    }
+
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);
     RuleInfo ruleInfo = builder.build();
@@ -147,6 +154,15 @@ public class RuleManager extends AbstractService {
     if (error.length() > 0) {
       throw new IOException(error);
     }
+  }
+
+  private void checkWhitelist(String path) {
+    SmartConf conf = new SmartConf();
+    WhitelistHelper helper = new WhitelistHelper();
+    if (!helper.isEnabled(conf)) {
+      return;
+    }
+    helper.checkPath(path, conf);
   }
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx) throws IOException {
