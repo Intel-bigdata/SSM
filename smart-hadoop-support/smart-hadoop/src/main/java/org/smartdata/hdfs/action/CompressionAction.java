@@ -175,6 +175,8 @@ public class CompressionAction extends HdfsAction {
 
         compress(in, out);
         HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
+        dfsClient.setOwner(compressTmpPath, srcFile.getOwner(), srcFile.getGroup());
+        dfsClient.setPermission(compressTmpPath, srcFile.getPermission());
         compressionFileState.setCompressedLength(destFile.getLen());
         appendLog("Compressed file length: " + destFile.getLen());
         compressionFileInfo =
