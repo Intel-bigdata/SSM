@@ -109,6 +109,8 @@ public class DecompressionAction extends HdfsAction {
       long length = dfsClient.getFileInfo(filePath).getLen();
       outputDecompressedData(in, out, (int) length);
       // Overwrite the original file with decompressed data
+      dfsClient.setOwner(compressTmpPath, dfsClient.getFileInfo(filePath).getOwner(), dfsClient.getFileInfo(filePath).getGroup());
+      dfsClient.setPermission(compressTmpPath, dfsClient.getFileInfo(filePath).getPermission());
       dfsClient.rename(compressTmpPath, filePath, Options.Rename.OVERWRITE);
       appendLog("The given file is successfully decompressed by codec: " +
           ((CompressionFileState) fileState).getCompressionImpl());

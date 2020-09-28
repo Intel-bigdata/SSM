@@ -244,10 +244,10 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
         actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
       String filePath = null;
       try {
+        filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
         if (!actionInfo.isSuccessful()) {
           return;
         }
-        filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
         // Task over access count after successful execution.
         takeOverAccessCount(filePath);
       } finally {
