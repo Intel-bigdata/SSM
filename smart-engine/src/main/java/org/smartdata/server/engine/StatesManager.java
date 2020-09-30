@@ -35,6 +35,7 @@ import org.smartdata.model.FileAccessInfo;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.StorageCapacity;
 import org.smartdata.model.Utilization;
+import org.smartdata.model.WhitelistHelper;
 import org.smartdata.server.engine.data.AccessEventFetcher;
 
 import java.io.IOException;
@@ -144,6 +145,13 @@ public class StatesManager extends AbstractService implements Reconfigurable {
     path = path + (path.endsWith("/") ? "" : "/");
     for (String s : ignoreDirs) {
       if (path.startsWith(s)) {
+        return;
+      }
+    }
+    if (WhitelistHelper.isEnabled(serverContext.getConf())) {
+      if (!WhitelistHelper.isInWhitelist(path, serverContext.getConf())) {
+        LOG.debug("Path " + path + " is not in the whitelist. "
+                + "Report file access event failed.");
         return;
       }
     }
