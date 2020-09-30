@@ -38,6 +38,7 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.SystemInfo;
+import org.smartdata.model.WhitelistHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,11 +107,16 @@ public class InotifyEventFetcher {
         SmartConfKeys.SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT);
     if (!ignore) {
       Long lastTxid = getLastTxid();
-      if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)) {
+      //if whitelist is changed, namespace will fetch fully again when server restart
+      if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)
+              && !WhitelistHelper.isWhitelistChanged(conf)) {
         startFromLastTxid(lastTxid);
       } else {
         startWithFetchingNameSpace();
+        LOG.info("Start fetch namespace fully!");
       }
+      //update old whitelist
+      conf.setLastFetchList();
     } else {
       long id = client.getNamenode().getCurrentEditLogTxid();
       LOG.warn("NOTE: Incomplete iNotify event may cause unpredictable consequences. "

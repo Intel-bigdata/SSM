@@ -4,7 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * It's a helper for whitelist function. It's used in action and rule submit process.
@@ -65,5 +68,28 @@ public class WhitelistHelper {
             }
         }
         return true;
+    }
+
+    /**
+     * Check if white list changed, it influences namespace fetch process.
+     * @param conf
+     * @return true/false
+     */
+    public static boolean isWhitelistChanged(SmartConf conf) {
+        List<String> currentList = conf.getCoverDir();
+        List<String> oldList = conf.getLastFetchList();
+        if (currentList.size() != oldList.size()) {
+            return true;
+        }
+        Set<String> set = new HashSet<>();
+        for (String s : oldList) {
+            set.add(s);
+        }
+        for (String s : currentList) {
+            if (!set.contains(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -187,6 +187,7 @@ public class SmartConfKeys {
    * For more than one directories, they should be separated by ",".
    */
   public static final String SMART_COVER_DIRS_KEY = "smart.cover.dirs";
+  public static final String SMART_LAST_FETCH_DIRS_KEY = "smart.last.fetch.dirs";
   public static final String SMART_WORK_DIR_KEY = "smart.work.dir";
   public static final String SMART_WORK_DIR_DEFAULT = "/system/ssm/";
 
