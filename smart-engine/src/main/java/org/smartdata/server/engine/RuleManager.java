@@ -28,6 +28,7 @@ import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.DetailedRuleInfo;
 import org.smartdata.model.RuleInfo;
 import org.smartdata.model.RuleState;
+import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.rule.RuleExecutorPluginManager;
 import org.smartdata.model.rule.RulePluginManager;
 import org.smartdata.model.rule.TimeBasedScheduleInfo;
@@ -115,6 +116,15 @@ public class RuleManager extends AbstractService {
 
     TranslateResult tr = doCheckRule(rule, null);
     doCheckActions(tr.getCmdDescriptor());
+
+    //check whitelist
+    if (WhitelistHelper.isEnabled(serverContext.getConf())) {
+      for (String path : tr.getGlobPathCheck()) {
+        if (!WhitelistHelper.isInWhitelist(path, serverContext.getConf())) {
+          throw new IOException("Path " + path + " is not in the whitelist.");
+        }
+      }
+    }
 
     RuleInfo.Builder builder = RuleInfo.newBuilder();
     builder.setRuleText(rule).setState(initState);

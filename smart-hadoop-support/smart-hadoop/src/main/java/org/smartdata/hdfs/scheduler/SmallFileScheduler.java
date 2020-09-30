@@ -36,6 +36,7 @@ import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
+import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
 
@@ -166,6 +167,15 @@ public class SmallFileScheduler extends ActionSchedulerService {
           }.getType());
       if (smallFileList.isEmpty()) {
         throw new IOException("Illegal small files list: " + smallFileList);
+      }
+
+      // Check whitelist
+      if (WhitelistHelper.isEnabled(getContext().getConf())) {
+        for (String filePath : smallFileList) {
+          if (!WhitelistHelper.isInWhitelist(filePath, getContext().getConf())) {
+            throw new IOException("Path " + filePath + " is not in the whitelist.");
+          }
+        }
       }
 
       // Check if the small file list is valid
