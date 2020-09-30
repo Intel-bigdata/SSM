@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.SmartFilePermission;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
 import org.smartdata.hdfs.action.SmallFileCompactAction;
@@ -171,7 +170,13 @@ public class SmallFileScheduler extends ActionSchedulerService {
       }
 
       // Check whitelist
-      checkWhiteList(smallFileList);
+      if (WhitelistHelper.isEnabled(getContext().getConf())) {
+        for (String filePath : smallFileList) {
+          if (!WhitelistHelper.isInWhitelist(filePath, getContext().getConf())) {
+            throw new IOException("Path " + filePath + " is not in the whitelist.");
+          }
+        }
+      }
 
       // Check if the small file list is valid
       if (checkIfValidSmallFiles(smallFileList)) {
@@ -181,17 +186,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
       }
     } else {
       return true;
-    }
-  }
-
-  private void checkWhiteList(List<String> smallFileList) {
-    WhitelistHelper helper = new WhitelistHelper();
-    SmartConf conf = getContext().getConf();
-    if (!helper.isEnabled(conf)) {
-      return;
-    }
-    for (String filePath : smallFileList) {
-      helper.checkPath(filePath, conf);
     }
   }
 

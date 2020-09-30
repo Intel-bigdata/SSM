@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.conf.SmartConf;
 
+import java.util.Map;
+
 /**
  * It's a helper for whitelist function. It's used in action and rule submit process.
  * Especially, SmallFileScheduler also use this helper for  distinguishing between
@@ -15,9 +17,9 @@ public class WhitelistHelper {
     /**
      * Check if whitelist is enabled.
      * @param conf
-     * @return
+     * @return true/false
      */
-    public boolean isEnabled(SmartConf conf) {
+    public static boolean isEnabled(SmartConf conf) {
         return !conf.getCoverDir().isEmpty();
     }
 
@@ -25,16 +27,43 @@ public class WhitelistHelper {
      * Check if the work path in the whitelist.
      * @param path
      * @param conf
+     * @return true/false
      */
-    public void checkPath(String path, SmartConf conf) {
+    public static boolean isInWhitelist(String path, SmartConf conf) {
         String filePath = path.endsWith("/") ? path : path + "/";
         for (String s : conf.getCoverDir()) {
             if (filePath.startsWith(s)) {
                 LOG.debug("Path " + filePath + " is in whitelist.");
-                return;
+                return true;
             }
         }
-        throw new IllegalArgumentException("Path "
-                + filePath + " is not in whitelist.");
+        return false;
+    }
+
+    /**
+     *  Check if  cmdlet in the whitelist.
+     * @param cmdletDescriptor
+     * @return true/false
+     */
+    public static boolean isCmdletInWhitelist(CmdletDescriptor cmdletDescriptor) {
+        SmartConf conf = new SmartConf();
+        int size = cmdletDescriptor.getActionSize();
+        for (int index = 0; index < size; index++) {
+            String actionName = cmdletDescriptor.getActionName(index);
+            Map<String, String> args = cmdletDescriptor.getActionArgs(index);
+            //check in the SmallFileScheduler for small file action
+            if (actionName.equals("compact") || actionName.equals("uncompact")) {
+                continue;
+            } else if (args.containsKey(CmdletDescriptor.HDFS_FILE_PATH)) {
+                String filePath = args.get(CmdletDescriptor.HDFS_FILE_PATH);
+                LOG.debug("WhiteList helper is checking path: " + filePath);
+                if (!isInWhitelist(filePath, conf)) {
+                    return false;
+                }
+            } else {
+                LOG.debug("This action text doesn't contain file path.");
+            }
+        }
+        return true;
     }
 }

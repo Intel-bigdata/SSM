@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
 import org.smartdata.action.ActionRegistry;
-import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
@@ -119,8 +118,12 @@ public class RuleManager extends AbstractService {
     doCheckActions(tr.getCmdDescriptor());
 
     //check whitelist
-    for (String path : tr.getGlobPathCheck()) {
-      checkWhitelist(path);
+    if (WhitelistHelper.isEnabled(serverContext.getConf())) {
+      for (String path : tr.getGlobPathCheck()) {
+        if (!WhitelistHelper.isInWhitelist(path, serverContext.getConf())) {
+          throw new IOException("Path " + path + " is not in the whitelist.");
+        }
+      }
     }
 
     RuleInfo.Builder builder = RuleInfo.newBuilder();
@@ -154,15 +157,6 @@ public class RuleManager extends AbstractService {
     if (error.length() > 0) {
       throw new IOException(error);
     }
-  }
-
-  private void checkWhitelist(String path) {
-    SmartConf conf = new SmartConf();
-    WhitelistHelper helper = new WhitelistHelper();
-    if (!helper.isEnabled(conf)) {
-      return;
-    }
-    helper.checkPath(path, conf);
   }
 
   private TranslateResult doCheckRule(String rule, TranslationContext ctx) throws IOException {
