@@ -21,6 +21,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.AbstractService;
@@ -360,6 +361,9 @@ public class CmdletManager extends AbstractService {
   public long submitCmdlet(String cmdlet) throws IOException {
     LOG.debug(String.format("Received Cmdlet -> [ %s ]", cmdlet));
     try {
+      if (StringUtils.isBlank(cmdlet)) {
+        throw new IOException("Cannot submit an empty action!");
+      }
       CmdletDescriptor cmdletDescriptor = CmdletDescriptor.fromCmdletString(cmdlet);
       return submitCmdlet(cmdletDescriptor);
     } catch (ParseException e) {
