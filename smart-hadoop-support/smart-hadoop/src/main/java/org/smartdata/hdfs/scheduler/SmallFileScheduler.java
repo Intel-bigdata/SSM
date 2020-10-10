@@ -555,7 +555,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       }
     } catch (Exception e) {
       LOG.warn("Failed to take over file access count, which can make the " +
-          "measure for data temperature inaccurate!");
+          "measure for data temperature inaccurate!", e);
     }
   }
 

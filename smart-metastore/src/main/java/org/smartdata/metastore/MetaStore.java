@@ -387,7 +387,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    *                count of old file.
    * @throws MetaStoreException
    */
-  public void updateAccessCountTableFid(long fidSrc, long fidDest)
+  public synchronized void updateAccessCountTableFid(long fidSrc, long fidDest)
       throws MetaStoreException {
     if (fidSrc == fidDest) {
       LOG.warn("No need to update fid for access count table "
@@ -1726,7 +1726,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     initializeDataBase();
   }
 
-  public void aggregateTables(AccessCountTable destinationTable
+  public synchronized void aggregateTables(AccessCountTable destinationTable
     , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
       accessCountDao.aggregateTables(destinationTable, tablesToAggregate);
