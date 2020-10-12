@@ -24,6 +24,8 @@ import org.springframework.jdbc.support.rowset.SqlRowSet;
 
 import javax.sql.DataSource;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -171,10 +173,39 @@ public class AccessCountDao {
 
   public void updateFid(long fidSrc, long fidDest) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    for (AccessCountTable table : getAllSortedTables()) {
-      String sql = String.format("update %s set %s=%s where %s=%s", table.getTableName(),
-          AccessCountDao.FILE_FIELD, fidDest, AccessCountDao.FILE_FIELD, fidSrc);
-      jdbcTemplate.execute(sql);
+    Connection connection = null;
+    PreparedStatement ps = null;
+    try {
+      connection = jdbcTemplate.getDataSource().getConnection();
+      connection.setAutoCommit(false);
+      String sql = "SELECT * FROM access_count_table ORDER BY start_time ASC FOR UPDATE";
+      ps = connection.prepareStatement(sql);
+      ResultSet resultSet = ps.executeQuery();
+      while (resultSet.next()) {
+        String tableName = resultSet.getString("table_name");
+        String isql = String.format("update %s set %s=%s where %s=%s", tableName,
+                AccessCountDao.FILE_FIELD, fidDest, AccessCountDao.FILE_FIELD, fidSrc);
+        ps = connection.prepareStatement(isql);
+        ps.executeUpdate();
+      }
+    } catch (SQLException e) {
+      try {
+        connection.rollback();
+      } catch (SQLException e1) {
+        System.out.println("Rollback failed!");
+      }
+    } finally {
+      try {
+        connection.setAutoCommit(true);
+        if (ps != null) {
+          ps.close();
+        }
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e2) {
+        System.out.println("Closing connection failed!");
+      }
     }
   }
 
