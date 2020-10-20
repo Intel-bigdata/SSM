@@ -91,6 +91,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Operations supported for upper functions.
@@ -129,6 +130,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private GeneralDao generalDao;
   private SmallFileDao smallFileDao;
   private ErasureCodingPolicyDao ecDao;
+  public final ReentrantLock accessCountLock;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -157,6 +159,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     generalDao = new GeneralDao(pool.getDataSource());
     smallFileDao = new SmallFileDao(pool.getDataSource());
     ecDao = new ErasureCodingPolicyDao(pool.getDataSource());
+    accessCountLock = new ReentrantLock();
   }
 
   private void initDbInfo() throws MetaStoreException {
@@ -387,17 +390,20 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    *                count of old file.
    * @throws MetaStoreException
    */
-  public synchronized void updateAccessCountTableFid(long fidSrc, long fidDest)
+  public void updateAccessCountTableFid(long fidSrc, long fidDest)
       throws MetaStoreException {
     if (fidSrc == fidDest) {
       LOG.warn("No need to update fid for access count table "
           + "with same fid: " + fidDest);
       return;
     }
+    accessCountLock.lock();
     try {
       accessCountDao.updateFid(fidSrc, fidDest);
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    } finally {
+      accessCountLock.unlock();
     }
   }
 
@@ -451,10 +457,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void deleteAccessCountTable(
     AccessCountTable table) throws MetaStoreException {
+    accessCountLock.lock();
     try {
       accessCountDao.delete(table);
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    } finally {
+      accessCountLock.unlock();
     }
   }
 
@@ -1726,7 +1735,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     initializeDataBase();
   }
 
-  public synchronized void aggregateTables(AccessCountTable destinationTable
+  public void aggregateTables(AccessCountTable destinationTable
     , List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     try {
       accessCountDao.aggregateTables(destinationTable, tablesToAggregate);

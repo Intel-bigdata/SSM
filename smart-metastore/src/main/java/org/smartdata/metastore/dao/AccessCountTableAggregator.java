@@ -36,8 +36,13 @@ public class AccessCountTableAggregator {
   public void aggregate(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     if (tablesToAggregate.size() > 0) {
-      metaStore.aggregateTables(destinationTable, tablesToAggregate);
-      metaStore.insertAccessCountTable(destinationTable);
+      metaStore.accessCountLock.lock();
+      try {
+        metaStore.aggregateTables(destinationTable, tablesToAggregate);
+        metaStore.insertAccessCountTable(destinationTable);
+      } finally {
+        metaStore.accessCountLock.unlock();
+      }
     }
   }
 }
