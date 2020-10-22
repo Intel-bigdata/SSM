@@ -130,7 +130,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private GeneralDao generalDao;
   private SmallFileDao smallFileDao;
   private ErasureCodingPolicyDao ecDao;
-  public final ReentrantLock accessCountLock;
+  private final ReentrantLock accessCountLock;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -382,6 +382,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     } else {
       return new ArrayList<>();
     }
+  }
+
+  public ReentrantLock getAccessCountLock() {
+    return accessCountLock;
   }
 
   /**

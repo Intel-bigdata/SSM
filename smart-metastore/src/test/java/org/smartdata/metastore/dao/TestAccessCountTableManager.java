@@ -38,14 +38,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestAccessCountTableManager extends DBTest {
 
   @Test
   public void testAccessCountTableManager() throws InterruptedException {
     MetaStore adapter = mock(MetaStore.class);
+    // Used by AccessCountTableAggregator
+    when(adapter.getAccessCountLock()).thenReturn(new ReentrantLock());
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable =
