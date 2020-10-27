@@ -23,6 +23,7 @@ import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class AccessCountTableAggregator {
   private final MetaStore metaStore;
@@ -36,8 +37,18 @@ public class AccessCountTableAggregator {
   public void aggregate(AccessCountTable destinationTable,
       List<AccessCountTable> tablesToAggregate) throws MetaStoreException {
     if (tablesToAggregate.size() > 0) {
-      metaStore.aggregateTables(destinationTable, tablesToAggregate);
-      metaStore.insertAccessCountTable(destinationTable);
+      ReentrantLock accessCountLock = metaStore.getAccessCountLock();
+      if (accessCountLock != null) {
+        accessCountLock.lock();
+      }
+      try {
+        metaStore.aggregateTables(destinationTable, tablesToAggregate);
+        metaStore.insertAccessCountTable(destinationTable);
+      } finally {
+        if (accessCountLock != null) {
+          accessCountLock.unlock();
+        }
+      }
     }
   }
 }

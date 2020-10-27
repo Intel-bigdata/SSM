@@ -288,7 +288,7 @@ public class CompressionScheduler extends ActionSchedulerService {
       metaStore.updateAccessCountTableFid(oldFid, newFid);
     } catch (Exception e) {
       LOG.warn("Failed to take over file access count, which can make the " +
-          "measure for data temperature inaccurate!");
+          "measure for data temperature inaccurate!", e);
     }
   }
 

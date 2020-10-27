@@ -91,6 +91,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Operations supported for upper functions.
@@ -129,6 +130,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private GeneralDao generalDao;
   private SmallFileDao smallFileDao;
   private ErasureCodingPolicyDao ecDao;
+  private final ReentrantLock accessCountLock;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -157,6 +159,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     generalDao = new GeneralDao(pool.getDataSource());
     smallFileDao = new SmallFileDao(pool.getDataSource());
     ecDao = new ErasureCodingPolicyDao(pool.getDataSource());
+    accessCountLock = new ReentrantLock();
   }
 
   private void initDbInfo() throws MetaStoreException {
@@ -381,6 +384,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     }
   }
 
+  public ReentrantLock getAccessCountLock() {
+    return accessCountLock;
+  }
+
   /**
    * @param fidSrc the fid of old file.
    * @param fidDest the fid of new file that will take over the access
@@ -394,10 +401,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
           + "with same fid: " + fidDest);
       return;
     }
+    accessCountLock.lock();
     try {
       accessCountDao.updateFid(fidSrc, fidDest);
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    } finally {
+      accessCountLock.unlock();
     }
   }
 
@@ -451,10 +461,13 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void deleteAccessCountTable(
     AccessCountTable table) throws MetaStoreException {
+    accessCountLock.lock();
     try {
       accessCountDao.delete(table);
     } catch (Exception e) {
       throw new MetaStoreException(e);
+    } finally {
+      accessCountLock.unlock();
     }
   }
 
