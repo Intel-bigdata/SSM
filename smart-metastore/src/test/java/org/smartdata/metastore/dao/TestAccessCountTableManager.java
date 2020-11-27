@@ -46,6 +46,7 @@ public class TestAccessCountTableManager extends DBTest {
   @Test
   public void testAccessCountTableManager() throws InterruptedException {
     MetaStore adapter = mock(MetaStore.class);
+    // Used by AccessCountTableAggregator
     AccessCountTableManager manager = new AccessCountTableManager(adapter);
     Long firstDayEnd = 24 * 60 * 60 * 1000L;
     AccessCountTable accessCountTable =

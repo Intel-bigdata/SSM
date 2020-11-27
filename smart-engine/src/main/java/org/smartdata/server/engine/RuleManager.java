@@ -312,12 +312,6 @@ public class RuleManager extends AbstractService {
         RuleExecutor ruleExecutor = infoRepo.launchExecutor(this);
         TranslateResult tr = ruleExecutor.getTranslateResult();
         TimeBasedScheduleInfo si = tr.getTbScheduleInfo();
-        long lastCheckTime = rule.getLastCheckTime();
-        long every = si.getBaseEvery();
-        every = every == 0 ? 5000 : every;
-        long now = System.currentTimeMillis();
-        long delay = every - ((now - lastCheckTime) % every);
-        si.setStartTime(now + delay);
         if (rule.getLastCheckTime() != 0) {
           si.setFirstCheckTime(rule.getLastCheckTime());
         }
