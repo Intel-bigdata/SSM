@@ -90,7 +90,8 @@ public class MetaStoreUtils {
             "file_state",
             "compression_file",
             "small_file",
-            "user_info"
+            "user_info",
+            "whitelist"
   };
 
   public static Connection createConnection(String url,
