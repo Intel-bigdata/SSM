@@ -46,6 +46,7 @@ import org.smartdata.metastore.dao.StorageDao;
 import org.smartdata.metastore.dao.StorageHistoryDao;
 import org.smartdata.metastore.dao.SystemInfoDao;
 import org.smartdata.metastore.dao.UserInfoDao;
+import org.smartdata.metastore.dao.WhitelistDao;
 import org.smartdata.metastore.dao.XattrDao;
 import org.smartdata.metastore.utils.MetaStoreUtils;
 import org.smartdata.metrics.FileAccessEvent;
@@ -129,6 +130,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
   private GeneralDao generalDao;
   private SmallFileDao smallFileDao;
   private ErasureCodingPolicyDao ecDao;
+  private WhitelistDao whitelistDao;
 
   public MetaStore(DBPool pool) throws MetaStoreException {
     this.pool = pool;
@@ -157,6 +159,7 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
     generalDao = new GeneralDao(pool.getDataSource());
     smallFileDao = new SmallFileDao(pool.getDataSource());
     ecDao = new ErasureCodingPolicyDao(pool.getDataSource());
+    whitelistDao = new WhitelistDao(pool.getDataSource());
   }
 
   private void initDbInfo() throws MetaStoreException {
@@ -2454,6 +2457,41 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
       return compressionFileDao.getInfoByPath(fileName);
     } catch (EmptyResultDataAccessException e) {
       return null;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  /**
+   * Get last fetched dirs of whitelist.
+   *
+   * @return the list of fetched dirs
+   * @throws MetaStoreException
+   */
+  public List<String> getLastFetchedDirs() throws MetaStoreException {
+    try {
+      String[] oldList = whitelistDao.getLastFetchedDirs().split(",");
+      List<String> lastFetchedDirs = new ArrayList<>();
+      for (String s : oldList) {
+        lastFetchedDirs.add(s + (s.endsWith("/") ? "" : "/"));
+      }
+      LOG.info("Last fetch dirs are " + lastFetchedDirs.toString());
+      return lastFetchedDirs;
+    } catch (Exception e) {
+      throw new MetaStoreException(e);
+    }
+  }
+
+  /**
+   * Update whitelist table with current whitelist configuration.
+   *
+   * @param newWhitelist
+   * @throws MetaStoreException
+   */
+  public void updateWhitelistTable(String newWhitelist) throws MetaStoreException {
+    try {
+      whitelistDao.updateTable(newWhitelist);
+      LOG.info("Success to update whitelist table with " + newWhitelist);
     } catch (Exception e) {
       throw new MetaStoreException(e);
     }

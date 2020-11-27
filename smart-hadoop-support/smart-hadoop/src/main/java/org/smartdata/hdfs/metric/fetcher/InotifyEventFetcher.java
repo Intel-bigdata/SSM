@@ -38,13 +38,15 @@ import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.model.SystemInfo;
-import org.smartdata.model.WhitelistHelper;
+import org.smartdata.utils.StringUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -65,6 +67,7 @@ public class InotifyEventFetcher {
   private SmartConf conf;
   public static final Logger LOG =
       LoggerFactory.getLogger(InotifyEventFetcher.class);
+  public static List<String> oldList = new ArrayList<>();
 
   public InotifyEventFetcher(DFSClient client, MetaStore metaStore,
       ScheduledExecutorService service, Callable callBack) {
@@ -107,16 +110,24 @@ public class InotifyEventFetcher {
         SmartConfKeys.SMART_NAMESPACE_FETCHER_IGNORE_UNSUCCESSIVE_INOTIFY_EVENT_DEFAULT);
     if (!ignore) {
       Long lastTxid = getLastTxid();
-      //if whitelist is changed, namespace will fetch fully again when server restart
+      //If whitelist is changed, the whole namespace will be fetched when servers restart
       if (lastTxid != null && lastTxid != -1 && canContinueFromLastTxid(client, lastTxid)
-              && !WhitelistHelper.isWhitelistChanged(conf)) {
+              && !isWhitelistChanged(conf, metaStore)) {
         startFromLastTxid(lastTxid);
       } else {
         startWithFetchingNameSpace();
         LOG.info("Start fetch namespace fully!");
       }
-      //update old whitelist
-      conf.setLastFetchList();
+      //Update old whitelist
+      try {
+        String currentList = StringUtil.join(",", conf.getCoverDir());
+        if (currentList.isEmpty()){
+          currentList = "/";
+        }
+        metaStore.updateWhitelistTable(currentList);
+      } catch (MetaStoreException e) {
+        LOG.warn("Failed to update whitelist.", e);
+      }
     } else {
       long id = client.getNamenode().getCurrentEditLogTxid();
       LOG.warn("NOTE: Incomplete iNotify event may cause unpredictable consequences. "
@@ -215,6 +226,31 @@ public class InotifyEventFetcher {
     if (fetchAndApplyFuture != null){
       fetchAndApplyFuture.cancel(false);
     }
+  }
+
+  /**
+   *Verify if whitelist changed. It influences namespace fetching process.
+   */
+  public static boolean isWhitelistChanged(SmartConf conf, MetaStore metaStore) {
+    List<String> currentList = conf.getCoverDir();
+    try {
+      oldList = metaStore.getLastFetchedDirs();
+    } catch (MetaStoreException e) {
+      LOG.warn("Failed to get last fetched dirs.", e);
+    }
+    if (currentList.size() != oldList.size()) {
+      return true;
+    }
+    Set<String> set = new HashSet<>();
+    for (String s : oldList) {
+      set.add(s);
+    }
+    for (String s : currentList) {
+      if (!set.contains(s)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static class InotifyFetchTask implements Runnable {

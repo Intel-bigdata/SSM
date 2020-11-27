@@ -20,24 +20,17 @@ package org.smartdata.conf;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.utils.StringUtil;
 
-import java.io.BufferedInputStream;
 import java.io.Console;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -48,14 +41,10 @@ public class SmartConf extends Configuration {
   private static final Logger LOG = LoggerFactory.getLogger(SmartConf.class);
   private final List<String> ignoreList;
   private final List<String> coverList;
-  private final List<String> lastFetchList = new ArrayList<>();
   // Include hosts configured in conf/agents and
   // hosts added dynamically (by `start-agent.sh --host $host`)
   private Set<String> agentHosts;
   private Set<String> serverHosts;
-  Properties props = new Properties();
-  String path = System.getProperty("user.dir") + File.separator + "conf"
-          + File.separator + "smart.properties";
 
   public SmartConf() {
     Configuration.addDefaultResource("smart-default.xml");
@@ -79,20 +68,6 @@ public class SmartConf extends Configuration {
       coverList.add(s + (s.endsWith("/") ? "" : "/"));
     }
 
-    //get last fetch dirs list
-    try {
-      InputStream in = new BufferedInputStream(new FileInputStream(path));
-      props.load(in);
-      String dirs = props.getProperty(SmartConfKeys.SMART_LAST_FETCH_DIRS_KEY);
-      String[] lastList = dirs.split(",");
-      for (String s : lastList) {
-        lastFetchList.add(s + (s.endsWith("/") ? "" : "/"));
-      }
-      in.close();
-    } catch (IOException e) {
-      LOG.error("Load smart.properties failed!");
-    }
-
     try {
       this.serverHosts = parseHost("servers", this);
       this.agentHosts = parseHost("agents", this);
@@ -106,27 +81,8 @@ public class SmartConf extends Configuration {
     return coverList;
   }
 
-  public List<String> getLastFetchList() {
-    return lastFetchList;
-  }
-
   public List<String> getIgnoreDir() {
     return ignoreList;
-  }
-
-  /**
-   * Update last fetch list to smart.last.fetch.dirs.
-   */
-  public void setLastFetchList() {
-    String writeList = StringUtil.join(",", getCoverDir());
-    try {
-      OutputStream out = new FileOutputStream(path);
-      props.setProperty(SmartConfKeys.SMART_LAST_FETCH_DIRS_KEY, writeList);
-      props.store(out, "Update value");
-      out.close();
-    } catch (IOException e) {
-      LOG.error("Update last fetch list failed.");
-    }
   }
 
   public void setCoverDir(ArrayList<String> fetchDirs) {
