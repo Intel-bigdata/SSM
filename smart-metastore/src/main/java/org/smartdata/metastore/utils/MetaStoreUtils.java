@@ -90,7 +90,8 @@ public class MetaStoreUtils {
             "file_state",
             "compression_file",
             "small_file",
-            "user_info"
+            "user_info",
+            "whitelist"
   };
 
   public static Connection createConnection(String url,
@@ -355,7 +356,11 @@ public class MetaStoreUtils {
               + "container_file_path varchar(4096) NOT NULL,\n"
               + "offset bigint(20) NOT NULL,\n"
               + "length bigint(20) NOT NULL\n"
-              + ");"
+              + ");",
+          "CREATE TABLE whitelist (\n"
+              + "last_fetched_dirs varchar(4096) NOT NULL\n"
+              + ");",
+          "INSERT INTO whitelist VALUES( '' );"
         };
     try {
       for (String s : deleteExistingTables) {
