@@ -288,7 +288,7 @@ function init_command() {
       ALLOW_DAEMON_OPT=true
       SMART_VARGS+=" -format"
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
-      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
+      JAVA_OPTS+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
     ;;
     smartserver)
       SMART_CLASSNAME=org.smartdata.server.SmartDaemon
@@ -298,7 +298,7 @@ function init_command() {
         JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
       fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
-      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
+      JAVA_OPTS+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
       reorder_lib
     ;;
@@ -312,7 +312,7 @@ function init_command() {
        JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
       fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
-      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_AGENT_JAVA_OPT}"
+      JAVA_OPTS+=" ${SSM_JAVA_OPT} ${SSM_AGENT_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.address="${SSM_EXEC_HOST}
     ;;
     standby)
@@ -325,7 +325,7 @@ function init_command() {
         JAVA_OPTS+=" -Xdebug -Xrunjdwp:transport=dt_socket,address=8008,server=y,suspend=y"
       fi
       JAVA_OPTS+=" -Dsmart.log.file="${SMART_LOG_FILE_NAME}
-      JAVA_OPST+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
+      JAVA_OPTS+=" ${SSM_JAVA_OPT} ${SSM_SERVER_JAVA_OPT}"
       SMART_VARGS+=" -D smart.agent.master.address="${SSM_EXEC_HOST}
       reorder_lib
     ;;
