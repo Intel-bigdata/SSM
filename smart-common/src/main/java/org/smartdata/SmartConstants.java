@@ -98,4 +98,6 @@ public class SmartConstants {
   }
 
   public static final String SMART_FILE_CHECKSUM_XATTR_NAME = "user.checksum";
+
+  public static final String FS_HDFS_IMPL = "fs.hdfs.impl";
 }
