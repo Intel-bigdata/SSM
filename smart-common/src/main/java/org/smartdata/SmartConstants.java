@@ -17,6 +17,8 @@
  */
 package org.smartdata;
 
+import org.apache.hadoop.hdfs.DistributedFileSystem;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -100,4 +102,8 @@ public class SmartConstants {
   public static final String SMART_FILE_CHECKSUM_XATTR_NAME = "user.checksum";
 
   public static final String FS_HDFS_IMPL = "fs.hdfs.impl";
+  public static final String SMART_FILE_SYSTEM =
+      "org.smartdata.hadoop.filesystem.SmartFileSystem";
+  public static final String DISTRIBUTED_FILE_SYSTEM =
+      DistributedFileSystem.class.getName();
 }
