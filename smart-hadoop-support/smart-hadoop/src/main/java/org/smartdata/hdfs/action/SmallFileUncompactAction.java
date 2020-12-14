@@ -48,7 +48,8 @@ public class SmallFileUncompactAction extends HdfsAction {
   private float status = 0f;
   private Configuration conf = null;
   private String smallFiles = null;
-  private String xAttrName = null;
+  private String xAttrNameFileState = null;
+  private String xAttrNameCheckSum = null;
   private String containerFile = null;
   private DFSClient smartDFSClient = null;
   public static final String CONTAINER_FILE = "-containerFile";
@@ -58,7 +59,8 @@ public class SmallFileUncompactAction extends HdfsAction {
     super.init(args);
     this.conf = getContext().getConf();
     this.smartDFSClient = dfsClient;
-    this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
+    this.xAttrNameFileState = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
+    this.xAttrNameCheckSum = SmartConstants.SMART_FILE_CHECKSUM_XATTR_NAME;
     this.smallFiles = args.get(FILE_PATH);
     this.containerFile = args.get(CONTAINER_FILE);
   }
@@ -134,7 +136,8 @@ public class SmallFileUncompactAction extends HdfsAction {
   }
 
   /**
-   * Reset meta data of small file.
+   * Reset meta data of small file. We should exclude the setting for
+   * xAttrNameFileState or xAttrNameCheckSum.
    */
   private void resetFileMeta(String path, HdfsFileStatus fileStatus,
       Map<String, byte[]> xAttr) throws IOException {
@@ -142,7 +145,8 @@ public class SmallFileUncompactAction extends HdfsAction {
     dfsClient.setPermission(path, fileStatus.getPermission());
 
     for(Map.Entry<String, byte[]> entry : xAttr.entrySet()) {
-      if (!entry.getKey().equals(xAttrName)) {
+      if (!entry.getKey().equals(xAttrNameFileState) &&
+          !entry.getKey().equals(xAttrNameCheckSum)) {
         dfsClient.setXAttr(path, entry.getKey(), entry.getValue(),
             EnumSet.of(XAttrSetFlag.CREATE, XAttrSetFlag.REPLACE));
       }
