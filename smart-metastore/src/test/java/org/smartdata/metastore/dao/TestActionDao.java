@@ -53,21 +53,23 @@ public class TestActionDao extends TestDaoUtil {
   @Test
   public void testGetAPageOfAction() {
     Map<String, String> args = new HashMap<>();
+    // ActionInfo's result and log queried from Metastore will be discarded
+    // and they are set by "".
     ActionInfo actionInfo = new ActionInfo(1, 1,
-        "cache", args, "Test",
-        "Test", false, 123213213L, true, 123123L,
+        "cache", args, "",
+        "", false, 123213213L, true, 123123L,
         100);
     ActionInfo actionInfo1 = new ActionInfo(2, 1,
-        "cache", args, "Test",
-        "Test", false, 123213213L, true, 123123L,
+        "cache", args, "",
+        "", false, 123213213L, true, 123123L,
         100);
     ActionInfo actionInfo2 = new ActionInfo(3, 1,
-        "cache", args, "Test",
-        "Test", false, 123213213L, true, 123123L,
+        "cache", args, "",
+        "", false, 123213213L, true, 123123L,
         100);
     ActionInfo actionInfo3 = new ActionInfo(4, 1,
-        "cache", args, "Test",
-        "Test", false, 123213213L, true, 123123L,
+        "cache", args, "",
+        "", false, 123213213L, true, 123123L,
         100);
 
     actionDao.insert(new ActionInfo[]{actionInfo, actionInfo1, actionInfo2, actionInfo3});
