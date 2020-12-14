@@ -53,6 +53,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.smartdata.SmartConstants.DISTRIBUTED_FILE_SYSTEM;
+import static org.smartdata.SmartConstants.FS_HDFS_IMPL;
+import static org.smartdata.SmartConstants.SMART_FILE_SYSTEM;
+
 public class CopyScheduler extends ActionSchedulerService {
   static final Logger LOG =
       LoggerFactory.getLogger(CopyScheduler.class);
@@ -401,19 +405,27 @@ public class CopyScheduler extends ActionSchedulerService {
     }
   }
 
-  private FileStatus[] listFileStatuesOfDirs(String dirName) {
+  private FileStatus[] listFileStatusesOfDirs(String dirName) {
     FileSystem fs = null;
     FileStatus[] tmpFileStatus = null;
     List<FileStatus> returnStatus = new LinkedList<>();
     try {
-      fs = FileSystem.get(URI.create(dirName), conf);
+      // We simply use local HDFS conf for getting remote file system.
+      // The smart file system configured for local HDFS should not be
+      // introduced to remote file system.
+      Configuration remoteConf = new Configuration(conf);
+      if (remoteConf.get(FS_HDFS_IMPL, "").equals(
+          SMART_FILE_SYSTEM)) {
+        remoteConf.set(FS_HDFS_IMPL, DISTRIBUTED_FILE_SYSTEM);
+      }
+      fs = FileSystem.get(URI.create(dirName), remoteConf);
       tmpFileStatus = fs.listStatus(new Path(dirName));
       for (FileStatus fileStatus : tmpFileStatus) {
         if (!fileStatus.isDirectory()) {
           returnStatus.add(fileStatus);
         } else {
           //all the file in this fileStatuses
-          FileStatus[] childFileStatuses = listFileStatuesOfDirs(fileStatus.getPath().getName());
+          FileStatus[] childFileStatuses = listFileStatusesOfDirs(fileStatus.getPath().getName());
           if (childFileStatuses.length != 0) {
             returnStatus.addAll(Arrays.asList(childFileStatuses));
           }
@@ -442,7 +454,7 @@ public class CopyScheduler extends ActionSchedulerService {
     }
     FileStatus[] fileStatuses = null;
     // recursively file lists
-    fileStatuses = listFileStatuesOfDirs(destDir);
+    fileStatuses = listFileStatusesOfDirs(destDir);
     if (fileStatuses.length == 0) {
       LOG.debug("Remote directory is empty!");
     } else {

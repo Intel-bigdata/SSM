@@ -51,7 +51,7 @@ public class ExecutorScheduler {
     if (si.getFirstCheckTime() == 0) {
       si.setFirstCheckTime(now + startDelay);
     }
-    long every = si.getMininalEvery();
+    long every = si.getMinimalEvery();
     if (every <= 0) {
       every = 5000;
     }

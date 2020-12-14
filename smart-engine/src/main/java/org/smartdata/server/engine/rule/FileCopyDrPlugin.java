@@ -74,7 +74,7 @@ public class FileCopyDrPlugin implements RuleExecutorPlugin {
           des.addActionArg(i, SyncAction.DEST, dest);
         }
         backUpInfo.setDest(dest);
-        backUpInfo.setPeriod(tResult.getTbScheduleInfo().getMininalEvery());
+        backUpInfo.setPeriod(tResult.getTbScheduleInfo().getMinimalEvery());
 
         des.addActionArg(i, SyncAction.SRC, dirs);
 

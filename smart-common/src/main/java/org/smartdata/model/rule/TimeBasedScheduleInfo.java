@@ -61,7 +61,7 @@ public class TimeBasedScheduleInfo {
     return every;
   }
 
-  public long getMininalEvery() {
+  public long getMinimalEvery() {
     if (every.length == 1) {
       return every[0];
     } else {
