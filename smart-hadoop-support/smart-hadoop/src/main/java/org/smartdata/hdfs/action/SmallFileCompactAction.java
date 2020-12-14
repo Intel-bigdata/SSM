@@ -58,7 +58,8 @@ public class SmallFileCompactAction extends HdfsAction {
   private String smallFiles = null;
   private String containerFile = null;
   private String containerFilePermission = null;
-  private String xAttrName = null;
+  private String xAttrNameFileSate = null;
+  private String xAttrNameCheckSum = null;
   public static final String CONTAINER_FILE = "-containerFile";
   public static final String CONTAINER_FILE_PERMISSION = "-containerFilePermission";
 
@@ -66,7 +67,8 @@ public class SmallFileCompactAction extends HdfsAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.conf = getContext().getConf();
-    this.xAttrName = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
+    this.xAttrNameFileSate = SmartConstants.SMART_FILE_STATE_XATTR_NAME;
+    this.xAttrNameCheckSum = SmartConstants.SMART_FILE_CHECKSUM_XATTR_NAME;
     this.smallFiles = args.get(FILE_PATH);
     this.containerFile = args.get(CONTAINER_FILE);
     this.containerFilePermission = args.get(CONTAINER_FILE_PERMISSION);
@@ -216,9 +218,9 @@ public class SmallFileCompactAction extends HdfsAction {
 
     // Set file container info into XAttr
     dfsClient.setXAttr(path,
-        xAttrName, SerializationUtils.serialize(compactFileState),
+        xAttrNameFileSate, SerializationUtils.serialize(compactFileState),
         EnumSet.of(XAttrSetFlag.CREATE));
-    dfsClient.setXAttr(path, SmartConstants.SMART_FILE_CHECKSUM_XATTR_NAME,
+    dfsClient.setXAttr(path, xAttrNameCheckSum,
         checksumBytes, EnumSet.of(XAttrSetFlag.CREATE));
   }
 
