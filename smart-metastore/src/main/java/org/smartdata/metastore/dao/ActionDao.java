@@ -17,6 +17,8 @@
  */
 package org.smartdata.metastore.dao;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.smartdata.metastore.MetaStoreException;
 import org.smartdata.metastore.utils.MetaStoreUtils;
@@ -201,13 +203,13 @@ public class ActionDao {
     sql = sql.substring(0, sql.length() - 1);
     //add limit
     sql = sql + " LIMIT " + start + "," + offset + ";";
-    return jdbcTemplate.query(sql, new ActionRowMapper());
+    return jdbcTemplate.query(sql, new ActionRowPartMapper());
   }
 
   public List<ActionInfo> getAPageOfAction(long start, long offset) {
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     String sql = "SELECT * FROM " + TABLE_NAME + " LIMIT " + start + "," + offset + ";";
-    return jdbcTemplate.query(sql, new ActionRowMapper());
+    return jdbcTemplate.query(sql, new ActionRowPartMapper());
   }
 
   public List<ActionInfo> searchAction(String path, long start, long offset, List<String> orderBy,
@@ -463,6 +465,43 @@ public class ActionDao {
       actionInfo.setExecHost(resultSet.getString("exec_host"));
       actionInfo.setProgress(resultSet.getFloat("progress"));
       return actionInfo;
+    }
+  }
+
+  /**
+   * No need to set result & log. If arg value is too long, it will be
+   * truncated.
+   */
+  class ActionRowPartMapper implements RowMapper<ActionInfo> {
+    @Override
+    public ActionInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+      ActionInfo actionInfo = new ActionInfo();
+      actionInfo.setActionId(resultSet.getLong("aid"));
+      actionInfo.setCmdletId(resultSet.getLong("cid"));
+      actionInfo.setActionName(resultSet.getString("action_name"));
+      actionInfo.setArgsFromJsonString(resultSet.getString("args"));
+      actionInfo.setArgs(
+          getTruncatedArgs(resultSet.getString("args")));
+      actionInfo.setSuccessful(resultSet.getBoolean("successful"));
+      actionInfo.setCreateTime(resultSet.getLong("create_time"));
+      actionInfo.setFinished(resultSet.getBoolean("finished"));
+      actionInfo.setFinishTime(resultSet.getLong("finish_time"));
+      actionInfo.setExecHost(resultSet.getString("exec_host"));
+      actionInfo.setProgress(resultSet.getFloat("progress"));
+      return actionInfo;
+    }
+
+    public Map<String, String> getTruncatedArgs(String jsonArgs) {
+      Gson gson = new Gson();
+      Map<String, String> args = gson.fromJson(jsonArgs,
+          new TypeToken<Map<String, String>>() {
+          }.getType());
+      for (Map.Entry<String, String> entry : args.entrySet()) {
+        if (entry.getValue().length() > 50) {
+          entry.setValue(entry.getValue().substring(0, 50) + "...");
+        }
+      }
+      return args;
     }
   }
 }
