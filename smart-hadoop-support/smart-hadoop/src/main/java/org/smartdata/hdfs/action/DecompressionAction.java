@@ -107,7 +107,7 @@ public class DecompressionAction extends HdfsAction {
 
       in = dfsClient.open(filePath);
       long length = dfsClient.getFileInfo(filePath).getLen();
-      outputDecompressedData(in, out, (int) length);
+      outputDecompressedData(in, out, length);
       // Overwrite the original file with decompressed data
       dfsClient.setOwner(compressTmpPath, dfsClient.getFileInfo(filePath).getOwner(), dfsClient.getFileInfo(filePath).getGroup());
       dfsClient.setPermission(compressTmpPath, dfsClient.getFileInfo(filePath).getPermission());
@@ -128,12 +128,12 @@ public class DecompressionAction extends HdfsAction {
   }
 
   private void outputDecompressedData(InputStream in,
-      OutputStream out, int length)
+      OutputStream out, long length)
       throws IOException {
     byte[] buff = new byte[buffSize];
-    int remainSize = length;
+    long  remainSize = length;
     while (remainSize != 0) {
-      int copySize = remainSize < buffSize ? remainSize : buffSize;
+      int copySize = remainSize < buffSize ? (int) remainSize : buffSize;
       int readSize = in.read(buff, 0, copySize);
       if (readSize == -1) {
         break;
