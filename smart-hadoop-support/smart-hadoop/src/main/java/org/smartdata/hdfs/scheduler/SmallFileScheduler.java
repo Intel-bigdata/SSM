@@ -19,12 +19,9 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.hdfs.DFSClient;
-import org.apache.hadoop.ipc.RemoteException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.smartdata.SmartConstants;
 import org.smartdata.SmartContext;
 import org.smartdata.SmartFilePermission;
 import org.smartdata.hdfs.HadoopUtil;
@@ -39,12 +36,10 @@ import org.smartdata.model.CompactFileState;
 import org.smartdata.model.FileInfo;
 import org.smartdata.model.FileState;
 import org.smartdata.model.LaunchAction;
-import org.smartdata.model.NormalFileState;
 import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -463,7 +458,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    * recovery case, the old file id can be acquired for taking over old file's
    * data temperature.
    */
-  private void setOldFileId(ActionInfo actionInfo) {
+  private void setOldFileId(ActionInfo actionInfo) throws IOException {
     if (actionInfo.getArgs().get(OLD_FILE_ID) != null &&
         !actionInfo.getArgs().get(OLD_FILE_ID).isEmpty()) {
       return;
@@ -475,7 +470,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
         oids.add(dfsClient.getFileInfo(path).getFileId());
       } catch (IOException e) {
         LOG.warn("Failed to set old fid for taking over data temperature!");
-        break;
+        throw e;
       }
     }
     actionInfo.setOldFileIds(oids);
