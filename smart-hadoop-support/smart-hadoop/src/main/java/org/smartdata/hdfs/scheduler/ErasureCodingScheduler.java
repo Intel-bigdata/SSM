@@ -19,6 +19,7 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   public static String EC_DIR;
   public static final String EC_TMP_DIR = "ec_tmp/";
   public static final String EC_TMP = "-ecTmp";
-  public static final String EC_POLICY = "-policy";
+  public static final String EC_POLICY = ErasureCodingAction.EC_POLICY_NAME;
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
@@ -197,6 +198,21 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     }
     afterSchedule(actionInfo);
     return ScheduleResult.SUCCESS;
+  }
+
+  @Override
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    try {
+      String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+      HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
+      String currentSrcEcPolicyName = fileStatus.getErasureCodingPolicy().getName();
+      String actionEcPolicyName = actionInfo.getArgs().get(EC_POLICY);
+      return currentSrcEcPolicyName.equals(actionEcPolicyName);
+    } catch (IOException | NullPointerException e) {
+      LOG.warn("Failed to get file status or EC policy, suppose this action " +
+          "was not successfully executed: {}", actionInfo.toString());
+      return false;
+    }
   }
 
   /**

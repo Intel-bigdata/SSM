@@ -224,6 +224,20 @@ public class CompressionScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
+  @Override
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    try {
+      String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+      FileState.FileType fileType =
+          HadoopUtil.getFileState(dfsClient, path).getFileType();
+      return fileType == FileState.FileType.COMPRESSION;
+    } catch (IOException e) {
+      LOG.warn("Failed to get file state, suppose this action was not " +
+          "successfully executed: {}", actionInfo.toString());
+      return false;
+    }
+  }
+
   public void afterSchedule(ActionInfo actionInfo) {
     String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     // lock the file only if ec or unec action is scheduled

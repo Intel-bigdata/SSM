@@ -453,6 +453,42 @@ public class SmallFileScheduler extends ActionSchedulerService {
     return scheduleResult;
   }
 
+  @Override
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    try {
+      // If any one small file is not compacted, return false.
+      for (String path : getSmallFileList(actionInfo)) {
+        FileState.FileType fileType =
+            HadoopUtil.getFileState(dfsClient, path).getFileType();
+        if (fileType != FileState.FileType.COMPACT) {
+          return false;
+        }
+      }
+      return true;
+    } catch (IOException e) {
+      LOG.warn("Failed to get file state, suppose this action was not " +
+          "successfully executed: {}", actionInfo.toString());
+      return false;
+    }
+  }
+
+  /**
+   * Do something after a successful scheduling.
+   * For compact/uncompact action, the original small file will be replaced by
+   * other file with new fid. We need to keep the original file's id to let new
+   * file take over its data temperature metric.
+   */
+  public void afterSchedule(ActionInfo actionInfo) {
+    try {
+      // Set old file ID, which will be persisted to DB.
+      setOldFileId(actionInfo);
+    } catch (Throwable t) {
+      // We think it may not be a big issue, so just warn user this issue.
+      LOG.warn("Failed in maintaining old fid for taking over " +
+          "old data's temperature.");
+    }
+  }
+
   /**
    * Set old file id which will be persisted into DB. For action status
    * recovery case, the old file id can be acquired for taking over old file's
@@ -474,42 +510,6 @@ public class SmallFileScheduler extends ActionSchedulerService {
       }
     }
     actionInfo.setOldFileIds(oids);
-  }
-
-  @Override
-  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
-    try {
-      // If any one small file is not compacted, return false.
-      for (String path : getSmallFileList(actionInfo)) {
-        FileState.FileType fileType =
-            HadoopUtil.getFileState(dfsClient, path).getFileType();
-        if (fileType != FileState.FileType.COMPACT) {
-          return false;
-        }
-      }
-      return true;
-    } catch (IOException e) {
-      LOG.warn("Failed to get file state, suppose this action was not " +
-          "successfully executed: {}",  actionInfo.toString());
-      return false;
-    }
-  }
-
-  /**
-   * Do something after a successful scheduling.
-   * For compact/uncompact action, the original small file will be replaced by
-   * other file with new fid. We need to keep the original file's id to let new
-   * file take over its data temperature metric.
-   */
-  public void afterSchedule(ActionInfo actionInfo) {
-    try {
-      // Set old file ID, which will be persisted to DB.
-      setOldFileId(actionInfo);
-    } catch (Throwable t) {
-      // We think it may not be a big issue, so just warn user this issue.
-      LOG.warn("Failed in maintaining old fid for taking over " +
-          "old data's temperature.");
-    }
   }
 
   /**
