@@ -442,15 +442,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
   @Override
   public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
       LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
-    ScheduleResult scheduleResult;
     if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-      scheduleResult = getCompactScheduleResult(actionInfo);
+      return getCompactScheduleResult(actionInfo);
     } else if (UNCOMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
-      scheduleResult = getUncompactScheduleResult(actionInfo, action);
-    } else {
-      scheduleResult = ScheduleResult.SUCCESS;
+      return getUncompactScheduleResult(actionInfo, action);
     }
-    return scheduleResult;
+    return ScheduleResult.SUCCESS;
   }
 
   @Override
