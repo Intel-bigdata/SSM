@@ -44,6 +44,7 @@ import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.LaunchCmdlet;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -468,7 +469,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       return;
     }
     List<Long> oids = new ArrayList<>();
-    // For uncompact,small file list will be set by #onSchedule.
+    // For uncompact, small file list will be set by #onSchedule.
     for (String path : getSmallFileList(actionInfo)) {
       try {
         oids.add(dfsClient.getFileInfo(path).getFileId());
@@ -477,49 +478,26 @@ public class SmallFileScheduler extends ActionSchedulerService {
         break;
       }
     }
-    actionInfo.getArgs().put(OLD_FILE_ID, toJsonString(oids));
-  }
-
-  private String toJsonString(List<Long> oids) {
-    return new Gson().toJson(oids);
-  }
-
-  private List<Long> fromJsonString(String oIdJson) {
-    return new Gson().fromJson(oIdJson,
-        new TypeToken<ArrayList<Long>>(){}.getType());
+    actionInfo.setOldFileIds(oids);
   }
 
   @Override
   public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
-    boolean isFinished = true;
     try {
+      // If any one small file is not compacted, return false.
       for (String path : getSmallFileList(actionInfo)) {
-        isFinished = isFinished &&
-            (getFileState(path).getFileType() == FileState.FileType.COMPACT);
-        if (!isFinished) {
+        FileState.FileType fileType =
+            HadoopUtil.getFileState(dfsClient, path).getFileType();
+        if (fileType != FileState.FileType.COMPACT) {
           return false;
         }
       }
+      return true;
     } catch (IOException e) {
-      LOG.warn("Failed to get file state, suppose not finished at " +
-          "previous time.");
+      LOG.warn("Failed to get file state, suppose this action was not " +
+          "successfully executed: {}",  actionInfo.toString());
       return false;
     }
-    return true;
-  }
-
-  // TODO: use smartDFSClient to directly call its method.
-  public FileState getFileState(String filePath) throws IOException {
-    try {
-      byte[] fileState = dfsClient.getXAttr(filePath,
-          SmartConstants.SMART_FILE_STATE_XATTR_NAME);
-      if (fileState != null) {
-        return (FileState) SerializationUtils.deserialize(fileState);
-      }
-    } catch (RemoteException e) {
-      return new NormalFileState(filePath);
-    }
-    return new NormalFileState(filePath);
   }
 
   /**
@@ -623,8 +601,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   public void takeOverAccessCount(ActionInfo actionInfo) {
     List<String> smallFiles = getSmallFileList(actionInfo);
-    List<Long> oldFids =
-        fromJsonString(actionInfo.getArgs().get(ActionInfo.OLD_FILE_ID));
+    List<Long> oldFids = actionInfo.getOldFileIds();
     try {
       for (int i = 0; i < smallFiles.size(); i++) {
         String filePath = smallFiles.get(i);
