@@ -46,6 +46,7 @@ import org.smartdata.model.WhitelistHelper;
 import org.smartdata.model.action.ActionScheduler;
 import org.smartdata.model.action.ScheduleResult;
 import org.smartdata.protocol.message.ActionStatus;
+import org.smartdata.protocol.message.ActionStatusFactory;
 import org.smartdata.protocol.message.CmdletStatus;
 import org.smartdata.protocol.message.CmdletStatusUpdate;
 import org.smartdata.protocol.message.LaunchCmdlet;
@@ -63,13 +64,11 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -89,10 +88,6 @@ public class CmdletManager extends AbstractService {
   private static final Logger LOG = LoggerFactory.getLogger(CmdletManager.class);
   public static final int TIMEOUT_MULTIPLIER = 100;
   public static final int TIMEOUT_MIN_MILLISECOND = 30000;
-  public static final String TIMEOUTLOG =
-    "Timeout error occurred for getting this action's status report.";
-  public static final String ACTION_SKIP_LOG =
-    "The action is not executed because the prior action in the same cmdlet failed.";
 
   private ScheduledExecutorService executorService;
   private CmdletDispatcher dispatcher;
@@ -1123,10 +1118,15 @@ public class CmdletManager extends AbstractService {
       return;
     }
     for (ActionStatus actionStatus : actionStatusList) {
-      onActionStatusUpdate(actionStatus);
-      ActionInfo actionInfo = idToActions.get(actionStatus.getActionId());
-      inferCmdletStatus(actionInfo);
+      onStatusUpdate(actionStatus);
     }
+  }
+
+  private void onStatusUpdate(ActionStatus actionStatus) throws IOException,
+      ActionException {
+    onActionStatusUpdate(actionStatus);
+    ActionInfo actionInfo = idToActions.get(actionStatus.getActionId());
+    inferCmdletStatus(actionInfo);
   }
 
   public void onCmdletStatusUpdate(CmdletStatus status) throws IOException {
@@ -1209,13 +1209,16 @@ public class CmdletManager extends AbstractService {
     }
     long actionId = actionInfo.getActionId();
     long cmdletId = actionInfo.getCmdletId();
-    List<Long> aids = idToCmdlets.get(cmdletId).getAids();
+    CmdletInfo cmdletInfo = idToCmdlets.get(cmdletId);
+    List<Long> aids = cmdletInfo.getAids();
     int index = aids.indexOf(actionId);
     if (!actionInfo.isSuccessful()) {
       for (int i = index + 1; i < aids.size(); i++) {
-        ActionStatus actionStatus = new ActionStatus(cmdletId, i == aids.size() - 1,
-            aids.get(i), ACTION_SKIP_LOG, actionInfo.getFinishTime(),
-            actionInfo.getFinishTime(), new Throwable(), true);
+        // Use current action's finish time to set start/finish time for
+        // subsequent action(s).
+        ActionStatus actionStatus = ActionStatusFactory.createSkipActionStatus(
+            cmdletId, i == aids.size() - 1, aids.get(i),
+            actionInfo.getFinishTime(), actionInfo.getFinishTime());
         onActionStatusUpdate(actionStatus);
       }
       CmdletStatus cmdletStatus =
@@ -1356,9 +1359,9 @@ public class CmdletManager extends AbstractService {
   }
 
   private class DetectFailedActionTask implements Runnable {
+
     public void run() {
       try {
-        Set<CmdletInfo> failedCmdlet = new HashSet<>();
         List<Long> cids = new ArrayList<>();
         cids.addAll(idToLaunchCmdlet.keySet());
         for (Long cid : cids) {
@@ -1370,24 +1373,23 @@ public class CmdletManager extends AbstractService {
             || cmdletInfo.getState() == CmdletState.EXECUTING) {
             for (long id : cmdletInfo.getAids()) {
               ActionInfo actionInfo = idToActions.get(id);
-              if (isTimeout(actionInfo)) {
-                failedCmdlet.add(cmdletInfo);
-                long startTime = actionInfo.getCreateTime();
-                if (startTime == 0) {
-                  startTime = cmdletInfo.getGenerateTime();
-                }
-                long finishTime = System.currentTimeMillis();
-                ActionStatus actionStatus = new ActionStatus(
-                    cid, id == cmdletInfo.getAids().get(cmdletInfo.getAids().size() - 1),
-                    id, TIMEOUTLOG, startTime, finishTime, new Throwable(), true);
-                onActionStatusUpdate(actionStatus);
+              if (!isTimeout(actionInfo)) {
+                continue;
+              }
+              // For timeout action, speculate its status.
+              if (isSuccessfulBySpeculation(actionInfo)) {
+                ActionStatus actionStatus =
+                    ActionStatusFactory.createSuccessActionStatus(
+                        cmdletInfo, actionInfo);
+                onStatusUpdate(actionStatus);
+              } else {
+                ActionStatus actionStatus =
+                    ActionStatusFactory.createTimeoutActionStatus(
+                        cmdletInfo, actionInfo);
+                onStatusUpdate(actionStatus);
               }
             }
           }
-        }
-        for (CmdletInfo cmdletInfo: failedCmdlet) {
-          cmdletInfo.setState(CmdletState.FAILED);
-          cmdletFinished(cmdletInfo.getCid());
         }
       } catch (ActionException e) {
         LOG.error(e.getMessage());
@@ -1404,6 +1406,17 @@ public class CmdletManager extends AbstractService {
       }
       long currentTime = System.currentTimeMillis();
       return currentTime - actionInfo.getFinishTime() > timeout;
+    }
+
+    public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+      for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+        // If it is successful according to one scheduler's speculation,
+        // we view it as fact.
+        if (p.isSuccessfulBySpeculation(actionInfo)) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 }

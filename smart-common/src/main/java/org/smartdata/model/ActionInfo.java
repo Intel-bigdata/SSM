@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ActionInfo {
+  public static final String OLD_FILE_ID = "-oid";
   private long actionId;
   private long cmdletId;
   private String actionName;

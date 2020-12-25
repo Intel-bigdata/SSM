@@ -76,4 +76,9 @@ public interface ActionScheduler {
    * @param actionInfo
    */
   void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex);
+
+  /**
+   * Speculate whether timeout action is finished.
+   */
+  boolean isSuccessfulBySpeculation(ActionInfo actionInfo);
 }

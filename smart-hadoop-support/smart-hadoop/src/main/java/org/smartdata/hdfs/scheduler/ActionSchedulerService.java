@@ -56,4 +56,8 @@ public abstract class ActionSchedulerService extends AbstractService implements 
 
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
   }
+
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    return false;
+  }
 }
