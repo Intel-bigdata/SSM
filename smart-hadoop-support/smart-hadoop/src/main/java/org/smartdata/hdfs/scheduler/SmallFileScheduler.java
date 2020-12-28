@@ -637,8 +637,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
         metaStore.updateAccessCountTableFid(oldFid, newFid);
       }
     } catch (Exception e) {
-      LOG.warn("Failed to take over file access count, which can make the " +
-          "measure for data temperature inaccurate!", e);
+      LOG.warn("Failed to take over file access count for all tables, " +
+          "which may make the measurement for data temperature inaccurate!",
+          e.getMessage());
     }
   }
 

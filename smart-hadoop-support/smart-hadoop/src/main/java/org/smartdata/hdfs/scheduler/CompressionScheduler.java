@@ -214,7 +214,7 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
-                                   LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     // For compression, add compressTmp argument. This arg is assigned by CompressionScheduler
     // and persisted to MetaStore for easily debugging.
     String tmpName = createTmpName(action);
@@ -222,6 +222,18 @@ public class CompressionScheduler extends ActionSchedulerService {
     actionInfo.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
     afterSchedule(actionInfo);
     return ScheduleResult.SUCCESS;
+  }
+
+  public void afterSchedule(ActionInfo actionInfo) {
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    // lock the file only if ec or unec action is scheduled
+    fileLock.add(srcPath);
+    try {
+      setOldFileId(actionInfo);
+    } catch (Throwable t) {
+      // We think it may not be a big issue, so just warn user this issue.
+      LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
+    }
   }
 
   /**
@@ -248,18 +260,6 @@ public class CompressionScheduler extends ActionSchedulerService {
       LOG.warn("Failed to get file state, suppose this action was not " +
           "successfully executed: {}", actionInfo.toString());
       return false;
-    }
-  }
-
-  public void afterSchedule(ActionInfo actionInfo) {
-    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-    // lock the file only if ec or unec action is scheduled
-    fileLock.add(srcPath);
-    try {
-      setOldFileId(actionInfo);
-    } catch (Throwable t) {
-      // We think it may not be a big issue, so just warn user this issue.
-      LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
     }
   }
 
@@ -342,7 +342,6 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   private void onCompressActionFinished(ActionInfo actionInfo)
       throws MetaStoreException {
-
     if (!actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
       return;
     }

@@ -169,12 +169,20 @@ public class AccessCountDao {
     jdbcTemplate.execute(sql);
   }
 
-  public void updateFid(long fidSrc, long fidDest) {
+  public void updateFid(long fidSrc, long fidDest) throws Exception {
+    int i = 0;
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
     for (AccessCountTable table : getAllSortedTables()) {
       String sql = String.format("update %s set %s=%s where %s=%s", table.getTableName(),
           AccessCountDao.FILE_FIELD, fidDest, AccessCountDao.FILE_FIELD, fidSrc);
-      jdbcTemplate.execute(sql);
+      try {
+        jdbcTemplate.execute(sql);
+      } catch (Exception e) {
+        i++;
+      }
+    }
+    if (i > 0) {
+      throw new Exception("Not updated table number: " + i);
     }
   }
 
