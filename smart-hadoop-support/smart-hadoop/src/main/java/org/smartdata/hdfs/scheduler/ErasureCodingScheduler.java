@@ -26,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelper;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
@@ -59,7 +61,7 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   public static String EC_DIR;
   public static final String EC_TMP_DIR = "ec_tmp/";
   public static final String EC_TMP = "-ecTmp";
-  public static final String EC_POLICY = ErasureCodingAction.EC_POLICY_NAME;
+  public static final String EC_POLICY = "-policy";
   private Set<String> fileLock;
   private SmartConf conf;
   private MetaStore metaStore;
@@ -202,13 +204,22 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
 
   @Override
   public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     try {
-      String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
-      String currentSrcEcPolicyName = fileStatus.getErasureCodingPolicy().getName();
+      CompatibilityHelper compatibilityHelper =
+          CompatibilityHelperLoader.getHelper();
+      // For unec, if current policy ID is 0, which means replication, we
+      // speculate that action was executed successful.
+      if (actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
+        return
+            compatibilityHelper.getErasureCodingPolicy(fileStatus) == (byte) 0;
+      }
+      String currentSrcEcPolicyName =
+          compatibilityHelper.getErasureCodingPolicyName(fileStatus);
       String actionEcPolicyName = actionInfo.getArgs().get(EC_POLICY);
       return currentSrcEcPolicyName.equals(actionEcPolicyName);
-    } catch (IOException | NullPointerException e) {
+    } catch (IOException e) {
       LOG.warn("Failed to get file status or EC policy, suppose this action " +
           "was not successfully executed: {}", actionInfo.toString());
       return false;

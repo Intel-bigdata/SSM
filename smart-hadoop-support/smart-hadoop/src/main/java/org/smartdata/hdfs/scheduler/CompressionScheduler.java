@@ -226,10 +226,13 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     try {
-      String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
       FileState.FileType fileType =
           HadoopUtil.getFileState(dfsClient, path).getFileType();
+      if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+       return fileType == FileState.FileType.NORMAL;
+      }
       return fileType == FileState.FileType.COMPRESSION;
     } catch (IOException e) {
       LOG.warn("Failed to get file state, suppose this action was not " +

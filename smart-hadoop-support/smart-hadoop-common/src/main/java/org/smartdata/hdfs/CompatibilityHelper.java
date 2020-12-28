@@ -95,6 +95,8 @@ public interface CompatibilityHelper {
 
   byte getErasureCodingPolicy(HdfsFileStatus fileStatus);
 
+  String getErasureCodingPolicyName(HdfsFileStatus fileStatus);
+
   byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException;
 
   Map<Byte, String> getErasureCodingPolicies(DFSClient client) throws IOException;

@@ -77,6 +77,11 @@ public abstract class CompatibilityHelper2 implements CompatibilityHelper {
     return (byte) 0;
   }
 
+  @Override
+  public String getErasureCodingPolicyName(HdfsFileStatus fileStatus) {
+    return SmartConstants.REPLICATION_CODEC_NAME;
+  }
+
   public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {
     return (byte) 0;
   }

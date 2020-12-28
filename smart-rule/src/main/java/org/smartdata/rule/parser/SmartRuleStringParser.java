@@ -24,6 +24,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.model.CmdletDescriptor;
 import org.smartdata.model.rule.TranslateResult;
@@ -105,7 +106,7 @@ public class SmartRuleStringParser {
               "RS-6-3-1024k");
         }
       } else {
-        policy = "replication";
+        policy = SmartConstants.REPLICATION_CODEC_NAME;
       }
       repl = "ecPolicy != \"" + policy + "\"";
     }
