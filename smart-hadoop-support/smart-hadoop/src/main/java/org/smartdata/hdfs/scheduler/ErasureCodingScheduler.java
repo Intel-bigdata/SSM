@@ -214,11 +214,13 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       if (actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
         return
             compatibilityHelper.getErasureCodingPolicy(fileStatus) == (byte) 0;
+      } else if (actionInfo.getActionName().equals(EC_ACTION_ID)) {
+        String currentSrcEcPolicyName =
+            compatibilityHelper.getErasureCodingPolicyName(fileStatus);
+        String actionEcPolicyName = actionInfo.getArgs().get(EC_POLICY);
+        return currentSrcEcPolicyName.equals(actionEcPolicyName);
       }
-      String currentSrcEcPolicyName =
-          compatibilityHelper.getErasureCodingPolicyName(fileStatus);
-      String actionEcPolicyName = actionInfo.getArgs().get(EC_POLICY);
-      return currentSrcEcPolicyName.equals(actionEcPolicyName);
+      return false;
     } catch (IOException e) {
       LOG.warn("Failed to get file status or EC policy, suppose this action " +
           "was not successfully executed: {}", actionInfo.toString());

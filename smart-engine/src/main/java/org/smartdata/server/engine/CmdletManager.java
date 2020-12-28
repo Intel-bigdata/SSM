@@ -1376,7 +1376,8 @@ public class CmdletManager extends AbstractService {
               if (!isTimeout(actionInfo)) {
                 continue;
               }
-              // For timeout action, speculate its status.
+              // For timeout action, speculate its status and set result
+              // if needed.
               if (isSuccessfulBySpeculation(actionInfo)) {
                 ActionStatus actionStatus =
                     ActionStatusFactory.createSuccessActionStatus(

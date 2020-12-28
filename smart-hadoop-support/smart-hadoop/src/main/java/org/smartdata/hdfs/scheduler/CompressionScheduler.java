@@ -224,16 +224,26 @@ public class CompressionScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
+  /**
+   * Speculate action status and set result accordingly.
+   */
   @Override
   public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
     String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     try {
-      FileState.FileType fileType =
-          HadoopUtil.getFileState(dfsClient, path).getFileType();
+      FileState fileState = HadoopUtil.getFileState(dfsClient, path);
+      FileState.FileType fileType = fileState.getFileType();
       if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
        return fileType == FileState.FileType.NORMAL;
       }
-      return fileType == FileState.FileType.COMPRESSION;
+      // Recover action result for successful compress action.
+      if (fileType == FileState.FileType.COMPRESSION) {
+        CompressionFileInfo compressionFileInfo =
+            new CompressionFileInfo((CompressionFileState) fileState);
+        actionInfo.setResult(new Gson().toJson(compressionFileInfo));
+        return true;
+      }
+      return false;
     } catch (IOException e) {
       LOG.warn("Failed to get file state, suppose this action was not " +
           "successfully executed: {}", actionInfo.toString());

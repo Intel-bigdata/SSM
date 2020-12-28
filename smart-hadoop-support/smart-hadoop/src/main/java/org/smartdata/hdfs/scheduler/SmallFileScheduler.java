@@ -450,16 +450,41 @@ public class SmallFileScheduler extends ActionSchedulerService {
     return ScheduleResult.SUCCESS;
   }
 
+  /**
+   * Speculate action status and set result accordingly.
+   */
   @Override
   public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
     try {
+      boolean isSuccessful = true;
+      List<FileState> fileStateList = new ArrayList<>();
       // If any one small file is not compacted, return false.
       for (String path : getSmallFileList(actionInfo)) {
-        FileState.FileType fileType =
-            HadoopUtil.getFileState(dfsClient, path).getFileType();
-        if (fileType != FileState.FileType.COMPACT) {
-          return false;
+        FileState fileState = HadoopUtil.getFileState(dfsClient, path);
+        FileState.FileType fileType = fileState.getFileType();
+        if (!isExpectedFileState(fileType, actionInfo.getActionName())) {
+          isSuccessful = false;
+          break;
         }
+        // Only add compact file state.
+        if (actionInfo.getActionName().equals(COMPACT_ACTION_NAME)) {
+          fileStateList.add(fileState);
+        }
+      }
+      if (!isSuccessful) {
+        return false;
+      }
+      if (actionInfo.getActionName().equals(UNCOMPACT_ACTION_NAME)) {
+        return true;
+      }
+      // Recover action result for successful compact action.
+      if (actionInfo.getActionName().equals(COMPACT_ACTION_NAME)) {
+        List<CompactFileState> compactFileStates = new ArrayList<>();
+        assert fileStateList.size() == getSmallFileList(actionInfo).size();
+        for (FileState fileState : fileStateList) {
+          compactFileStates.add((CompactFileState) fileState);
+        }
+        actionInfo.setResult(new Gson().toJson(compactFileStates));
       }
       return true;
     } catch (IOException e) {
@@ -467,6 +492,14 @@ public class SmallFileScheduler extends ActionSchedulerService {
           "successfully executed: {}", actionInfo.toString());
       return false;
     }
+  }
+
+  public boolean isExpectedFileState(FileState.FileType fileType,
+      String actionName) {
+    if (actionName.equals(COMPACT_ACTION_NAME)) {
+      return fileType == FileState.FileType.COMPACT;
+    }
+    return fileType == FileState.FileType.NORMAL;
   }
 
   /**
