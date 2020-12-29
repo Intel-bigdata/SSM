@@ -65,7 +65,10 @@ public class ActionStatusFactory {
     }
     long finishTime = System.currentTimeMillis();
     long lastAid = cmdletInfo.getAids().get(cmdletInfo.getAids().size() - 1);
+    // Action result can be set by scheduler.
+    String result =
+        actionInfo.getResult() != null ? actionInfo.getResult() : "";
     return new ActionStatus(cid, aid == lastAid, aid,
-        SUCCESS_BY_SPECULATION_LOG, startTime, finishTime, null, true);
+        SUCCESS_BY_SPECULATION_LOG, startTime, finishTime, null, true, result);
   }
 }

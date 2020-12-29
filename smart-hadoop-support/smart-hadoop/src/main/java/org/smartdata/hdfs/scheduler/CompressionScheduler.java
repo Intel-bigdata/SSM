@@ -350,7 +350,13 @@ public class CompressionScheduler extends ActionSchedulerService {
     CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
         new TypeToken<CompressionFileInfo>() {
         }.getType());
-    CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
+    if (compressionFileInfo == null) {
+      LOG.error("CompressionFileInfo should NOT be null after successful " +
+          "execution!");
+      return;
+    }
+    CompressionFileState compressionFileState =
+        compressionFileInfo.getCompressionFileState();
     compressionFileState.setFileStage(FileState.FileStage.DONE);
     // Update metastore and then replace file with compressed one
     metaStore.insertUpdateFileState(compressionFileState);
