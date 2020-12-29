@@ -64,11 +64,13 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -1362,6 +1364,8 @@ public class CmdletManager extends AbstractService {
 
     public void run() {
       try {
+        Set<CmdletInfo> failedCmdlet = new HashSet<>();
+        Set<CmdletInfo> succeededCmdlet = new HashSet<>();
         List<Long> cids = new ArrayList<>();
         cids.addAll(idToLaunchCmdlet.keySet());
         for (Long cid : cids) {
@@ -1379,18 +1383,28 @@ public class CmdletManager extends AbstractService {
               // For timeout action, speculate its status and set result
               // if needed.
               if (isSuccessfulBySpeculation(actionInfo)) {
+                succeededCmdlet.add(cmdletInfo);
                 ActionStatus actionStatus =
                     ActionStatusFactory.createSuccessActionStatus(
                         cmdletInfo, actionInfo);
-                onStatusUpdate(actionStatus);
+                onActionStatusUpdate(actionStatus);
               } else {
+                failedCmdlet.add(cmdletInfo);
                 ActionStatus actionStatus =
                     ActionStatusFactory.createTimeoutActionStatus(
                         cmdletInfo, actionInfo);
-                onStatusUpdate(actionStatus);
+                onActionStatusUpdate(actionStatus);
               }
             }
           }
+        }
+        for (CmdletInfo cmdletInfo: failedCmdlet) {
+          cmdletInfo.setState(CmdletState.FAILED);
+          cmdletFinished(cmdletInfo.getCid());
+        }
+        for (CmdletInfo cmdletInfo: succeededCmdlet) {
+          cmdletInfo.setState(CmdletState.DONE);
+          cmdletFinished(cmdletInfo.getCid());
         }
       } catch (ActionException e) {
         LOG.error(e.getMessage());
