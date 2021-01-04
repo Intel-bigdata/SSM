@@ -139,6 +139,12 @@ public class SmallFileScheduler extends ActionSchedulerService {
   }
 
   @Override
+  public void recover(ActionInfo actionInfo) {
+    compactSmallFileLock.addAll(getSmallFileList(actionInfo));
+    containerFileLock.add(getContainerFile(actionInfo));
+  }
+
+  @Override
   public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
       throws IOException {
     // check args
@@ -147,8 +153,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
     }
     if (COMPACT_ACTION_NAME.equals(actionInfo.getActionName())) {
       // Check if container file is null
-      String containerFilePath = actionInfo.getArgs().get(
-          SmallFileCompactAction.CONTAINER_FILE);
+      String containerFilePath = getContainerFile(actionInfo);
       if (containerFilePath == null || containerFilePath.isEmpty()) {
         throw new IOException("Illegal container file path: " + containerFilePath);
       }
@@ -307,8 +312,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private ScheduleResult getCompactScheduleResult(ActionInfo actionInfo) {
     // Get container file and small file list of this action
-    String containerFilePath = actionInfo.getArgs().get(
-        SmallFileCompactAction.CONTAINER_FILE);
+    String containerFilePath = getContainerFile(actionInfo);
     ArrayList<String> smallFileList = new Gson().fromJson(
         actionInfo.getArgs().get(HdfsAction.FILE_PATH),
         new TypeToken<ArrayList<String>>() {
@@ -356,7 +360,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
       if (containerFilePermission == null) {
         Map<String, String> args = new HashMap<>(3);
         args.put(SmallFileCompactAction.CONTAINER_FILE,
-            actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE));
+            getContainerFile(actionInfo));
         args.put(SmallFileCompactAction.FILE_PATH,
             new Gson().toJson(smallFileList));
         args.put(SmallFileCompactAction.CONTAINER_FILE_PERMISSION,
@@ -386,8 +390,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
   private ScheduleResult getUncompactScheduleResult(ActionInfo actionInfo,
       LaunchAction action) {
     // Check if container file path is valid
-    String containerFilePath = actionInfo.getArgs().get(
-        SmallFileCompactAction.CONTAINER_FILE);
+    String containerFilePath = getContainerFile(actionInfo);
     if (containerFilePath == null || containerFilePath.isEmpty()) {
       LOG.debug("Illegal container file path: {}", containerFilePath);
       actionInfo.setResult("Illegal container file path: " + containerFilePath);
@@ -422,7 +425,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
         Map<String, String> args = new HashMap<>(2);
         args.put(HdfsAction.FILE_PATH, new Gson().toJson(smallFileList));
         args.put(SmallFileUncompactAction.CONTAINER_FILE,
-            actionInfo.getArgs().get(SmallFileUncompactAction.CONTAINER_FILE));
+            getContainerFile(actionInfo));
         action.setArgs(args);
         actionInfo.setArgs(args);
         afterSchedule(actionInfo);
@@ -547,8 +550,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private void handleCompactActionResult(ActionInfo actionInfo) {
     // Get container file path, small files, result of this action
-    String containerFilePath = actionInfo.getArgs().get(
-        SmallFileCompactAction.CONTAINER_FILE);
+    String containerFilePath = getContainerFile(actionInfo);
     List<String> smallFileList = new Gson().fromJson(
         actionInfo.getArgs().get(HdfsAction.FILE_PATH),
         new TypeToken<ArrayList<String>>() {
@@ -580,8 +582,7 @@ public class SmallFileScheduler extends ActionSchedulerService {
    */
   private void handleUncompactActionResult(ActionInfo actionInfo) {
     // Get container file path, small files, result of this action
-    String containerFilePath = actionInfo.getArgs().get(
-        SmallFileUncompactAction.CONTAINER_FILE);
+    String containerFilePath = getContainerFile(actionInfo);
 
     if (actionInfo.isSuccessful()) {
       containerFileCache.remove(containerFilePath);
@@ -617,6 +618,10 @@ public class SmallFileScheduler extends ActionSchedulerService {
     return new Gson().fromJson(actionInfo.getArgs().get(HdfsAction.FILE_PATH),
         new TypeToken<ArrayList<String>>() {
         }.getType());
+  }
+
+  public String getContainerFile(ActionInfo actionInfo) {
+    return actionInfo.getArgs().get(SmallFileCompactAction.CONTAINER_FILE);
   }
 
   /**

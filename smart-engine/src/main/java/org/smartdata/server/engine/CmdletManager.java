@@ -222,6 +222,8 @@ public class CmdletManager extends AbstractService {
           for (ActionInfo actionInfo: actionInfos) {
             actionInfo.setCreateTime(cmdletInfo.getGenerateTime());
             actionInfo.setFinishTime(System.currentTimeMillis());
+            // Recover scheduler status according to dispatched action.
+            recoverSchedulerStatus(actionInfo);
           }
           syncCmdAction(cmdletInfo, actionInfos);
         }
@@ -244,6 +246,12 @@ public class CmdletManager extends AbstractService {
       return;
     } catch (ParseException pe) {
       LOG.error("Failed to parse cmdlet string for tracking task", pe);
+    }
+  }
+
+  public void recoverSchedulerStatus(ActionInfo actionInfo) {
+    for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
+      p.recover(actionInfo);
     }
   }
 
@@ -351,7 +359,7 @@ public class CmdletManager extends AbstractService {
    * @return  true if the given user info equals the one recorded in metastore.
    * @throws MetaStoreException
    */
-  public boolean authentic (UserInfo userInfo) throws MetaStoreException {
+  public boolean authentic(UserInfo userInfo) throws MetaStoreException {
     try {
       UserInfo origin = metaStore.getUserInfoByUserName(userInfo.getUserName());
       if (origin == null) {

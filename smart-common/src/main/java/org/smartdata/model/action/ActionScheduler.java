@@ -81,4 +81,9 @@ public interface ActionScheduler {
    * Speculate whether timeout action is finished.
    */
   boolean isSuccessfulBySpeculation(ActionInfo actionInfo);
-}
+
+  /**
+   * Recover status, e.g., lock status.
+   */
+  void recover(ActionInfo actionInfo);
+  }

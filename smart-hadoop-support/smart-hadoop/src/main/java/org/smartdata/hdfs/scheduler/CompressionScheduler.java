@@ -54,7 +54,6 @@ import static org.smartdata.model.ActionInfo.OLD_FILE_ID;
 
 /**
  * A scheduler for compression/decompression action.
- *
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
