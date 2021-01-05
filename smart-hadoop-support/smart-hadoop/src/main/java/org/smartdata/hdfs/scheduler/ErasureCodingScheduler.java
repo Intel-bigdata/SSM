@@ -19,12 +19,15 @@ package org.smartdata.hdfs.scheduler;
 
 import com.google.common.util.concurrent.RateLimiter;
 import org.apache.hadoop.hdfs.DFSClient;
+import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.util.VersionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.SmartContext;
 import org.smartdata.conf.SmartConf;
 import org.smartdata.conf.SmartConfKeys;
+import org.smartdata.hdfs.CompatibilityHelper;
+import org.smartdata.hdfs.CompatibilityHelperLoader;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.*;
 import org.smartdata.metastore.MetaStore;
@@ -38,12 +41,13 @@ import org.smartdata.protocol.message.LaunchCmdlet;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import static org.smartdata.model.ActionInfo.OLD_FILE_ID;
 
 public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final Logger LOG = LoggerFactory.getLogger(ErasureCodingScheduler.class);
@@ -59,7 +63,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   public static final String EC_TMP = "-ecTmp";
   public static final String EC_POLICY = "-policy";
   private Set<String> fileLock;
-  private Map<String, Long> filePathToOldFid;
   private SmartConf conf;
   private MetaStore metaStore;
   private long throttleInMb;
@@ -80,7 +83,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
     ssmTmpDir = ssmTmpDir + (ssmTmpDir.endsWith("/") ? "" : "/");
     ErasureCodingScheduler.EC_DIR = ssmTmpDir + EC_TMP_DIR;
     fileLock = new HashSet<>();
-    filePathToOldFid = new HashMap<>();
   }
 
   public List<String> getSupportedActions() {
@@ -89,7 +91,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
 
   public void init() throws IOException {
     fileLock.clear();
-    filePathToOldFid.clear();
     try {
       final URI nnUri = HadoopUtil.getNameNodeUri(getContext().getConf());
       dfsClient = HadoopUtil.getDFSClient(nnUri, getContext().getConf());
@@ -100,12 +101,20 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
 
   @Override
   public void start() throws IOException {
-
   }
 
   @Override
   public void stop() throws IOException {
+  }
 
+  @Override
+  public void recover(ActionInfo actionInfo) {
+    if (!actionInfo.getActionName().equals(EC_ACTION_ID) &&
+        !actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
+      return;
+    }
+    String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    fileLock.add(filePath);
   }
 
   @Override
@@ -197,23 +206,71 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
       actionInfo.appendLog(ex.getMessage());
       return ScheduleResult.FAIL;
     }
-    afterSchedule(srcPath);
+    afterSchedule(actionInfo);
     return ScheduleResult.SUCCESS;
+  }
+
+  @Override
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    try {
+      HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
+      CompatibilityHelper compatibilityHelper =
+          CompatibilityHelperLoader.getHelper();
+      // For unec, if current policy ID is 0, which means replication, we
+      // speculate that action was executed successful.
+      if (actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
+        return
+            compatibilityHelper.getErasureCodingPolicy(fileStatus) == (byte) 0;
+      } else if (actionInfo.getActionName().equals(EC_ACTION_ID)) {
+        String currentSrcEcPolicyName =
+            compatibilityHelper.getErasureCodingPolicyName(fileStatus);
+        String actionEcPolicyName = actionInfo.getArgs().get(EC_POLICY);
+        return currentSrcEcPolicyName.equals(actionEcPolicyName);
+      }
+      return false;
+    } catch (IOException e) {
+      LOG.warn("Failed to get file status or EC policy, suppose this action " +
+          "was not successfully executed: {}", actionInfo.toString());
+      return false;
+    }
   }
 
   /**
    * For EC/UnEC action, the src file will be locked and
    * the old file id is kept in a map.
    */
-  public void afterSchedule(String srcPath) {
+  public void afterSchedule(ActionInfo actionInfo) {
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     // lock the file only if ec or unec action is scheduled
     fileLock.add(srcPath);
     try {
-      filePathToOldFid.put(srcPath, dfsClient.getFileInfo(srcPath).getFileId());
+      setOldFileId(actionInfo);
     } catch (Throwable t) {
       // We think it may not be a big issue, so just warn user this issue.
       LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
     }
+  }
+
+  /**
+   * Set old file id which will be persisted into DB. For action status
+   * recovery case, the old file id can be acquired for taking over old file's
+   * data temperature.
+   */
+  private void setOldFileId(ActionInfo actionInfo) throws IOException {
+    if (actionInfo.getArgs().get(OLD_FILE_ID) != null &&
+        !actionInfo.getArgs().get(OLD_FILE_ID).isEmpty()) {
+      return;
+    }
+    List<Long> oids = new ArrayList<>();
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    try {
+      oids.add(dfsClient.getFileInfo(path).getFileId());
+    } catch (IOException e) {
+      LOG.warn("Failed to set old fid for taking over data temperature!");
+      throw e;
+    }
+    actionInfo.setOldFileIds(oids);
   }
 
   private String createTmpName(LaunchAction action) {
@@ -249,13 +306,12 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
           return;
         }
         // Task over access count after successful execution.
-        takeOverAccessCount(filePath);
+        takeOverAccessCount(actionInfo);
       } finally {
         // As long as the action is finished, regardless of success or not,
-        // we should remove the corresponding record from fileLock & filePathToOldFid.
+        // we should remove the corresponding record from fileLock.
         if (filePath != null) {
           fileLock.remove(filePath);
-          filePathToOldFid.remove(filePath);
         }
       }
     }
@@ -266,16 +322,18 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
    * to keep old file's access count and let new file takes over this metric. E.g.,
    * with (un)EC/(de)Compress/(un)Compact action, a new file will overwrite the old file.
    */
-  public void takeOverAccessCount(String filePath) {
+  public void takeOverAccessCount(ActionInfo actionInfo) {
     try {
-      long oldFid = filePathToOldFid.get(filePath);
+      String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+      long oldFid = actionInfo.getOldFileIds().get(0);
       // The new fid may have not been updated in metastore, so
       // we get it from dfs client.
       long newFid = dfsClient.getFileInfo(filePath).getFileId();
       metaStore.updateAccessCountTableFid(oldFid, newFid);
     } catch (Exception e) {
-      LOG.warn("Failed to take over file access count, which can make the " +
-          "measure for data temperature inaccurate!", e);
+      LOG.warn("Failed to take over file access count for all tables, " +
+              "which may make the measurement for data temperature inaccurate!",
+          e.getMessage());
     }
   }
 

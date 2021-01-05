@@ -32,6 +32,10 @@ public class CompressionFileInfo {
     this(needReplace, null, compressionFileState);
   }
 
+  public CompressionFileInfo(CompressionFileState compressionFileState) {
+    this(false, null, compressionFileState);
+  }
+
   public CompressionFileInfo(boolean needReplace, String tempPath,
       CompressionFileState compressionFileState) {
     this.needReplace = needReplace;

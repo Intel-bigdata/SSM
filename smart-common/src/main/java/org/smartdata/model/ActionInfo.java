@@ -20,10 +20,15 @@ package org.smartdata.model;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ActionInfo {
+  // Old file id
+  public static final String OLD_FILE_ID = "-oid";
   private long actionId;
   private long cmdletId;
   private String actionName;
@@ -105,6 +110,28 @@ public class ActionInfo {
     args = gson.fromJson(jsonArgs,
         new TypeToken<Map<String, String>>() {
         }.getType());
+  }
+
+  // Applicable to some actions that need to create new file to replace
+  // the old one.
+  public void setOldFileIds(List<Long> oids) {
+    getArgs().put(OLD_FILE_ID, toJsonString(oids));
+  }
+
+  // Applicable to some actions that need to create new file to replace
+  // the old one.
+  public List<Long> getOldFileIds() {
+    return fromJsonString(
+        Optional.ofNullable(getArgs().get(OLD_FILE_ID)).orElse(""));
+  }
+
+  public static String toJsonString(List<Long> oids) {
+    return new Gson().toJson(oids);
+  }
+
+  public static List<Long> fromJsonString(String oIdJson) {
+    return new Gson().fromJson(oIdJson,
+        new TypeToken<ArrayList<Long>>(){}.getType());
   }
 
   public String getResult() {

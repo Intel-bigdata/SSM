@@ -37,6 +37,7 @@ import org.apache.hadoop.hdfs.server.namenode.ErasureCodingPolicyManager;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeStorage;
 import org.apache.hadoop.hdfs.server.protocol.StorageReport;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.SmartConstants;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.StorageGroup;
 import org.smartdata.hdfs.action.move.DBlockStriped;
@@ -225,6 +226,15 @@ public class CompatibilityHelper31 implements CompatibilityHelper {
       return (byte) 0;
     }
     return fileStatus.getErasureCodingPolicy().getId();
+  }
+
+  @Override
+  public String getErasureCodingPolicyName(HdfsFileStatus fileStatus) {
+    ErasureCodingPolicy erasureCodingPolicy = fileStatus.getErasureCodingPolicy();
+    if (erasureCodingPolicy == null) {
+      return SmartConstants.REPLICATION_CODEC_NAME;
+    }
+    return erasureCodingPolicy.getName();
   }
 
   @Override

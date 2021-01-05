@@ -29,6 +29,7 @@ import org.apache.hadoop.hdfs.security.token.block.BlockTokenIdentifier;
 import org.apache.hadoop.hdfs.server.balancer.KeyManager;
 import org.apache.hadoop.hdfs.server.common.HdfsServerConstants;
 import org.apache.hadoop.security.token.Token;
+import org.smartdata.SmartConstants;
 import org.smartdata.hdfs.action.move.DBlock;
 import org.smartdata.hdfs.action.move.MLocation;
 import org.smartdata.hdfs.action.move.StorageGroup;
@@ -75,6 +76,11 @@ public abstract class CompatibilityHelper2 implements CompatibilityHelper {
   public byte getErasureCodingPolicy(HdfsFileStatus fileStatus) {
     // for HDFS2.x, the erasure policy is always replication whose id is 0 in HDFS.
     return (byte) 0;
+  }
+
+  @Override
+  public String getErasureCodingPolicyName(HdfsFileStatus fileStatus) {
+    return SmartConstants.REPLICATION_CODEC_NAME;
   }
 
   public byte getErasureCodingPolicyByName(DFSClient client, String ecPolicyName) throws IOException {

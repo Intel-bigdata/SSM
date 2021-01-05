@@ -104,4 +104,6 @@ public class SmartConstants {
       "org.smartdata.hadoop.filesystem.SmartFileSystem";
   public static final String DISTRIBUTED_FILE_SYSTEM =
       "org.apache.hadoop.hdfs.DistributedFileSystem";
+
+  public static final String REPLICATION_CODEC_NAME = "replication";
 }

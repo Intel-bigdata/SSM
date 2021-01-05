@@ -44,16 +44,16 @@ import org.smartdata.protocol.message.LaunchCmdlet;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import static org.smartdata.model.ActionInfo.OLD_FILE_ID;
 
 /**
  * A scheduler for compression/decompression action.
- *
  */
 public class CompressionScheduler extends ActionSchedulerService {
   private DFSClient dfsClient;
@@ -70,7 +70,6 @@ public class CompressionScheduler extends ActionSchedulerService {
   public static final String COMPRESS_TMP_DIR = "compress_tmp/";
   private SmartConf conf;
   private Set<String> fileLock;
-  private Map<String, Long> filePathToOldFid;
 
   public static final Logger LOG =
       LoggerFactory.getLogger(CompressionScheduler.class);
@@ -86,7 +85,6 @@ public class CompressionScheduler extends ActionSchedulerService {
     CompressionScheduler.COMPRESS_DIR =
         new File(ssmWorkDir, COMPRESS_TMP_DIR).getAbsolutePath();
     this.fileLock = new HashSet<>();
-    this.filePathToOldFid = new HashMap<>();
   }
 
   @Override
@@ -105,6 +103,16 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public void stop() throws IOException {
+  }
+
+  @Override
+  public void recover(ActionInfo actionInfo) {
+    if (!actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+        !actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+      return;
+    }
+    String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    fileLock.add(filePath);
   }
 
   @Override
@@ -215,26 +223,74 @@ public class CompressionScheduler extends ActionSchedulerService {
 
   @Override
   public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
-                                   LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
+      LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     // For compression, add compressTmp argument. This arg is assigned by CompressionScheduler
     // and persisted to MetaStore for easily debugging.
     String tmpName = createTmpName(action);
     action.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
     actionInfo.getArgs().put(COMPRESS_TMP, new File(COMPRESS_DIR, tmpName).getAbsolutePath());
-    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-    afterSchedule(srcPath);
+    afterSchedule(actionInfo);
     return ScheduleResult.SUCCESS;
   }
 
-  public void afterSchedule(String srcPath) {
+  public void afterSchedule(ActionInfo actionInfo) {
+    String srcPath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
     // lock the file only if ec or unec action is scheduled
     fileLock.add(srcPath);
     try {
-      filePathToOldFid.put(srcPath, dfsClient.getFileInfo(srcPath).getFileId());
+      setOldFileId(actionInfo);
     } catch (Throwable t) {
       // We think it may not be a big issue, so just warn user this issue.
       LOG.warn("Failed in maintaining old fid for taking over old data's temperature.");
     }
+  }
+
+  /**
+   * Speculate action status and set result accordingly.
+   */
+  @Override
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    try {
+      FileState fileState = HadoopUtil.getFileState(dfsClient, path);
+      FileState.FileType fileType = fileState.getFileType();
+      if (actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+       return fileType == FileState.FileType.NORMAL;
+      }
+      // Recover action result for successful compress action.
+      if (fileType == FileState.FileType.COMPRESSION) {
+        CompressionFileInfo compressionFileInfo =
+            new CompressionFileInfo((CompressionFileState) fileState);
+        actionInfo.setResult(new Gson().toJson(compressionFileInfo));
+        return true;
+      }
+      return false;
+    } catch (IOException e) {
+      LOG.warn("Failed to get file state, suppose this action was not " +
+          "successfully executed: {}", actionInfo.toString());
+      return false;
+    }
+  }
+
+  /**
+   * Set old file id which will be persisted into DB. For action status
+   * recovery case, the old file id can be acquired for taking over old file's
+   * data temperature.
+   */
+  private void setOldFileId(ActionInfo actionInfo) throws IOException {
+    if (actionInfo.getArgs().get(OLD_FILE_ID) != null &&
+        !actionInfo.getArgs().get(OLD_FILE_ID).isEmpty()) {
+      return;
+    }
+    List<Long> oids = new ArrayList<>();
+    String path = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    try {
+      oids.add(dfsClient.getFileInfo(path).getFileId());
+    } catch (IOException e) {
+      LOG.warn("Failed to set old fid for taking over data temperature!");
+      throw e;
+    }
+    actionInfo.setOldFileIds(oids);
   }
 
   @Override
@@ -262,7 +318,7 @@ public class CompressionScheduler extends ActionSchedulerService {
         onDecompressActionFinished(actionInfo);
       }
       // Take over access count after successful execution.
-      takeOverAccessCount(srcPath);
+      takeOverAccessCount(actionInfo);
     } catch (MetaStoreException e) {
       LOG.error("Compression action failed in metastore!", e);
     } catch (Exception e) {
@@ -270,7 +326,6 @@ public class CompressionScheduler extends ActionSchedulerService {
     } finally {
       // Remove the record as long as the action is finished.
       fileLock.remove(srcPath);
-      filePathToOldFid.remove(srcPath);
     }
   }
 
@@ -279,22 +334,23 @@ public class CompressionScheduler extends ActionSchedulerService {
    * to keep old file's access count and let new file takes over this metric. E.g.,
    * with (un)EC/(de)Compress/(un)Compact action, a new file will overwrite the old file.
    */
-  public void takeOverAccessCount(String filePath) {
+  public void takeOverAccessCount(ActionInfo actionInfo) {
     try {
-      long oldFid = filePathToOldFid.get(filePath);
+      String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+      long oldFid = actionInfo.getOldFileIds().get(0);
       // The new fid may have not been updated in metastore, so
       // we get it from dfs client.
       long newFid = dfsClient.getFileInfo(filePath).getFileId();
       metaStore.updateAccessCountTableFid(oldFid, newFid);
     } catch (Exception e) {
-      LOG.warn("Failed to take over file access count, which can make the " +
-          "measure for data temperature inaccurate!", e);
+      LOG.warn("Failed to take over file access count for all tables, " +
+              "which may make the measurement for data temperature inaccurate!",
+          e.getMessage());
     }
   }
 
   private void onCompressActionFinished(ActionInfo actionInfo)
       throws MetaStoreException {
-
     if (!actionInfo.getActionName().equals(COMPRESSION_ACTION_ID)) {
       return;
     }
@@ -303,7 +359,13 @@ public class CompressionScheduler extends ActionSchedulerService {
     CompressionFileInfo compressionFileInfo = gson.fromJson(compressionInfoJson,
         new TypeToken<CompressionFileInfo>() {
         }.getType());
-    CompressionFileState compressionFileState = compressionFileInfo.getCompressionFileState();
+    if (compressionFileInfo == null) {
+      LOG.error("CompressionFileInfo should NOT be null after successful " +
+          "execution!");
+      return;
+    }
+    CompressionFileState compressionFileState =
+        compressionFileInfo.getCompressionFileState();
     compressionFileState.setFileStage(FileState.FileStage.DONE);
     // Update metastore and then replace file with compressed one
     metaStore.insertUpdateFileState(compressionFileState);

@@ -37,23 +37,37 @@ public abstract class ActionSchedulerService extends AbstractService implements 
     this.metaStore = metaStore;
   }
 
+  @Override
   public boolean onSubmit(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex)
       throws IOException {
     return true;
   }
 
+  @Override
   public ScheduleResult onSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo,
       LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
     return ScheduleResult.SUCCESS;
   }
 
+  @Override
   public void postSchedule(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex,
       ScheduleResult result) {
   }
 
+  @Override
   public void onPreDispatch(LaunchCmdlet cmdlet, LaunchAction action, int actionIndex) {
   }
 
+  @Override
   public void onActionFinished(CmdletInfo cmdletInfo, ActionInfo actionInfo, int actionIndex) {
+  }
+
+  @Override
+  public boolean isSuccessfulBySpeculation(ActionInfo actionInfo) {
+    return false;
+  }
+
+  @Override
+  public void recover(ActionInfo actionInfo) {
   }
 }

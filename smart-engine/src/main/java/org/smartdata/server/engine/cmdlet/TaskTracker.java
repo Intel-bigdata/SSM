@@ -54,7 +54,7 @@ public class TaskTracker {
    * @param cid the ID of the finished Cmdlet.
    */
   public void untrack(long cid) {
-    Optional.of(cidToCmdDesptor.remove(cid)).ifPresent(
+    Optional.ofNullable(cidToCmdDesptor.remove(cid)).ifPresent(
         cmdDesptor -> tacklingCmdDesptors.remove(cmdDesptor));
   }
 

@@ -52,7 +52,8 @@ public class SmallFileUncompactAction extends HdfsAction {
   private String xAttrNameCheckSum = null;
   private String containerFile = null;
   private DFSClient smartDFSClient = null;
-  public static final String CONTAINER_FILE = "-containerFile";
+  public static final String CONTAINER_FILE =
+      SmallFileCompactAction.CONTAINER_FILE;
 
   @Override
   public void init(Map<String, String> args) {
