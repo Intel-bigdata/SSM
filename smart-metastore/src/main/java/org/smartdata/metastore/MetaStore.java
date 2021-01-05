@@ -464,13 +464,10 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
 
   public void deleteAccessCountTable(
     AccessCountTable table) throws MetaStoreException {
-    accessCountLock.lock();
     try {
       accessCountDao.delete(table);
     } catch (Exception e) {
       throw new MetaStoreException(e);
-    } finally {
-      accessCountLock.unlock();
     }
   }
 

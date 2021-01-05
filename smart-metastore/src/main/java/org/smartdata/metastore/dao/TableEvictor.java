@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.smartdata.metastore.MetaStore;
 import org.smartdata.metastore.MetaStoreException;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 public abstract class TableEvictor {
   public static final Logger LOG = LoggerFactory.getLogger(TableEvictor.class);
   private MetaStore metaStore;
@@ -31,12 +33,20 @@ public abstract class TableEvictor {
   }
 
   public void dropTable(AccessCountTable accessCountTable) {
+    ReentrantLock accessCountLock = metaStore.getAccessCountLock();
+    if (accessCountLock != null) {
+      accessCountLock.lock();
+    }
     try {
       this.metaStore.dropTable(accessCountTable.getTableName());
       this.metaStore.deleteAccessCountTable(accessCountTable);
       LOG.debug("Dropped access count table " + accessCountTable.getTableName());
     } catch (MetaStoreException e) {
       LOG.error("Drop access count table {} failed", accessCountTable.getTableName(), e);
+    } finally {
+      if (accessCountLock != null) {
+        accessCountLock.unlock();
+      }
     }
   }
 
