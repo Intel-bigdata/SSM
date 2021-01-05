@@ -235,6 +235,7 @@ public class CmdletManager extends AbstractService {
           CmdletDescriptor cmdletDescriptor =
                   CmdletDescriptor.fromCmdletString(cmdletInfo.getParameters());
           cmdletDescriptor.setRuleId(cmdletInfo.getRid());
+          // Pending task also needs to be tracked.
           tracker.track(cmdletInfo.getCid(), cmdletDescriptor);
           LOG.debug(String.format("Reload pending cmdlet: {}", cmdletInfo));
           List<ActionInfo> actionInfos = getActions(cmdletInfo.getAids());
@@ -249,7 +250,18 @@ public class CmdletManager extends AbstractService {
     }
   }
 
+  /**
+   * Only recover scheduler status according to dispatched task.
+   */
   public void recoverSchedulerStatus(ActionInfo actionInfo) {
+    try {
+      CmdletInfo cmdletInfo = getCmdletInfo(actionInfo.getCmdletId());
+      if (cmdletInfo.getState() != CmdletState.DISPATCHED) {
+        return;
+      }
+    } catch (IOException e) {
+      return;
+    }
     for (ActionScheduler p : schedulers.get(actionInfo.getActionName())) {
       p.recover(actionInfo);
     }
