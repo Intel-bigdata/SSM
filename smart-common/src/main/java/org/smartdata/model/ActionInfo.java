@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class ActionInfo {
   // Old file id
@@ -120,7 +121,8 @@ public class ActionInfo {
   // Applicable to some actions that need to create new file to replace
   // the old one.
   public List<Long> getOldFileIds() {
-    return fromJsonString(getArgs().get(OLD_FILE_ID));
+    return fromJsonString(
+        Optional.ofNullable(getArgs().get(OLD_FILE_ID)).orElse(""));
   }
 
   public static String toJsonString(List<Long> oids) {

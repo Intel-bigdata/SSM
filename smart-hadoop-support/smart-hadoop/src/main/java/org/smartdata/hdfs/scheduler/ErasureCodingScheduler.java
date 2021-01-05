@@ -325,7 +325,6 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
   public void takeOverAccessCount(ActionInfo actionInfo) {
     try {
       String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
-      assert actionInfo.getOldFileIds().size() == 1;
       long oldFid = actionInfo.getOldFileIds().get(0);
       // The new fid may have not been updated in metastore, so
       // we get it from dfs client.
