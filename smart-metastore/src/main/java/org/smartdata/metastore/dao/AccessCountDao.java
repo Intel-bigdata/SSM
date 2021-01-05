@@ -169,20 +169,25 @@ public class AccessCountDao {
     jdbcTemplate.execute(sql);
   }
 
-  public void updateFid(long fidSrc, long fidDest) throws Exception {
-    int i = 0;
+  public void updateFid(long fidSrc, long fidDest) throws SQLException {
+    int failedNum = 0;
     JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
-    for (AccessCountTable table : getAllSortedTables()) {
+    List<AccessCountTable> accessCountTables = getAllSortedTables();
+    for (AccessCountTable table : accessCountTables) {
       String sql = String.format("update %s set %s=%s where %s=%s", table.getTableName(),
           AccessCountDao.FILE_FIELD, fidDest, AccessCountDao.FILE_FIELD, fidSrc);
       try {
         jdbcTemplate.execute(sql);
       } catch (Exception e) {
-        i++;
+        failedNum++;
       }
     }
-    if (i > 0) {
-      throw new Exception("Not updated table number: " + i);
+    // Otherwise, ignore the exception because table evictor can evict access
+    // count tables, which is not synchronized. Even so, there is no impact on
+    // the measurement for data temperature.
+    if (failedNum == accessCountTables.size()) {
+      // Throw exception if all tables are not updated.
+      throw new SQLException("Failed to update fid!");
     }
   }
 
