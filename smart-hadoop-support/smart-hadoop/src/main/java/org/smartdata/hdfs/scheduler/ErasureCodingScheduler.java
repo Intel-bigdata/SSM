@@ -101,12 +101,20 @@ public class ErasureCodingScheduler extends ActionSchedulerService {
 
   @Override
   public void start() throws IOException {
-
   }
 
   @Override
   public void stop() throws IOException {
+  }
 
+  @Override
+  public void recover(ActionInfo actionInfo) {
+    if (!actionInfo.getActionName().equals(EC_ACTION_ID) &&
+        !actionInfo.getActionName().equals(UNEC_ACTION_ID)) {
+      return;
+    }
+    String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    fileLock.add(filePath);
   }
 
   @Override

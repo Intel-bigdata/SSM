@@ -140,6 +140,10 @@ public class SmallFileScheduler extends ActionSchedulerService {
 
   @Override
   public void recover(ActionInfo actionInfo) {
+    if (!actionInfo.getActionName().equals(COMPACT_ACTION_NAME) &&
+        !actionInfo.getActionName().equals(UNCOMPACT_ACTION_NAME)) {
+      return;
+    }
     compactSmallFileLock.addAll(getSmallFileList(actionInfo));
     containerFileLock.add(getContainerFile(actionInfo));
   }

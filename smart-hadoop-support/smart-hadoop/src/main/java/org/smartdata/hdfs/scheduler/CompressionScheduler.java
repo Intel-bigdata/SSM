@@ -106,6 +106,16 @@ public class CompressionScheduler extends ActionSchedulerService {
   }
 
   @Override
+  public void recover(ActionInfo actionInfo) {
+    if (!actionInfo.getActionName().equals(COMPRESSION_ACTION_ID) &&
+        !actionInfo.getActionName().equals(DECOMPRESSION_ACTION_ID)) {
+      return;
+    }
+    String filePath = actionInfo.getArgs().get(HdfsAction.FILE_PATH);
+    fileLock.add(filePath);
+  }
+
+  @Override
   public List<String> getSupportedActions() {
     return actions;
   }
