@@ -150,9 +150,12 @@ public class CmdletManager extends AbstractService {
 
     int reportPeriod = context.getConf().getInt(SmartConfKeys.SMART_STATUS_REPORT_PERIOD_KEY,
         SmartConfKeys.SMART_STATUS_REPORT_PERIOD_DEFAULT);
+    // Max interval of status report, by default 500ms.
     int maxInterval = reportPeriod * context.getConf().getInt(
         SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_KEY,
         SmartConfKeys.SMART_STATUS_REPORT_PERIOD_MULTIPLIER_DEFAULT);
+    // TIMEOUT_MULTIPLIER * maxInterval, 50s by default, is a potential timeout
+    // value. And the least timeout value is 30s according to the below code.
     this.timeout = TIMEOUT_MULTIPLIER * maxInterval < TIMEOUT_MIN_MILLISECOND
         ? TIMEOUT_MIN_MILLISECOND : TIMEOUT_MULTIPLIER * maxInterval;
   }
