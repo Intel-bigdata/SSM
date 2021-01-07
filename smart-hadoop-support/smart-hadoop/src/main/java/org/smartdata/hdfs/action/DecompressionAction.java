@@ -137,13 +137,13 @@ public class DecompressionAction extends HdfsAction {
       if (readSize == -1) {
         break;
       }
-      out.write(buff, 0, copySize);
+      out.write(buff, 0, readSize);
       remainSize -= readSize;
       if (readSize != copySize) {
-        throw new IOException("Unexpected!");
+        LOG.warn("readSize={}, copySize={}", readSize, copySize);
       }
       if (remainSize < 0) {
-        throw new IOException("Unexpected!");
+        LOG.warn("Unexpected!");
       }
       if (remainSize == 0) {
         LOG.warn("No data remains!");
