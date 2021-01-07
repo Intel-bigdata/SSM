@@ -127,18 +127,20 @@ public class DecompressionAction extends HdfsAction {
     }
   }
 
-  private void outputDecompressedData(InputStream in,
-      OutputStream out, long length)
-      throws IOException {
+  private void outputDecompressedData(InputStream in, OutputStream out,
+      long length) throws IOException {
     byte[] buff = new byte[buffSize];
-    long  remainSize = length;
+    long remainSize = length;
     while (remainSize != 0) {
       int copySize = remainSize < buffSize ? (int) remainSize : buffSize;
+      // readSize may be smaller than copySize. Here, readSize is the actual
+      // number of bytes read to buff.
       int readSize = in.read(buff, 0, copySize);
       if (readSize == -1) {
         break;
       }
-      out.write(buff, 0, copySize);
+      // Use readSize instead of copySize.
+      out.write(buff, 0, readSize);
       remainSize -= readSize;
       this.progress = (float) (length - remainSize) / length;
     }
