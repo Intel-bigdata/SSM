@@ -139,6 +139,15 @@ public class DecompressionAction extends HdfsAction {
       }
       out.write(buff, 0, copySize);
       remainSize -= readSize;
+      if (readSize != copySize) {
+        throw new IOException("Unexpected!");
+      }
+      if (remainSize < 0) {
+        throw new IOException("Unexpected!");
+      }
+      if (remainSize == 0) {
+        LOG.warn("No data remains!");
+      }
       this.progress = (float) (length - remainSize) / length;
     }
   }
