@@ -133,21 +133,15 @@ public class DecompressionAction extends HdfsAction {
     long remainSize = length;
     while (remainSize != 0) {
       int copySize = remainSize < buffSize ? (int) remainSize : buffSize;
+      // readSize may be smaller than copySize. Here, readSize is the actual
+      // number of bytes read to buff.
       int readSize = in.read(buff, 0, copySize);
       if (readSize == -1) {
         break;
       }
+      // Use readSize instead of copySize.
       out.write(buff, 0, readSize);
       remainSize -= readSize;
-      if (readSize != copySize) {
-        LOG.warn("readSize={}, copySize={}", readSize, copySize);
-      }
-      if (remainSize < 0) {
-        LOG.warn("Unexpected!");
-      }
-      if (remainSize == 0) {
-        LOG.warn("No data remains!");
-      }
       this.progress = (float) (length - remainSize) / length;
     }
   }
