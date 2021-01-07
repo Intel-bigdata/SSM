@@ -232,7 +232,7 @@ public class CompressionAction extends HdfsAction {
   private int getActualBuffSize(long fileSize) {
     // The capacity of originalPos and compressedPos is maxSplit (1000, by default) in database
     // Calculated by max number of splits.
-    int calculatedBufferSize = (int) (fileSize / maxSplit);
+    int calculatedBufferSize = ((int) (fileSize / (bufferSize * maxSplit)) + 1) * bufferSize;
     LOG.debug("Calculated buffer size: " + calculatedBufferSize);
     LOG.debug("MaxSplit: " + maxSplit);
     // Determine the actual buffer size
