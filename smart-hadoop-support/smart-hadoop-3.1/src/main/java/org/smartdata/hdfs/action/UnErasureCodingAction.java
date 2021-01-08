@@ -43,8 +43,6 @@ import java.util.Map;
 public class UnErasureCodingAction extends ErasureCodingBase {
   private static final Logger LOG =
       LoggerFactory.getLogger(UnErasureCodingAction.class);
-  private String ecPolicyName;
-  private SmartConf conf;
 
   @Override
   public void init(Map<String, String> args) {
@@ -90,7 +88,7 @@ public class UnErasureCodingAction extends ErasureCodingBase {
       return;
     }
     try {
-      convert(conf, ecPolicyName);
+      convert(fileStatus);
       setAttributes(srcPath, fileStatus, ecTmpPath);
       dfsClient.rename(ecTmpPath, srcPath, Options.Rename.OVERWRITE);
       appendLog(CONVERT_RESULT);

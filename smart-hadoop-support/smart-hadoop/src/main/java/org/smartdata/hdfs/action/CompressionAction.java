@@ -131,27 +131,26 @@ public class CompressionAction extends HdfsAction {
           "Failed to execute Compression Action: the given file doesn't exist!");
     }
 
+    HdfsFileStatus srcFileStatus = dfsClient.getFileInfo(filePath);
     // Consider directory case.
-    if (dfsClient.getFileInfo(filePath).isDir()) {
+    if (srcFileStatus.isDir()) {
       appendLog("Compression is not applicable to a directory.");
       return;
     }
-
     // Generate compressed file
-    HdfsFileStatus srcFile = dfsClient.getFileInfo(filePath);
     compressionFileState = new CompressionFileState(filePath, bufferSize, compressCodec);
-    compressionFileState.setOriginalLength(srcFile.getLen());
+    compressionFileState.setOriginalLength(srcFileStatus.getLen());
 
     OutputStream appendOut = null;
     DFSInputStream in = null;
     OutputStream out = null;
     try {
-      if (srcFile.getLen() == 0) {
+      if (srcFileStatus.getLen() == 0) {
         compressionFileInfo = new CompressionFileInfo(false, compressionFileState);
       } else {
-        short replication = srcFile.getReplication();
-        long blockSize = srcFile.getBlockSize();
-        long fileSize = srcFile.getLen();
+        short replication = srcFileStatus.getReplication();
+        long blockSize = srcFileStatus.getBlockSize();
+        long fileSize = srcFileStatus.getLen();
         appendLog("File length: " + fileSize);
         bufferSize = getActualBuffSize(fileSize);
 
@@ -167,18 +166,18 @@ public class CompressionAction extends HdfsAction {
         // Keep storage policy consistent.
         // The below statement is not supported on Hadoop-2.7.3 or CDH-5.10.1
         // String storagePolicyName = dfsClient.getStoragePolicy(filePath).getName();
-        byte storagePolicyId = dfsClient.getFileInfo(filePath).getStoragePolicy();
+        byte storagePolicyId = srcFileStatus.getStoragePolicy();
         String storagePolicyName = SmartConstants.STORAGE_POLICY_MAP.get(storagePolicyId);
         if (!storagePolicyName.equals("UNDEF")) {
           dfsClient.setStoragePolicy(compressTmpPath, storagePolicyName);
         }
 
         compress(in, out);
-        HdfsFileStatus destFile = dfsClient.getFileInfo(compressTmpPath);
-        dfsClient.setOwner(compressTmpPath, srcFile.getOwner(), srcFile.getGroup());
-        dfsClient.setPermission(compressTmpPath, srcFile.getPermission());
-        compressionFileState.setCompressedLength(destFile.getLen());
-        appendLog("Compressed file length: " + destFile.getLen());
+        HdfsFileStatus destFileStatus = dfsClient.getFileInfo(compressTmpPath);
+        dfsClient.setOwner(compressTmpPath, srcFileStatus.getOwner(), srcFileStatus.getGroup());
+        dfsClient.setPermission(compressTmpPath, srcFileStatus.getPermission());
+        compressionFileState.setCompressedLength(destFileStatus.getLen());
+        appendLog("Compressed file length: " + destFileStatus.getLen());
         compressionFileInfo =
             new CompressionFileInfo(true, compressTmpPath, compressionFileState);
       }
