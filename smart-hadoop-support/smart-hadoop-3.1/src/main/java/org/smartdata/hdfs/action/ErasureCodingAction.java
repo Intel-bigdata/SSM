@@ -53,9 +53,6 @@ public class ErasureCodingAction extends ErasureCodingBase {
       LoggerFactory.getLogger(ErasureCodingAction.class);
   public static final String EC_POLICY_NAME = "-policy";
 
-  private SmartConf conf;
-  private String ecPolicyName;
-
   @Override
   public void init(Map<String, String> args) {
     super.init(args);
@@ -126,7 +123,7 @@ public class ErasureCodingAction extends ErasureCodingBase {
         outputStream =
             dfsClient.append(srcPath, bufferSize, EnumSet.of(CreateFlag.APPEND), null, null);
       }
-      convert(conf, ecPolicyName);
+      convert(fileStatus);
       /**
        * The append operation will change the modification time accordingly,
        * so we use the FileStatus obtained before append to set ecTmp file's most attributes

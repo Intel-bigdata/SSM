@@ -45,22 +45,24 @@ abstract public class ErasureCodingBase extends HdfsAction {
   protected String ecTmpPath;
   protected int bufferSize = 1024 * 1024;
   protected float progress;
+  protected SmartConf conf;
+  protected String ecPolicyName;
   // The value for -ecTmp is assigned by ErasureCodingScheduler.
   public static final String EC_TMP = "-ecTmp";
   public static final String REPLICATION_POLICY_NAME =
       SystemErasureCodingPolicies.getReplicationPolicy().getName();
 
-  protected void convert(SmartConf conf, String ecPolicyName) throws ActionException {
+  protected void convert(HdfsFileStatus srcFileStatus) throws ActionException {
     DFSInputStream in = null;
     DFSOutputStream out = null;
     try {
       long blockSize = conf.getLong(DFSConfigKeys.DFS_BLOCK_SIZE_KEY,
           DFSConfigKeys.DFS_BLOCK_SIZE_DEFAULT);
       in = dfsClient.open(srcPath, bufferSize, true);
-      HdfsFileStatus fileStatus = dfsClient.getFileInfo(srcPath);
-      short replication = (short) conf.getInt(DFSConfigKeys.DFS_REPLICATION_KEY, DFSConfigKeys.DFS_REPLICATION_DEFAULT);
+      short replication = (short) conf.getInt(DFSConfigKeys.DFS_REPLICATION_KEY,
+          DFSConfigKeys.DFS_REPLICATION_DEFAULT);
       // use the same FsPermission as srcPath
-      FsPermission permission = fileStatus.getPermission();
+      FsPermission permission = srcFileStatus.getPermission();
       out = dfsClient.create(ecTmpPath, permission, EnumSet.of(CreateFlag.CREATE), true,
           replication, blockSize, null, bufferSize, null, null, ecPolicyName);
       // Keep storage policy according with original file except UNDEF storage policy
@@ -68,7 +70,7 @@ abstract public class ErasureCodingBase extends HdfsAction {
       if (!storagePolicyName.equals("UNDEF")) {
         dfsClient.setStoragePolicy(ecTmpPath, storagePolicyName);
       }
-      long bytesRemaining = fileStatus.getLen();
+      long bytesRemaining = srcFileStatus.getLen();
       byte[] buf = new byte[bufferSize];
       while (bytesRemaining > 0L) {
         int bytesToRead =
@@ -80,7 +82,7 @@ abstract public class ErasureCodingBase extends HdfsAction {
         }
         out.write(buf, 0, bytesRead);
         bytesRemaining -= (long) bytesRead;
-        this.progress = (float) (fileStatus.getLen() - bytesRemaining) / fileStatus.getLen();
+        this.progress = (float) (srcFileStatus.getLen() - bytesRemaining) / srcFileStatus.getLen();
       }
     } catch (Exception ex) {
       throw new ActionException(ex);
