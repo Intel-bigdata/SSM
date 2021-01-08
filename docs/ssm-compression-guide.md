@@ -60,3 +60,6 @@ original length of compressed file by using `hdfs dfs -ls`.
 
 * It is supported to sync or copy compressed data to another cluster. But, the data is firstly decompressed and then transferred to the given cluster, which means SSM compression cannot be used to reduce network IO load
 in syncing data. Besides, the backup file will not be compressed.
+
+* SSM will write a few metadata into HDFS file xattr after compression. The required xattr size depends on the size of file to be compressed. For large file, HDFS max xattr size may be exceeded, which can be resolved by
+setting a larger value for `dfs.namenode.fs-limits.max-xattr-size` in HDFS.
