@@ -197,7 +197,7 @@ public class SmallFileCompactAction extends HdfsAction {
     // Delete file
     dfsClient.delete(path, false);
 
-    // Create file
+    // Create file with empty content.
     OutputStream out = dfsClient.create(path, true);
     if (out != null) {
       out.close();
@@ -208,8 +208,8 @@ public class SmallFileCompactAction extends HdfsAction {
     dfsClient.setPermission(path, fileStatus.getPermission());
     dfsClient.setReplication(path, fileStatus.getReplication());
     dfsClient.setStoragePolicy(path, "Cold");
-    dfsClient.setTimes(path, fileStatus.getAccessTime(),
-        dfsClient.getFileInfo(path).getModificationTime());
+    dfsClient.setTimes(path, fileStatus.getModificationTime(),
+        fileStatus.getAccessTime());
 
     for(Map.Entry<String, byte[]> entry : xAttr.entrySet()) {
       dfsClient.setXAttr(path, entry.getKey(), entry.getValue(),
