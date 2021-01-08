@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartdata.action.ActionType;
 import org.smartdata.action.Utils;
+import org.smartdata.conf.SmartConf;
+import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.move.AbstractMoveFileAction;
 import org.smartdata.hdfs.action.move.MoverExecutor;
 import org.smartdata.hdfs.action.move.MoverStatus;
@@ -40,6 +42,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
   private String storagePolicy;
   private String fileName;
   private FileMovePlan movePlan;
+  private SmartConf conf;
 
   public MoveFileAction() {
     super();
@@ -55,6 +58,7 @@ public class MoveFileAction extends AbstractMoveFileAction {
   public void init(Map<String, String> args) {
     super.init(args);
     this.fileName = args.get(FILE_PATH);
+    this.conf = getContext().getConf();
     this.storagePolicy = getStoragePolicy() != null ?
         getStoragePolicy() : args.get(STORAGE_POLICY);
     if (args.containsKey(MOVE_PLAN)) {
@@ -69,6 +73,8 @@ public class MoveFileAction extends AbstractMoveFileAction {
 
   @Override
   protected void execute() throws Exception {
+    this.setDfsClient(HadoopUtil.getDFSClient(
+            HadoopUtil.getNameNodeUri(conf), conf));
     if (fileName == null) {
       throw new IllegalArgumentException("File parameter is missing!");
     }
