@@ -29,7 +29,6 @@ import org.smartdata.action.SmartAction;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.hdfs.HadoopUtil;
 import org.smartdata.hdfs.action.HdfsAction;
-import org.smartdata.hdfs.action.MoveFileAction;
 import org.smartdata.hdfs.client.SmartDFSClient;
 import org.smartdata.model.LaunchAction;
 import org.smartdata.protocol.message.LaunchCmdlet;
@@ -75,18 +74,7 @@ public class CmdletFactory {
     smartAction.setLastAction(isLastAction);
     smartAction.init(launchAction.getArgs());
     smartAction.setActionId(launchAction.getActionId());
-    if (smartAction instanceof MoveFileAction) {
-      try {
-        ((HdfsAction) smartAction)
-                .setDfsClient(
-                        HadoopUtil.getDFSClient(
-                                HadoopUtil.getNameNodeUri(smartContext.getConf()),
-                                smartContext.getConf()));
-      } catch (IOException e) {
-        LOG.error("smartAction aid={} setDfsClient error", launchAction.getActionId(), e);
-        throw new ActionException(e);
-      }
-    } else if (smartAction instanceof HdfsAction) {
+    if (smartAction instanceof HdfsAction) {
       try {
         ((HdfsAction) smartAction)
             .setDfsClient(
