@@ -163,7 +163,7 @@ public class CompressionScheduler extends ActionSchedulerService {
     if (fileState instanceof CompressionFileState) {
       return true;
     }
-    LOG.warn("A compressed file path should be given!");
+    LOG.debug("A compressed file path should be given!");
     return false;
   }
 
