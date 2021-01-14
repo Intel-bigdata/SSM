@@ -233,6 +233,9 @@ public class InotifyEventFetcher {
    */
   public static boolean isWhitelistChanged(SmartConf conf, MetaStore metaStore) {
     List<String> currentList = conf.getCoverDir();
+    if (currentList.isEmpty()) {
+      currentList.add("/");
+    }
     try {
       oldList = metaStore.getLastFetchedDirs();
     } catch (MetaStoreException e) {
