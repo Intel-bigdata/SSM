@@ -315,7 +315,7 @@ public class InotifyEventFetcher {
     }
 
     public List<String> getFetchDirFromConfig() {
-      this.conf.getCoverDir();
+      fetchList = conf.getCoverDir();
       return fetchList;
     }
 
