@@ -233,6 +233,9 @@ public class InotifyEventFetcher {
    */
   public static boolean isWhitelistChanged(SmartConf conf, MetaStore metaStore) {
     List<String> currentList = conf.getCoverDir();
+    if (currentList.isEmpty()) {
+      currentList.add("/");
+    }
     try {
       oldList = metaStore.getLastFetchedDirs();
     } catch (MetaStoreException e) {
@@ -307,13 +310,11 @@ public class InotifyEventFetcher {
     }
 
     public List<String> getIgnoreDirFromConfig() {
-      ignoreList = conf.getIgnoreDir();
-      return ignoreList;
+      return conf.getIgnoreDir();
     }
 
     public List<String> getFetchDirFromConfig() {
-      this.conf.getCoverDir();
-      return fetchList;
+      return conf.getCoverDir();
     }
 
     public boolean shouldIgnore(String path) {
