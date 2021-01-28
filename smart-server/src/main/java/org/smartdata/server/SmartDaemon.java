@@ -97,7 +97,7 @@ public class SmartDaemon implements ServerDaemon {
     String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
     String principalConfig = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
     String principal =
-            org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
+       org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
 
     SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
