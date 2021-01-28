@@ -35,7 +35,7 @@ import org.smartdata.utils.SecurityUtil;
 import java.io.IOException;
 
 public class SmartDaemon implements ServerDaemon {
-  public static final Logger LOG = LoggerFactory.getLogger(SmartDaemon.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SmartDaemon.class);
   private final String[] args;
   //Todo: maybe we can make worker as an interface
   private HazelcastWorker hazelcastWorker;
