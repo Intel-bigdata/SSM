@@ -23,7 +23,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.zeppelin.server.SmartZeppelinServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +41,6 @@ import org.smartdata.server.engine.ServiceMode;
 import org.smartdata.server.engine.StatesManager;
 import org.smartdata.server.engine.cmdlet.agent.AgentMaster;
 import org.smartdata.server.utils.GenericOptionsParser;
-import org.smartdata.utils.SecurityUtil;
 import static org.smartdata.SmartConstants.NUMBER_OF_SMART_AGENT;
 
 import java.io.File;
@@ -83,7 +81,6 @@ public class SmartServer {
     LOG.info("Start Init Smart Server");
 
     HadoopUtil.setSmartConfByHadoop(conf);
-    authentication();
     MetaStore metaStore = MetaStoreUtils.getDBAdapter(conf);
     context = new ServerContext(conf, metaStore);
     initServiceMode(conf);
@@ -216,31 +213,6 @@ public class SmartServer {
       return false;
     }
     return false;
-  }
-
-  private void authentication() throws IOException {
-    if (!SecurityUtil.isSecurityEnabled(conf)) {
-      return;
-    }
-
-    // Load Hadoop configuration files
-    try {
-      HadoopUtil.loadHadoopConf(conf);
-    } catch (IOException e) {
-      LOG.info("Running in secure mode, but cannot find Hadoop configuration file. "
-          + "Please config smart.hadoop.conf.path property in smart-site.xml.");
-      conf.set("hadoop.security.authentication", "kerberos");
-      conf.set("hadoop.security.authorization", "true");
-    }
-
-    UserGroupInformation.setConfiguration(conf);
-
-    String keytabFilename = conf.get(SmartConfKeys.SMART_SERVER_KEYTAB_FILE_KEY);
-    String principalConfig = conf.get(SmartConfKeys.SMART_SERVER_KERBEROS_PRINCIPAL_KEY);
-    String principal =
-        org.apache.hadoop.security.SecurityUtil.getServerPrincipal(principalConfig, (String) null);
-
-    SecurityUtil.loginUsingKeytab(keytabFilename, principal);
   }
 
   /**
