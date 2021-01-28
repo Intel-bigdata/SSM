@@ -76,14 +76,15 @@ kadmind
 
 ### 2. Export keytabs
 
-#### 2.1 Add smartserver Kerberos principal to database and export it to keytab.
+#### 2.1 Add smart server (standby server) Kerberos principal to database and export it to keytab.
 ```
 kadmin.local:addprinc -randkey {username}/{hostname}
 kadmin.local:xst -k /xxx/xxx/smartserver-{hostname}.keytab {username}/{hostname}
 ```
 **Note:** replace the username with the HDFS user who has the correct permission to execute actions and replace hostname with hostname of the smart server
 
-#### 2.2 Add smartagent Kerberos principals to database and export it to keytabs. Please create principals for each agent. Then use 'scp' to copy each keytab file to each agent.
+#### 2.2 Add smart agent Kerberos principals to database and export it to keytabs.
+Please create principals for each agent. Then, use 'scp' to copy each keytab file to the corresponding agent node.
 ```
 kadmin.local:addprinc -randkey {username}/{hostname}
 kadmin.local:xst -k /xxx/xxx/smartagent-{hostname}.keytab {username}/{hostname}
@@ -100,7 +101,9 @@ kadmin.local:xst -k /xxx/xxx/hdfs-{hostname}.keytab hdfs/{hostname}
 
 ### 3. Configure SSM
 
-Please update smart-site.xml for each node. Smart agent principal and keytab path for each node are different.
+Please update smart-site.xml for each node. The principal and keytab path can be different for each agent node.
+If multiple smart servers are configured, the principal and keytab path should be configured respectively for
+each smart server.
 
 ```xml
 <!-- hadoop conf dir should be configured -->
