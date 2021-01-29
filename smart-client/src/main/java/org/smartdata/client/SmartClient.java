@@ -30,6 +30,8 @@ import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.utils.StringUtil;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -40,6 +42,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
@@ -53,6 +56,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
   private List<String> coverAccessEventDirs;
+  public static final String ACTIVE_SMART_SERVER_FILE_PATH = "/tmp/active_smart_server";
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -111,7 +115,17 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private void initialize(InetSocketAddress[] addrs) throws IOException {
     RPC.setProtocolEngine(conf, ClientProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
+    List<InetSocketAddress> orderedAddrs = new ArrayList<>();
+    InetSocketAddress recordedActiveAddr = getActiveServerAddress();
+    if (recordedActiveAddr != null) {
+      orderedAddrs.add(recordedActiveAddr);
+    }
     for (InetSocketAddress addr : addrs) {
+      if (!addr.equals(recordedActiveAddr)) {
+        orderedAddrs.add(addr);
+      }
+    }
+    for (InetSocketAddress addr : orderedAddrs) {
       ClientProtocolProtoBuffer proxy = RPC.getProxy(
           ClientProtocolProtoBuffer.class, VERSION, addr, conf);
       SmartClientProtocol server = new ClientProtocolClientSideTranslator(proxy);
@@ -146,6 +160,38 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   /**
+   * Record active server currently found into a local file.
+   */
+  private void recordActiveServerAddress(String address)
+      throws IOException {
+    if (!new File(ACTIVE_SMART_SERVER_FILE_PATH).exists()) {
+      new File(ACTIVE_SMART_SERVER_FILE_PATH).createNewFile();
+    }
+    FileWriter fw = null;
+    try {
+      fw = new FileWriter(ACTIVE_SMART_SERVER_FILE_PATH);
+      fw.write(address);
+    } finally {
+      if (fw != null) {
+        fw.close();
+      }
+    }
+  }
+
+  /**
+   * Get recorded active server address.
+   */
+  private InetSocketAddress getActiveServerAddress() {
+    Scanner scanner = new Scanner(ACTIVE_SMART_SERVER_FILE_PATH);
+    if (scanner.hasNextLine()) {
+      String address = scanner.nextLine();
+      String[] strings = address.split(":");
+      return new InetSocketAddress(strings[0], Integer.valueOf(strings[1]));
+    }
+    return null;
+  }
+
+  /**
    * Reports access count event to smart server. In SSM HA mode, multiple
    * smart servers can be configured. If fail to connect to one server,
    * this method will pick up the next one from a queue to try again. If
@@ -171,16 +217,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         try {
           SmartClientProtocol server = serverQue.getFirst();
           server.reportFileAccessEvent(event);
-
-          // Reset smart server address in conf to reflect
-          // the changes of active smart server.
           if (failedServerNum != 0) {
-            List<String> rpcAddrs = new LinkedList<>();
-            for (SmartClientProtocol s : serverQue) {
-              rpcAddrs.add(serverToRpcAddr.get(s));
-            }
-            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
-                StringUtil.join(",", rpcAddrs));
+            onNewActiveSmartServer();
           }
           break;
         } catch (ConnectException e) {
@@ -196,6 +234,21 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
         }
       }
     }
+  }
+
+  /**
+   * Reset smart server address in conf and a local file to reflect the
+   * changes of active smart server in fail over.
+   */
+  public void onNewActiveSmartServer() throws IOException {
+    List<String> rpcAddrs = new LinkedList<>();
+    for (SmartClientProtocol s : serverQue) {
+      rpcAddrs.add(serverToRpcAddr.get(s));
+    }
+    conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+        StringUtil.join(",", rpcAddrs));
+    String address = serverToRpcAddr.get(serverQue.getFirst());
+    recordActiveServerAddress(address);
   }
 
   @Override
