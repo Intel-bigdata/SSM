@@ -161,26 +161,36 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   /**
-   * Record active server currently found into a local file.
+   * Record active server (hostname:port) currently found into a local file.
+   * This file can be dropped by OS, but considering it's just used for
+   * optimization, the lack of recorded active server doesn't cause critical
+   * issue.
    */
-  private void recordActiveServerAddr(String addr)
-      throws IOException {
-    if (!new File(ACTIVE_SMART_SERVER_FILE_PATH).exists()) {
-      new File(ACTIVE_SMART_SERVER_FILE_PATH).createNewFile();
-    }
+  private void recordActiveServerAddr(String addr) {
     FileWriter fw = null;
     try {
+      if (!new File(ACTIVE_SMART_SERVER_FILE_PATH).exists()) {
+        new File(ACTIVE_SMART_SERVER_FILE_PATH).createNewFile();
+      }
       fw = new FileWriter(ACTIVE_SMART_SERVER_FILE_PATH);
       fw.write(addr);
+    } catch (IOException e) {
+      // Nothing to do.
     } finally {
       if (fw != null) {
-        fw.close();
+        try {
+          fw.close();
+        } catch (IOException e) {
+          // Nothing to do.
+        }
       }
     }
   }
 
   /**
-   * Get recorded active server address.
+   * Get recorded active server address (hostname:port).
+   *
+   * @return active server address if found. Otherwise, null.
    */
   private InetSocketAddress getActiveServerAddress() {
     try {
@@ -245,7 +255,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
    * Reset smart server address in conf and a local file to reflect the
    * changes of active smart server in fail over.
    */
-  public void onNewActiveSmartServer() throws IOException {
+  public void onNewActiveSmartServer() {
     List<String> rpcAddrs = new LinkedList<>();
     for (SmartClientProtocol s : serverQue) {
       rpcAddrs.add(serverToRpcAddr.get(s));
