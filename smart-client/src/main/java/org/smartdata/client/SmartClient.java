@@ -31,6 +31,7 @@ import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.utils.StringUtil;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -130,7 +131,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
           ClientProtocolProtoBuffer.class, VERSION, addr, conf);
       SmartClientProtocol server = new ClientProtocolClientSideTranslator(proxy);
       serverQue.addLast(server);
-      serverToRpcAddr.put(server, addr.toString());
+      serverToRpcAddr.put(server, addr.getHostName() + ":" + addr.getPort());
     }
 
     // SMART_IGNORE_DIRS_KEY and SMART_WORK_DIR_KEY should be configured on
@@ -162,7 +163,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   /**
    * Record active server currently found into a local file.
    */
-  private void recordActiveServerAddress(String address)
+  private void recordActiveServerAddr(String addr)
       throws IOException {
     if (!new File(ACTIVE_SMART_SERVER_FILE_PATH).exists()) {
       new File(ACTIVE_SMART_SERVER_FILE_PATH).createNewFile();
@@ -170,7 +171,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     FileWriter fw = null;
     try {
       fw = new FileWriter(ACTIVE_SMART_SERVER_FILE_PATH);
-      fw.write(address);
+      fw.write(addr);
     } finally {
       if (fw != null) {
         fw.close();
@@ -182,11 +183,15 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
    * Get recorded active server address.
    */
   private InetSocketAddress getActiveServerAddress() {
-    Scanner scanner = new Scanner(ACTIVE_SMART_SERVER_FILE_PATH);
-    if (scanner.hasNextLine()) {
-      String address = scanner.nextLine();
-      String[] strings = address.split(":");
-      return new InetSocketAddress(strings[0], Integer.valueOf(strings[1]));
+    try {
+      Scanner scanner = new Scanner(new File(ACTIVE_SMART_SERVER_FILE_PATH));
+      if (scanner.hasNextLine()) {
+        String address = scanner.nextLine();
+        String[] strings = address.split(":");
+        return new InetSocketAddress(strings[0], Integer.valueOf(strings[1]));
+      }
+    } catch (FileNotFoundException e) {
+      return null;
     }
     return null;
   }
@@ -247,8 +252,8 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
     }
     conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
         StringUtil.join(",", rpcAddrs));
-    String address = serverToRpcAddr.get(serverQue.getFirst());
-    recordActiveServerAddress(address);
+    String addr = serverToRpcAddr.get(serverQue.getFirst());
+    recordActiveServerAddr(addr);
   }
 
   @Override
