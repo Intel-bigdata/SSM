@@ -18,8 +18,11 @@
 package org.smartdata.client;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.Client;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
@@ -44,7 +47,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
@@ -225,29 +235,110 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   @Override
   public void reportFileAccessEvent(FileAccessEvent event)
       throws IOException {
-    if (!shouldIgnore(event.getPath())) {
-      checkOpen();
-      int failedServerNum = 0;
-      while (true) {
-        try {
-          SmartClientProtocol server = serverQue.getFirst();
+    if (shouldIgnore(event.getPath())) {
+      return;
+    }
+    checkOpen();
+    if (conf.getBoolean(SmartConfKeys.SMART_CLIENT_CONCURRENT_REPORT_ENABLED,
+        SmartConfKeys.SMART_CLIENT_CONCURRENT_REPORT_ENABLED_DEFAULT)) {
+      reportFileAccessEventConcurrently(event);
+    } else {
+      reportFileAccessEventSimply(event);
+    }
+  }
+
+  /**
+   * A simple report strategy that tries to connect to smart server one by one.
+   * And active smart server address will be updated in a local file for new
+   * client to use henceforth.
+   * @param event
+   * @throws IOException
+   */
+  private void reportFileAccessEventSimply(FileAccessEvent event)
+      throws IOException {
+    int failedServerNum = 0;
+    while (true) {
+      try {
+        SmartClientProtocol server = serverQue.getFirst();
+        server.reportFileAccessEvent(event);
+        if (failedServerNum != 0) {
+          onNewActiveSmartServer();
+        }
+        break;
+      } catch (ConnectException e) {
+        failedServerNum++;
+        // If all servers has been tried but still fail,
+        // throw an exception.
+        if (failedServerNum == serverQue.size()) {
+          throw new ConnectException("Tried to connect to configured SSM "
+              + "server(s), but failed." + e.getMessage());
+        }
+        // Move the first server to last.
+        serverQue.addLast(serverQue.pollFirst());
+      }
+    }
+  }
+
+  /**
+   * Report file access event concurrently. Only one server is active, so
+   * reporting to this server will be successful.
+   * @param event
+   */
+  private void reportFileAccessEventConcurrently(FileAccessEvent event)
+      throws IOException {
+    // Change the log level to avoid displaying confused message to user.
+    Logger.getLogger(Client.class.getName()).setLevel(Level.WARN);
+    int num = serverQue.size();
+    ExecutorService executorService = Executors.newFixedThreadPool(num);
+    Future<Void>[] futures = new Future[num];
+    int index = 0;
+    for (SmartClientProtocol server : serverQue) {
+      futures[index] = executorService.submit(new Callable<Void>() {
+        @Override
+        public Void call() throws IOException {
           server.reportFileAccessEvent(event);
-          if (failedServerNum != 0) {
-            onNewActiveSmartServer();
-          }
+          return null;
+        }
+      });
+      index++;
+    }
+    List<Future<Void>> timeoutFutures = new ArrayList<>();
+    boolean isReported = false;
+    for (Future<Void> future : futures) {
+      try {
+        // A short timeout value for performance consideration.
+        future.get(500, TimeUnit.MILLISECONDS);
+        isReported = true;
+        break;
+        // ExecutionException will be thrown if IOException
+        // inside #call is thrown.
+      } catch (InterruptedException | ExecutionException e) {
+        continue;
+      } catch (TimeoutException e) {
+        timeoutFutures.add(future);
+      }
+    }
+    // If not reported, wait for the above timeout futures again.
+    if (!isReported) {
+      for (Future<Void> timeoutFuture : timeoutFutures) {
+        try {
+          // Extend the timeout. Active smart server takes little time to
+          // tackle the report, so we think this timeout value is enough.
+          timeoutFuture.get(3, TimeUnit.SECONDS);
+          isReported = true;
           break;
-        } catch (ConnectException e) {
-          failedServerNum++;
-          // If all servers has been tried but still fail,
-          // throw an exception.
-          if (failedServerNum == serverQue.size()) {
-            throw new ConnectException("Tried to connect to configured SSM "
-                + "server(s), but failed." + e.getMessage());
-          }
-          // Move the first server to last.
-          serverQue.addLast(serverQue.pollFirst());
+        } catch (InterruptedException | ExecutionException
+            | TimeoutException e) {
+          // Nothing to do.
         }
       }
+    }
+    // Cancel the report tasks. No impact on the successfully executed task.
+    for (Future<Void> future : futures) {
+      future.cancel(true);
+    }
+    if (!isReported) {
+      throw new IOException("Failed to report access event to Smart Server!");
     }
   }
 

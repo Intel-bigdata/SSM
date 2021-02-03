@@ -215,4 +215,9 @@ public class SmartConfKeys {
   public static final String SMART_COMPRESSION_CODEC_DEFAULT = "Zlib";
   public static final String SMART_COMPRESSION_MAX_SPLIT = "smart.compression.max.split";
   public static final int SMART_COMPRESSION_MAX_SPLIT_DEFAULT = 1000;
+
+  // Enable current report or not in SSM HA mode.
+  public static final String SMART_CLIENT_CONCURRENT_REPORT_ENABLED =
+      "smart.client.concurrent.report.enabled";
+  public static final boolean SMART_CLIENT_CONCURRENT_REPORT_ENABLED_DEFAULT = false;
 }
