@@ -67,6 +67,19 @@
     </description>
   </property>
 
+  <property>
+    <name>smart.client.concurrent.report.enabled</name>
+    <value>false</value>
+    <description>
+      This property is used to enable/disable concurrent report for SmartClient.
+      If it is enabled, SmartClient will connect to multiple configured smart
+      servers concurrently, which is an optimization to find active smart server.
+      Only active smart sever will respond to build successful connection. If
+      report is successfully delivered to active smart server, attempting to
+      connect to other smart servers will be canceled.
+    </description>
+  </property>
+
   <!--
   The above properties can take effect in SSM, and they can also be configured on
   client side for Smart Client to use, e.g., you can make the above configuration
