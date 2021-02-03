@@ -69,7 +69,7 @@
 
   <property>
     <name>smart.client.concurrent.report.enabled</name>
-    <value>false</value>
+    <value>true</value>
     <description>
       This property is used to enable/disable concurrent report for SmartClient.
       If it is enabled, SmartClient will connect to multiple configured smart

@@ -219,5 +219,5 @@ public class SmartConfKeys {
   // Enable current report or not in SSM HA mode.
   public static final String SMART_CLIENT_CONCURRENT_REPORT_ENABLED =
       "smart.client.concurrent.report.enabled";
-  public static final boolean SMART_CLIENT_CONCURRENT_REPORT_ENABLED_DEFAULT = false;
+  public static final boolean SMART_CLIENT_CONCURRENT_REPORT_ENABLED_DEFAULT = true;
 }
