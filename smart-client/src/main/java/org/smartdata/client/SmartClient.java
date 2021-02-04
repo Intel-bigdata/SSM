@@ -302,35 +302,24 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
       });
       index++;
     }
-    List<Future<Void>> timeoutFutures = new ArrayList<>();
     boolean isReported = false;
-    for (Future<Void> future : futures) {
-      try {
-        // A short timeout value for performance consideration.
-        future.get(500, TimeUnit.MILLISECONDS);
-        isReported = true;
-        break;
-        // ExecutionException will be thrown if IOException
-        // inside #call is thrown.
-      } catch (InterruptedException | ExecutionException e) {
-        continue;
-      } catch (TimeoutException e) {
-        timeoutFutures.add(future);
-      }
-    }
-    // If not reported, wait for the above timeout futures again.
-    if (!isReported) {
-      for (Future<Void> timeoutFuture : timeoutFutures) {
+    byte tryNum = 0;
+    while (tryNum++ < 10) {
+      for (Future<Void> future : futures) {
         try {
-          // Extend the timeout. Active smart server takes little time to
-          // tackle the report, so we think this timeout value is enough.
-          timeoutFuture.get(3, TimeUnit.SECONDS);
+          // A short timeout value for performance consideration.
+          future.get(200, TimeUnit.MILLISECONDS);
           isReported = true;
           break;
-        } catch (InterruptedException | ExecutionException
-            | TimeoutException e) {
-          // Nothing to do.
+          // ExecutionException will be thrown if IOException inside #call is
+          // thrown. Multiple calling #get with exception thrown behaves
+          // consistently.
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+          continue;
         }
+      }
+      if (isReported) {
+        break;
       }
     }
     // Cancel the report tasks. No impact on the successfully executed task.
