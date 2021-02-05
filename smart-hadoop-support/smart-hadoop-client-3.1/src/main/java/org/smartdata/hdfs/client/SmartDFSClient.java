@@ -148,7 +148,7 @@ public class SmartDFSClient extends DFSClient {
   /**
    * Functionality: create an InputStream and report access event to SSM server.
    *
-   * DFSClient is firstly used to get an Inpustream to get file length. The real
+   * DFSClient is firstly used to get an Inputstream to get file length. The real
    * InputStream returned is obtained from SmartInputStreamFactory which has some
    * considerations about compression, compact, S3 etc.
    *

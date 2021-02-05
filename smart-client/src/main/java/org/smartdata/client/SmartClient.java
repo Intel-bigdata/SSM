@@ -18,8 +18,11 @@
 package org.smartdata.client;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.Client;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
@@ -30,6 +33,9 @@ import org.smartdata.protocol.protobuffer.ClientProtocolClientSideTranslator;
 import org.smartdata.protocol.protobuffer.ClientProtocolProtoBuffer;
 import org.smartdata.utils.StringUtil;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
@@ -40,7 +46,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private static final long VERSION = 1;
@@ -53,6 +67,7 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private List<String> ignoreAccessEventDirs;
   private Map<String, Integer> singleIgnoreList;
   private List<String> coverAccessEventDirs;
+  public static final String ACTIVE_SMART_SERVER_FILE_PATH = "/tmp/active_smart_server";
 
   public SmartClient(Configuration conf) throws IOException {
     this.conf = conf;
@@ -111,12 +126,22 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   private void initialize(InetSocketAddress[] addrs) throws IOException {
     RPC.setProtocolEngine(conf, ClientProtocolProtoBuffer.class,
         ProtobufRpcEngine.class);
+    List<InetSocketAddress> orderedAddrs = new ArrayList<>();
+    InetSocketAddress recordedActiveAddr = getActiveServerAddress();
+    if (recordedActiveAddr != null) {
+      orderedAddrs.add(recordedActiveAddr);
+    }
     for (InetSocketAddress addr : addrs) {
+      if (!addr.equals(recordedActiveAddr)) {
+        orderedAddrs.add(addr);
+      }
+    }
+    for (InetSocketAddress addr : orderedAddrs) {
       ClientProtocolProtoBuffer proxy = RPC.getProxy(
           ClientProtocolProtoBuffer.class, VERSION, addr, conf);
       SmartClientProtocol server = new ClientProtocolClientSideTranslator(proxy);
       serverQue.addLast(server);
-      serverToRpcAddr.put(server, addr.toString());
+      serverToRpcAddr.put(server, addr.getHostName() + ":" + addr.getPort());
     }
 
     // SMART_IGNORE_DIRS_KEY and SMART_WORK_DIR_KEY should be configured on
@@ -146,6 +171,52 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   }
 
   /**
+   * Record active server (hostname:port) currently found into a local file.
+   * This file can be dropped by OS, but considering it's just used for
+   * optimization, the lack of recorded active server doesn't cause critical
+   * issue.
+   */
+  private void recordActiveServerAddr(String addr) {
+    FileWriter fw = null;
+    try {
+      if (!new File(ACTIVE_SMART_SERVER_FILE_PATH).exists()) {
+        new File(ACTIVE_SMART_SERVER_FILE_PATH).createNewFile();
+      }
+      fw = new FileWriter(ACTIVE_SMART_SERVER_FILE_PATH);
+      fw.write(addr);
+    } catch (IOException e) {
+      // Nothing to do.
+    } finally {
+      if (fw != null) {
+        try {
+          fw.close();
+        } catch (IOException e) {
+          // Nothing to do.
+        }
+      }
+    }
+  }
+
+  /**
+   * Get recorded active server address (hostname:port).
+   *
+   * @return active server address if found. Otherwise, null.
+   */
+  private InetSocketAddress getActiveServerAddress() {
+    try {
+      Scanner scanner = new Scanner(new File(ACTIVE_SMART_SERVER_FILE_PATH));
+      if (scanner.hasNextLine()) {
+        String address = scanner.nextLine();
+        String[] strings = address.split(":");
+        return new InetSocketAddress(strings[0], Integer.valueOf(strings[1]));
+      }
+    } catch (FileNotFoundException e) {
+      return null;
+    }
+    return null;
+  }
+
+  /**
    * Reports access count event to smart server. In SSM HA mode, multiple
    * smart servers can be configured. If fail to connect to one server,
    * this method will pick up the next one from a queue to try again. If
@@ -164,38 +235,115 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
   @Override
   public void reportFileAccessEvent(FileAccessEvent event)
       throws IOException {
-    if (!shouldIgnore(event.getPath())) {
-      checkOpen();
-      int failedServerNum = 0;
-      while (true) {
-        try {
-          SmartClientProtocol server = serverQue.getFirst();
-          server.reportFileAccessEvent(event);
+    if (shouldIgnore(event.getPath())) {
+      return;
+    }
+    checkOpen();
+    if (conf.getBoolean(SmartConfKeys.SMART_CLIENT_CONCURRENT_REPORT_ENABLED,
+        SmartConfKeys.SMART_CLIENT_CONCURRENT_REPORT_ENABLED_DEFAULT)) {
+      reportFileAccessEventConcurrently(event);
+    } else {
+      reportFileAccessEventSimply(event);
+    }
+  }
 
-          // Reset smart server address in conf to reflect
-          // the changes of active smart server.
-          if (failedServerNum != 0) {
-            List<String> rpcAddrs = new LinkedList<>();
-            for (SmartClientProtocol s : serverQue) {
-              rpcAddrs.add(serverToRpcAddr.get(s));
-            }
-            conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
-                StringUtil.join(",", rpcAddrs));
-          }
-          break;
-        } catch (ConnectException e) {
-          failedServerNum++;
-          // If all servers has been tried but still fail,
-          // throw an exception.
-          if (failedServerNum == serverQue.size()) {
-            throw new ConnectException("Tried to connect to configured SSM "
-                + "server(s), but failed." + e.getMessage());
-          }
-          // Move the first server to last.
-          serverQue.addLast(serverQue.pollFirst());
+  /**
+   * A simple report strategy that tries to connect to smart server one by one.
+   * And active smart server address will be updated in a local file for new
+   * client to use henceforth.
+   * @param event
+   * @throws IOException
+   */
+  private void reportFileAccessEventSimply(FileAccessEvent event)
+      throws IOException {
+    int failedServerNum = 0;
+    while (true) {
+      try {
+        SmartClientProtocol server = serverQue.getFirst();
+        server.reportFileAccessEvent(event);
+        if (failedServerNum != 0) {
+          onNewActiveSmartServer();
         }
+        break;
+      } catch (ConnectException e) {
+        failedServerNum++;
+        // If all servers has been tried but still fail,
+        // throw an exception.
+        if (failedServerNum == serverQue.size()) {
+          throw new ConnectException("Tried to connect to configured SSM "
+              + "server(s), but failed." + e.getMessage());
+        }
+        // Move the first server to last.
+        serverQue.addLast(serverQue.pollFirst());
       }
     }
+  }
+
+  /**
+   * Report file access event concurrently. Only one server is active, so
+   * reporting to this server will be successful.
+   * @param event
+   */
+  private void reportFileAccessEventConcurrently(FileAccessEvent event)
+      throws IOException {
+    // Change the log level to avoid displaying confused message to user.
+    Logger.getLogger(Client.class.getName()).setLevel(Level.WARN);
+    int num = serverQue.size();
+    ExecutorService executorService = Executors.newFixedThreadPool(num);
+    Future<Void>[] futures = new Future[num];
+    int index = 0;
+    for (SmartClientProtocol server : serverQue) {
+      futures[index] = executorService.submit(new Callable<Void>() {
+        @Override
+        public Void call() throws IOException {
+          server.reportFileAccessEvent(event);
+          return null;
+        }
+      });
+      index++;
+    }
+    boolean isReported = false;
+    byte tryNum = 0;
+    while (tryNum++ < 10) {
+      for (Future<Void> future : futures) {
+        try {
+          // A short timeout value for performance consideration.
+          future.get(200, TimeUnit.MILLISECONDS);
+          isReported = true;
+          break;
+          // ExecutionException will be thrown if IOException inside #call is
+          // thrown. Multiple calling #get with exception thrown behaves
+          // consistently.
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+          continue;
+        }
+      }
+      if (isReported) {
+        break;
+      }
+    }
+    // Cancel the report tasks. No impact on the successfully executed task.
+    for (Future<Void> future : futures) {
+      future.cancel(true);
+    }
+    if (!isReported) {
+      throw new IOException("Failed to report access event to Smart Server!");
+    }
+  }
+
+  /**
+   * Reset smart server address in conf and a local file to reflect the
+   * changes of active smart server in fail over.
+   */
+  public void onNewActiveSmartServer() {
+    List<String> rpcAddrs = new LinkedList<>();
+    for (SmartClientProtocol s : serverQue) {
+      rpcAddrs.add(serverToRpcAddr.get(s));
+    }
+    conf.set(SmartConfKeys.SMART_SERVER_RPC_ADDRESS_KEY,
+        StringUtil.join(",", rpcAddrs));
+    String addr = serverToRpcAddr.get(serverQue.getFirst());
+    recordActiveServerAddr(addr);
   }
 
   @Override
