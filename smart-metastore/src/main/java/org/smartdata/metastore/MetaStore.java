@@ -85,6 +85,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2483,10 +2484,11 @@ public class MetaStore implements CopyMetaService, CmdletMetaService, BackupMeta
    */
   public List<String> getLastFetchedDirs() throws MetaStoreException {
     try {
-      String[] oldList = whitelistDao.getLastFetchedDirs().split(",");
       List<String> lastFetchedDirs = new ArrayList<>();
-      for (String s : oldList) {
-        lastFetchedDirs.add(s + (s.endsWith("/") ? "" : "/"));
+      String fetchedList = whitelistDao.getLastFetchedDirs();
+      if (!fetchedList.isEmpty()) {
+        String[] oldList = fetchedList.split(",");
+        lastFetchedDirs.addAll(Arrays.asList(oldList));
       }
       LOG.info("Last fetch dirs are " + lastFetchedDirs.toString());
       return lastFetchedDirs;

@@ -121,9 +121,6 @@ public class InotifyEventFetcher {
       //Update old whitelist
       try {
         String currentList = StringUtil.join(",", conf.getCoverDir());
-        if (currentList.isEmpty()){
-          currentList = "/";
-        }
         metaStore.updateWhitelistTable(currentList);
       } catch (MetaStoreException e) {
         LOG.warn("Failed to update whitelist.", e);
@@ -233,9 +230,6 @@ public class InotifyEventFetcher {
    */
   public static boolean isWhitelistChanged(SmartConf conf, MetaStore metaStore) {
     List<String> currentList = conf.getCoverDir();
-    if (currentList.isEmpty()) {
-      currentList.add("/");
-    }
     try {
       oldList = metaStore.getLastFetchedDirs();
     } catch (MetaStoreException e) {

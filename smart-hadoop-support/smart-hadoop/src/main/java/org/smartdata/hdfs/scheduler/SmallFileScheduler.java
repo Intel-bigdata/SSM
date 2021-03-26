@@ -144,7 +144,9 @@ public class SmallFileScheduler extends ActionSchedulerService {
         !actionInfo.getActionName().equals(UNCOMPACT_ACTION_NAME)) {
       return;
     }
-    compactSmallFileLock.addAll(getSmallFileList(actionInfo));
+    if (actionInfo.getActionName().equals(COMPACT_ACTION_NAME)) {
+      compactSmallFileLock.addAll(getSmallFileList(actionInfo));
+    }
     containerFileLock.add(getContainerFile(actionInfo));
   }
 
