@@ -32,7 +32,7 @@
     <packaging>jar</packaging>
 
     <properties>
-    <log4j.version>2.17.0</log4j.version>
+    <log4j.version>2.17.1</log4j.version>
     </properties>
 
     <dependencies>
