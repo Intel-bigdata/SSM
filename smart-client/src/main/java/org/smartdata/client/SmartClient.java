@@ -18,11 +18,9 @@
 package org.smartdata.client;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.ipc.Client;
 import org.apache.hadoop.ipc.ProtobufRpcEngine;
 import org.apache.hadoop.ipc.RPC;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+
 import org.smartdata.SmartConstants;
 import org.smartdata.conf.SmartConfKeys;
 import org.smartdata.metrics.FileAccessEvent;
@@ -286,8 +284,6 @@ public class SmartClient implements java.io.Closeable, SmartClientProtocol {
    */
   private void reportFileAccessEventConcurrently(FileAccessEvent event)
       throws IOException {
-    // Change the log level to avoid displaying confused message to user.
-    Logger.getLogger(Client.class.getName()).setLevel(Level.WARN);
     int num = serverQue.size();
     ExecutorService executorService = Executors.newFixedThreadPool(num);
     Future<Void>[] futures = new Future[num];

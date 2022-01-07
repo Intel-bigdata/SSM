@@ -137,10 +137,11 @@ fi
 
 # JAVA_OPTS+=" ${SMART_JAVA_OPTS} -Dfile.encoding=${SMART_ENCODING} ${SMART_MEM}"
 # JAVA_OPTS+=" -Dlog4j.configuration=file://${SMART_CONF_DIR}/log4j.properties"
+JAVA_OPTS+=" -Dlog4j2.configurationFile=file://${SMART_CONF_DIR}/log4j.properties"
 export JAVA_OPTS
 
 JAVA_INTP_OPTS="${SMART_INTP_JAVA_OPTS} -Dfile.encoding=${SMART_ENCODING}"
-JAVA_INTP_OPTS+=" -Dlog4j.configuration=file://${SMART_CONF_DIR}/log4j.properties"
+#JAVA_INTP_OPTS+=" -Dlog4j.configuration=file://${SMART_CONF_DIR}/log4j.properties"
 export JAVA_INTP_OPTS
 
 
