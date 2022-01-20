@@ -31,10 +31,6 @@
     <version>1.6.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <properties>
-    <log4j.version>2.17.0</log4j.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.smartdata</groupId>
