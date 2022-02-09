@@ -41,7 +41,7 @@
     <log4j.version>2.17.1</log4j.version>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
-    <hadoop.version>2.7.3</hadoop.version>
+    <hadoop.version>2.10.1</hadoop.version>
     <alluxio.version>1.6.1</alluxio.version>
     <junit.version>4.11</junit.version>
     <scala.version>2.11.8</scala.version>
